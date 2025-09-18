@@ -512,7 +512,8 @@ export default function DrillLibrary() {
       <PageLayout>
         {/* Header */}
         <PageHeader
-          title="Drill Library"
+          title="Drill"
+          accentWord="Library"
           subtitle="Browse and manage training drills"
           actionButton={
             <StandardButton 
