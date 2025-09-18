@@ -15,7 +15,10 @@ const authenticateJWT = async (req, res, next) => {
     }
 
     // Verify the JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+    console.log('🔐 JWT Secret being used:', jwtSecret ? 'Set from env' : 'Using fallback');
+    console.log('🔍 Attempting to verify token...');
+    const decoded = jwt.verify(token, jwtSecret);
     
     // Get user from our database
     const user = await User.findById(decoded.userId);
