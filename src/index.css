@@ -1,36 +1,6 @@
-/* Import Design System */
-@import './styles/design-system.css';
-@import './styles/responsive-design.css';
-@import './styles/dark-mode.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Layout-specific styles */
-:root.dark {
-  /* Use centralized color system */
-  --background: 26 32 44; /* --color-background-primary converted to HSL */
-  --foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --card: 45 55 72; /* --color-background-secondary converted to HSL */
-  --card-foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --popover: 45 55 72; /* --color-background-secondary converted to HSL */
-  --popover-foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --primary: 56 178 172; /* --color-accent-primary converted to HSL */
-  --primary-foreground: 255 255 255;
-  --secondary: 74 85 104; /* --color-accent-secondary converted to HSL */
-  --secondary-foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --muted: 74 85 104; /* --color-accent-secondary converted to HSL */
-  --muted-foreground: 160 174 192; /* --color-text-secondary converted to HSL */
-  --accent: 74 85 104; /* --color-accent-secondary converted to HSL */
-  --accent-foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --destructive: 229 62 62; /* --color-feedback-error converted to HSL */
-  --destructive-foreground: 226 232 240; /* --color-text-primary converted to HSL */
-  --border: 74 85 104; /* --color-border converted to HSL */
-  --input: 74 85 104; /* --color-border converted to HSL */
-  --ring: 56 178 172; /* --color-focus converted to HSL */
-  --radius: 0.75rem;
-}
 
 /* Custom Number Input Arrows Removal */
 input[type='number']::-webkit-inner-spin-button,
@@ -207,6 +177,91 @@ button:focus-visible {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Brand Color System - Light Mode */
+    /* Brand Blue - Professional, trustworthy */
+    --brand-blue-50: 239 100% 97%;
+    --brand-blue-100: 239 100% 93%;
+    --brand-blue-200: 239 100% 87%;
+    --brand-blue-300: 239 100% 78%;
+    --brand-blue-400: 239 100% 67%;
+    --brand-blue-500: 239 84% 67%;
+    --brand-blue-600: 239 84% 60%;
+    --brand-blue-700: 239 84% 53%;
+    --brand-blue-800: 239 84% 46%;
+    --brand-blue-900: 239 84% 39%;
+    --brand-blue-950: 239 84% 25%;
+    --brand-blue-foreground: 0 0% 100%;
+
+    /* Brand Yellow - Energy, optimism */
+    --brand-yellow-50: 48 100% 96%;
+    --brand-yellow-100: 48 96% 89%;
+    --brand-yellow-200: 48 97% 77%;
+    --brand-yellow-300: 46 97% 65%;
+    --brand-yellow-400: 43 96% 56%;
+    --brand-yellow-500: 38 92% 50%;
+    --brand-yellow-600: 32 95% 44%;
+    --brand-yellow-700: 26 90% 37%;
+    --brand-yellow-800: 23 83% 31%;
+    --brand-yellow-900: 22 78% 26%;
+    --brand-yellow-950: 21 92% 14%;
+    --brand-yellow-foreground: 0 0% 0%;
+
+    /* Brand Green - Success, growth */
+    --brand-green-50: 151 81% 96%;
+    --brand-green-100: 149 80% 90%;
+    --brand-green-200: 152 76% 80%;
+    --brand-green-300: 156 72% 67%;
+    --brand-green-400: 158 64% 52%;
+    --brand-green-500: 160 84% 39%;
+    --brand-green-600: 161 94% 30%;
+    --brand-green-700: 163 94% 24%;
+    --brand-green-800: 163 88% 20%;
+    --brand-green-900: 164 86% 16%;
+    --brand-green-950: 166 91% 9%;
+    --brand-green-foreground: 0 0% 100%;
+
+    /* Brand Red - Attention, urgency */
+    --brand-red-50: 0 86% 97%;
+    --brand-red-100: 0 93% 94%;
+    --brand-red-200: 0 96% 89%;
+    --brand-red-300: 0 94% 82%;
+    --brand-red-400: 0 91% 71%;
+    --brand-red-500: 0 84% 60%;
+    --brand-red-600: 0 72% 51%;
+    --brand-red-700: 0 74% 42%;
+    --brand-red-800: 0 70% 35%;
+    --brand-red-900: 0 63% 31%;
+    --brand-red-950: 0 75% 15%;
+    --brand-red-foreground: 0 0% 100%;
+
+    /* Brand Purple - Creativity, premium */
+    --brand-purple-50: 270 100% 98%;
+    --brand-purple-100: 269 100% 95%;
+    --brand-purple-200: 269 100% 92%;
+    --brand-purple-300: 269 97% 85%;
+    --brand-purple-400: 270 95% 75%;
+    --brand-purple-500: 271 91% 65%;
+    --brand-purple-600: 271 81% 56%;
+    --brand-purple-700: 272 72% 47%;
+    --brand-purple-800: 272 67% 39%;
+    --brand-purple-900: 273 66% 32%;
+    --brand-purple-950: 274 87% 21%;
+    --brand-purple-foreground: 0 0% 100%;
+
+    /* Brand Orange - Warmth, enthusiasm */
+    --brand-orange-50: 33 100% 96%;
+    --brand-orange-100: 34 100% 92%;
+    --brand-orange-200: 32 98% 83%;
+    --brand-orange-300: 31 97% 72%;
+    --brand-orange-400: 27 96% 61%;
+    --brand-orange-500: 25 95% 53%;
+    --brand-orange-600: 21 90% 48%;
+    --brand-orange-700: 17 88% 40%;
+    --brand-orange-800: 15 79% 34%;
+    --brand-orange-900: 15 75% 28%;
+    --brand-orange-950: 15 80% 15%;
+    --brand-orange-foreground: 0 0% 100%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -241,6 +296,91 @@ button:focus-visible {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Brand Color System - Dark Mode */
+    /* Brand Blue - Professional, trustworthy */
+    --brand-blue-50: 239 84% 10%;
+    --brand-blue-100: 239 84% 15%;
+    --brand-blue-200: 239 84% 25%;
+    --brand-blue-300: 239 84% 35%;
+    --brand-blue-400: 239 84% 45%;
+    --brand-blue-500: 239 84% 67%;
+    --brand-blue-600: 239 100% 75%;
+    --brand-blue-700: 239 100% 80%;
+    --brand-blue-800: 239 100% 85%;
+    --brand-blue-900: 239 100% 90%;
+    --brand-blue-950: 239 100% 95%;
+    --brand-blue-foreground: 0 0% 0%;
+
+    /* Brand Yellow - Energy, optimism */
+    --brand-yellow-50: 21 92% 8%;
+    --brand-yellow-100: 22 78% 20%;
+    --brand-yellow-200: 23 83% 25%;
+    --brand-yellow-300: 26 90% 30%;
+    --brand-yellow-400: 32 95% 35%;
+    --brand-yellow-500: 38 92% 50%;
+    --brand-yellow-600: 43 96% 60%;
+    --brand-yellow-700: 46 97% 70%;
+    --brand-yellow-800: 48 97% 80%;
+    --brand-yellow-900: 48 96% 90%;
+    --brand-yellow-950: 48 100% 95%;
+    --brand-yellow-foreground: 0 0% 0%;
+
+    /* Brand Green - Success, growth */
+    --brand-green-50: 166 91% 5%;
+    --brand-green-100: 164 86% 12%;
+    --brand-green-200: 163 88% 16%;
+    --brand-green-300: 163 94% 20%;
+    --brand-green-400: 161 94% 25%;
+    --brand-green-500: 160 84% 39%;
+    --brand-green-600: 158 64% 52%;
+    --brand-green-700: 156 72% 67%;
+    --brand-green-800: 152 76% 80%;
+    --brand-green-900: 149 80% 90%;
+    --brand-green-950: 151 81% 96%;
+    --brand-green-foreground: 0 0% 0%;
+
+    /* Brand Red - Attention, urgency */
+    --brand-red-50: 0 75% 10%;
+    --brand-red-100: 0 63% 25%;
+    --brand-red-200: 0 70% 30%;
+    --brand-red-300: 0 74% 35%;
+    --brand-red-400: 0 72% 45%;
+    --brand-red-500: 0 84% 60%;
+    --brand-red-600: 0 91% 71%;
+    --brand-red-700: 0 94% 82%;
+    --brand-red-800: 0 96% 89%;
+    --brand-red-900: 0 93% 94%;
+    --brand-red-950: 0 86% 97%;
+    --brand-red-foreground: 0 0% 0%;
+
+    /* Brand Purple - Creativity, premium */
+    --brand-purple-50: 274 87% 15%;
+    --brand-purple-100: 273 66% 25%;
+    --brand-purple-200: 272 67% 32%;
+    --brand-purple-300: 272 72% 40%;
+    --brand-purple-400: 271 81% 50%;
+    --brand-purple-500: 271 91% 65%;
+    --brand-purple-600: 270 95% 75%;
+    --brand-purple-700: 269 97% 85%;
+    --brand-purple-800: 269 100% 92%;
+    --brand-purple-900: 269 100% 95%;
+    --brand-purple-950: 270 100% 98%;
+    --brand-purple-foreground: 0 0% 0%;
+
+    /* Brand Orange - Warmth, enthusiasm */
+    --brand-orange-50: 15 80% 10%;
+    --brand-orange-100: 15 75% 22%;
+    --brand-orange-200: 15 79% 28%;
+    --brand-orange-300: 17 88% 34%;
+    --brand-orange-400: 21 90% 42%;
+    --brand-orange-500: 25 95% 53%;
+    --brand-orange-600: 27 96% 61%;
+    --brand-orange-700: 31 97% 72%;
+    --brand-orange-800: 32 98% 83%;
+    --brand-orange-900: 34 100% 92%;
+    --brand-orange-950: 33 100% 96%;
+    --brand-orange-foreground: 0 0% 0%;
   }
 }
 
@@ -248,9 +388,9 @@ button:focus-visible {
 
 @layer base {
   * {
-    @apply border-neutral-200;
+    @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-neutral-50 text-neutral-900;
+    @apply bg-background text-foreground;
   }
 }
