@@ -230,7 +230,7 @@ export default function Players() {
     return team?.TeamName || team?.Name || "Unknown Team";
   };
 
-  if (isContextLoading) {
+  if (isContextLoading || !currentUser) {
     return <LoadingState message="Loading players..." />;
   }
 
@@ -275,7 +275,7 @@ export default function Players() {
             {
               value: selectedTeam,
               onChange: setSelectedTeam,
-              placeholder: currentUser?.role === 'admin' ? "All Teams" : "Select Team",
+              placeholder: "Select Team",
               options: [
                 ...(currentUser?.role === 'admin' ? [{ value: "all", label: "All Teams" }] : []),
                 ...filteredTeamsForDropdown.map(team => ({
