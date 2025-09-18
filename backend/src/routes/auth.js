@@ -1,56 +1,44 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
 const User = require('../models/User');
 
 const router = express.Router();
 
-// Verify Firebase token and get user info
-router.post('/verify', authenticateToken, async (req, res) => {
+// Verify JWT token and get user info
+router.post('/verify', authenticateJWT, async (req, res) => {
   try {
     res.json({
       success: true,
-      user: {
-        id: req.user._id,
-        userID: req.user.userID,
-        email: req.user.email,
-        fullName: req.user.fullName,
-        role: req.user.role,
-        profileImage: req.user.profileImage,
-        department: req.user.department,
-        phoneNumber: req.user.phoneNumber
-      }
+      user: req.user.toPublicJSON()
     });
   } catch (error) {
     console.error('Auth verify error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
 // Get current user info
-router.get('/me', authenticateToken, async (req, res) => {
+router.get('/me', authenticateJWT, async (req, res) => {
   try {
     res.json({
       success: true,
-      user: {
-        id: req.user._id,
-        userID: req.user.userID,
-        email: req.user.email,
-        fullName: req.user.fullName,
-        role: req.user.role,
-        profileImage: req.user.profileImage,
-        department: req.user.department,
-        phoneNumber: req.user.phoneNumber
-      }
+      user: req.user.toPublicJSON()
     });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req, res) => {
+router.put('/profile', authenticateJWT, async (req, res) => {
   try {
     const { fullName, phoneNumber, department } = req.body;
     
@@ -66,20 +54,14 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      user: {
-        id: updatedUser._id,
-        userID: updatedUser.userID,
-        email: updatedUser.email,
-        fullName: updatedUser.fullName,
-        role: updatedUser.role,
-        profileImage: updatedUser.profileImage,
-        department: updatedUser.department,
-        phoneNumber: updatedUser.phoneNumber
-      }
+      user: updatedUser.toPublicJSON()
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
@@ -177,8 +159,7 @@ router.post('/register', async (req, res) => {
       role: Role,
       phoneNumber: PhoneNumber || null,
       department: Department || null,
-      password: Password, // Will be hashed by pre-save middleware
-      firebaseUid: `pwd_${new Date().getTime()}_${Math.random().toString(36).substr(2, 9)}` // Unique ID for password-based users
+      password: Password // Will be hashed by pre-save middleware
     });
 
     await newUser.save();

@@ -18,6 +18,8 @@ import AddReport from "./AddReport";
 
 import AddUser from "./AddUser";
 
+import Login from "./Login";
+
 import GamesSchedule from "./GamesSchedule";
 
 import GameDetails from "./GameDetails";
@@ -53,6 +55,8 @@ const PAGES = {
     AddReport: AddReport,
     
     AddUser: AddUser,
+    
+    Login: Login,
     
     GamesSchedule: GamesSchedule,
     
@@ -112,6 +116,8 @@ function PagesContent() {
                 <Route path="/AddReport" element={<AddReport />} />
                 
                 <Route path="/AddUser" element={<AddUser />} />
+                
+                <Route path="/Login" element={<Login />} />
                 
                 <Route path="/GamesSchedule" element={<GamesSchedule />} />
                 
