@@ -66,13 +66,22 @@ export function SelectField({
   // Use the correct value and onChange function
   const fieldValue = value || (formData && formData[id]);
   const fieldOnChange = onChange || handleChange;
+  
+  // Debug logging
+  console.log(`SelectField ${id}:`, { onChange, handleChange, fieldOnChange, formData });
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
         {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
         {label} {isRequired && "*"}
       </Label>
-      <Select value={fieldValue} onValueChange={(newValue) => fieldOnChange(id, newValue)}>
+      <Select value={fieldValue} onValueChange={(newValue) => {
+        if (typeof fieldOnChange === 'function') {
+          fieldOnChange(id, newValue);
+        } else {
+          console.error(`fieldOnChange is not a function for ${id}:`, { onChange, handleChange, fieldOnChange });
+        }
+      }}>
         <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -95,12 +104,19 @@ export function SelectField({
 /**
  * Form Grid Container
  */
-export function FormGrid({ children, columns = 2 }) {
+export function FormGrid({ children, columns = 2, formData, handleChange, onChange, ...restProps }) {
   const gridClass = columns === 1 ? "grid gap-6" : `grid md:grid-cols-${columns} gap-6`;
   
   return (
     <div className={gridClass}>
-      {children}
+      {React.Children.map(children, child => 
+        React.cloneElement(child, { 
+          formData, 
+          handleChange,
+          onChange,
+          ...restProps
+        })
+      )}
     </div>
   );
 }
