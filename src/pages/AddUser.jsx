@@ -4,7 +4,8 @@ import {
   User as UserIcon,
   Shield,
   Mail,
-  Building
+  Building,
+  Phone
 } from "lucide-react";
 import { airtableSync } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
@@ -62,7 +63,22 @@ export default function AddUser() {
   };
 
   const isFormValid = (formData) => {
-    return formData.FullName?.trim() && formData.Email?.trim();
+    // All fields are required except Department when Role is "Department Manager"
+    const requiredFields = {
+      FullName: formData.FullName?.trim(),
+      Email: formData.Email?.trim(),
+      Role: formData.Role?.trim(),
+      PhoneNumber: formData.PhoneNumber?.trim()
+    };
+
+    // Check if all required fields are filled
+    const allRequiredFieldsFilled = Object.values(requiredFields).every(Boolean);
+
+    // Department is required unless the role is "Department Manager"
+    const isDepartmentRequired = formData.Role !== "Department Manager";
+    const isDepartmentValid = !isDepartmentRequired || formData.Department?.trim();
+
+    return allRequiredFieldsFilled && isDepartmentValid;
   };
 
   const roleOptions = [
@@ -104,11 +120,21 @@ export default function AddUser() {
         <TextInputField
           id="Email"
           label="Email"
-                      type="email"
-                      placeholder="Enter email address"
+          type="email"
+          placeholder="Enter email address"
           required={true}
           icon={Mail}
           iconColor="text-brand-blue-400"
+        />
+
+        <TextInputField
+          id="PhoneNumber"
+          label="Phone Number"
+          type="tel"
+          placeholder="Enter phone number"
+          required={true}
+          icon={Phone}
+          iconColor="text-brand-green-400"
         />
 
         <SelectField
@@ -125,6 +151,7 @@ export default function AddUser() {
           id="Department"
           label="Department"
           placeholder="Select department"
+          required={(formData) => formData?.Role !== "Department Manager"}
           options={departmentOptions}
           icon={Building}
           iconColor="text-brand-green-400"

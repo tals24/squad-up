@@ -15,13 +15,16 @@ export function TextInputField({
   required = false, 
   type = "text",
   icon: Icon,
-  iconColor = "text-brand-blue"
+  iconColor = "text-brand-blue",
+  formData // Added to support conditional requirements
 }) {
+  // Handle conditional requirements
+  const isRequired = typeof required === 'function' ? required(formData) : required;
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
         {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
-        {label} {required && "*"}
+        {label} {isRequired && "*"}
       </Label>
       <Input
         id={id}
@@ -30,7 +33,7 @@ export function TextInputField({
         onChange={(e) => onChange(id, e.target.value)}
         placeholder={placeholder}
         className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20"
-        required={required}
+        required={isRequired}
       />
     </div>
   );
@@ -48,13 +51,16 @@ export function SelectField({
   placeholder, 
   required = false,
   icon: Icon,
-  iconColor = "text-brand-blue"
+  iconColor = "text-brand-blue",
+  formData // Added to support conditional requirements
 }) {
+  // Handle conditional requirements
+  const isRequired = typeof required === 'function' ? required(formData) : required;
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
         {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
-        {label} {required && "*"}
+        {label} {isRequired && "*"}
       </Label>
       <Select value={value} onValueChange={(newValue) => onChange(id, newValue)}>
         <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
