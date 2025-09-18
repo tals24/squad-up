@@ -23,6 +23,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageLayout, PageHeader, SearchFilter, DataCard, LoadingState, EmptyState } from "@/components/ui/design-system-components";
 import { useData } from "../components/DataContext";
 
 // --- Game Stats Rotator Component ---
@@ -311,96 +312,71 @@ export default function GamesSchedule() {
   const displayedGames = getFilteredGames();
 
   if (isDataLoading) {
-    return (
-      <div className="p-6 md:p-8 bg-slate-900 min-h-screen">
-        <div className="max-w-6xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-slate-700 rounded w-1/3"></div>
-            <div className="grid gap-6">
-              {[1,2,3,4,5].map(i => (
-                <div key={i} className="h-32 bg-slate-800 rounded-xl shadow-sm"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading Mission Data..." />;
   }
 
   if (error) {
     return (
-      <div className="p-6 md:p-8 bg-slate-900 min-h-screen">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/25">
-            <Activity className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-xl font-bold mb-2 text-white">Mission Data Unavailable</h3>
-          <p className="text-slate-400 mb-3">There was an issue loading the schedule data.</p>
-          <p className="text-sm text-red-400">{error.message || error.toString()}</p>
-        </div>
-      </div>
+      <PageLayout>
+        <EmptyState
+          icon={Activity}
+          title="Mission Data Unavailable"
+          message={`There was an issue loading the schedule data: ${error.message || error.toString()}`}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 bg-slate-900 min-h-screen">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Mission <span className="text-cyan-400">Schedule</span>
-            </h1>
-            <p className="text-slate-400 text-lg font-mono">
-              Tactical Operations Command Center
-            </p>
-          </div>
-        </div>
+    <PageLayout maxWidth="max-w-6xl">
+      {/* Header */}
+      <PageHeader
+        title="Mission"
+        accentWord="Schedule"
+        subtitle="Tactical Operations Command Center"
+      />
 
         {/* Control Panel (Filters) */}
-        <Card className="shadow-2xl border border-slate-700 bg-slate-800/70 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Filter className="w-5 h-5 text-cyan-400" />
-              Mission Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-cyan-400" />
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white hover:bg-slate-600 focus:border-cyan-400">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="all" className="text-white focus:bg-slate-600">All Missions</SelectItem>
-                    {availableStatuses.map(status => (
-                      <SelectItem key={status} value={status} className="text-white focus:bg-slate-600">
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* New Result Filter */}
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-cyan-400" />
-                <Select value={resultFilter} onValueChange={setResultFilter}>
-                  <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white hover:bg-slate-600 focus:border-cyan-400">
-                    <SelectValue placeholder="Filter by result" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    <SelectItem value="all" className="text-white focus:bg-slate-600">All Results</SelectItem>
-                    <SelectItem value="win" className="text-white focus:bg-slate-600 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-green-400 mr-1"/>Wins</SelectItem>
-                    <SelectItem value="loss" className="text-white focus:bg-slate-600 flex items-center gap-2"><TrendingDown className="w-4 h-4 text-red-400 mr-1"/>Losses</SelectItem>
-                    <SelectItem value="draw" className="text-white focus:bg-slate-600 flex items-center gap-2"><Minus className="w-4 h-4 text-yellow-400 mr-1"/>Draws</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <DataCard
+          title="Mission Filters"
+          titleIcon={<Filter className="w-5 h-5 text-cyan-400" />}
+          contentClassName="p-6"
+          headerClassName="pb-4"
+        >
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-cyan-400" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600 focus:border-cyan-400">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="all" className="text-white focus:bg-slate-700 hover:bg-slate-700">All Missions</SelectItem>
+                  {availableStatuses.map(status => (
+                    <SelectItem key={status} value={status} className="text-white focus:bg-slate-700 hover:bg-slate-700">
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
+            {/* Result Filter */}
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-cyan-400" />
+              <Select value={resultFilter} onValueChange={setResultFilter}>
+                <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600 focus:border-cyan-400">
+                  <SelectValue placeholder="Filter by result" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="all" className="text-white focus:bg-slate-700 hover:bg-slate-700">All Results</SelectItem>
+                  <SelectItem value="win" className="text-white focus:bg-slate-700 hover:bg-slate-700">Wins</SelectItem>
+                  <SelectItem value="loss" className="text-white focus:bg-slate-700 hover:bg-slate-700">Losses</SelectItem>
+                  <SelectItem value="draw" className="text-white focus:bg-slate-700 hover:bg-slate-700">Draws</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </DataCard>
 
         {/* Games Grid */}
         <div className="space-y-4">
@@ -480,22 +456,17 @@ export default function GamesSchedule() {
               </Link>
             )})
           ) : (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gradient-to-r from-slate-700 to-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl border border-slate-600">
-                <Calendar className="w-10 h-10 text-slate-500" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">No Missions Scheduled</h3>
-              <p className="text-slate-400 mb-4">
-                {statusFilter !== "all" || resultFilter !== "all"
+            <EmptyState
+              icon={Calendar}
+              title="No Missions Scheduled"
+              message={
+                statusFilter !== "all" || resultFilter !== "all"
                   ? "Adjust mission parameters to view available operations." 
                   : "No tactical operations found in the system database."
-                }
-              </p>
-              <div className="w-full max-w-md mx-auto h-1 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent rounded-full"></div>
-            </div>
+              }
+            />
           )}
         </div>
-      </div>
-    </div>
+    </PageLayout>
   );
 }
