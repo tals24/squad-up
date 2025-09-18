@@ -487,7 +487,7 @@ export default function PlayersOptimized() {
                 <FormField label="Team">
                   <Select value={selectedTeam} onValueChange={setSelectedTeam}>
                     <SelectTrigger>
-                      <SelectValue placeholder="All Teams" />
+                      <SelectValue placeholder="Select Team" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Teams</SelectItem>
