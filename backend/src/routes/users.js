@@ -1,14 +1,15 @@
 const express = require('express');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { requireRole } = require('../middleware/auth');
 const User = require('../models/User');
 
 const router = express.Router();
 
 // Get all users (Admin and Department Manager only)
-router.get('/', authenticateToken, requireRole(['Admin', 'Department Manager']), async (req, res) => {
+router.get('/', authenticateJWT, requireRole(['Admin', 'Department Manager']), async (req, res) => {
   try {
     const users = await User.find()
-      .select('-firebaseUid')
+      .select('-password')
       .sort({ fullName: 1 });
 
     res.json({
@@ -22,9 +23,9 @@ router.get('/', authenticateToken, requireRole(['Admin', 'Department Manager']),
 });
 
 // Get user by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-firebaseUid');
+    const user = await User.findById(req.params.id).select('-password');
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -41,7 +42,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new user (Admin only)
-router.post('/', authenticateToken, requireRole(['Admin']), async (req, res) => {
+router.post('/', authenticateJWT, requireRole(['Admin']), async (req, res) => {
   try {
     const { email, fullName, role, department, phoneNumber } = req.body;
 
@@ -52,7 +53,7 @@ router.post('/', authenticateToken, requireRole(['Admin']), async (req, res) => 
     }
 
     const user = new User({
-      firebaseUid: 'temp', // Will be updated when they first login
+      // Password will be set via separate endpoint or admin panel
       email,
       fullName,
       role: role || 'Coach',
@@ -81,7 +82,7 @@ router.post('/', authenticateToken, requireRole(['Admin']), async (req, res) => 
 });
 
 // Update user (Admin only)
-router.put('/:id', authenticateToken, requireRole(['Admin']), async (req, res) => {
+router.put('/:id', authenticateJWT, requireRole(['Admin']), async (req, res) => {
   try {
     const { fullName, role, department, phoneNumber } = req.body;
 
@@ -89,7 +90,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), async (req, res) =
       req.params.id,
       { fullName, role, department, phoneNumber },
       { new: true }
-    ).select('-firebaseUid');
+    ).select('-password');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -106,7 +107,7 @@ router.put('/:id', authenticateToken, requireRole(['Admin']), async (req, res) =
 });
 
 // Delete user (Admin only)
-router.delete('/:id', authenticateToken, requireRole(['Admin']), async (req, res) => {
+router.delete('/:id', authenticateJWT, requireRole(['Admin']), async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
 

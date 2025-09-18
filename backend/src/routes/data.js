@@ -91,7 +91,7 @@ router.get('/all', authenticateJWT, async (req, res) => {
 });
 
 // Airtable sync equivalent (for backward compatibility)
-router.post('/airtable-sync', authenticateToken, async (req, res) => {
+router.post('/airtable-sync', authenticateJWT, async (req, res) => {
   try {
     const { action, tableName, recordId, data } = req.body;
 

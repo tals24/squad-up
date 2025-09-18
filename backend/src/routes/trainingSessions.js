@@ -1,11 +1,12 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const TrainingSession = require('../models/TrainingSession');
 
 const router = express.Router();
 
 // Get all training sessions
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     let query = {};
@@ -33,7 +34,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get training session by ID
-router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const trainingSession = await TrainingSession.findById(req.params.id)
       .populate('team', 'teamName season division');
@@ -53,7 +54,7 @@ router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Create new training session
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { date, team, status, weekIdentifier, notes, duration, location, weather } = req.body;
 
@@ -90,7 +91,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update training session
-router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const { date, status, weekIdentifier, notes, duration, location, weather } = req.body;
 
@@ -115,7 +116,7 @@ router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Delete training session
-router.delete('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const trainingSession = await TrainingSession.findByIdAndDelete(req.params.id);
 

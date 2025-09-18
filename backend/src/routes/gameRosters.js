@@ -1,11 +1,12 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const GameRoster = require('../models/GameRoster');
 
 const router = express.Router();
 
 // Get all game rosters
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const gameRosters = await GameRoster.find()
       .populate('game', 'gameTitle team')
@@ -23,7 +24,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get game roster by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const gameRoster = await GameRoster.findById(req.params.id)
       .populate('game', 'gameTitle team')
@@ -44,7 +45,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new game roster entry
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { game, player, status } = req.body;
 
@@ -69,7 +70,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update game roster
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -96,7 +97,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete game roster
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const gameRoster = await GameRoster.findByIdAndDelete(req.params.id);
 

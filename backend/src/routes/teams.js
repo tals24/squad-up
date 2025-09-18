@@ -1,12 +1,13 @@
 const express = require('express');
-const { authenticateToken, requireRole, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { requireRole, checkTeamAccess } = require('../middleware/auth');
 const Team = require('../models/Team');
 const User = require('../models/User');
 
 const router = express.Router();
 
 // Get all teams (with role-based filtering)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     let query = {};
@@ -36,7 +37,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get team by ID
-router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const team = await Team.findById(req.params.id)
       .populate('coach', 'fullName email role')
@@ -58,7 +59,7 @@ router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Create new team (Admin and Department Manager only)
-router.post('/', authenticateToken, requireRole(['Admin', 'Department Manager']), async (req, res) => {
+router.post('/', authenticateJWT, requireRole(['Admin', 'Department Manager']), async (req, res) => {
   try {
     const { teamName, season, division, coach, divisionManager, departmentManager } = req.body;
 
@@ -97,7 +98,7 @@ router.post('/', authenticateToken, requireRole(['Admin', 'Department Manager'])
 });
 
 // Update team (Admin, Department Manager, and assigned Coach)
-router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const { teamName, season, division, coach, divisionManager, departmentManager } = req.body;
 
@@ -125,7 +126,7 @@ router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Delete team (Admin and Department Manager only)
-router.delete('/:id', authenticateToken, requireRole(['Admin', 'Department Manager']), async (req, res) => {
+router.delete('/:id', authenticateJWT, requireRole(['Admin', 'Department Manager']), async (req, res) => {
   try {
     const team = await Team.findByIdAndDelete(req.params.id);
 

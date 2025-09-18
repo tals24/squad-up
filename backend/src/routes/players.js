@@ -1,12 +1,13 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const Player = require('../models/Player');
 const Team = require('../models/Team');
 
 const router = express.Router();
 
 // Get all players (with role-based filtering)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     let query = {};
@@ -34,7 +35,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get player by ID
-router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const player = await Player.findById(req.params.id)
       .populate('team', 'teamName season division');
@@ -54,7 +55,7 @@ router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Create new player
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email } = req.body;
 
@@ -90,7 +91,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update player
-router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email } = req.body;
 
@@ -115,7 +116,7 @@ router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Delete player
-router.delete('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const player = await Player.findByIdAndDelete(req.params.id);
 

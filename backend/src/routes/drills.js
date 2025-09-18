@@ -1,11 +1,11 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
 const Drill = require('../models/Drill');
 
 const router = express.Router();
 
 // Get all drills
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const drills = await Drill.find()
       .populate('author', 'fullName role')
@@ -22,7 +22,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get drill by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const drill = await Drill.findById(req.params.id)
       .populate('author', 'fullName role');
@@ -42,7 +42,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new drill
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { drillName, description, category, targetAgeGroup, videoLink, instructions, details, layoutData, duration, playersRequired, equipment } = req.body;
 
@@ -75,7 +75,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update drill
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { drillName, description, category, targetAgeGroup, videoLink, instructions, details, layoutData, duration, playersRequired, equipment } = req.body;
 
@@ -100,7 +100,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete drill
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const drill = await Drill.findByIdAndDelete(req.params.id);
 
