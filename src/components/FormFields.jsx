@@ -16,10 +16,15 @@ export function TextInputField({
   type = "text",
   icon: Icon,
   iconColor = "text-brand-blue",
-  formData // Added to support conditional requirements
+  formData, // Added to support conditional requirements
+  handleChange // Alternative prop name from GenericAddPage
 }) {
   // Handle conditional requirements
   const isRequired = typeof required === 'function' ? required(formData) : required;
+  
+  // Use the correct value and onChange function
+  const fieldValue = value || (formData && formData[id]) || '';
+  const fieldOnChange = onChange || handleChange;
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
@@ -29,8 +34,8 @@ export function TextInputField({
       <Input
         id={id}
         type={type}
-        value={value}
-        onChange={(e) => onChange(id, e.target.value)}
+        value={fieldValue}
+        onChange={(e) => fieldOnChange(id, e.target.value)}
         placeholder={placeholder}
         className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20"
         required={isRequired}
@@ -52,17 +57,22 @@ export function SelectField({
   required = false,
   icon: Icon,
   iconColor = "text-brand-blue",
-  formData // Added to support conditional requirements
+  formData, // Added to support conditional requirements
+  handleChange // Alternative prop name from GenericAddPage
 }) {
   // Handle conditional requirements
   const isRequired = typeof required === 'function' ? required(formData) : required;
+  
+  // Use the correct value and onChange function
+  const fieldValue = value || (formData && formData[id]);
+  const fieldOnChange = onChange || handleChange;
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
         {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
         {label} {isRequired && "*"}
       </Label>
-      <Select value={value} onValueChange={(newValue) => onChange(id, newValue)}>
+      <Select value={fieldValue} onValueChange={(newValue) => fieldOnChange(id, newValue)}>
         <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
