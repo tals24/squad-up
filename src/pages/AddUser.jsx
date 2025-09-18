@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { User } from "@/api/entities";
 import { Link } from "react-router-dom";
@@ -13,20 +12,11 @@ import {
   Building,
   Users
 } from "lucide-react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  Button,
-  Input,
-  Label,
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/design-system-components";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { airtableSync } from "@/api/functions";
 import ConfirmationToast from "../components/ConfirmationToast";
 
@@ -109,11 +99,11 @@ export default function AddUser() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary p-6 md:p-8">
+      <div className="min-h-screen bg-background p-6 md:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-bg-secondary rounded w-1/3"></div>
-            <div className="h-96 bg-bg-secondary rounded-xl shadow-sm"></div>
+            <div className="h-8 bg-slate-700 rounded w-1/3"></div>
+            <div className="h-96 bg-slate-800 rounded-xl shadow-sm"></div>
           </div>
         </div>
       </div>
@@ -122,37 +112,37 @@ export default function AddUser() {
 
   return (
     <>
-      <div className="min-h-screen bg-bg-primary p-6 md:p-8 relative">
+      <div className="min-h-screen bg-background p-6 md:p-8 relative">
         {/* Ambient effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 via-transparent to-secondary-50/50 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>
         
         <div className="max-w-2xl mx-auto space-y-8 relative">
           {/* Header */}
           <div className="flex items-center gap-4">
             <Link to={createPageUrl("Dashboard")}>
-              <Button variant="outline" size="icon" className="border-border-custom text-text-primary hover:bg-bg-secondary hover:border-accent-primary transition-all duration-300">
+              <Button variant="outline" size="icon" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-cyan-500 transition-all duration-300">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
-                Add New <span className="text-accent-primary">User</span>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                Add New <span className="text-cyan-400">User</span>
               </h1>
-              <p className="text-text-secondary text-lg font-mono">Create a new user account</p>
+              <p className="text-slate-400 text-lg font-mono">Create a new user account</p>
             </div>
           </div>
 
           {/* Form Card */}
-          <Card className="shadow-2xl border border-accent-primary/20 bg-bg-secondary/70 backdrop-blur-sm relative overflow-hidden">
+          <Card className="shadow-2xl border border-cyan-500/20 bg-slate-800/70 backdrop-blur-sm relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
             
-            <CardHeader className="border-b border-border-custom/50 relative">
+            <CardHeader className="border-b border-slate-700/50 relative">
               <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-cyan-400/0"></div>
-              <CardTitle className="text-xl font-bold text-text-primary flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-accent-secondary/20">
-                  <Shield className="w-5 h-5 text-text-primary" />
+              <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
+                  <Shield className="w-5 h-5 text-white" />
                 </div>
                 User Information
               </CardTitle>
@@ -161,8 +151,8 @@ export default function AddUser() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-text-primary font-medium flex items-center gap-2">
-                      <UserIcon className="w-4 h-4 text-accent-primary" />
+                    <Label htmlFor="fullName" className="text-slate-300 font-medium flex items-center gap-2">
+                      <UserIcon className="w-4 h-4 text-cyan-400" />
                       Full Name *
                     </Label>
                     <Input
@@ -170,14 +160,14 @@ export default function AddUser() {
                       value={formData.FullName}
                       onChange={(e) => handleChange('FullName', e.target.value)}
                       placeholder="Enter full name"
-                      className="bg-bg-secondary border-border-custom text-text-primary placeholder-text-secondary focus:border-accent-primary focus:ring-accent-primary/20"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-text-primary font-medium flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-accent-primary" />
+                    <Label htmlFor="email" className="text-slate-300 font-medium flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-blue-400" />
                       Email *
                     </Label>
                     <Input
@@ -186,56 +176,56 @@ export default function AddUser() {
                       value={formData.Email}
                       onChange={(e) => handleChange('Email', e.target.value)}
                       placeholder="Enter email address"
-                      className="bg-bg-secondary border-border-custom text-text-primary placeholder-text-secondary focus:border-accent-primary focus:ring-accent-primary/20"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="role" className="text-text-primary font-medium flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-accent-secondary" />
+                    <Label htmlFor="role" className="text-slate-300 font-medium flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-400" />
                       Role *
                     </Label>
                     <Select value={formData.Role} onValueChange={(value) => handleChange('Role', value)}>
-                      <SelectTrigger className="bg-bg-secondary border-border-custom text-text-primary focus:border-accent-primary focus:ring-accent-primary/20">
+                      <SelectTrigger className="bg-background border-border text-foreground focus:border-cyan-400 focus:ring-cyan-400/20">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
-                      <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
-                        <SelectItem value="Coach" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Coach</SelectItem>
-                        <SelectItem value="Division Manager" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Division Manager</SelectItem>
-                        <SelectItem value="Department Manager" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Department Manager</SelectItem>
+                      <SelectContent className="bg-background border-border text-foreground">
+                        <SelectItem value="Coach" className="text-white focus:bg-slate-600 hover:bg-slate-600">Coach</SelectItem>
+                        <SelectItem value="Division Manager" className="text-white focus:bg-slate-600 hover:bg-slate-600">Division Manager</SelectItem>
+                        <SelectItem value="Department Manager" className="text-white focus:bg-slate-600 hover:bg-slate-600">Department Manager</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="department" className="text-text-primary font-medium flex items-center gap-2">
-                      <Building className="w-4 h-4 text-success" />
+                    <Label htmlFor="department" className="text-slate-300 font-medium flex items-center gap-2">
+                      <Building className="w-4 h-4 text-green-400" />
                       Department
                     </Label>
                     <Select value={formData.Department} onValueChange={(value) => handleChange('Department', value)}>
-                      <SelectTrigger className="bg-bg-secondary border-border-custom text-text-primary focus:border-accent-primary focus:ring-accent-primary/20">
+                      <SelectTrigger className="bg-background border-border text-foreground focus:border-cyan-400 focus:ring-cyan-400/20">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
-                      <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
-                        <SelectItem value="Senior Division" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Senior Division</SelectItem>
-                        <SelectItem value="Middle Division" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Middle Division</SelectItem>
-                        <SelectItem value="Youth Division" className="text-text-primary focus:bg-bg-secondary hover:bg-bg-secondary">Youth Division</SelectItem>
+                      <SelectContent className="bg-background border-border text-foreground">
+                        <SelectItem value="Senior Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Senior Division</SelectItem>
+                        <SelectItem value="Middle Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Middle Division</SelectItem>
+                        <SelectItem value="Youth Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Youth Division</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-6 border-t border-border-custom">
+                <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
                   <Link to={createPageUrl("Dashboard")}>
-                    <Button variant="outline" className="border-border-custom text-text-primary hover:bg-bg-secondary hover:border-accent-primary transition-all duration-300">
+                    <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-cyan-500 transition-all duration-300">
                       Cancel
                     </Button>
                   </Link>
                   <Button
                     type="submit"
                     disabled={isSaving || !formData.FullName || !formData.Email}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-text-primary shadow-lg shadow-accent-primary/20 hover:shadow-accent-primary/30 transition-all duration-300"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all duration-300"
                   >
                     {isSaving ? (
                       <>
