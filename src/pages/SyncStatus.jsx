@@ -140,13 +140,12 @@ export default function SyncStatus() {
             </div>
             
             {lastSync && (
-              <div className="flex items-center gap-2 mt-4 text-sm text-text-secondary">
+              <div className="flex items-center gap-2 mt-4 text-sm text-slate-400">
                 <Clock className="w-4 h-4" />
                 <span>Last checked: {lastSync.toLocaleString()}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DataCard>
 
         {/* Tables Status */}
         {tables.length > 0 && (
