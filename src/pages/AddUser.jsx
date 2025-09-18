@@ -5,7 +5,8 @@ import {
   Shield,
   Mail,
   Building,
-  Phone
+  Phone,
+  Lock
 } from "lucide-react";
 import { airtableSync } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
@@ -20,7 +21,9 @@ export default function AddUser() {
     Email: "",
     Role: "Coach",
     PhoneNumber: "",
-    Department: ""
+    Department: "",
+    Password: "",
+    ConfirmPassword: ""
   };
 
   useEffect(() => {
@@ -39,23 +42,26 @@ export default function AddUser() {
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Users',
-        recordData: {
-          ...formData,
-          PhoneNumber: formData.PhoneNumber || undefined,
-          Department: formData.Department || undefined
-        }
+      // Remove ConfirmPassword from submission data
+      const { ConfirmPassword, ...submitData } = formData;
+      
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData)
       });
 
-      if (response.data?.success) {
+      const data = await response.json();
+
+      if (data.success) {
         return {
           success: true,
-          message: `${formData.FullName} has been added to the system and can now access SquadUp.`
+          message: data.message || `${formData.FullName} has been added to the system and can now access SquadUp.`
         };
       } else {
-        throw new Error(response.data?.error || "Failed to save user");
+        throw new Error(data.error || "Failed to save user");
       }
     } catch (error) {
       throw new Error(error.message);
@@ -68,7 +74,9 @@ export default function AddUser() {
       FullName: formData.FullName?.trim(),
       Email: formData.Email?.trim(),
       Role: formData.Role?.trim(),
-      PhoneNumber: formData.PhoneNumber?.trim()
+      PhoneNumber: formData.PhoneNumber?.trim(),
+      Password: formData.Password?.trim(),
+      ConfirmPassword: formData.ConfirmPassword?.trim()
     };
 
     // Check if all required fields are filled
@@ -78,7 +86,11 @@ export default function AddUser() {
     const isDepartmentRequired = formData.Role !== "Department Manager";
     const isDepartmentValid = !isDepartmentRequired || formData.Department?.trim();
 
-    return allRequiredFieldsFilled && isDepartmentValid;
+    // Password validation
+    const isPasswordValid = formData.Password && formData.Password.length >= 6;
+    const doPasswordsMatch = formData.Password === formData.ConfirmPassword;
+
+    return allRequiredFieldsFilled && isDepartmentValid && isPasswordValid && doPasswordsMatch;
   };
 
   const roleOptions = [
@@ -107,7 +119,7 @@ export default function AddUser() {
       isFormValid={isFormValid}
       isLoading={isLoading}
     >
-      <FormGrid columns={2}>
+      <FormGrid columns={1}>
         <TextInputField
           id="FullName"
           label="Full Name"
@@ -135,6 +147,26 @@ export default function AddUser() {
           required={true}
           icon={Phone}
           iconColor="text-brand-green-400"
+        />
+
+        <TextInputField
+          id="Password"
+          label="Password"
+          type="password"
+          placeholder="Enter password (min 6 characters)"
+          required={true}
+          icon={Lock}
+          iconColor="text-brand-red-400"
+        />
+
+        <TextInputField
+          id="ConfirmPassword"
+          label="Confirm Password"
+          type="password"
+          placeholder="Confirm password"
+          required={true}
+          icon={Lock}
+          iconColor="text-brand-red-400"
         />
 
         <SelectField
