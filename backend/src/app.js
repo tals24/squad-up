@@ -6,7 +6,6 @@ const morgan = require('morgan');
 
 // Import configurations
 const connectDB = require('./config/database');
-const { initializeFirebaseAdmin } = require('./config/firebase-admin');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -24,9 +23,6 @@ const dataRoutes = require('./routes/data');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Initialize Firebase Admin
-initializeFirebaseAdmin();
 
 // Connect to MongoDB
 connectDB();

@@ -35,6 +35,7 @@ import {
   FormField,
   Grid
 } from "@/components/ui/design-system-components";
+import { PageLayout, PageHeader, SearchFilter, LoadingState, StandardButton } from "@/components/ui/design-system-components";
 import { 
   AnimatedButton, 
   AnimatedCard, 
@@ -229,133 +230,64 @@ export default function Players() {
     return team?.TeamName || team?.Name || "Unknown Team";
   };
 
-  if (isContextLoading) {
-    return (
-      <PageTransition>
-        <Section padding="lg" className="bg-gradient-to-br from-primary-50 to-secondary-50 min-h-screen">
-          <Container size="xl">
-            <motion.div 
-              className="space-y-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="text-center">
-                <LoadingSpinner size="lg" />
-                <Text className="mt-4 text-neutral-600">Loading players...</Text>
-              </div>
-              
-              <StaggerContainer>
-                <Grid cols={4} gap="md">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                    <StaggerItem key={i}>
-                      <div className="h-48 bg-neutral-200 rounded-xl animate-pulse" />
-                    </StaggerItem>
-                  ))}
-                </Grid>
-              </StaggerContainer>
-            </motion.div>
-          </Container>
-        </Section>
-      </PageTransition>
-    );
+  if (isContextLoading || !currentUser) {
+    return <LoadingState message="Loading players..." />;
   }
 
   return (
     <PageTransition>
-      <Section padding="lg" className="bg-gradient-to-br from-primary-50 to-secondary-50 min-h-screen">
-        <Container size="xl" className="space-y-8">
+      <PageLayout>
         {/* Header */}
-          <motion.div 
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
-          >
-          <div>
-              <Heading level={1} className="mb-2">
-              My Players
-              </Heading>
-              <Text variant="large" className="text-neutral-600">
-              Manage and track player development
-              </Text>
-          </div>
-          <Link to={createPageUrl("AddPlayer")}>
-              <AnimatedButton variant="primary" size="md">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Player
-              </AnimatedButton>
-          </Link>
-          </motion.div>
+        <PageHeader
+          title="My"
+          accentWord="Players"
+          subtitle="Manage and track player development"
+          actionButton={
+            <Link to={createPageUrl("AddPlayer")}>
+              <StandardButton 
+                variant="primary"
+                icon={<Plus className="w-5 h-5" />}
+              >
+                Add Player
+              </StandardButton>
+            </Link>
+          }
+        />
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.4, 0.0, 0.2, 1] }}
-        >
-          <Card variant="elevated">
-          <CardContent className="p-6">
-              <Grid cols={3} gap="md" className="items-end">
-                <FormField label="Search Players">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 w-4 h-4" />
-                    <AnimatedInput
-                  placeholder="Search players..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                      {...createAriaProps({
-                        label: 'Search players by name',
-                        describedBy: 'search-help'
-                      })}
-                />
-              </div>
-                  <Text id="search-help" variant="caption" className="mt-1 text-neutral-500">
-                    Search by player name
-                  </Text>
-                </FormField>
-              
-              <FormField label="Position">
-              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-                  <SelectTrigger>
-                  <SelectValue placeholder="All Positions" />
-                </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Positions</SelectItem>
-                    <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
-                    <SelectItem value="Defender">Defender</SelectItem>
-                    <SelectItem value="Midfielder">Midfielder</SelectItem>
-                    <SelectItem value="Forward">Forward</SelectItem>
-                </SelectContent>
-              </Select>
-              </FormField>
-              <FormField label="Team">
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Team" />
-                </SelectTrigger>
-                  <SelectContent>
-                  {/* "All Teams" option only for admins */}
-                    {currentUser?.role === 'admin' && <SelectItem value="all">All Teams</SelectItem>}
-                  {filteredTeamsForDropdown.map(team => (
-                      <SelectItem key={team.id} value={team.id}>
-                      {team.TeamName || team.Name}
-                    </SelectItem>
-                  ))}
-                  {/* Show a message if no teams are available for non-admin user */}
-                  {currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0 && (
-                      <SelectItem value="no-teams" disabled>
-                      No teams assigned
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              </FormField>
-            </Grid>
-          </CardContent>
-        </Card>
-        </motion.div>
+        <SearchFilter
+          searchValue={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search players..."
+          filters={[
+            {
+              value: selectedPosition,
+              onChange: setSelectedPosition,
+              placeholder: "All Positions",
+              options: [
+                { value: "all", label: "All Positions" },
+                { value: "Goalkeeper", label: "Goalkeeper" },
+                { value: "Defender", label: "Defender" },
+                { value: "Midfielder", label: "Midfielder" },
+                { value: "Forward", label: "Forward" }
+              ]
+            },
+            {
+              value: selectedTeam,
+              onChange: setSelectedTeam,
+              placeholder: "Select Team",
+              options: [
+                ...(currentUser?.role === 'admin' ? [{ value: "all", label: "All Teams" }] : []),
+                ...filteredTeamsForDropdown.map(team => ({
+                  value: team.id,
+                  label: team.TeamName || team.Name
+                })),
+                ...(currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0 ? 
+                  [{ value: "no-teams", label: "No teams assigned", disabled: true }] : [])
+              ]
+            }
+          ]}
+        />
 
         {/* Players Grid */}
         <motion.div
@@ -533,8 +465,7 @@ export default function Players() {
             <ChevronRight className="w-4 h-4 ml-2" />
           </AnimatedButton>
         </motion.div>
-        </Container>
-      </Section>
+      </PageLayout>
     </PageTransition>
   );
 }

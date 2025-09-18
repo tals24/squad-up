@@ -1,11 +1,11 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
 const SessionDrill = require('../models/SessionDrill');
 
 const router = express.Router();
 
 // Get all session drills
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const sessionDrills = await SessionDrill.find()
       .populate('trainingSession', 'sessionTitle date team')
@@ -23,7 +23,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get session drill by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const sessionDrill = await SessionDrill.findById(req.params.id)
       .populate('trainingSession', 'sessionTitle date team')
@@ -44,7 +44,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new session drill
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { trainingSession, drill, sessionPart, smallGameNotes, duration, order, notes } = req.body;
 
@@ -73,7 +73,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update session drill
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { sessionPart, smallGameNotes, duration, order, notes } = req.body;
 
@@ -100,7 +100,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete session drill
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const sessionDrill = await SessionDrill.findByIdAndDelete(req.params.id);
 

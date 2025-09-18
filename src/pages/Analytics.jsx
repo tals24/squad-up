@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageLayout, PageHeader, DataCard, LoadingState, EmptyState } from "@/components/ui/design-system-components";
 import { airtableSync } from "@/api/functions";
 
 export default function Analytics() {
@@ -182,138 +183,101 @@ export default function Analytics() {
   const { filteredTeams } = getFilteredData();
 
   if (isLoading) {
-    return (
-      <div className="p-6 md:p-8 bg-bg-primary min-h-screen">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-bg-secondary rounded w-1/3"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="h-32 bg-bg-secondary rounded-xl shadow-sm"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading analytics data..." />;
   }
 
   return (
-    <div className="p-6 md:p-8 bg-bg-primary min-h-screen text-slate-100 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
-              Analytics <span className="text-accent-primary">Dashboard</span>
-            </h1>
-            <p className="text-text-secondary text-lg">
-              Performance insights and team statistics
-            </p>
-          </div>
-          {currentUser?.role !== 'Coach' && (
+    <PageLayout>
+      {/* Header */}
+      <PageHeader
+        title="Analytics"
+        accentWord="Dashboard"
+        subtitle="Performance insights and team statistics"
+        actionButton={
+          currentUser?.role !== 'Coach' && (
             <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-              <SelectTrigger className="w-48 bg-bg-secondary border-border-custom text-text-primary focus:border-accent-primary">
+              <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white focus:border-cyan-400">
                 <SelectValue placeholder="All Teams" />
               </SelectTrigger>
-              <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
-                <SelectItem value="all" className="focus:bg-bg-secondary">All Teams</SelectItem>
+              <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                <SelectItem value="all" className="focus:bg-slate-700 hover:bg-slate-700">All Teams</SelectItem>
                 {filteredTeams.map(team => (
-                  <SelectItem key={team.TeamID} value={team.TeamID} className="focus:bg-bg-secondary">
+                  <SelectItem key={team.TeamID} value={team.TeamID} className="focus:bg-slate-700 hover:bg-slate-700">
                     {team.TeamName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-        </div>
+          )
+        }
+      />
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm hover:shadow-accent-primary/30 hover:border-accent-primary transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-text-secondary">Average Rating</CardTitle>
-                <Target className="w-5 h-5 text-accent-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {analytics.averageRating}/5
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <span>Team performance</span>
-              </div>
-            </CardContent>
-          </Card>
+          <DataCard hover={true} className="hover:shadow-cyan-500/30 hover:border-cyan-500/50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-400">Average Rating</h3>
+              <Target className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {analytics.averageRating}/5
+            </div>
+            <div className="flex items-center text-sm text-slate-400">
+              <span>Team performance</span>
+            </div>
+          </DataCard>
 
-          <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm hover:shadow-accent-primary/30 hover:border-accent-primary transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-text-secondary">Total Goals</CardTitle>
-                <Trophy className="w-5 h-5 text-warning" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {analytics.totalGoals}
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <span>Goals scored</span>
-              </div>
-            </CardContent>
-          </Card>
+          <DataCard hover={true} className="hover:shadow-cyan-500/30 hover:border-cyan-500/50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-400">Total Goals</h3>
+              <Trophy className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {analytics.totalGoals}
+            </div>
+            <div className="flex items-center text-sm text-slate-400">
+              <span>Goals scored</span>
+            </div>
+          </DataCard>
 
-          <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm hover:shadow-accent-primary/30 hover:border-accent-primary transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-text-secondary">Total Assists</CardTitle>
-                <Users className="w-5 h-5 text-accent-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {analytics.totalAssists}
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <span>Assists made</span>
-              </div>
-            </CardContent>
-          </Card>
+          <DataCard hover={true} className="hover:shadow-cyan-500/30 hover:border-cyan-500/50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-400">Total Assists</h3>
+              <Users className="w-5 h-5 text-green-400" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {analytics.totalAssists}
+            </div>
+            <div className="flex items-center text-sm text-slate-400">
+              <span>Assists made</span>
+            </div>
+          </DataCard>
 
-          <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm hover:shadow-accent-primary/30 hover:border-accent-primary transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-text-secondary">Play Time</CardTitle>
-                <Activity className="w-5 h-5 text-accent-secondary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {Math.round(analytics.totalMinutes / 60)}h
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <span>Total minutes</span>
-              </div>
-            </CardContent>
-          </Card>
+          <DataCard hover={true} className="hover:shadow-cyan-500/30 hover:border-cyan-500/50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-400">Play Time</h3>
+              <Activity className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">
+              {Math.round(analytics.totalMinutes / 60)}h
+            </div>
+            <div className="flex items-center text-sm text-slate-400">
+              <span>Total minutes</span>
+            </div>
+          </DataCard>
         </div>
         
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Top Performers */}
           <div className="lg:col-span-2">
-            <Card className="shadow-xl border-border-custom bg-bg-secondary/70 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-text-primary flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-accent-primary" />
-                  Top Performers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <DataCard
+              title="Top Performers"
+              titleIcon={<TrendingUp className="w-6 h-6 text-cyan-400" />}
+            >
                 <div className="space-y-4">
                   {analytics.topPerformers.length > 0 ? (
                     analytics.topPerformers.map((performer, index) => (
-                      <div key={performer.player.id} className="flex items-center gap-4 p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+                      <div key={performer.player.id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-900/50 border border-slate-700 hover:shadow-md transition-all duration-200">
                         <div className="flex items-center gap-4">
                           {performer.player["Profile Image"] ? (
                             <img
@@ -364,12 +328,11 @@ export default function Analytics() {
                   ) : (
                     <div className="text-center py-8">
                       <TrendingUp className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-text-secondary">No performance data available yet</p>
+                      <p className="text-slate-400">No performance data available yet</p>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </DataCard>
           </div>
 
           {/* Position Breakdown */}
@@ -424,16 +387,15 @@ export default function Analytics() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-text-primary mb-2">
+                  <div className="text-4xl font-bold text-white mb-2">
                     {analytics.recentTrends}
                   </div>
-                  <p className="text-text-secondary">Reports in last 30 days</p>
+                  <p className="text-slate-400">Reports in last 30 days</p>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -1,49 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
+import React from "react";
 import {
   User as UserIcon,
   Shield,
   Calendar,
   Hash,
-  Trophy,
-  Target
+  Trophy
 } from "lucide-react";
 import { airtableSync } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
+/**
+ * Example: AddPlayer page using the GenericAddPage template
+ * This demonstrates how easy it is to create new "Add" pages
+ */
 export default function AddPlayer() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [teams, setTeams] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   const initialFormData = {
     FullName: "",
+    Position: "",
     KitNumber: "",
     DateOfBirth: "",
-    Position: "",
-    Team: "",
-    ProfileImageURL: ""
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const user = await User.me();
-      setCurrentUser(user);
-      
-      // Load teams for team selection
-      const teamsResponse = await airtableSync({ action: 'fetch', tableName: 'Teams' });
-      if (teamsResponse.data?.records) {
-        setTeams(teamsResponse.data.records);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-    }
-    setIsLoading(false);
+    Team: ""
   };
 
   const handleSubmit = async (formData) => {
@@ -51,18 +28,13 @@ export default function AddPlayer() {
       const response = await airtableSync({
         action: 'create',
         tableName: 'Players',
-        recordData: {
-          ...formData,
-          Team: formData.Team ? [formData.Team] : undefined,
-          DateOfBirth: formData.DateOfBirth || undefined,
-          ProfileImageURL: formData.ProfileImageURL || undefined,
-        }
+        recordData: formData
       });
 
       if (response.data?.success) {
         return {
           success: true,
-          message: `${formData.FullName} has been added to the squad and is now ready to start training!`
+          message: `${formData.FullName} has been added to the squad successfully!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save player");
@@ -85,25 +57,24 @@ export default function AddPlayer() {
     { value: "Forward", label: "Forward" }
   ];
 
-  // Create team options from loaded teams
-  const teamOptions = teams.map(team => ({
-    value: team.id,
-    label: team.TeamName || team.Name
-  }));
+  const teamOptions = [
+    { value: "team1", label: "Senior Team" },
+    { value: "team2", label: "Youth Team" },
+    { value: "team3", label: "Academy Team" }
+  ];
 
   return (
     <GenericAddPage
       entityName="Player"
       entityDisplayName="Player"
       description="Add a new player to the squad"
-      icon={Target}
+      icon={Trophy}
       titleIcon={UserIcon}
       titleColor="text-brand-green"
       backUrl="Players"
       initialFormData={initialFormData}
       onSubmit={handleSubmit}
       isFormValid={isFormValid}
-      isLoading={isLoading}
     >
       <FormGrid columns={2}>
         <TextInputField
@@ -139,26 +110,21 @@ export default function AddPlayer() {
           id="DateOfBirth"
           label="Date of Birth"
           type="date"
+          required={false}
           icon={Calendar}
           iconColor="text-brand-green-400"
         />
 
-        <SelectField
-          id="Team"
-          label="Team"
-          placeholder="Select team"
-          options={teamOptions}
-          icon={Trophy}
-          iconColor="text-brand-red-400"
-        />
-
-        <TextInputField
-          id="ProfileImageURL"
-          label="Profile Image URL"
-          placeholder="Enter image URL (optional)"
-          icon={UserIcon}
-          iconColor="text-brand-blue-400"
-        />
+        <FormGrid columns={1}>
+          <SelectField
+            id="Team"
+            label="Team"
+            placeholder="Select team"
+            options={teamOptions}
+            icon={Trophy}
+            iconColor="text-brand-red-400"
+          />
+        </FormGrid>
       </FormGrid>
     </GenericAddPage>
   );

@@ -106,3 +106,12 @@ export const Grid = React.forwardRef(({
 });
 
 Grid.displayName = 'Grid';
+
+// Export our new shared components
+export { default as PageLayout } from './PageLayout';
+export { default as PageHeader } from './PageHeader';
+export { default as SearchFilter } from './SearchFilter';
+export { default as StandardButton } from './StandardButton';
+export { default as DataCard } from './DataCard';
+export { default as LoadingState } from './LoadingState';
+export { default as EmptyState } from './EmptyState';

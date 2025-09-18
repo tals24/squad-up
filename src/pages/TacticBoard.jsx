@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { User } from "@/api/entities";
 import {
@@ -13,7 +12,9 @@ import {
   PlusCircle,
   Edit3,
   Check,
-  Search
+  Search,
+  Plus, // Added Plus icon
+  Loader2 // Added Loader2 icon
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export default function TacticBoard() {
     GeneralRating: 3,
     GeneralNotes: ""
   });
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Used for saving performance data
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationConfig, setConfirmationConfig] = useState({});
 
@@ -51,10 +52,9 @@ export default function TacticBoard() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [formation, setFormation] = useState({});
-  const [customFormations, setCustomFormations] = useState([]); // This state is now primarily for *newly created* templates before they are saved to Airtable. Saved ones are in 'savedFormations'.
-  const [showFormationModal, setShowFormationModal] = useState(false);
+  const [customFormations, setCustomFormations] = useState([]);
+  const [showFormationModal, setShowFormationModal] = useState(false); // Controls FormationEditorModal
 
-  // New states for position assignment
   const [isEditingFormation, setIsEditingFormation] = useState(false);
   const [editingFormationData, setEditingFormationData] = useState(null);
   const [showPositionModal, setShowPositionModal] = useState(false);
@@ -62,19 +62,26 @@ export default function TacticBoard() {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [formationToDelete, setFormationToDelete] = useState(null);
 
-  // New states for formation saving/loading
-  const [showSaveFormationModal, setShowSaveFormationModal] = useState(false);
+  const [showSaveFormationModal, setShowSaveFormationModal] = useState(false); // Controls Save Board Layout modal
   const [saveFormationName, setSaveFormationName] = useState("");
   const [savedFormations, setSavedFormations] = useState([]);
-  const [isSavingFormation, setIsSavingFormation] = useState(false);
+  const [isSavingFormation, setIsSavingFormation] = useState(false); // Used for saving actual formation templates or board layouts
   const [currentTeamId, setCurrentTeamId] = useState(null);
 
-  // New state for editing formation name
   const [editingFormationName, setEditingFormationName] = useState("");
 
   useEffect(() => {
     User.me().then(setCurrentUser).catch(console.error);
   }, []);
+
+  const initializeFormation = useCallback(() => {
+    const numPositions = gameSize === "9-a-side" ? 9 : 11;
+    const newFormation = {};
+    for (let i = 1; i <= numPositions; i++) {
+      newFormation[i] = null;
+    }
+    setFormation(newFormation);
+  }, [gameSize]);
 
   const loadSavedFormations = useCallback(async () => {
     try {
@@ -124,33 +131,20 @@ export default function TacticBoard() {
       });
       setShowConfirmation(true);
     }
-  }, [currentUser, users, teams]);
+  }, [currentUser, teams, users]); // Removed 'players' dependency as it's not used in the function
 
-  // Load saved formations when component mounts and when current user/teams change
   useEffect(() => {
     if (currentUser && teams.length > 0) {
       loadSavedFormations();
     }
-  }, [currentUser, teams, players, loadSavedFormations]); // Added players to dependency array in case player data affects team filtering
+  }, [currentUser, teams, players, loadSavedFormations]);
 
-  const initializeFormation = useCallback(() => {
-    const numPositions = gameSize === "9-a-side" ? 9 : 11;
-    const newFormation = {};
-    for (let i = 1; i <= numPositions; i++) {
-      newFormation[i] = null;
-    }
-    setFormation(newFormation);
-  }, [gameSize]);
-
-  // This useEffect now ONLY handles changes to gameSize
   useEffect(() => {
-    // When game size changes, select a default formation for that size.
     if (gameSize === "9-a-side") {
         setSelectedFormation("1-3-3-2");
     } else {
         setSelectedFormation("1-4-3-3");
     }
-    // Also, clear the board and exit any editing mode.
     initializeFormation();
     setIsEditingFormation(false);
     setEditingFormationData(null);
@@ -188,7 +182,7 @@ export default function TacticBoard() {
         );
       }
     }
-    
+
     if (searchTerm) {
         filteredPlayers = filteredPlayers.filter(player =>
             player.FullName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -208,12 +202,11 @@ export default function TacticBoard() {
     };
   }, [currentUser, users, teams, players, formation, searchTerm]);
 
-  const handleSaveFormation = async () => {
+  const handleSaveFormation = async () => { // This function saves the current board layout
     if (!saveFormationName.trim() || isSavingFormation) return;
 
     setIsSavingFormation(true);
     try {
-      // The saved layout should represent players on the pitch and game size.
       const formationLayout = JSON.stringify({
         players: formation,
         gameSize: gameSize
@@ -244,7 +237,7 @@ export default function TacticBoard() {
         setShowConfirmation(true);
         setShowSaveFormationModal(false);
         setSaveFormationName("");
-        
+
         await loadSavedFormations();
       } else {
         throw new Error(response.data?.error || "Failed to save formation");
@@ -264,21 +257,19 @@ export default function TacticBoard() {
   const loadSavedFormation = (savedFormationRecord) => {
     try {
       const formationData = JSON.parse(savedFormationRecord.FormationLayout);
-      
+
       if (formationData.gameSize !== gameSize) {
         setGameSize(formationData.gameSize);
       } else {
-        initializeFormation(); 
+        initializeFormation();
       }
-      
+
       setFormation(formationData.players || {});
-      setSelectedFormation(savedFormationRecord.id); // FIX: Set the ID, not the name
-      
+      setSelectedFormation(savedFormationRecord.id);
+
       setIsEditingFormation(false);
       setEditingFormationData(null);
       setEditingFormationName("");
-      
-      // Removed the confirmation popup
     } catch (error) {
       console.error("Error loading saved formation:", error);
       setConfirmationConfig({
@@ -306,37 +297,33 @@ export default function TacticBoard() {
       }
     }
   };
-  
+
   const handleEditCurrentFormation = () => {
-    // Try finding in local custom formations first (not strictly needed with current custom formation flow, but good for robustness)
     const customFormationToEdit = customFormations.find(f => f.name === selectedFormation && f.gameSize === gameSize);
     if (customFormationToEdit) {
         setEditingFormationData({ ...customFormationToEdit });
-        setEditingFormationName(customFormationToEdit.name); // Set for editing
+        setEditingFormationName(customFormationToEdit.name);
         setIsEditingFormation(true);
         return;
     }
 
-    // Try finding in Airtable saved formations
     const airtableFormationToEdit = savedFormations.find(f => f.id === selectedFormation);
     if (airtableFormationToEdit) {
         try {
             const layout = JSON.parse(airtableFormationToEdit.FormationLayout);
-            // Ensure we have the structure needed for editing (defenders, midfielders, forwards)
             if (layout.defenders !== undefined && layout.midfielders !== undefined && layout.forwards !== undefined) {
                 setEditingFormationData({
-                    id: airtableFormationToEdit.id, // Important for update operation
+                    id: airtableFormationToEdit.id,
                     name: airtableFormationToEdit.FormationName,
                     defenders: layout.defenders,
                     midfielders: layout.midfielders,
                     forwards: layout.forwards,
-                    positions: layout.positions || { 1: 'GK' }, // Default GK if not explicitly set
+                    positions: layout.positions || { 1: 'GK' },
                     gameSize: airtableFormationToEdit.GameSize,
                 });
-                setEditingFormationName(airtableFormationToEdit.FormationName); // Set for editing
+                setEditingFormationName(airtableFormationToEdit.FormationName);
                 setIsEditingFormation(true);
             } else {
-                // This formation was saved with only player positions, not the editable structure.
                 setConfirmationConfig({
                     type: 'info',
                     title: 'Cannot Edit This Formation',
@@ -354,7 +341,6 @@ export default function TacticBoard() {
             setShowConfirmation(true);
         }
     } else {
-        // Fallback for default formations (if selectedFormation matches a default value but no custom/airtable record is found)
         setConfirmationConfig({
             type: 'info',
             title: 'Cannot Edit Default Formation',
@@ -417,7 +403,7 @@ export default function TacticBoard() {
           setSelectedFormation(gameSize === "9-a-side" ? "1-3-3-2" : "1-4-3-3");
           initializeFormation();
         }
-        
+
         setConfirmationConfig({
           type: 'success',
           title: 'Formation Deleted',
@@ -439,18 +425,14 @@ export default function TacticBoard() {
   };
 
   const handleSaveCustomFormation = (newFormation) => {
-    // When creating a brand new formation template, it starts with an empty template
-    // This now correctly sets editingFormationData for a *new* creation
     const formationWithGameSize = {
       ...newFormation,
       gameSize,
-      positions: { 1: 'GK' } // GK is always fixed
+      positions: { 1: 'GK' }
     };
 
     setEditingFormationData(formationWithGameSize);
-    setEditingFormationName(newFormation.name || ""); // Initialize name for editing
-    // Don't set selectedFormation here, as we're in editing mode.
-    // The selection will happen after saving.
+    setEditingFormationName(newFormation.name || "");
     setIsEditingFormation(true);
     setShowFormationModal(false);
   };
@@ -479,8 +461,8 @@ export default function TacticBoard() {
 
   const handleFinalizeFormation = async () => {
     if (editingFormationData) {
-      const isUpdating = !!editingFormationData.id; // Check if an ID exists, indicating an update
-      if (!editingFormationName.trim()) { // Ensure name is not empty
+      const isUpdating = !!editingFormationData.id;
+      if (!editingFormationName.trim()) {
         setConfirmationConfig({
           type: 'error',
           title: 'Formation Name Required',
@@ -492,10 +474,9 @@ export default function TacticBoard() {
 
       setIsSavingFormation(true);
       try {
-        // This is saving the formation *template*.
         const formationLayout = JSON.stringify({
-          players: {}, // This template does not include specific players
-          gameSize: gameSize, // Use current gameSize for the layout, though editingFormationData.gameSize should also be current
+          players: {},
+          gameSize: gameSize,
           defenders: editingFormationData.defenders,
           midfielders: editingFormationData.midfielders,
           forwards: editingFormationData.forwards,
@@ -503,15 +484,15 @@ export default function TacticBoard() {
         });
 
         const recordData = {
-          FormationName: editingFormationName.trim(), // Use the live edited name
-          GameSize: gameSize, // Ensure gameSize is consistent
+          FormationName: editingFormationName.trim(),
+          GameSize: gameSize,
           FormationLayout: formationLayout,
         };
 
-        if (currentTeamId && !isUpdating) { // Only assign team for new creations
+        if (currentTeamId && !isUpdating) {
           recordData.Team = [currentTeamId];
         }
-        
+
         let response;
         if (isUpdating) {
             response = await airtableSync({
@@ -531,13 +512,12 @@ export default function TacticBoard() {
         if (response.data?.success) {
           setIsEditingFormation(false);
           setEditingFormationData(null);
-          setEditingFormationName(""); // Clear editing name state
-          
-          await loadSavedFormations(); // Reload saved formations to include the new/updated one
-          
-          // Select the newly created/updated formation by its Airtable ID
+          setEditingFormationName("");
+
+          await loadSavedFormations();
+
           setSelectedFormation(response.data.record.id);
-          initializeFormation(); // Clear the board, as we're now just managing the template
+          initializeFormation();
 
           setConfirmationConfig({
             type: 'success',
@@ -565,7 +545,7 @@ export default function TacticBoard() {
     setSelectedFormation(gameSize === "9-a-side" ? "1-3-3-2" : "1-4-3-3");
     setIsEditingFormation(false);
     setEditingFormationData(null);
-    setEditingFormationName(""); // Clear editing name state
+    setEditingFormationName("");
     initializeFormation();
   };
 
@@ -585,8 +565,7 @@ export default function TacticBoard() {
     return [...defaultOptions, ...customOptions, ...savedOptions];
   };
 
-  // Helper function to calculate positions, extracting logic from useMemo
-  const _calculatePositions = (isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations) => {
+  const _calculatePositions = useCallback((isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations) => {
     if (isEditingFormation && editingFormationData) {
       let positions = { 1: { x: 50, y: 85, label: editingFormationData.positions?.[1] || 'GK' } };
       let positionIndex = 2;
@@ -639,7 +618,7 @@ export default function TacticBoard() {
     const airtableSaved = savedFormations.find(f => f.id === selectedFormation && f.GameSize === gameSize);
     if (airtableSaved) {
       const parsedLayout = JSON.parse(airtableSaved.FormationLayout);
-      
+
       if (parsedLayout.defenders !== undefined && parsedLayout.midfielders !== undefined && parsedLayout.forwards !== undefined) {
           let positions = { 1: { x: 50, y: 85, label: (parsedLayout.positions && parsedLayout.positions[1]) || 'GK' } };
           let positionIndex = 2;
@@ -663,10 +642,8 @@ export default function TacticBoard() {
           distributeLine(parsedLayout.forwards, 25, parsedLayout.positions);
           return positions;
       } else {
-          // Fallback to a default visual for the game size if custom layout data is not present in Airtable save.
-          // This ensures that board layouts saved with the simplified FormationLayout still display correctly.
           if (gameSize === "9-a-side") {
-              return { // Default 9-a-side: 1-3-3-2
+              return {
                   1: { x: 50, y: 85, label: 'GK' },
                   2: { x: 25, y: 65, label: 'LB' },
                   3: { x: 50, y: 65, label: 'CB' },
@@ -677,7 +654,7 @@ export default function TacticBoard() {
                   8: { x: 35, y: 25, label: 'LF' },
                   9: { x: 65, y: 25, label: 'RF' }
               };
-          } else { // 11-a-side default: 1-4-3-3
+          } else {
               return {
                   1: { x: 50, y: 85, label: 'GK' },
                   2: { x: 75, y: 65, label: 'RB' },
@@ -708,7 +685,7 @@ export default function TacticBoard() {
                 8: { x: 35, y: 25, label: 'LF' },
                 9: { x: 65, y: 25, label: 'RF' }
             };
-        } else { // 1-4-2-2
+        } else {
             return {
                 1: { x: 50, y: 85, label: 'GK' },
                 2: { x: 20, y: 65, label: 'LB' },
@@ -721,7 +698,7 @@ export default function TacticBoard() {
                 9: { x: 65, y: 25, label: 'RF' }
             };
         }
-    } else { // 11-a-side
+    } else {
         if (selectedFormation === "1-4-4-2") {
             return {
                 1: { x: 50, y: 85, label: 'GK' },
@@ -736,7 +713,7 @@ export default function TacticBoard() {
                 10: { x: 40, y: 25, label: 'ST' },
                 11: { x: 60, y: 25, label: 'ST' }
             };
-        } else { // 1-4-3-3
+        } else {
             return {
                 1: { x: 50, y: 85, label: 'GK' },
                 2: { x: 75, y: 65, label: 'RB' },
@@ -756,11 +733,11 @@ export default function TacticBoard() {
     return {
         1: { x: 50, y: 85, label: 'GK' }
     };
-  };
+  }, []);
 
   const positions = useMemo(() => {
     return _calculatePositions(isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations);
-  }, [isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations]);
+  }, [isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations, _calculatePositions]);
 
   const getAvailablePositions = () => {
     if (!selectedPositionId || !editingFormationData) return [];
@@ -772,17 +749,17 @@ export default function TacticBoard() {
       lineType = 'goalkeeper';
     } else {
       let currentIndex = 2;
-      
+
       if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.defenders) {
         lineType = 'defender';
       }
       currentIndex += editingFormationData.defenders;
-      
+
       if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.midfielders) {
         lineType = 'midfielder';
       }
       currentIndex += editingFormationData.midfielders;
-      
+
       if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.forwards) {
         lineType = 'forward';
       }
@@ -870,7 +847,7 @@ export default function TacticBoard() {
 
   const handlePerformanceSubmit = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
+    setIsSaving(true); // Using general isSaving for this operation
 
     try {
       const response = await airtableSync({
@@ -913,12 +890,12 @@ export default function TacticBoard() {
 
   const getPositionColor = (position) => {
     const colors = {
-      'Goalkeeper': 'bg-accent-secondary',
-      'Defender': 'bg-accent-primary',
-      'Midfielder': 'bg-success',
-      'Forward': 'bg-error'
+      'Goalkeeper': 'bg-purple-500',
+      'Defender': 'bg-blue-500',
+      'Midfielder': 'bg-green-500',
+      'Forward': 'bg-red-500'
     };
-    return colors[position] || 'bg-disabled-custom';
+    return colors[position] || 'bg-muted';
   };
 
   const isCurrentFormationCustom = useMemo(() => {
@@ -928,182 +905,88 @@ export default function TacticBoard() {
 
   if (isLoading) {
     return (
-      <div className="p-6 md:p-8 bg-bg-primary min-h-screen">
+      <div className="p-6 md:p-8 bg-background min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-bg-secondary rounded w-1/3"></div>
+          <div className="animate-pulse space-y-8">
+            <div className="h-20 bg-card rounded-xl shadow-sm"></div>
+            <div className="h-24 bg-card rounded-xl shadow-sm"></div>
             <div className="grid lg:grid-cols-4 gap-6">
-              <div className="h-96 bg-bg-secondary rounded-xl shadow-sm"></div>
-              <div className="lg:col-span-3 h-96 bg-bg-secondary rounded-xl shadow-sm"></div>
+              <div className="h-96 bg-card rounded-xl shadow-sm"></div>
+              <div className="lg:col-span-3 h-96 bg-card rounded-xl shadow-sm"></div>
             </div>
           </div>
         </div>
       </div>
     );
   }
-  
+
   return (
     <>
-      <div className="h-screen bg-bg-primary flex flex-col overflow-hidden">
-        <div className="flex-shrink-0 bg-bg-secondary border-b border-border-custom p-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-text-primary">Tactic Board</h1>
-                <p className="text-text-secondary">
-                  {isEditingFormation
-                    ? `Editing Formation: ${editingFormationName || 'New Custom Formation'} - Click empty circles to assign positions`
-                    : `Drag players to build your formation (${gameSize})`}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                {isEditingFormation ? (
+      <div className="p-6 md:p-8 bg-background min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header - NEW CONTENT FROM OUTLINE */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Tactic <span className="text-primary">Board</span>
+              </h1>
+              <p className="text-muted-foreground text-lg">Create and manage team formations</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowFormationModal(true)}
+                variant="outline"
+                className="border-border text-foreground hover:bg-accent"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Formation
+              </Button>
+              <Button
+                onClick={() => setShowSaveFormationModal(true)} // Opens the "Save Board Layout as Formation" modal
+                disabled={isSavingFormation || Object.values(formation).every(player => !player)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                {isSavingFormation ? (
                   <>
-                    <Button
-                      onClick={handleFinalizeFormation}
-                      disabled={isSavingFormation || !editingFormationName.trim()}
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      {isSavingFormation ? "Saving..." : "Save Custom Formation"}
-                    </Button>
-                    <Button
-                      onClick={cancelFormationEdit}
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-                    >
-                      Cancel
-                    </Button>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-slate-300 text-sm">Game Size:</Label>
-                      <Select value={gameSize} onValueChange={setGameSize}>
-                        <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
-                          <SelectItem value="9-a-side" className="text-white">9-a-side</SelectItem>
-                          <SelectItem value="11-a-side" className="text-white">11-a-side</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-slate-300 text-sm">Formation:</Label>
-                      <Select value={selectedFormation} onValueChange={handleFormationChange}>
-                        <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white text-sm">
-                          <SelectValue>
-                            {savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-700 border-slate-600">
-                          {getFormationOptions().map(option => (
-                            <SelectItem key={option.value} value={option.value} className="text-white">
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="create_new" className="text-blue-400">
-                            <div className="flex items-center gap-2">
-                              <PlusCircle className="w-4 h-4" />
-                              <span>Create New Formation</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      onClick={clearFormation}
-                      variant="outline"
-                      size="sm"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Clear
-                    </Button>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Formation
                   </>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
-            <div className="flex-shrink-0 p-4 border-b border-slate-700 space-y-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-500" />
-                <h3 className="font-semibold text-white">Available Players</h3>
-                <Badge variant="secondary" className="ml-auto bg-slate-700 text-slate-300">
-                  {availablePlayers.length}
-                </Badge>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-                <Input
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pl-9"
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-2 space-y-1">
-                {availablePlayers.length > 0 ? (
-                  availablePlayers.map((player) => (
-                    <div
-                      key={player.id}
-                      draggable={!isEditingFormation}
-                      onDragStart={(e) => !isEditingFormation && handleDragStart(e, player)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => !isEditingFormation && handlePlayerClick(player)}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
-                        isEditingFormation
-                          ? 'bg-slate-700/30 opacity-50 cursor-not-allowed'
-                          : `cursor-pointer hover:bg-slate-700 ${
-                              draggedPlayer?.id === player.id ? 'opacity-50 bg-slate-700' : 'bg-slate-700/30 hover:bg-slate-700'
-                            }`
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPositionColor(player.Position)}`}>
-                        {player.KitNumber || '?'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">
-                          {player.FullName}
-                        </p>
-                        <p className="text-slate-400 text-sm">
-                          {player.Position}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-400">
-                      {isEditingFormation ? "Players hidden during formation editing" : "All players are on the pitch"}
-                    </p>
-                  </div>
-                )}
-              </div>
+              </Button>
             </div>
           </div>
 
-          <div className="flex-1 bg-slate-900 flex flex-col overflow-hidden">
-            <div className="flex-shrink-0 p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+          {/* Existing Controls (Game Size, Formation Select, Edit/Delete, etc.) - WRAPPED IN A CARD */}
+          <Card className="p-4">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="text-xl font-bold text-foreground">
+                {isEditingFormation
+                  ? `Editing Formation: ${editingFormationName || 'New Custom Formation'}`
+                  : `Current Formation`
+                }
+              </CardTitle>
+              <p className="text-muted-foreground">
+                 {isEditingFormation
+                    ? 'Click empty circles to assign positions'
+                    : `Drag players to build your formation (${
+                        savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation
+                      })`
+                  }
+              </p>
+            </CardHeader>
+            <CardContent className="p-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               {isEditingFormation ? (
                 <div className="flex items-center gap-4 flex-1">
-                  <h3 className="text-lg font-semibold text-white">
-                    Formation Name:
-                  </h3>
                   <Input
                     value={editingFormationName}
                     onChange={(e) => setEditingFormationName(e.target.value)}
                     placeholder="Enter formation name..."
-                    className="max-w-xs bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                    className="max-w-xs bg-background border-border text-foreground placeholder:text-muted-foreground"
                   />
                   <Badge className="bg-yellow-500 text-black">
                     <Edit3 className="w-3 h-3 mr-1" />
@@ -1111,129 +994,283 @@ export default function TacticBoard() {
                   </Badge>
                 </div>
               ) : (
-                <h3 className="text-lg font-semibold text-white">
-                  Formation ({savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}) - {formationPlayers.length}/{gameSize === "9-a-side" ? 9 : 11} Players
-                </h3>
-              )}
-              {!isEditingFormation && isCurrentFormationCustom && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-muted-foreground text-sm">Game Size:</Label>
+                    <Select value={gameSize} onValueChange={setGameSize}>
+                      <SelectTrigger className="w-32 bg-card border-border text-foreground text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="9-a-side" className="text-foreground">9-a-side</SelectItem>
+                        <SelectItem value="11-a-side" className="text-foreground">11-a-side</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-muted-foreground text-sm">Formation:</Label>
+                    <Select value={selectedFormation} onValueChange={handleFormationChange}>
+                      <SelectTrigger className="w-48 bg-card border-border text-foreground text-sm">
+                        <SelectValue>
+                          {savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {getFormationOptions().map(option => (
+                          <SelectItem key={option.value} value={option.value} className="text-foreground">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="create_new" className="text-blue-400">
+                          <div className="flex items-center gap-2">
+                            <PlusCircle className="w-4 h-4" />
+                            <span>Create New Formation</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button
-                    onClick={handleEditCurrentFormation}
-                    variant="ghost"
+                    onClick={clearFormation}
+                    variant="outline"
                     size="sm"
-                    className="text-slate-400 hover:text-white hover:bg-slate-700"
+                    className="border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                   >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={handleDeleteCurrentFormation}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Delete
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Clear
                   </Button>
                 </div>
               )}
-            </div>
-
-            <div className="flex-1 p-4">
-              <div className="w-full h-full bg-gradient-to-b from-green-600 to-green-800 rounded-xl shadow-2xl relative overflow-hidden">
-                <div className="absolute inset-0">
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white rounded-full opacity-100"></div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full opacity-100"></div>
-
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white opacity-100"></div>
-
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2/5 h-24 border-2 border-white border-b-0 rounded-t-lg opacity-100"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2/5 h-24 border-2 border-white border-t-0 rounded-b-lg opacity-100"></div>
-
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/4 h-12 border-2 border-white border-b-0 rounded-t-lg opacity-100"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/4 h-12 border-2 border-white border-t-0 rounded-b-lg opacity-100"></div>
-                </div>
-
-                {Object.entries(positions).map(([positionId, pos]) => {
-                  const player = formation[positionId];
-                  const isClickableForEdit = isEditingFormation && !player && positionId !== "1";
-
-                  return (
-                    <div
-                      key={positionId}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                      style={{
-                        left: `${pos.x}%`,
-                        top: `${pos.y}%`
-                      }}
-                      onDragOver={!isEditingFormation ? handleDragOver : undefined}
-                      onDrop={!isEditingFormation ? (e) => handleDrop(e, positionId) : undefined}
+              {isEditingFormation ? (
+                <>
+                  <Button
+                    onClick={handleFinalizeFormation}
+                    disabled={isSavingFormation || !editingFormationName.trim()}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    {isSavingFormation ? "Saving..." : "Save Custom Formation"}
+                  </Button>
+                  <Button
+                    onClick={cancelFormationEdit}
+                    variant="outline"
+                    className="border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                isCurrentFormationCustom && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleEditCurrentFormation}
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent"
                     >
-                      {player ? (
-                        <div className="relative group">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white cursor-pointer ${getPositionColor(player.Position)} hover:scale-110 transition-transform duration-200`}
-                            onClick={() => !isEditingFormation && handlePlayerClick(player)}
-                          >
-                            {player.KitNumber || '?'}
-                          </div>
-                          {!isEditingFormation && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFromFormation(positionId);
-                              }}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-white text-xs font-medium text-center whitespace-nowrap bg-black bg-opacity-50 rounded px-2 py-1">
-                            {player.FullName}
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-white font-bold transition-all duration-200 ${
-                            isClickableForEdit
-                              ? 'border-yellow-400 bg-yellow-500/30 shadow-lg cursor-pointer hover:bg-yellow-500/50 hover:scale-110'
-                              : isDragging ? 'border-blue-400 bg-blue-500/30 shadow-lg' : 'border-white'
-                          }`}
-                          onClick={isClickableForEdit ? () => handlePositionClick(positionId) : undefined}
-                        >
-                          <span className={`text-xs ${isEditingFormation && (editingFormationData?.positions?.[positionId] && positionId !== '1' || positionId === '1' ) ? 'text-yellow-200' : ''}`}>
-                            {pos.label}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={handleDeleteCurrentFormation}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
+                )
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Sidebar and Pitch - NOW IN A GRID */}
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Available Players Sidebar */}
+            <Card className="col-span-1 flex flex-col h-full min-h-[400px]">
+              <div className="flex-shrink-0 p-4 border-b border-border space-y-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-brand-blue" />
+                  <h3 className="font-semibold text-foreground">Available Players</h3>
+                  <div className="ml-auto bg-secondary text-secondary-foreground px-2 py-1 rounded text-sm">
+                    {availablePlayers.length}
+                  </div>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                  <Input
+                      placeholder="Search by name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground pl-9"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-2 space-y-1">
+                  {availablePlayers.length > 0 ? (
+                    availablePlayers.map((player) => (
+                      <div
+                        key={player.id}
+                        draggable={!isEditingFormation}
+                        onDragStart={(e) => !isEditingFormation && handleDragStart(e, player)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => !isEditingFormation && handlePlayerClick(player)}
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                          isEditingFormation
+                            ? 'bg-secondary/30 opacity-50 cursor-not-allowed'
+                            : `cursor-pointer hover:bg-accent ${
+                                draggedPlayer?.id === player.id ? 'opacity-50 bg-accent' : 'bg-secondary/30 hover:bg-accent'
+                              }`
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPositionColor(player.Position)}`}>
+                          {player.KitNumber || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">
+                            {player.FullName}
+                          </p>
+                          <p className="text-muted-foreground text-sm">
+                            {player.Position}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground">
+                        {isEditingFormation ? "Players hidden during formation editing" : "All players are on the pitch"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Tactic Board Pitch */}
+            <Card className="col-span-3 flex flex-col h-full min-h-[400px]">
+              <div className="flex-shrink-0 p-4 bg-card border-b border-border flex items-center justify-between">
+                {isEditingFormation ? (
+                  <div className="flex items-center gap-4 flex-1">
+                    <Input
+                      value={editingFormationName}
+                      onChange={(e) => setEditingFormationName(e.target.value)}
+                      placeholder="Enter formation name..."
+                      className="max-w-xs bg-background border-border text-foreground placeholder:text-muted-foreground"
+                    />
+                    <Badge className="bg-yellow-500 text-black">
+                      <Edit3 className="w-3 h-3 mr-1" />
+                      Editing Mode
+                    </Badge>
+                  </div>
+                ) : (
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Formation ({savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}) - {formationPlayers.length}/{gameSize === "9-a-side" ? 9 : 11} Players
+                  </h3>
+                )}
+              </div>
+
+              <div className="flex-1 p-4">
+                <div className="w-full h-full bg-gradient-to-b from-green-600 to-green-800 rounded-xl shadow-2xl relative overflow-hidden">
+                  <div className="absolute inset-0">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white rounded-full opacity-100"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full opacity-100"></div>
+
+                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white opacity-100"></div>
+
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2/5 h-24 border-2 border-white border-b-0 rounded-t-lg opacity-100"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2/5 h-24 border-2 border-white border-t-0 rounded-b-lg opacity-100"></div>
+
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/4 h-12 border-2 border-white border-b-0 rounded-t-lg opacity-100"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/4 h-12 border-2 border-white border-t-0 rounded-b-lg opacity-100"></div>
+                  </div>
+
+                  {Object.entries(positions).map(([positionId, pos]) => {
+                    const player = formation[positionId];
+                    const isClickableForEdit = isEditingFormation && !player && positionId !== "1";
+
+                    return (
+                      <div
+                        key={positionId}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                        style={{
+                          left: `${pos.x}%`,
+                          top: `${pos.y}%`
+                        }}
+                        onDragOver={!isEditingFormation ? handleDragOver : undefined}
+                        onDrop={!isEditingFormation ? (e) => handleDrop(e, positionId) : undefined}
+                      >
+                        {player ? (
+                          <div className="relative group">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white cursor-pointer ${getPositionColor(player.Position)} hover:scale-110 transition-transform duration-200`}
+                              onClick={() => !isEditingFormation && handlePlayerClick(player)}
+                            >
+                              {player.KitNumber || '?'}
+                            </div>
+                            {!isEditingFormation && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFromFormation(positionId);
+                                }}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-white text-xs font-medium text-center whitespace-nowrap bg-black bg-opacity-50 rounded px-2 py-1">
+                              {player.FullName}
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-white font-bold transition-all duration-200 ${
+                              isClickableForEdit
+                                ? 'border-yellow-400 bg-yellow-500/30 shadow-lg cursor-pointer hover:bg-yellow-500/50 hover:scale-110'
+                                : isDragging ? 'border-blue-400 bg-blue-500/30 shadow-lg' : 'border-white'
+                            }`}
+                            onClick={isClickableForEdit ? () => handlePositionClick(positionId) : undefined}
+                          >
+                            <span className={`text-xs ${isEditingFormation && (editingFormationData?.positions?.[positionId] && positionId !== '1' || positionId === '1' ) ? 'text-yellow-200' : ''}`}>
+                              {pos.label}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
 
       <Dialog open={showSaveFormationModal} onOpenChange={setShowSaveFormationModal}>
-        <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-              <Save className="w-5 h-5 text-blue-500" />
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Save className="w-5 h-5 text-brand-blue" />
               Save Board Layout as Formation
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <p className="text-slate-300">Enter a name for this formation layout:</p>
+            <p className="text-muted-foreground">Enter a name for this formation layout:</p>
             <Input
               value={saveFormationName}
               onChange={(e) => setSaveFormationName(e.target.value)}
               placeholder="e.g., My Favorite Game Plan"
-              className="bg-slate-700 border-slate-600 text-white"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               onKeyPress={(e) => e.key === 'Enter' && handleSaveFormation()}
             />
-            <div className="text-sm text-slate-400">
+            <div className="text-sm text-muted-foreground">
               Game Size: {gameSize} • Players on Board: {formationPlayers.length}/{gameSize === "9-a-side" ? 9 : 11}
             </div>
           </div>
@@ -1245,14 +1282,14 @@ export default function TacticBoard() {
                 setShowSaveFormationModal(false);
                 setSaveFormationName("");
               }}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-border text-muted-foreground hover:bg-accent"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveFormation}
               disabled={!saveFormationName.trim() || isSavingFormation}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              variant="default"
             >
               {isSavingFormation ? "Saving..." : "Save Board Layout"}
             </Button>
@@ -1261,10 +1298,10 @@ export default function TacticBoard() {
       </Dialog>
 
       <Dialog open={showPerformanceModal} onOpenChange={setShowPerformanceModal}>
-        <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-500" />
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Target className="w-5 h-5 text-brand-blue" />
               Performance Data - {selectedPlayer?.FullName}
             </DialogTitle>
           </DialogHeader>
@@ -1272,7 +1309,7 @@ export default function TacticBoard() {
           <form onSubmit={handlePerformanceSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="minutes" className="text-slate-300">Minutes Played</Label>
+                <Label htmlFor="minutes" className="text-muted-foreground">Minutes Played</Label>
                 <Input
                   id="minutes"
                   type="number"
@@ -1280,36 +1317,36 @@ export default function TacticBoard() {
                   max="120"
                   value={performanceData.MinutesPlayed}
                   onChange={(e) => setPerformanceData(prev => ({ ...prev, MinutesPlayed: e.target.value }))}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="goals" className="text-slate-300">Goals</Label>
+                <Label htmlFor="goals" className="text-muted-foreground">Goals</Label>
                 <Input
                   id="goals"
                   type="number"
                   min="0"
                   value={performanceData.Goals}
                   onChange={(e) => setPerformanceData(prev => ({ ...prev, Goals: e.target.value }))}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="assists" className="text-slate-300">Assists</Label>
+                <Label htmlFor="assists" className="text-muted-foreground">Assists</Label>
                 <Input
                   id="assists"
                   type="number"
                   min="0"
                   value={performanceData.Assists}
                   onChange={(e) => setPerformanceData(prev => ({ ...prev, Assists: e.target.value }))}
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-300">Rating</Label>
+                <Label className="text-muted-foreground">Rating</Label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <button
@@ -1317,7 +1354,7 @@ export default function TacticBoard() {
                       type="button"
                       onClick={() => setPerformanceData(prev => ({ ...prev, GeneralRating: rating }))}
                       className={`text-2xl transition-colors duration-200 ${
-                        rating <= performanceData.GeneralRating ? 'text-yellow-400' : 'text-slate-600'
+                        rating <= performanceData.GeneralRating ? 'text-yellow-400' : 'text-muted-foreground'
                       }`}
                     >
                       <Star className="w-6 h-6 fill-current" />
@@ -1328,13 +1365,13 @@ export default function TacticBoard() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-slate-300">Player Notes</Label>
+              <Label htmlFor="notes" className="text-muted-foreground">Player Notes</Label>
               <Textarea
                 id="notes"
                 value={performanceData.GeneralNotes}
                 onChange={(e) => setPerformanceData(prev => ({ ...prev, GeneralNotes: e.target.value }))}
                 placeholder="Add performance notes..."
-                className="bg-slate-700 border-slate-600 text-white h-20"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground h-20"
               />
             </div>
 
@@ -1343,14 +1380,14 @@ export default function TacticBoard() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowPerformanceModal(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="border-border text-muted-foreground hover:bg-accent"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                variant="default"
               >
                 {isSaving ? "Saving..." : "Save Data"}
               </Button>
@@ -1360,23 +1397,23 @@ export default function TacticBoard() {
       </Dialog>
 
       <Dialog open={showPositionModal} onOpenChange={setShowPositionModal}>
-        <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-500" />
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Target className="w-5 h-5 text-brand-blue" />
               Assign Position
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <p className="text-slate-300">Choose a position for this spot:</p>
+            <p className="text-muted-foreground">Choose a position for this spot:</p>
             <div className="grid grid-cols-3 gap-2">
               {getAvailablePositions().map((position) => (
                 <Button
                   key={position.value}
                   variant="outline"
                   onClick={() => handleAssignPosition(position.value)}
-                  className="justify-center border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-bold"
+                  className="justify-center border-border text-muted-foreground hover:bg-accent hover:text-foreground font-bold"
                 >
                   {position.label}
                 </Button>
@@ -1388,7 +1425,7 @@ export default function TacticBoard() {
             <Button
               variant="outline"
               onClick={() => setShowPositionModal(false)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-border text-muted-foreground hover:bg-accent"
             >
               Cancel
             </Button>
@@ -1397,16 +1434,16 @@ export default function TacticBoard() {
       </Dialog>
 
       <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
-        <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
               <X className="w-5 h-5 text-red-500" />
               Delete Formation
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <p className="text-slate-300">
+            <p className="text-muted-foreground">
               Are you sure you want to delete "{formationToDelete?.name || formationToDelete?.FormationName}"? This action cannot be undone.
             </p>
           </div>
@@ -1415,7 +1452,7 @@ export default function TacticBoard() {
             <Button
               variant="outline"
               onClick={() => setShowDeleteConfirmation(false)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-border text-muted-foreground hover:bg-accent"
             >
               Cancel
             </Button>

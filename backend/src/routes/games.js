@@ -1,12 +1,13 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const Game = require('../models/Game');
 const Team = require('../models/Team');
 
 const router = express.Router();
 
 // Get all games (with role-based filtering)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     let query = {};
@@ -33,7 +34,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get game by ID
-router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const game = await Game.findById(req.params.id)
       .populate('team', 'teamName season division');
@@ -53,7 +54,7 @@ router.get('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Create new game
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { team, opponent, date, location, status } = req.body;
 
@@ -87,7 +88,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update game
-router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const { opponent, date, location, status, ourScore, opponentScore, defenseSummary, midfieldSummary, attackSummary, generalSummary } = req.body;
 
@@ -112,7 +113,7 @@ router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Delete game
-router.delete('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const game = await Game.findByIdAndDelete(req.params.id);
 

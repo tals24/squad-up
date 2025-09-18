@@ -57,10 +57,10 @@ export default function FormationEditorModal({ isOpen, onClose, onSave, gameSize
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-bg-secondary border-border-custom text-text-primary">
+      <DialogContent className="sm:max-w-md bg-card border-border text-card-foreground">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Create New Formation</DialogTitle>
-          <p className="text-sm text-text-secondary">Define a custom formation for {gameSize}.</p>
+          <p className="text-sm text-muted-foreground">Define a custom formation for {gameSize}.</p>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -71,52 +71,52 @@ export default function FormationEditorModal({ isOpen, onClose, onSave, gameSize
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., My Custom 4-4-2"
-              className="bg-bg-secondary border-border-custom"
+              className="bg-background border-border"
             />
           </div>
           
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="defenders" className="flex items-center gap-2"><Shield className="w-4 h-4 text-accent-primary"/> Defenders</Label>
+              <Label htmlFor="defenders" className="flex items-center gap-2"><Shield className="w-4 h-4 text-blue-400"/> Defenders</Label>
               <Input
                 id="defenders"
                 type="number"
                 min="0"
                 value={defenders}
                 onChange={(e) => handleNumberChange(setDefenders, e.target.value)}
-                className="bg-bg-secondary border-border-custom"
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="midfielders" className="flex items-center gap-2"><Users className="w-4 h-4 text-success"/> Midfielders</Label>
+              <Label htmlFor="midfielders" className="flex items-center gap-2"><Users className="w-4 h-4 text-green-400"/> Midfielders</Label>
               <Input
                 id="midfielders"
                 type="number"
                 min="0"
                 value={midfielders}
                 onChange={(e) => handleNumberChange(setMidfielders, e.target.value)}
-                className="bg-bg-secondary border-border-custom"
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="forwards" className="flex items-center gap-2"><Swords className="w-4 h-4 text-error"/> Forwards</Label>
+              <Label htmlFor="forwards" className="flex items-center gap-2"><Swords className="w-4 h-4 text-red-400"/> Forwards</Label>
               <Input
                 id="forwards"
                 type="number"
                 min="0"
                 value={forwards}
                 onChange={(e) => handleNumberChange(setForwards, e.target.value)}
-                className="bg-bg-secondary border-border-custom"
+                className="bg-background border-border"
               />
             </div>
           </div>
           
-          <div className="p-3 bg-bg-secondary/50 rounded-lg text-center">
-            <p className="text-sm text-text-primary">Total Outfield Players: <span className="font-bold text-text-primary">{defenders + midfielders + forwards} / {outfieldPlayers}</span></p>
+          <div className="p-3 bg-muted/50 rounded-lg text-center">
+            <p className="text-sm text-muted-foreground">Total Outfield Players: <span className="font-bold text-foreground">{defenders + midfielders + forwards} / {outfieldPlayers}</span></p>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-sm text-error bg-error/10 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 p-3 rounded-lg">
               <AlertCircle className="w-4 h-4"/>
               <span>{error}</span>
             </div>
@@ -124,8 +124,8 @@ export default function FormationEditorModal({ isOpen, onClose, onSave, gameSize
         </div>
 
         <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" onClick={onClose} className="border-border-custom text-text-primary hover:bg-bg-secondary">Cancel</Button>
-          <Button type="button" onClick={handleSave} className="bg-accent-primary hover:bg-blue-600">Save Formation</Button>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" onClick={handleSave} variant="default">Save Formation</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageLayout, PageHeader, DataCard, StandardButton } from "@/components/ui/design-system-components";
 import { airtableSync } from "@/api/functions"; // Corrected import path
 
 export default function SyncStatus() {
@@ -57,19 +58,19 @@ export default function SyncStatus() {
 
   const getStatusColor = () => {
     switch (connectionStatus) {
-      case 'connected': return 'text-success';
-      case 'error': return 'text-error';
-      case 'checking': return 'text-warning';
-      default: return 'text-text-secondary';
+      case 'connected': return 'text-green-400';
+      case 'error': return 'text-red-400';
+      case 'checking': return 'text-yellow-400';
+      default: return 'text-slate-400';
     }
   };
 
   const getStatusIcon = () => {
     switch (connectionStatus) {
-      case 'connected': return <CheckCircle className="w-6 h-6 text-success" />;
-      case 'error': return <AlertCircle className="w-6 h-6 text-error" />;
-      case 'checking': return <Loader2 className="w-6 h-6 text-warning animate-spin" />;
-      default: return <WifiOff className="w-6 h-6 text-text-secondary" />;
+      case 'connected': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error': return <AlertCircle className="w-6 h-6 text-red-400" />;
+      case 'checking': return <Loader2 className="w-6 h-6 text-yellow-400 animate-spin" />;
+      default: return <WifiOff className="w-6 h-6 text-slate-400" />;
     }
   };
 
@@ -84,43 +85,35 @@ export default function SyncStatus() {
   };
 
   return (
-    <div className="p-6 md:p-8 bg-bg-primary min-h-screen text-slate-100 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
-            Sync <span className="text-accent-primary">Status</span>
-          </h1>
-          <p className="text-text-secondary text-lg">
-            Monitor your Airtable connection and data synchronization
-          </p>
-        </div>
+    <PageLayout maxWidth="max-w-4xl">
+      {/* Header */}
+      <PageHeader
+        title="Sync"
+        accentWord="Status"
+        subtitle="Monitor your Airtable connection and data synchronization"
+      />
 
         {/* Connection Status Card */}
-        <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-bold text-text-primary flex items-center gap-3">
-                <Wifi className="w-6 h-6 text-accent-primary" />
-                Airtable Connection
-              </CardTitle>
-              <Button 
-                onClick={checkConnection} 
-                disabled={isLoading}
-                variant="outline"
-                className="border-border-custom bg-bg-secondary text-text-primary hover:bg-bg-secondary hover:text-accent-primary hover:border-accent-primary/50"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Test Connection
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-6 rounded-xl bg-bg-primary/50 border border-border-custom">
+        <DataCard
+          title="Airtable Connection"
+          titleIcon={<Wifi className="w-6 h-6 text-cyan-400" />}
+          headerClassName="flex items-center justify-between"
+        >
+          <div className="flex items-center justify-end mb-4">
+            <StandardButton 
+              onClick={checkConnection} 
+              disabled={isLoading}
+              variant="outline"
+              icon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            >
+              Test Connection
+            </StandardButton>
+          </div>
+          <div className="flex items-center justify-between p-6 rounded-xl bg-slate-900/50 border border-slate-700">
               <div className="flex items-center gap-4">
                 {getStatusIcon()}
                 <div>
-                  <h3 className="font-bold text-lg text-text-primary">
+                  <h3 className="font-bold text-lg text-white">
                     {connectionStatus === 'connected' && 'Connected'}
                     {connectionStatus === 'error' && 'Connection Failed'}
                     {connectionStatus === 'checking' && 'Checking Connection...'}
@@ -147,13 +140,12 @@ export default function SyncStatus() {
             </div>
             
             {lastSync && (
-              <div className="flex items-center gap-2 mt-4 text-sm text-text-secondary">
+              <div className="flex items-center gap-2 mt-4 text-sm text-slate-400">
                 <Clock className="w-4 h-4" />
                 <span>Last checked: {lastSync.toLocaleString()}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DataCard>
 
         {/* Tables Status */}
         {tables.length > 0 && (
@@ -248,7 +240,6 @@ export default function SyncStatus() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

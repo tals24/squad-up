@@ -35,14 +35,14 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
           >
-            <div className="bg-bg-secondary rounded-xl border border-border-custom shadow-2xl p-6">
+            <div className="bg-card rounded-xl border border-border shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-text-primary">Drill Description</h2>
+                <h2 className="text-xl font-bold text-card-foreground">Drill Description</h2>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="text-text-secondary hover:text-text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -50,7 +50,7 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="drill-title" className="text-text-primary font-medium">
+                  <Label htmlFor="drill-title" className="text-foreground font-medium">
                     Drill Title
                   </Label>
                   <Input
@@ -58,12 +58,12 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter drill title..."
-                    className="mt-2 bg-bg-secondary border-border-custom text-text-primary placeholder-text-secondary"
+                    className="mt-2 bg-background border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="drill-description" className="text-text-primary font-medium">
+                  <Label htmlFor="drill-description" className="text-foreground font-medium">
                     Description & Instructions
                   </Label>
                   <Textarea
@@ -71,7 +71,7 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
                     placeholder="Describe the drill, instructions, objectives, and variations..."
-                    className="mt-2 h-32 bg-bg-secondary border-border-custom text-text-primary placeholder-text-secondary resize-none"
+                    className="mt-2 h-32 bg-background border-border text-foreground placeholder:text-muted-foreground resize-none"
                   />
                 </div>
               </div>
@@ -80,13 +80,12 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="border-border-custom text-text-primary hover:bg-bg-secondary hover:text-text-primary"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="bg-accent-primary hover:bg-blue-600 text-text-primary"
+                  variant="default"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Save Description

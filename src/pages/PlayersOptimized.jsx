@@ -374,7 +374,7 @@ export default function PlayersOptimized() {
     [players]
   );
 
-  if (isContextLoading) {
+  if (isContextLoading || !teams || teams.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -487,7 +487,7 @@ export default function PlayersOptimized() {
                 <FormField label="Team">
                   <Select value={selectedTeam} onValueChange={setSelectedTeam}>
                     <SelectTrigger>
-                      <SelectValue placeholder="All Teams" />
+                      <SelectValue placeholder="Select Team" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Teams</SelectItem>

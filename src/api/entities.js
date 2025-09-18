@@ -1,5 +1,5 @@
-// Import our new auth service
-import authService from '../services/authService';
+// Import our JWT auth service
+import jwtAuthService from '../services/jwtAuthService';
 
 // Create a safe wrapper for entities (keeping for future use)
 const createSafeEntity = (entity) => {
@@ -18,16 +18,14 @@ const createSafeEntity = (entity) => {
 export const TrainingSession = createSafeEntity(null);
 export const SessionDrill = createSafeEntity(null);
 
-// Export User with Firebase Auth methods
+// Export User with JWT Auth methods
 export const User = {
-  me: () => authService.me(),
-  login: (email, password) => authService.login(email, password),
-  loginWithGoogle: () => authService.loginWithGoogle(),
-  loginWithRedirect: (redirectUrl) => authService.loginWithRedirect(redirectUrl),
-  logout: () => authService.logout(),
-  register: (email, password, displayName) => authService.register(email, password, displayName),
-  resetPassword: (email) => authService.resetPassword(email),
-  onAuthStateChange: (callback) => authService.onAuthStateChange(callback),
-  isAuthenticated: () => authService.isAuthenticated(),
-  getCurrentUser: () => authService.getCurrentUser(),
+  me: () => jwtAuthService.me(),
+  login: (email, password) => jwtAuthService.login(email, password),
+  logout: () => jwtAuthService.signOut(),
+  onAuthStateChange: (callback) => jwtAuthService.onAuthStateChange(callback),
+  isAuthenticated: () => jwtAuthService.isAuthenticated(),
+  getCurrentUser: () => jwtAuthService.currentUser,
+  verifyToken: () => jwtAuthService.verifyToken(),
+  getAuthToken: () => jwtAuthService.getAuthToken(),
 };

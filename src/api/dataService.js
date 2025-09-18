@@ -3,13 +3,11 @@ const API_BASE_URL = 'http://localhost:3001/api';
 
 // Helper function to get auth token
 const getAuthToken = () => {
-  // Get the Firebase auth token from the current user
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = user.accessToken || null;
+  // Get the JWT auth token from localStorage
+  const token = localStorage.getItem('authToken');
   
   console.log('🔐 Getting auth token:');
-  console.log('  - User in localStorage:', user);
-  console.log('  - Token exists:', !!token);
+  console.log('  - JWT Token exists:', !!token);
   console.log('  - Token length:', token ? token.length : 0);
   
   return token;

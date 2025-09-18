@@ -1,11 +1,12 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const Formation = require('../models/Formation');
 
 const router = express.Router();
 
 // Get all formations
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const formations = await Formation.find()
       .populate('team', 'teamName season division')
@@ -23,7 +24,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get formation by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const formation = await Formation.findById(req.params.id)
       .populate('team', 'teamName season division')
@@ -44,7 +45,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new formation
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { formationName, gameSize, formationLayout, team, description, isDefault } = req.body;
 
@@ -73,7 +74,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update formation
-router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const { formationName, gameSize, formationLayout, description, isDefault } = req.body;
 
@@ -100,7 +101,7 @@ router.put('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
 });
 
 // Delete formation
-router.delete('/:id', authenticateToken, checkTeamAccess, async (req, res) => {
+router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
     const formation = await Formation.findByIdAndDelete(req.params.id);
 

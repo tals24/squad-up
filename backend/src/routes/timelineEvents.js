@@ -1,11 +1,12 @@
 const express = require('express');
-const { authenticateToken, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
+const { checkTeamAccess } = require('../middleware/auth');
 const TimelineEvent = require('../models/TimelineEvent');
 
 const router = express.Router();
 
 // Get all timeline events
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const timelineEvents = await TimelineEvent.find()
       .populate('player', 'fullName kitNumber position')
@@ -24,7 +25,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get timeline event by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const timelineEvent = await TimelineEvent.findById(req.params.id)
       .populate('player', 'fullName kitNumber position')
@@ -46,7 +47,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new timeline event
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const { player, game, eventType, minutesPlayed, goals, assists, generalRating, generalNotes } = req.body;
 
@@ -78,7 +79,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update timeline event
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateJWT, async (req, res) => {
   try {
     const { eventType, minutesPlayed, goals, assists, generalRating, generalNotes } = req.body;
 
@@ -106,7 +107,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete timeline event
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
     const timelineEvent = await TimelineEvent.findByIdAndDelete(req.params.id);
 

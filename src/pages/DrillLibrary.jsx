@@ -38,6 +38,7 @@ import {
   Textarea,
   Checkbox 
 } from "@/components/ui/design-system-components";
+import { PageLayout, PageHeader, SearchFilter, DataCard, StandardButton } from "@/components/ui/design-system-components";
 import { airtableSync } from "@/api/functions"; // Updated import path
 import { User } from "@/api/entities"; // Updated import path
 import ConfirmationToast from "../components/ConfirmationToast";
@@ -508,100 +509,100 @@ export default function DrillLibrary() {
 
   return (
     <>
-      <div className="p-6 md:p-8 bg-bg-primary min-h-screen">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">Drill Library</h1>
-              <p className="text-text-secondary text-lg">Browse and manage training drills</p>
-            </div>
-            <Button onClick={handleOpenAddModal} className="bg-accent-primary hover:bg-cyan-400 text-slate-900 font-bold shadow-lg shadow-accent-primary/20">
-              <Plus className="w-5 h-5 mr-2" />
+      <PageLayout>
+        {/* Header */}
+        <PageHeader
+          title="Drill"
+          accentWord="Library"
+          subtitle="Browse and manage training drills"
+          actionButton={
+            <StandardButton 
+              onClick={handleOpenAddModal}
+              variant="primary"
+              icon={<Plus className="w-5 h-5" />}
+            >
               Add Drill
-            </Button>
-          </div>
+            </StandardButton>
+          }
+        />
 
           {/* Filters */}
-          <Card className="shadow-2xl border-border-custom bg-bg-secondary/70 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary w-4 h-4" />
-                  <Input
-                    placeholder="Search drills by name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-bg-secondary border-border-custom text-text-primary placeholder-text-secondary focus:border-accent-primary"
-                  />
-                </div>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full md:w-48 bg-bg-secondary border-border-custom text-text-primary focus:border-accent-primary">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
-                    <SelectItem value="all" className="focus:bg-bg-secondary">All Categories</SelectItem>
-                    {exactCategories.map(cat => <SelectItem key={cat} value={cat} className="focus:bg-bg-secondary">{cat}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={ageGroupFilter} onValueChange={setAgeGroupFilter}>
-                  <SelectTrigger className="w-full md:w-48 bg-bg-secondary border-border-custom text-text-primary focus:border-accent-primary">
-                    <SelectValue placeholder="All Age Groups" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
-                    <SelectItem value="all" className="focus:bg-bg-secondary">All Age Groups</SelectItem>
-                    {exactAgeGroups.map(age => <SelectItem key={age} value={age} className="focus:bg-bg-secondary">{age}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          <SearchFilter
+            searchValue={searchTerm}
+            onSearchChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search drills by name..."
+            filters={[
+              {
+                value: categoryFilter,
+                onChange: setCategoryFilter,
+                placeholder: "All Categories",
+                options: [
+                  { value: "all", label: "All Categories" },
+                  ...exactCategories.map(cat => ({ value: cat, label: cat }))
+                ]
+              },
+              {
+                value: ageGroupFilter,
+                onChange: setAgeGroupFilter,
+                placeholder: "All Age Groups",
+                options: [
+                  { value: "all", label: "All Age Groups" },
+                  ...exactAgeGroups.map(age => ({ value: age, label: age }))
+                ]
+              }
+            ]}
+          />
 
           {/* Drills Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDrills.length > 0 ? (
               filteredDrills.map((drill) => (
-                <Card
+                <DataCard
                   key={drill.id}
-                  className="shadow-2xl hover:shadow-xl transition-all duration-300 border-border-custom bg-bg-secondary/70 backdrop-blur-sm group overflow-hidden flex flex-col hover:bg-bg-secondary/70"
+                  className="hover:shadow-cyan-500/30 hover:border-cyan-500/50 cursor-pointer group overflow-hidden flex flex-col"
+                  hover={true}
                 >
                   <div className="p-6 flex-grow">
-                    <CardTitle className="text-lg font-bold text-text-primary truncate mb-2">
+                    <h3 className="text-lg font-bold text-white truncate mb-2">
                       {drill.DrillName}
-                    </CardTitle>
-                    <p className="text-text-secondary text-sm mb-4 h-10 overflow-hidden">
+                    </h3>
+                    <p className="text-slate-400 text-sm mb-4 h-10 overflow-hidden">
                       {drill.DrillDescription || drill.Description || drill.Instructions || drill.Details || "No description available."}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="bg-bg-secondary text-text-primary">
+                      <Badge variant="secondary" className="bg-slate-700 text-white">
                         <Tag className="w-3 h-3 mr-1" /> {drill.Category}
                       </Badge>
-                      <Badge variant="secondary" className="bg-bg-secondary text-text-primary">
+                      <Badge variant="secondary" className="bg-slate-700 text-white">
                         <Users className="w-3 h-3 mr-1" /> {displayAgeGroups(drill.TargetAgeGroup)}
                       </Badge>
                     </div>
                   </div>
-                  <div className="p-6 border-t border-border-custom">
-                    <Button variant="outline" className="w-full border-border-custom text-text-primary hover:bg-bg-secondary hover:text-accent-primary transition-colors" onClick={() => handleDrillClick(drill)}>
-                      <Eye className="w-4 h-4 mr-2" /> View Details
-                    </Button>
+                  <div className="p-6 border-t border-slate-700">
+                    <StandardButton 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => handleDrillClick(drill)}
+                      icon={<Eye className="w-4 h-4" />}
+                    >
+                      View Details
+                    </StandardButton>
                   </div>
-                </Card>
+                </DataCard>
               ))
             ) : (
               <div className="col-span-full">
-                <Card className="shadow-2xl border-border-custom bg-bg-secondary/70 backdrop-blur-sm">
-                  <CardContent className="p-12 text-center">
-                    <ClipboardList className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-text-primary mb-2">No Drills Found</h3>
-                    <p className="text-text-secondary">Try adjusting your filters or add a new drill.</p>
-                  </CardContent>
-                </Card>
+                <DataCard>
+                  <div className="p-12 text-center">
+                    <ClipboardList className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-white mb-2">No Drills Found</h3>
+                    <p className="text-slate-400">Try adjusting your filters or add a new drill.</p>
+                  </div>
+                </DataCard>
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </PageLayout>
 
       <AddDrillModal
         open={isAddModalOpen}

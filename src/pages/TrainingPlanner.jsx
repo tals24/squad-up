@@ -4,6 +4,7 @@ import { useData } from '../components/DataContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Save, Loader2, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StandardButton } from "@/components/ui/design-system-components";
 import { User } from '@/api/entities'; // Updated import path
 import WeeklyCalendar from '../components/WeeklyCalendar';
 import DrillLibrarySidebar from '../components/DrillLibrarySidebar';
@@ -212,31 +213,31 @@ export default function TrainingPlanner() {
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
 
   return (
-    <div className="h-screen bg-bg-primary text-text-primary flex flex-col overflow-hidden">
+    <div className="h-screen bg-slate-900 text-white flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="p-4 border-b border-border-custom bg-bg-secondary/70 backdrop-blur-sm flex items-center justify-between z-10">
+      <header className="p-4 border-b border-slate-700 bg-slate-800/70 backdrop-blur-sm flex items-center justify-between z-10">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Training Planner</h1>
-          <div className="flex items-center gap-4 text-text-primary mt-1">
-            <div className="flex items-center gap-2 bg-bg-secondary border border-border-custom rounded-lg p-1">
-              <Button onClick={() => handleWeekChange(subWeeks(currentDate, 1))} variant="ghost" size="icon" className="h-7 w-7 text-text-secondary hover:bg-bg-secondary hover:text-accent-primary">
+          <h1 className="text-2xl font-bold text-white">Training <span className="text-cyan-400">Planner</span></h1>
+          <div className="flex items-center gap-4 text-white mt-1">
+            <div className="flex items-center gap-2 bg-slate-700/50 border border-slate-600 rounded-lg p-1">
+              <Button onClick={() => handleWeekChange(subWeeks(currentDate, 1))} variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:bg-slate-600 hover:text-cyan-400">
                 <ChevronLeft className="w-5 h-5"/>
               </Button>
-              <span className="font-bold text-lg text-text-primary tabular-nums tracking-tighter">
+              <span className="font-bold text-lg text-white tabular-nums tracking-tighter">
                 {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
               </span>
-              <Button onClick={() => handleWeekChange(addWeeks(currentDate, 1))} variant="ghost" size="icon" className="h-7 w-7 text-text-secondary hover:bg-bg-secondary hover:text-accent-primary">
+              <Button onClick={() => handleWeekChange(addWeeks(currentDate, 1))} variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:bg-slate-600 hover:text-cyan-400">
                 <ChevronRight className="w-5 h-5"/>
               </Button>
             </div>
             <Select value={selectedTeamId} onValueChange={handleTeamChange}>
-              <SelectTrigger className="w-48 bg-bg-secondary border-border-custom hover:border-accent-primary/50">
+              <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white hover:border-cyan-400/50">
                 <SelectValue placeholder={managedTeams.length > 0 ? "Select Team..." : "No Teams Available"} />
               </SelectTrigger>
-              <SelectContent className="bg-bg-secondary border-border-custom text-text-primary">
+              <SelectContent className="bg-slate-800 border-slate-600 text-white">
                 {managedTeams.length > 0 ? (
                   managedTeams.map(team => (
-                    <SelectItem key={team.id} value={team.id} className="focus:bg-bg-secondary">
+                    <SelectItem key={team.id} value={team.id} className="focus:bg-slate-700 hover:bg-slate-700">
                       {team.TeamName}
                     </SelectItem>
                   ))
@@ -246,15 +247,15 @@ export default function TrainingPlanner() {
               </SelectContent>
             </Select>
             {hasSavedData && (
-              <div className="flex items-center gap-2 text-success text-sm bg-success/10 border border-green-500/30 rounded-full px-3 py-1">
+              <div className="flex items-center gap-2 text-green-400 text-sm bg-green-400/10 border border-green-500/30 rounded-full px-3 py-1">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span>Plan Saved</span>
               </div>
             )}
           </div>
         </div>
-        <Button onClick={handleSavePlan} disabled={isSaving} className="bg-accent-primary text-slate-900 font-bold hover:bg-cyan-400 shadow-lg shadow-accent-primary/20">
-            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Save className="w-4 h-4 mr-2"/>}
+        <Button onClick={handleSavePlan} disabled={isSaving} className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4"/>}
             {isSaving ? 'Saving...' : 'Save Weekly Plan'}
         </Button>
       </header>
@@ -264,8 +265,8 @@ export default function TrainingPlanner() {
         {isLoadingPlan ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-accent-primary" />
-              <p className="text-text-secondary">Loading training plan...</p>
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-cyan-400" />
+              <p className="text-slate-400">Loading training plan...</p>
             </div>
           </div>
         ) : selectedTeamId && selectedTeamId !== "no-teams" ? (
@@ -280,10 +281,10 @@ export default function TrainingPlanner() {
             </>
         ) : (
             <div className="flex-1 flex items-center justify-center text-center p-4">
-                <div className="p-8 bg-bg-secondary/50 rounded-2xl shadow-2xl border border-border-custom max-w-sm">
-                    <Info className="w-12 h-12 text-accent-primary mx-auto mb-4"/>
-                    <h2 className="text-xl font-bold text-text-primary">Select a Team to Begin</h2>
-                    <p className="text-text-secondary mt-2">Please select a team from the dropdown above to start planning your training week.</p>
+                <div className="p-8 bg-slate-800/50 rounded-2xl shadow-2xl border border-slate-700 max-w-sm">
+                    <Info className="w-12 h-12 text-cyan-400 mx-auto mb-4"/>
+                    <h2 className="text-xl font-bold text-white">Select a Team to Begin</h2>
+                    <p className="text-slate-400 mt-2">Please select a team from the dropdown above to start planning your training week.</p>
                 </div>
             </div>
         )}
