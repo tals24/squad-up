@@ -255,73 +255,39 @@ export default function Players() {
         />
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.4, 0.0, 0.2, 1] }}
-        >
-          <Card variant="elevated">
-          <CardContent className="p-6">
-              <Grid cols={3} gap="md" className="items-end">
-                <FormField label="Search Players">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 w-4 h-4" />
-                    <AnimatedInput
-                  placeholder="Search players..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                      {...createAriaProps({
-                        label: 'Search players by name',
-                        describedBy: 'search-help'
-                      })}
-                />
-              </div>
-                  <Text id="search-help" variant="caption" className="mt-1 text-neutral-500">
-                    Search by player name
-                  </Text>
-                </FormField>
-              
-              <FormField label="Position">
-              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-                  <SelectTrigger>
-                  <SelectValue placeholder="All Positions" />
-                </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Positions</SelectItem>
-                    <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
-                    <SelectItem value="Defender">Defender</SelectItem>
-                    <SelectItem value="Midfielder">Midfielder</SelectItem>
-                    <SelectItem value="Forward">Forward</SelectItem>
-                </SelectContent>
-              </Select>
-              </FormField>
-              <FormField label="Team">
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Team" />
-                </SelectTrigger>
-                  <SelectContent>
-                  {/* "All Teams" option only for admins */}
-                    {currentUser?.role === 'admin' && <SelectItem value="all">All Teams</SelectItem>}
-                  {filteredTeamsForDropdown.map(team => (
-                      <SelectItem key={team.id} value={team.id}>
-                      {team.TeamName || team.Name}
-                    </SelectItem>
-                  ))}
-                  {/* Show a message if no teams are available for non-admin user */}
-                  {currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0 && (
-                      <SelectItem value="no-teams" disabled>
-                      No teams assigned
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              </FormField>
-            </Grid>
-          </CardContent>
-        </Card>
-        </motion.div>
+        <SearchFilter
+          searchValue={searchTerm}
+          onSearchChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search players..."
+          filters={[
+            {
+              value: selectedPosition,
+              onChange: setSelectedPosition,
+              placeholder: "All Positions",
+              options: [
+                { value: "all", label: "All Positions" },
+                { value: "Goalkeeper", label: "Goalkeeper" },
+                { value: "Defender", label: "Defender" },
+                { value: "Midfielder", label: "Midfielder" },
+                { value: "Forward", label: "Forward" }
+              ]
+            },
+            {
+              value: selectedTeam,
+              onChange: setSelectedTeam,
+              placeholder: currentUser?.role === 'admin' ? "All Teams" : "Select Team",
+              options: [
+                ...(currentUser?.role === 'admin' ? [{ value: "all", label: "All Teams" }] : []),
+                ...filteredTeamsForDropdown.map(team => ({
+                  value: team.id,
+                  label: team.TeamName || team.Name
+                })),
+                ...(currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0 ? 
+                  [{ value: "no-teams", label: "No teams assigned", disabled: true }] : [])
+              ]
+            }
+          ]}
+        />
 
         {/* Players Grid */}
         <motion.div
