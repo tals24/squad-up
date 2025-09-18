@@ -10,7 +10,7 @@ export default function PlayerNumberMenu({ position, onSelectNumber, onClose }) 
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
-        className="fixed z-50 bg-bg-secondary/98 backdrop-blur-md rounded-xl p-3 shadow-2xl border border-border-custom"
+        className="fixed z-50 bg-card/98 backdrop-blur-md rounded-xl p-3 shadow-2xl border border-border"
         style={{
           left: Math.min(position.x - 60, window.innerWidth - 140),
           top: Math.max(position.y - 100, 10),
@@ -29,7 +29,7 @@ export default function PlayerNumberMenu({ position, onSelectNumber, onClose }) 
                 e.stopPropagation();
                 onSelectNumber(number.toString());
               }}
-              className="w-8 h-8 bg-accent-primary hover:bg-blue-600 text-text-primary font-bold rounded-full text-sm flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg"
+              className="w-8 h-8 bg-brand-blue hover:bg-brand-blue-600 text-brand-blue-foreground font-bold rounded-full text-sm flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg"
             >
               {number}
             </button>
@@ -43,7 +43,7 @@ export default function PlayerNumberMenu({ position, onSelectNumber, onClose }) 
               e.stopPropagation();
               onClose();
             }}
-            className="px-3 py-1 bg-bg-secondary hover:bg-bg-secondary text-text-primary text-xs rounded-md transition-colors duration-200"
+            className="px-3 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs rounded-md transition-colors duration-200"
           >
             Close
           </button>
