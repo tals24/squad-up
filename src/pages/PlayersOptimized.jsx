@@ -374,7 +374,7 @@ export default function PlayersOptimized() {
     [players]
   );
 
-  if (isContextLoading) {
+  if (isContextLoading || !teams || teams.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
