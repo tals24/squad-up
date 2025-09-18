@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
 const User = require('../models/User');
 const Team = require('../models/Team');
 const Player = require('../models/Player');
@@ -14,7 +14,7 @@ const SessionDrill = require('../models/SessionDrill');
 const router = express.Router();
 
 // Get all data (equivalent to fetchAllTables from Airtable)
-router.get('/all', authenticateToken, async (req, res) => {
+router.get('/all', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     
@@ -36,7 +36,7 @@ router.get('/all', authenticateToken, async (req, res) => {
       trainingSessions,
       sessionDrills
     ] = await Promise.all([
-      User.find().select('-firebaseUid').lean(),
+      User.find().select('-password').lean(),
       Team.find(teamQuery).populate('coach', 'fullName email role').lean(),
       Player.find().populate('team', 'teamName season division').lean(),
       Game.find().populate('team', 'teamName season division').lean(),
