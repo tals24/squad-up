@@ -253,8 +253,8 @@ export default function TrainingPlanner() {
             )}
           </div>
         </div>
-        <Button onClick={handleSavePlan} disabled={isSaving} className="bg-accent-primary text-slate-900 font-bold hover:bg-cyan-400 shadow-lg shadow-accent-primary/20">
-            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Save className="w-4 h-4 mr-2"/>}
+        <Button onClick={handleSavePlan} disabled={isSaving} className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4"/>}
             {isSaving ? 'Saving...' : 'Save Weekly Plan'}
         </Button>
       </header>

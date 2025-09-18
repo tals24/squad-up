@@ -281,10 +281,10 @@ export default function Players() {
               </Text>
           </div>
           <Link to={createPageUrl("AddPlayer")}>
-              <AnimatedButton variant="primary" size="md">
-              <Plus className="w-5 h-5 mr-2" />
+              <Button className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+              <Plus className="w-5 h-5" />
               Add Player
-              </AnimatedButton>
+              </Button>
           </Link>
           </motion.div>
 

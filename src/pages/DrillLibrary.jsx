@@ -516,8 +516,8 @@ export default function DrillLibrary() {
               <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">Drill Library</h1>
               <p className="text-text-secondary text-lg">Browse and manage training drills</p>
             </div>
-            <Button onClick={handleOpenAddModal} className="bg-accent-primary hover:bg-cyan-400 text-slate-900 font-bold shadow-lg shadow-accent-primary/20">
-              <Plus className="w-5 h-5 mr-2" />
+            <Button onClick={handleOpenAddModal} className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+              <Plus className="w-5 h-5" />
               Add Drill
             </Button>
           </div>
