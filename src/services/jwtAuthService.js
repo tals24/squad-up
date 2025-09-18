@@ -109,11 +109,17 @@ class JwtAuthService {
         return this.formatUser(data.user);
       } else {
         // Token is invalid, clear auth
+        console.log('🔴 Token verification failed, clearing auth and redirecting to login');
         await this.signOut();
+        // Redirect to login page
+        window.location.href = '/Login';
         throw new Error('Token verification failed');
       }
     } catch (error) {
+      console.log('🔴 Token verification error, clearing auth and redirecting to login');
       await this.signOut();
+      // Redirect to login page
+      window.location.href = '/Login';
       throw error;
     }
   }

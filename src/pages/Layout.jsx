@@ -41,7 +41,7 @@ import { User as UserEntity } from "@/api/entities";
 import { Button } from "@/components/ui/design-system-components";
 import { airtableSync } from "@/api/functions";
 import { DataProvider } from "../components/DataContext";
-import LoginModal from "../components/LoginModal";
+// Removed LoginModal - now using dedicated Login page
 
 // Note: ThemeProvider is now imported from ThemeContext
 
@@ -53,7 +53,7 @@ export default function Layout({ children, currentPageName }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [debugInfo, setDebugInfo] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  // Removed showLoginModal - now using dedicated Login page
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
@@ -79,37 +79,28 @@ export default function Layout({ children, currentPageName }) {
         return;
       }
       
-      // If no user, show login modal
+      // If no user, redirect to login page
       setIsAuthorized(false);
-      setShowLoginModal(true);
+      window.location.href = '/Login';
+      return;
       
     } catch (error) {
       console.log('Authentication error:', error);
       setIsAuthorized(false);
       setAuthError(error.message);
-      setShowLoginModal(true);
+      // Redirect to login page instead of showing modal
+      window.location.href = '/Login';
+      return;
     }
     setIsLoading(false);
   };
 
   const handleLogout = async () => {
     await UserEntity.logout();
-    window.location.reload();
+    window.location.href = '/Login';
   };
 
-  const handleLoginSuccess = (user) => {
-    console.log('Login successful:', user);
-    setCurrentUser(user);
-    setUserRole('Admin'); // Default to admin for now
-    setIsAuthorized(true);
-    setShowLoginModal(false);
-    setAuthError(null);
-  };
-
-  const handleLoginClose = () => {
-    setShowLoginModal(false);
-    setAuthError(null);
-  };
+  // Removed handleLoginSuccess and handleLoginClose - now using dedicated Login page
 
   const getRoleIcon = (role) => {
     switch (role) {
@@ -172,7 +163,7 @@ export default function Layout({ children, currentPageName }) {
             {!isLoading && (
               <div className="flex flex-col gap-3">
                 <Button 
-                  onClick={() => setShowLoginModal(true)} 
+                  onClick={() => window.location.href = '/Login'} 
                   className="bg-cyan-500 hover:bg-cyan-600 text-white"
                 >
                   Sign In
@@ -193,12 +184,7 @@ export default function Layout({ children, currentPageName }) {
             )}
           </div>
         </div>
-        {showLoginModal && (
-          <LoginModal 
-            onLoginSuccess={handleLoginSuccess}
-            onClose={handleLoginClose}
-          />
-        )}
+        {/* Removed LoginModal - now using dedicated Login page */}
       </>
     );
   }
