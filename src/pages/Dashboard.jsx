@@ -239,43 +239,48 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
     }, [weekSessions, sessionDrills, allDrills]);
 
     const drillCategoryColors = {
-        'Passing': 'bg-accent-primary',
-        'Shooting': 'bg-error',
-        'Dribbling': 'bg-warning',
-        'Defense': 'bg-success',
-        'Goalkeeping': 'bg-accent-secondary',
-        'Warm-up': 'bg-accent-primary',
-        'Physical': 'bg-warning',
-        'Tactics': 'bg-accent-primary',
-        'Conditioning': 'bg-success',
-        'Small Sided Game': 'bg-accent-secondary',
+        'Passing': 'bg-blue-500',
+        'Shooting': 'bg-red-500',
+        'Dribbling': 'bg-yellow-500',
+        'Defense': 'bg-green-500',
+        'Goalkeeping': 'bg-purple-500',
+        'Warm-up': 'bg-orange-500',
+        'Physical': 'bg-pink-500',
+        'Tactics': 'bg-cyan-500',
+        'Conditioning': 'bg-indigo-500',
+        'Small Sided Game': 'bg-emerald-500',
     };
 
     return (
-        <Card className="bg-bg-secondary/70 border border-border-custom shadow-xl backdrop-blur-sm flex flex-col">
+        <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col">
             <CardHeader>
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-bold text-text-primary flex items-center gap-2">
-                        <ListChecks className="w-5 h-5 text-accent-primary" />
+                    <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                        <ListChecks className="w-5 h-5 text-green-400" />
                         Weekly Training
                     </CardTitle>
                     <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => setWeekOffset(p => p - 1)} className="w-7 h-7"><ChevronLeft className="w-4 h-4 text-text-secondary hover:text-accent-primary" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setWeekOffset(p => p + 1)} className="w-7 h-7"><ChevronRight className="w-4 h-4 text-text-secondary hover:text-accent-primary" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setWeekOffset(p => p - 1)} className="w-7 h-7 hover:bg-slate-700/50">
+                            <ChevronLeft className="w-4 h-4 text-slate-400 hover:text-green-400" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setWeekOffset(p => p + 1)} className="w-7 h-7 hover:bg-slate-700/50">
+                            <ChevronRight className="w-4 h-4 text-slate-400 hover:text-green-400" />
+                        </Button>
                     </div>
                 </div>
-                <p className="text-sm text-text-secondary font-mono">{format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}</p>
+                <p className="text-sm text-slate-400 font-mono">{format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}</p>
             </CardHeader>
             <CardContent className="flex-grow">
+                <h3 className="text-sm font-semibold text-slate-400 mb-2">This Week's Schedule</h3>
                 {Object.keys(dailyDrills).length > 0 ? (
                     <div className="space-y-3">
                         {Object.entries(dailyDrills).map(([day, drills]) => (
                             <div key={day}>
-                                <h4 className="font-bold text-text-primary text-sm mb-1">{day}</h4>
+                                <h4 className="font-bold text-white text-sm mb-1">{day}</h4>
                                 <ul className="space-y-1 pl-2">
                                     {drills.map(drill => (
-                                        <li key={drill.id} className="flex items-center gap-2 text-sm text-text-secondary">
-                                            <span className={`w-2 h-2 rounded-full ${drillCategoryColors[drill.Category] || 'bg-disabled-custom'}`}></span>
+                                        <li key={drill.id} className="flex items-center gap-2 text-sm text-slate-400">
+                                            <span className={`w-2 h-2 rounded-full ${drillCategoryColors[drill.Category] || 'bg-slate-500'}`}></span>
                                             <span className="truncate">{drill.DrillName}</span>
                                         </li>
                                     ))}
@@ -284,13 +289,26 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-text-secondary flex flex-col items-center justify-center h-full">
-                        <ListChecks className="w-10 h-10 mx-auto mb-2" />
-                        <p className="font-semibold text-text-secondary">No trainings planned</p>
-                        <p className="text-xs mb-3">Plan your week to see it here.</p>
+                    <div className="text-center text-slate-500">
+                        <p className="text-sm">No trainings scheduled</p>
+                    </div>
+                )}
+            </CardContent>
+            <div className="border-t border-slate-700 mx-6"></div>
+            <CardContent className="pt-4">
+                <h3 className="text-sm font-semibold text-slate-400 mb-2">Quick Actions</h3>
+                {Object.keys(dailyDrills).length > 0 ? (
+                    <Link to={createPageUrl("WeeklyCalendar")} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors -m-2">
+                        <p className="font-bold text-white">View Full Calendar</p>
+                        <div className="text-sm text-green-400 font-mono mt-1">
+                            {Object.keys(dailyDrills).length} training days scheduled
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="text-center">
                         <Link to={createPageUrl("TrainingPlanner")}>
-                           <Button size="sm" variant="outline" className="text-accent-primary border-accent-primary/50 hover:bg-accent-primary/10 hover:text-accent-primary">
-                                Go to Planner
+                           <Button size="sm" variant="outline" className="text-green-400 border-green-400/50 hover:bg-green-400/10 hover:text-green-400">
+                                Plan This Week
                            </Button>
                         </Link>
                     </div>
