@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-mock-data": "node scripts/generateMockData.js",
+    "seed": "node scripts/generateMockData.js",
+    "create-firebase-users": "node scripts/createFirebaseUsers.js",
+    "link-firebase-users": "node scripts/linkFirebaseUsers.js",
+    "setup-complete": "npm run seed && npm run create-firebase-users && npm run link-firebase-users"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.5.0",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
+    "nodemon": "^3.1.10"
+  }
+}
