@@ -328,12 +328,11 @@ export default function Analytics() {
                   ) : (
                     <div className="text-center py-8">
                       <TrendingUp className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-text-secondary">No performance data available yet</p>
+                      <p className="text-slate-400">No performance data available yet</p>
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </DataCard>
           </div>
 
           {/* Position Breakdown */}
