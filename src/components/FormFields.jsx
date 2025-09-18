@@ -66,9 +66,6 @@ export function SelectField({
   // Use the correct value and onChange function
   const fieldValue = value || (formData && formData[id]);
   const fieldOnChange = onChange || handleChange;
-  
-  // Debug logging
-  console.log(`SelectField ${id}:`, { onChange, handleChange, fieldOnChange, formData });
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
@@ -107,16 +104,37 @@ export function SelectField({
 export function FormGrid({ children, columns = 2, formData, handleChange, onChange, ...restProps }) {
   const gridClass = columns === 1 ? "grid gap-6" : `grid md:grid-cols-${columns} gap-6`;
   
+  // Filter out DOM-related props that shouldn't be passed to children
+  const { className, style, id, ...cleanProps } = restProps;
+  
   return (
     <div className={gridClass}>
-      {React.Children.map(children, child => 
-        React.cloneElement(child, { 
-          formData, 
-          handleChange,
-          onChange,
-          ...restProps
-        })
-      )}
+      {React.Children.map(children, child => {
+        // Only clone React elements, skip null/undefined children
+        if (!React.isValidElement(child)) {
+          return child;
+        }
+        
+        // Only pass props to our FormField components, not to regular div/DOM elements
+        const isFormFieldComponent = child.type && (
+          child.type === TextInputField || 
+          child.type === SelectField ||
+          (typeof child.type === 'function' && child.type.name && 
+           (child.type.name.includes('Field') || child.type.name.includes('Input')))
+        );
+        
+        if (isFormFieldComponent) {
+          return React.cloneElement(child, { 
+            formData, 
+            handleChange,
+            onChange,
+            ...cleanProps
+          });
+        }
+        
+        // For non-FormField components, just return them as-is
+        return child;
+      })}
     </div>
   );
 }
