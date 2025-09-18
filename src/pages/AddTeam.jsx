@@ -104,11 +104,11 @@ export default function AddTeam() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary p-6 md:p-8">
+      <div className="min-h-screen bg-background p-6 md:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-bg-secondary rounded w-1/3"></div>
-            <div className="h-96 bg-bg-secondary rounded-xl shadow-sm"></div>
+            <div className="h-8 bg-muted rounded w-1/3"></div>
+            <div className="h-96 bg-card rounded-xl shadow-sm"></div>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function AddTeam() {
 
   return (
     <>
-      <div className="min-h-screen bg-bg-primary p-6 md:p-8 relative">
+      <div className="min-h-screen bg-background p-6 md:p-8 relative">
         {/* Ambient effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>

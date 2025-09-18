@@ -102,8 +102,8 @@ export default function AddUser() {
       <div className="min-h-screen bg-background p-6 md:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-slate-700 rounded w-1/3"></div>
-            <div className="h-96 bg-slate-800 rounded-xl shadow-sm"></div>
+            <div className="h-8 bg-muted rounded w-1/3"></div>
+            <div className="h-96 bg-card rounded-xl shadow-sm"></div>
           </div>
         </div>
       </div>
@@ -121,27 +121,27 @@ export default function AddUser() {
           {/* Header */}
           <div className="flex items-center gap-4">
             <Link to={createPageUrl("Dashboard")}>
-              <Button variant="outline" size="icon" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-cyan-500 transition-all duration-300">
+              <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Add New <span className="text-cyan-400">User</span>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Add New <span className="text-brand-blue">User</span>
               </h1>
-              <p className="text-slate-400 text-lg font-mono">Create a new user account</p>
+              <p className="text-muted-foreground text-lg font-mono">Create a new user account</p>
             </div>
           </div>
 
           {/* Form Card */}
-          <Card className="shadow-2xl border border-cyan-500/20 bg-slate-800/70 backdrop-blur-sm relative overflow-hidden">
+          <Card className="shadow-2xl border border-brand-blue/20 bg-card/70 backdrop-blur-sm relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
             
-            <CardHeader className="border-b border-slate-700/50 relative">
-              <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-cyan-400/0"></div>
-              <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <CardHeader className="border-b border-border/50 relative">
+              <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-brand-blue/0 via-brand-blue/30 to-brand-blue/0"></div>
+              <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-brand-purple to-brand-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-purple/20">
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 User Information
@@ -151,8 +151,8 @@ export default function AddUser() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-slate-300 font-medium flex items-center gap-2">
-                      <UserIcon className="w-4 h-4 text-cyan-400" />
+                    <Label htmlFor="fullName" className="text-foreground font-medium flex items-center gap-2">
+                      <UserIcon className="w-4 h-4 text-brand-blue" />
                       Full Name *
                     </Label>
                     <Input
@@ -166,8 +166,8 @@ export default function AddUser() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-300 font-medium flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-blue-400" />
+                    <Label htmlFor="email" className="text-foreground font-medium flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-brand-blue-400" />
                       Email *
                     </Label>
                     <Input
@@ -182,50 +182,50 @@ export default function AddUser() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="role" className="text-slate-300 font-medium flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-purple-400" />
+                    <Label htmlFor="role" className="text-foreground font-medium flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-brand-purple-400" />
                       Role *
                     </Label>
                     <Select value={formData.Role} onValueChange={(value) => handleChange('Role', value)}>
-                      <SelectTrigger className="bg-background border-border text-foreground focus:border-cyan-400 focus:ring-cyan-400/20">
+                      <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border text-foreground">
-                        <SelectItem value="Coach" className="text-white focus:bg-slate-600 hover:bg-slate-600">Coach</SelectItem>
-                        <SelectItem value="Division Manager" className="text-white focus:bg-slate-600 hover:bg-slate-600">Division Manager</SelectItem>
-                        <SelectItem value="Department Manager" className="text-white focus:bg-slate-600 hover:bg-slate-600">Department Manager</SelectItem>
+                        <SelectItem value="Coach" className="text-foreground focus:bg-accent hover:bg-accent">Coach</SelectItem>
+                        <SelectItem value="Division Manager" className="text-foreground focus:bg-accent hover:bg-accent">Division Manager</SelectItem>
+                        <SelectItem value="Department Manager" className="text-foreground focus:bg-accent hover:bg-accent">Department Manager</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="department" className="text-slate-300 font-medium flex items-center gap-2">
-                      <Building className="w-4 h-4 text-green-400" />
+                    <Label htmlFor="department" className="text-foreground font-medium flex items-center gap-2">
+                      <Building className="w-4 h-4 text-brand-green-400" />
                       Department
                     </Label>
                     <Select value={formData.Department} onValueChange={(value) => handleChange('Department', value)}>
-                      <SelectTrigger className="bg-background border-border text-foreground focus:border-cyan-400 focus:ring-cyan-400/20">
+                      <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
                       <SelectContent className="bg-background border-border text-foreground">
-                        <SelectItem value="Senior Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Senior Division</SelectItem>
-                        <SelectItem value="Middle Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Middle Division</SelectItem>
-                        <SelectItem value="Youth Division" className="text-white focus:bg-slate-600 hover:bg-slate-600">Youth Division</SelectItem>
+                        <SelectItem value="Senior Division" className="text-foreground focus:bg-accent hover:bg-accent">Senior Division</SelectItem>
+                        <SelectItem value="Middle Division" className="text-foreground focus:bg-accent hover:bg-accent">Middle Division</SelectItem>
+                        <SelectItem value="Youth Division" className="text-foreground focus:bg-accent hover:bg-accent">Youth Division</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
+                <div className="flex justify-end gap-4 pt-6 border-t border-border">
                   <Link to={createPageUrl("Dashboard")}>
-                    <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-cyan-500 transition-all duration-300">
+                    <Button variant="outline" className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300">
                       Cancel
                     </Button>
                   </Link>
                   <Button
                     type="submit"
                     disabled={isSaving || !formData.FullName || !formData.Email}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all duration-300"
+                    className="bg-gradient-to-r from-brand-blue to-brand-blue-600 hover:from-brand-blue-400 hover:to-brand-blue-500 text-brand-blue-foreground shadow-lg shadow-brand-blue/20 hover:shadow-brand-blue/30 transition-all duration-300"
                   >
                     {isSaving ? (
                       <>
