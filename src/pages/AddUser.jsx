@@ -45,7 +45,7 @@ export default function AddUser() {
       // Remove ConfirmPassword from submission data
       const { ConfirmPassword, ...submitData } = formData;
       
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

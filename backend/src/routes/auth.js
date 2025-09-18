@@ -177,7 +177,8 @@ router.post('/register', async (req, res) => {
       role: Role,
       phoneNumber: PhoneNumber || null,
       department: Department || null,
-      password: Password // Will be hashed by pre-save middleware
+      password: Password, // Will be hashed by pre-save middleware
+      firebaseUid: `pwd_${new Date().getTime()}_${Math.random().toString(36).substr(2, 9)}` // Unique ID for password-based users
     });
 
     await newUser.save();
@@ -190,9 +191,12 @@ router.post('/register', async (req, res) => {
 
   } catch (error) {
     console.error('Registration error:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       success: false,
-      error: 'Internal server error' 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

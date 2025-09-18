@@ -9,11 +9,11 @@ const userSchema = new mongoose.Schema({
     default: () => new mongoose.Types.ObjectId().toString()
   },
   
-  // Firebase UID for authentication
+  // Firebase UID for authentication (optional for password-based users)
   firebaseUid: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    default: null
   },
   
   // Basic user information
@@ -98,9 +98,10 @@ userSchema.methods.toPublicJSON = function() {
 };
 
 // Index for efficient queries
-userSchema.index({ firebaseUid: 1 });
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+// Sparse index for firebaseUid - only indexes non-null values
+userSchema.index({ firebaseUid: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', userSchema);
 
