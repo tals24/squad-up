@@ -35,6 +35,7 @@ import {
   FormField,
   Grid
 } from "@/components/ui/design-system-components";
+import { PageLayout, PageHeader, SearchFilter, LoadingState, StandardButton } from "@/components/ui/design-system-components";
 import { 
   AnimatedButton, 
   AnimatedCard, 
@@ -230,63 +231,28 @@ export default function Players() {
   };
 
   if (isContextLoading) {
-    return (
-      <PageTransition>
-        <Section padding="lg" className="bg-gradient-to-br from-primary-50 to-secondary-50 min-h-screen">
-          <Container size="xl">
-            <motion.div 
-              className="space-y-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="text-center">
-                <LoadingSpinner size="lg" />
-                <Text className="mt-4 text-neutral-600">Loading players...</Text>
-              </div>
-              
-              <StaggerContainer>
-                <Grid cols={4} gap="md">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                    <StaggerItem key={i}>
-                      <div className="h-48 bg-neutral-200 rounded-xl animate-pulse" />
-                    </StaggerItem>
-                  ))}
-                </Grid>
-              </StaggerContainer>
-            </motion.div>
-          </Container>
-        </Section>
-      </PageTransition>
-    );
+    return <LoadingState message="Loading players..." />;
   }
 
   return (
     <PageTransition>
-      <Section padding="lg" className="bg-gradient-to-br from-primary-50 to-secondary-50 min-h-screen">
-        <Container size="xl" className="space-y-8">
+      <PageLayout>
         {/* Header */}
-          <motion.div 
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
-          >
-          <div>
-              <Heading level={1} className="mb-2">
-              My Players
-              </Heading>
-              <Text variant="large" className="text-neutral-600">
-              Manage and track player development
-              </Text>
-          </div>
-          <Link to={createPageUrl("AddPlayer")}>
-              <Button className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Add Player
-              </Button>
-          </Link>
-          </motion.div>
+        <PageHeader
+          title="My"
+          accentWord="Players"
+          subtitle="Manage and track player development"
+          actionButton={
+            <Link to={createPageUrl("AddPlayer")}>
+              <StandardButton 
+                variant="primary"
+                icon={<Plus className="w-5 h-5" />}
+              >
+                Add Player
+              </StandardButton>
+            </Link>
+          }
+        />
 
         {/* Filters */}
         <motion.div
@@ -533,8 +499,7 @@ export default function Players() {
             <ChevronRight className="w-4 h-4 ml-2" />
           </AnimatedButton>
         </motion.div>
-        </Container>
-      </Section>
+      </PageLayout>
     </PageTransition>
   );
 }
