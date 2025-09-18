@@ -93,48 +93,29 @@ function PagesContent() {
     const currentPage = _getCurrentPage(location.pathname);
     
     return (
-        <Layout currentPageName={currentPage}>
-            <Routes>            
-                
-                    <Route path="/" element={<Dashboard />} />
-                
-                
-                <Route path="/Dashboard" element={<Dashboard />} />
-                
-                <Route path="/Players" element={<Players />} />
-                
-                <Route path="/Player" element={<Player />} />
-                
-                <Route path="/SyncStatus" element={<SyncStatus />} />
-                
-                <Route path="/Analytics" element={<Analytics />} />
-                
-                <Route path="/AddPlayer" element={<AddPlayer />} />
-                
-                <Route path="/AddTeam" element={<AddTeam />} />
-                
-                <Route path="/AddReport" element={<AddReport />} />
-                
-                <Route path="/AddUser" element={<AddUser />} />
-                
-                <Route path="/Login" element={<Login />} />
-                
-                <Route path="/GamesSchedule" element={<GamesSchedule />} />
-                
-                <Route path="/GameDetails" element={<GameDetails />} />
-                
-                <Route path="/AccessDenied" element={<AccessDenied />} />
-                
-                <Route path="/DrillLibrary" element={<DrillLibrary />} />
-                
-                <Route path="/TacticBoard" element={<TacticBoard />} />
-                
-                <Route path="/TrainingPlanner" element={<TrainingPlanner />} />
-                
-                <Route path="/DrillLab" element={<DrillLab />} />
-                
-            </Routes>
-        </Layout>
+        <Routes>            
+            {/* Public routes - no Layout wrapper */}
+            <Route path="/" element={<Login />} />
+            <Route path="/Login" element={<Login />} />
+            
+            {/* Protected routes - wrapped in Layout */}
+            <Route path="/Dashboard" element={<Layout currentPageName="Dashboard"><Dashboard /></Layout>} />
+            <Route path="/Players" element={<Layout currentPageName="Players"><Players /></Layout>} />
+            <Route path="/Player" element={<Layout currentPageName="Player"><Player /></Layout>} />
+            <Route path="/SyncStatus" element={<Layout currentPageName="SyncStatus"><SyncStatus /></Layout>} />
+            <Route path="/Analytics" element={<Layout currentPageName="Analytics"><Analytics /></Layout>} />
+            <Route path="/AddPlayer" element={<Layout currentPageName="AddPlayer"><AddPlayer /></Layout>} />
+            <Route path="/AddTeam" element={<Layout currentPageName="AddTeam"><AddTeam /></Layout>} />
+            <Route path="/AddReport" element={<Layout currentPageName="AddReport"><AddReport /></Layout>} />
+            <Route path="/AddUser" element={<Layout currentPageName="AddUser"><AddUser /></Layout>} />
+            <Route path="/GamesSchedule" element={<Layout currentPageName="GamesSchedule"><GamesSchedule /></Layout>} />
+            <Route path="/GameDetails" element={<Layout currentPageName="GameDetails"><GameDetails /></Layout>} />
+            <Route path="/AccessDenied" element={<Layout currentPageName="AccessDenied"><AccessDenied /></Layout>} />
+            <Route path="/DrillLibrary" element={<Layout currentPageName="DrillLibrary"><DrillLibrary /></Layout>} />
+            <Route path="/TacticBoard" element={<Layout currentPageName="TacticBoard"><TacticBoard /></Layout>} />
+            <Route path="/TrainingPlanner" element={<Layout currentPageName="TrainingPlanner"><TrainingPlanner /></Layout>} />
+            <Route path="/DrillLab" element={<Layout currentPageName="DrillLab"><DrillLab /></Layout>} />
+        </Routes>
     );
 }
 
