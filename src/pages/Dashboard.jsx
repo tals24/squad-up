@@ -589,7 +589,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-white">
-              Welcome, <span className="text-cyan-400">{currentUser?.full_name?.split(' ')[0]}</span>
+              Welcome, <span className="text-cyan-400">{currentUser?.fullName?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'User'}</span>
             </h1>
             <p className="text-slate-400 text-lg font-mono">
               {userRole} Terminal
