@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from "../components/DataContext";
-import { airtableSync } from "@/api/functions";
+import { getFormations, createFormation, updateFormation, deleteFormation, createTimelineEvent } from "@/api/functions";
 import ConfirmationToast from "../components/ConfirmationToast";
 import FormationEditorModal from "../components/FormationEditorModal";
 
@@ -107,10 +107,7 @@ export default function TacticBoard() {
 
       setCurrentTeamId(teamId);
 
-      const response = await airtableSync({
-        action: 'fetch',
-        tableName: 'Formations'
-      });
+      const response = await getFormations();
 
       if (response.data?.records) {
         const filteredFormations = response.data.records.filter(formation => {
@@ -222,11 +219,7 @@ export default function TacticBoard() {
         recordData.Team = [currentTeamId];
       }
 
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Formations',
-        recordData: recordData
-      });
+      const response = await createFormation(recordData);
 
       if (response.data?.success) {
         setConfirmationConfig({
@@ -379,11 +372,7 @@ export default function TacticBoard() {
 
     try {
       if (isAirtableFormation) {
-        const response = await airtableSync({
-          action: 'delete',
-          tableName: 'Formations',
-          recordId: formationToDelete.id
-        });
+        const response = await deleteFormation(formationToDelete.id);
 
         if (response.data?.success) {
           await loadSavedFormations();
@@ -495,18 +484,9 @@ export default function TacticBoard() {
 
         let response;
         if (isUpdating) {
-            response = await airtableSync({
-                action: 'update',
-                tableName: 'Formations',
-                recordId: editingFormationData.id,
-                recordData: recordData
-            });
+            response = await updateFormation(editingFormationData.id, recordData);
         } else {
-            response = await airtableSync({
-                action: 'create',
-                tableName: 'Formations',
-                recordData: recordData
-            });
+            response = await createFormation(recordData);
         }
 
         if (response.data?.success) {
@@ -850,20 +830,19 @@ export default function TacticBoard() {
     setIsSaving(true); // Using general isSaving for this operation
 
     try {
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'TimelineEvents',
-        recordData: {
-          Player: selectedPlayer ? [selectedPlayer.id] : undefined,
-          Date: new Date().toISOString().split('T')[0],
-          EventType: "Game Report",
-          GeneralRating: parseInt(performanceData.GeneralRating) || 3,
-          MinutesPlayed: parseInt(performanceData.MinutesPlayed) || 0,
-          Goals: parseInt(performanceData.Goals) || 0,
-          Assists: parseInt(performanceData.Assists) || 0,
-          GeneralNotes: performanceData.GeneralNotes || ""
-        }
-      });
+      const eventData = {
+        player: selectedPlayer ? selectedPlayer._id : null,
+        type: "Game Report",
+        title: `Performance Report - ${selectedPlayer?.fullName}`,
+        content: performanceData.GeneralNotes || "",
+        rating: parseInt(performanceData.GeneralRating) || 3,
+        minutesPlayed: parseInt(performanceData.MinutesPlayed) || 0,
+        goals: parseInt(performanceData.Goals) || 0,
+        assists: parseInt(performanceData.Assists) || 0,
+        date: new Date().toISOString()
+      };
+
+      const response = await createTimelineEvent(eventData);
 
       if (response.data?.success) {
         setConfirmationConfig({

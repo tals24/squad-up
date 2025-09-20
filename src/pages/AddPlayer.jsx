@@ -8,7 +8,7 @@ import {
   Trophy,
   Target
 } from "lucide-react";
-import { airtableSync } from "@/api/functions";
+import { getTeams, createPlayer } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
@@ -35,10 +35,10 @@ export default function AddPlayer() {
       const user = await User.me();
       setCurrentUser(user);
       
-      // Load teams for team selection
-      const teamsResponse = await airtableSync({ action: 'fetch', tableName: 'Teams' });
-      if (teamsResponse.data?.records) {
-        setTeams(teamsResponse.data.records);
+      // Load teams for team selection using MongoDB backend
+      const teamsResponse = await getTeams();
+      if (teamsResponse.data?.success && teamsResponse.data?.data) {
+        setTeams(teamsResponse.data.data);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -48,21 +48,30 @@ export default function AddPlayer() {
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Players',
-        recordData: {
-          ...formData,
-          Team: formData.Team ? [formData.Team] : undefined,
-          DateOfBirth: formData.DateOfBirth || undefined,
-          ProfileImageURL: formData.ProfileImageURL || undefined,
-        }
-      });
+      const playerData = {
+        fullName: formData.Name,
+        team: formData.Team || null,
+        position: formData.Position,
+        jerseyNumber: formData.JerseyNumber ? parseInt(formData.JerseyNumber) : null,
+        dateOfBirth: formData.DateOfBirth || null,
+        height: formData.Height ? parseFloat(formData.Height) : null,
+        weight: formData.Weight ? parseFloat(formData.Weight) : null,
+        preferredFoot: formData.PreferredFoot || null,
+        nationality: formData.Nationality || null,
+        phoneNumber: formData.PhoneNumber || null,
+        email: formData.Email || null,
+        emergencyContact: formData.EmergencyContact || null,
+        emergencyPhone: formData.EmergencyPhone || null,
+        medicalConditions: formData.MedicalConditions || null,
+        notes: formData.Notes || null
+      };
+
+      const response = await createPlayer(playerData);
 
       if (response.data?.success) {
         return {
           success: true,
-          message: `${formData.FullName} has been added to the squad and is now ready to start training!`
+          message: `${formData.Name} has been added to the squad and is now ready to start training!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save player");

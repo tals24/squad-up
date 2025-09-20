@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/sidebar";
 import { User as UserEntity } from "@/api/entities";
 import { Button } from "@/components/ui/design-system-components";
-import { airtableSync } from "@/api/functions";
+// Removed airtableSync - now using MongoDB backend
 import { DataProvider } from "../components/DataContext";
 // Removed LoginModal - now using dedicated Login page
 

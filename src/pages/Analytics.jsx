@@ -16,63 +16,16 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLayout, PageHeader, DataCard, LoadingState, EmptyState } from "@/components/ui/design-system-components";
-import { airtableSync } from "@/api/functions";
+import { useData } from "../components/DataContext";
 
 export default function Analytics() {
+  const { users, teams, players, reports, isLoading: isDataLoading } = useData();
   const [currentUser, setCurrentUser] = useState(null);
-  const [players, setPlayers] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [reports, setReports] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadAnalyticsData();
+    User.me().then(setCurrentUser).catch(console.error);
   }, []);
-
-  const loadAnalyticsData = async () => {
-    try {
-      const user = await User.me();
-      setCurrentUser(user);
-
-      // Load real data from Airtable
-      try {
-        const playersResponse = await airtableSync({ action: 'fetch', tableName: 'Players' });
-        const teamsResponse = await airtableSync({ action: 'fetch', tableName: 'Teams' });
-        const reportsResponse = await airtableSync({ action: 'fetch', tableName: 'TimelineEvents' });
-
-        if (playersResponse.data?.records) {
-          setPlayers(playersResponse.data.records);
-        } else {
-          console.warn("No players data received from Airtable.");
-          setPlayers([]);
-        }
-        if (teamsResponse.data?.records) {
-          setTeams(teamsResponse.data.records);
-        } else {
-          console.warn("No teams data received from Airtable.");
-          setTeams([]);
-        }
-        if (reportsResponse.data?.records) {
-          setReports(reportsResponse.data.records);
-        } else {
-          console.warn("No reports data received from Airtable.");
-          setReports([]);
-        }
-      } catch (airtableError) {
-        console.error("Airtable connection error:", airtableError);
-        // Default to empty arrays on Airtable error to prevent app crash
-        setPlayers([]);
-        setTeams([]);
-        setReports([]);
-      }
-
-    } catch (error) {
-      console.error("Error loading analytics data:", error);
-      // Ensure loading state is false even if User.me() fails
-    }
-    setIsLoading(false);
-  };
 
   const getFilteredData = () => {
     if (!currentUser) return { filteredPlayers: [], filteredReports: [], filteredTeams: [] };

@@ -8,7 +8,7 @@ import {
   Clock,
   Target
 } from "lucide-react";
-import { airtableSync } from "@/api/functions";
+import { getTeams, createGame } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
@@ -37,10 +37,10 @@ export default function AddGame() {
       const user = await User.me();
       setCurrentUser(user);
       
-      // Load teams for team selection
-      const teamsResponse = await airtableSync({ action: 'fetch', tableName: 'Teams' });
-      if (teamsResponse.data?.records) {
-        setTeams(teamsResponse.data.records);
+      // Load teams for team selection using MongoDB backend
+      const teamsResponse = await getTeams();
+      if (teamsResponse.data?.success && teamsResponse.data?.data) {
+        setTeams(teamsResponse.data.data);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -55,19 +55,17 @@ export default function AddGame() {
         ? `${formData.Date}T${formData.Time}:00.000Z`
         : undefined;
 
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Games',
-        recordData: {
-          GameTitle: formData.GameTitle,
-          Date: gameDateTime,
-          Location: formData.Location,
-          Opponent: formData.Opponent,
-          Team: formData.Team ? [formData.Team] : undefined,
-          GameType: formData.GameType,
-          Status: formData.Status
-        }
-      });
+      const gameData = {
+        team: formData.Team || null,
+        opponent: formData.Opponent || null,
+        date: gameDateTime,
+        venue: formData.Location || null,
+        type: formData.GameType || 'Friendly',
+        status: formData.Status || 'Scheduled',
+        title: formData.GameTitle || null
+      };
+
+      const response = await createGame(gameData);
 
       if (response.data?.success) {
         return {

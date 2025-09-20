@@ -6,7 +6,7 @@ import { Undo, Redo, Trash2, Save, ArrowLeft, FileText, View } from 'lucide-reac
 import DrillLabToolbar from '../components/DrillLabToolbar';
 import DrillCanvas from '../components/DrillCanvas';
 import DrillDescriptionModal from '../components/DrillDescriptionModal';
-import { airtableSync } from "@/api/functions";
+import { getDrills, updateDrill } from "@/api/functions";
 import ConfirmationToast from "../components/ConfirmationToast";
 
 export default function DrillLab() {
@@ -37,11 +37,7 @@ export default function DrillLab() {
       // טעינת תרגיל קיים
       const fetchDrillData = async () => {
         setIsLoading(true);
-        const response = await airtableSync({
-          action: 'fetchSingle',
-          tableName: 'Drills',
-          recordId: drillId
-        });
+        const response = await getDrills();
         if (response.data?.record) {
           const drill = response.data.record;
           setDrillDescription(drill.Description || drill.DrillDescription || '');
@@ -135,9 +131,7 @@ export default function DrillLab() {
     if (!drillId || isReadOnly) return;
     
     if (elementsToSave) {
-      const response = await airtableSync({
-        action: 'update',
-        tableName: 'Drills',
+      const response = await updateDrill({
         recordId: drillId,
         recordData: {
           DrillLayoutData: JSON.stringify(elementsToSave)

@@ -24,7 +24,9 @@ router.get('/all', authenticateJWT, async (req, res) => {
       teamQuery.coach = user._id;
     }
 
-    // Fetch all data in parallel
+    console.log(`🔍 User ${user.fullName} (${user.role}) requesting data...`);
+    
+    // Fetch all data in parallel with error handling
     const [
       users,
       teams,
@@ -36,16 +38,18 @@ router.get('/all', authenticateJWT, async (req, res) => {
       trainingSessions,
       sessionDrills
     ] = await Promise.all([
-      User.find().select('-password').lean(),
-      Team.find(teamQuery).populate('coach', 'fullName email role').lean(),
-      Player.find().populate('team', 'teamName season division').lean(),
-      Game.find().populate('team', 'teamName season division').lean(),
-      TimelineEvent.find().populate('player game author').lean(),
-      Drill.find().populate('author', 'fullName').lean(),
-      GameRoster.find().populate('game player').lean(),
-      TrainingSession.find().populate('team', 'teamName').lean(),
-      SessionDrill.find().populate('trainingSession drill').lean()
+      User.find().select('-password').lean().catch(err => { console.error('Users query error:', err); return []; }),
+      Team.find(teamQuery).populate('coach', 'fullName email role').lean().catch(err => { console.error('Teams query error:', err); return []; }),
+      Player.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Players query error:', err); return []; }),
+      Game.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Games query error:', err); return []; }),
+      TimelineEvent.find().populate('player game author').lean().catch(err => { console.error('Reports query error:', err); return []; }),
+      Drill.find().populate('author', 'fullName').lean().catch(err => { console.error('Drills query error:', err); return []; }),
+      GameRoster.find().populate('game player').lean().catch(err => { console.error('GameRosters query error:', err); return []; }),
+      TrainingSession.find().populate('team', 'teamName').lean().catch(err => { console.error('TrainingSessions query error:', err); return []; }),
+      SessionDrill.find().populate('trainingSession drill').lean().catch(err => { console.error('SessionDrills query error:', err); return []; })
     ]);
+    
+    console.log(`📊 Initial data counts - Users: ${users.length}, Teams: ${teams.length}, Players: ${players.length}, Games: ${games.length}`);
 
     // Filter data based on user role
     let filteredTeams = teams;
@@ -56,18 +60,43 @@ router.get('/all', authenticateJWT, async (req, res) => {
     let filteredTrainingSessions = trainingSessions;
 
     if (user.role === 'Coach') {
-      const teamIds = teams.map(team => team._id);
-      filteredPlayers = players.filter(player => teamIds.includes(player.team._id));
-      filteredGames = games.filter(game => teamIds.includes(game.team._id));
-      filteredReports = reports.filter(report => 
-        filteredPlayers.some(player => player._id.toString() === report.player._id.toString())
-      );
-      filteredGameRosters = gameRosters.filter(roster => 
-        teamIds.includes(roster.game.team._id)
-      );
-      filteredTrainingSessions = trainingSessions.filter(session => 
-        teamIds.includes(session.team._id)
-      );
+      // Get team IDs for this coach (convert to strings for comparison)
+      const teamIds = teams.map(team => team._id.toString());
+      console.log(`🧑‍🏫 Coach ${user.fullName} has access to teams:`, teamIds);
+      
+      // Filter players by teams this coach manages
+      filteredPlayers = players.filter(player => {
+        if (!player.team || !player.team._id) return false;
+        return teamIds.includes(player.team._id.toString());
+      });
+      
+      // Filter games by teams this coach manages  
+      filteredGames = games.filter(game => {
+        if (!game.team || !game.team._id) return false;
+        return teamIds.includes(game.team._id.toString());
+      });
+      
+      // Filter reports by players in this coach's teams
+      const playerIds = filteredPlayers.map(player => player._id.toString());
+      filteredReports = reports.filter(report => {
+        if (!report.player || !report.player._id) return false;
+        return playerIds.includes(report.player._id.toString());
+      });
+      
+      // Filter game rosters by games this coach manages
+      const gameIds = filteredGames.map(game => game._id.toString());
+      filteredGameRosters = gameRosters.filter(roster => {
+        if (!roster.game || !roster.game._id) return false;
+        return gameIds.includes(roster.game._id.toString());
+      });
+      
+      // Filter training sessions by teams this coach manages
+      filteredTrainingSessions = trainingSessions.filter(session => {
+        if (!session.team || !session.team._id) return false;
+        return teamIds.includes(session.team._id.toString());
+      });
+      
+      console.log(`📊 Coach data filtered: ${filteredPlayers.length} players, ${filteredGames.length} games, ${filteredReports.length} reports`);
     }
 
     res.json({

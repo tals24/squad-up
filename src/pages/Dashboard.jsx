@@ -339,7 +339,7 @@ const PlayerSpotlight = ({ players, reports }) => {
   const playerStats = useMemo(() => {
     if (!currentPlayer || !reports) return null;
 
-    const playerReports = reports.filter(report => report.Player && report.Player.includes(currentPlayer.id));
+    const playerReports = reports.filter(report => report.player && report.player._id === currentPlayer._id);
     if (playerReports.length === 0) {
         return {
             averageRating: 'N/A',
@@ -350,11 +350,11 @@ const PlayerSpotlight = ({ players, reports }) => {
         };
     }
 
-    const totalRating = playerReports.reduce((sum, r) => sum + (r.GeneralRating || 0), 0);
+    const totalRating = playerReports.reduce((sum, r) => sum + (r.rating || 0), 0);
     const averageRating = (totalRating / playerReports.length).toFixed(1);
-    const totalGoals = playerReports.reduce((sum, r) => sum + (r.Goals || 0), 0);
-    const totalAssists = playerReports.reduce((sum, r) => sum + (r.Assists || 0), 0);
-    const minutesPlayed = playerReports.reduce((sum, r) => sum + (r.MinutesPlayed || 0), 0);
+    const totalGoals = playerReports.reduce((sum, r) => sum + (r.goals || 0), 0);
+    const totalAssists = playerReports.reduce((sum, r) => sum + (r.assists || 0), 0);
+    const minutesPlayed = playerReports.reduce((sum, r) => sum + (r.minutesPlayed || 0), 0);
 
     return {
         averageRating,
@@ -404,34 +404,34 @@ const PlayerSpotlight = ({ players, reports }) => {
   return (
     <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm p-4">
       <CardContent className="p-0">
-        <Link to={createPageUrl(`Player?id=${currentPlayer.PlayerRecordID || currentPlayer.id}`)} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors">
+        <Link to={createPageUrl(`Player?id=${currentPlayer._id}`)} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors">
           <div className="flex items-center gap-4">
             <div className="relative">
-              {currentPlayer["Profile Image"] ? (
+              {currentPlayer.profileImage ? (
                 <img
-                  src={currentPlayer["Profile Image"]}
-                  alt={currentPlayer.FullName}
+                  src={currentPlayer.profileImage}
+                  alt={currentPlayer.fullName}
                   className="w-16 h-16 rounded-full object-cover border-2 border-purple-400"
                   onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                 />
               ) : null }
               <div
                 className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-purple-400"
-                style={{ display: currentPlayer["Profile Image"] ? 'none' : 'flex' }}
+                style={{ display: currentPlayer.profileImage ? 'none' : 'flex' }}
               >
                 <span className="text-white font-bold text-2xl">
-                  {currentPlayer.FullName?.charAt(0) || 'P'}
+                  {currentPlayer.fullName?.charAt(0) || 'P'}
                 </span>
               </div>
             </div>
             <div className="flex-1">
-              <p className="font-bold text-lg text-white">{currentPlayer.FullName}</p>
+              <p className="font-bold text-lg text-white">{currentPlayer.fullName}</p>
               <div className="flex items-center gap-2 text-sm">
                 <Badge variant="outline" className="text-purple-400 border-purple-400">
-                  {currentPlayer.Position}
+                  {currentPlayer.position}
                 </Badge>
-                {currentPlayer.DateOfBirth && getPlayerAge(currentPlayer.DateOfBirth) && (
-                  <span className="text-slate-400">Age {getPlayerAge(currentPlayer.DateOfBirth)}</span>
+                {currentPlayer.dateOfBirth && getPlayerAge(currentPlayer.dateOfBirth) && (
+                  <span className="text-slate-400">Age {getPlayerAge(currentPlayer.dateOfBirth)}</span>
                 )}
               </div>
             </div>
@@ -503,52 +503,62 @@ export default function Dashboard() {
       };
     }
 
-    const airtableUser = users.find(u => u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase());
-    const airtableRole = airtableUser?.Role;
+    // MongoDB/JWT Backend data structure (no more Airtable!)
+    const backendUser = users.find(u => u.email && u.email.toLowerCase() === currentUser.email.toLowerCase());
+    const userRole = currentUser.role; // Use role from JWT token
 
     let fTeams = teams;
     let fPlayers = players;
     let fGames = games;
 
-    if (airtableRole === 'Coach' && airtableUser) {
-      fTeams = teams.filter(team => team.Coach && team.Coach.includes(airtableUser.id));
-      const teamIds = fTeams.map(team => team.id);
-      fPlayers = players.filter(player => player.Team && teamIds.some(id => player.Team.includes(id)));
-      fGames = games.filter(game => game.Team && teamIds.some(id => game.Team.includes(id)));
-    } else if (airtableRole === 'Division Manager' && airtableUser?.Department) {
-      fTeams = teams.filter(team => team.Division === airtableUser.Department);
-      const teamIds = fTeams.map(team => team.id);
-      fPlayers = players.filter(player => player.Team && teamIds.some(id => player.Team.includes(id)));
-      fGames = games.filter(game => game.Team && teamIds.some(id => game.Team.includes(id)));
-    } else {
-        fTeams = [];
-        fPlayers = [];
-        fGames = [];
+    if (userRole === 'Coach' && backendUser) {
+      // Filter teams where this user is the coach
+      fTeams = teams.filter(team => team.coach && team.coach._id === backendUser._id);
+      const teamIds = fTeams.map(team => team._id);
+      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
+    } else if (userRole === 'Division Manager' && backendUser?.department) {
+      // Filter teams by division
+      fTeams = teams.filter(team => team.division === backendUser.department);
+      const teamIds = fTeams.map(team => team._id);
+      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
+    } else if (userRole === 'Department Manager' && backendUser?.department) {
+      // Filter teams by department
+      fTeams = teams.filter(team => team.division === backendUser.department);
+      const teamIds = fTeams.map(team => team._id);
+      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
+    } else if (userRole !== 'Admin') {
+      // Non-admin users with no specific permissions see nothing
+      fTeams = [];
+      fPlayers = [];
+      fGames = [];
     }
 
-    const playerIds = fPlayers.map(p => p.id);
-    const fReports = reports.filter(report => report.Player && playerIds.some(id => report.Player.includes(id)));
-    const displayRole = airtableRole || 'Coach';
+    const playerIds = fPlayers.map(p => p._id);
+    const fReports = reports.filter(report => report.player && playerIds.includes(report.player._id));
+    const displayRole = userRole || 'Coach';
 
     return { filteredTeams: fTeams, filteredPlayers: fPlayers, filteredReports: fReports, filteredGames: fGames, userRole: displayRole };
   }, [currentUser, users, teams, players, reports, games]);
 
   const recentEvents = useMemo(() => {
     const pastGames = filteredGames
-        .filter(game => game.Date && safeIsPast(game.Date))
+        .filter(game => game.date && safeIsPast(game.date))
         .map(g => ({
           ...g,
           type: 'game',
-          eventDate: safeDate(g.Date)
+          eventDate: safeDate(g.date)
         }))
         .filter(g => g.eventDate); // Remove games with invalid dates
 
     const recentReports = filteredReports
-        .filter(r => r.Date) // Only include reports with dates
+        .filter(r => r.createdAt) // MongoDB uses createdAt field
         .map(r => ({
           ...r,
           type: 'report',
-          eventDate: safeDate(r.Date)
+          eventDate: safeDate(r.createdAt)
         }))
         .filter(r => r.eventDate); // Remove reports with invalid dates
 
@@ -558,9 +568,13 @@ export default function Dashboard() {
   }, [filteredGames, filteredReports]);
 
   const getPlayerName = (report) => {
-    if (!report.Player) return "Unknown Player";
-    const player = players.find(p => p.id === report.Player[0]);
-    return player?.FullName || "Unknown Player";
+    if (!report.player) return "Unknown Player";
+    // MongoDB structure: report.player is populated object or ObjectId
+    if (typeof report.player === 'object' && report.player.fullName) {
+      return report.player.fullName;
+    }
+    const player = players.find(p => p._id === report.player);
+    return player?.fullName || "Unknown Player";
   };
 
   if (isDataLoading) {

@@ -11,7 +11,7 @@ import {
   Clock,
   Search
 } from "lucide-react";
-import { airtableSync, searchAllPlayers } from "@/api/functions";
+import { createReport, searchAllPlayers } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 import { Input } from "@/components/ui/input";
@@ -120,17 +120,20 @@ export default function AddReport() {
         throw new Error("Please select a player for the report");
       }
 
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'TimelineEvents',
-        recordData: {
-          ...formData,
-          GeneralRating: parseInt(formData.GeneralRating) || 3,
-          MinutesPlayed: formData.MinutesPlayed ? parseInt(formData.MinutesPlayed) : undefined,
-          Goals: formData.Goals ? parseInt(formData.Goals) : undefined,
-          Assists: formData.Assists ? parseInt(formData.Assists) : undefined,
-        }
-      });
+      const reportData = {
+        player: formData.Player || null,
+        type: formData.ReportType || 'Scout Report',
+        title: formData.Title || null,
+        content: formData.Content || null,
+        rating: parseInt(formData.GeneralRating) || 3,
+        minutesPlayed: formData.MinutesPlayed ? parseInt(formData.MinutesPlayed) : null,
+        goals: formData.Goals ? parseInt(formData.Goals) : null,
+        assists: formData.Assists ? parseInt(formData.Assists) : null,
+        date: formData.Date || new Date().toISOString(),
+        notes: formData.Notes || null
+      };
+
+      const response = await createReport(reportData);
 
       if (response.data?.success) {
         const playerName = selectedPlayerDetails?.FullName || "Player";

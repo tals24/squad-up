@@ -2,7 +2,7 @@
 import * as dataService from './dataService';
 
 // Export all data service functions
-export const airtableSync = dataService.airtableSync;
+// Removed airtableSync - now using MongoDB backend
 export const initializeGameRoster = dataService.initializeGameRoster;
 export const fetchAllTables = dataService.fetchAllTables;
 export const saveTrainingPlan = dataService.saveTrainingPlan;
@@ -40,6 +40,9 @@ export const getTimelineEvents = dataService.getTimelineEvents;
 export const createTimelineEvent = dataService.createTimelineEvent;
 export const updateTimelineEvent = dataService.updateTimelineEvent;
 export const deleteTimelineEvent = dataService.deleteTimelineEvent;
+
+// Alias for reports (reports are stored as timeline events)
+export const createReport = dataService.createTimelineEvent;
 
 export const getDrills = dataService.getDrills;
 export const createDrill = dataService.createDrill;
