@@ -6,7 +6,7 @@ import {
   Calendar,
   Users
 } from "lucide-react";
-import { airtableSync } from "@/api/functions";
+import { createTeam, getUsers } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
@@ -31,29 +31,42 @@ export default function AddTeam() {
       const user = await User.me();
       setCurrentUser(user);
 
-      // Load users for coach selection
-      const usersResponse = await airtableSync({ action: 'fetch', tableName: 'Users' });
-      if (usersResponse.data?.records) {
-        setUsers(usersResponse.data.records);
+      // Load users for coach selection using new backend API
+      console.log("🔄 Loading users for coach selection...");
+      const usersResponse = await getUsers();
+      console.log("📊 Users response:", usersResponse);
+      
+      if (usersResponse.data?.success && usersResponse.data?.data) {
+        setUsers(usersResponse.data.data);
+        console.log("✅ Loaded users:", usersResponse.data.data.length);
+        console.log("📋 Users data:", usersResponse.data.data);
+        
+        // Log specifically for coaches
+        const coaches = usersResponse.data.data.filter(user => user.role === 'Coach');
+        console.log("👥 Found coaches:", coaches.length, coaches);
+      } else {
+        console.error("❌ Failed to load users:", usersResponse);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("❌ Error loading data:", error);
     }
     setIsLoading(false);
   };
 
   const handleSubmit = async (formData) => {
     try {
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Teams',
-        recordData: {
-          TeamName: formData.Name,
-          Division: formData.Division,
-          Season: formData.Season,
-          Coach: formData.Coach ? [formData.Coach] : undefined,
-        }
-      });
+      console.log("🔄 Creating team with data:", formData);
+      
+      const teamData = {
+        teamName: formData.Name,
+        division: formData.Division,
+        season: formData.Season,
+        coach: formData.Coach || null
+      };
+      
+      console.log("📤 Sending team data to API:", teamData);
+      const response = await createTeam(teamData);
+      console.log("📊 Create team response:", response);
 
       if (response.data?.success) {
         return {
@@ -61,9 +74,10 @@ export default function AddTeam() {
           message: `${formData.Name} has been created and is ready to start the season!`
         };
       } else {
-        throw new Error(response.data?.error || "Failed to save team");
+        throw new Error(response.data?.error || response.error || "Failed to save team");
       }
     } catch (error) {
+      console.error("❌ Error creating team:", error);
       throw new Error(error.message);
     }
   };
@@ -82,11 +96,13 @@ export default function AddTeam() {
 
   // Create coach options from loaded users
   const coachOptions = users
-    .filter(user => user.Role === 'Coach')
+    .filter(user => user.role === 'Coach')
     .map(user => ({
-      value: user.UserID || user.id,
-      label: user.FullName || user.Email
+      value: user.id || user._id,
+      label: user.fullName || user.email
     }));
+
+  console.log("👥 Available coaches:", coachOptions);
 
   return (
     <GenericAddPage

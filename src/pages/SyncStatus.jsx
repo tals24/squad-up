@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLayout, PageHeader, DataCard, StandardButton } from "@/components/ui/design-system-components";
-import { airtableSync } from "@/api/functions"; // Corrected import path
+// Removed airtableSync - now using MongoDB backend
 
 export default function SyncStatus() {
   const [connectionStatus, setConnectionStatus] = useState('checking');
@@ -37,20 +37,28 @@ export default function SyncStatus() {
     setConnectionStatus('checking');
     
     try {
-      const response = await airtableSync({ action: 'test' });
+      // Test MongoDB connection instead of Airtable
+      const response = await fetch('/api/data/all', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       
-      if (response.data?.success) {
+      if (response.ok) {
+        const data = await response.json();
         setConnectionStatus('connected');
-        setTables(response.data.tables || []);
+        setTables(data.data ? Object.keys(data.data) : []);
         setLastSync(new Date());
       } else {
         setConnectionStatus('error');
-        setError(response.data?.error || 'Unknown connection error');
+        setError('MongoDB connection failed');
       }
     } catch (connectionError) {
       console.error("Connection test failed:", connectionError);
       setConnectionStatus('error');
-      setError('Failed to connect to Airtable. Please check your API key and Base ID.');
+      setError('Failed to connect to MongoDB. Please check your database connection.');
     }
     
     setIsLoading(false);

@@ -60,13 +60,7 @@ export const fetchAllTables = async () => {
   return await apiCall('/data/all');
 };
 
-export const airtableSync = async (params) => {
-  console.log('Syncing data with backend API...', params);
-  return await apiCall('/data/airtable-sync', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-};
+// Removed airtableSync - now using MongoDB backend directly
 
 // User management
 export const getUsers = async () => {

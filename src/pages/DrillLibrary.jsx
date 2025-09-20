@@ -39,7 +39,7 @@ import {
   Checkbox 
 } from "@/components/ui/design-system-components";
 import { PageLayout, PageHeader, SearchFilter, DataCard, StandardButton } from "@/components/ui/design-system-components";
-import { airtableSync } from "@/api/functions"; // Updated import path
+import { createDrill, getDrills } from "@/api/functions"; // Updated to MongoDB functions
 import { User } from "@/api/entities"; // Updated import path
 import ConfirmationToast from "../components/ConfirmationToast";
 
@@ -75,7 +75,7 @@ const AddDrillModal = ({ open, setOpen, refreshData, showConfirmation, categorie
 
   const testAvailableFields = async () => {
     try {
-      const response = await airtableSync({ action: 'fetch', tableName: 'Drills' });
+      const response = await getDrills();
       if (response.data?.records && response.data.records.length > 0) {
         const firstRecord = response.data.records[0];
         const fields = Object.keys(firstRecord).filter(key => !['id', 'createdTime'].includes(key));
@@ -161,9 +161,7 @@ const AddDrillModal = ({ open, setOpen, refreshData, showConfirmation, categorie
 
       console.log(`Creating drill for ${openTacticBoard ? 'tactic board' : 'library'}:`, recordData);
 
-      const response = await airtableSync({
-        action: 'create',
-        tableName: 'Drills',
+      const response = await createDrill({
         recordData: recordData
       });
 

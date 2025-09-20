@@ -93,11 +93,11 @@ router.post('/', authenticateJWT, async (req, res) => {
 // Update player
 router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
-    const { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email } = req.body;
+    const { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email, profileImage } = req.body;
 
     const player = await Player.findByIdAndUpdate(
       req.params.id,
-      { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email },
+      { fullName, kitNumber, position, dateOfBirth, team, nationalID, phoneNumber, email, profileImage },
       { new: true }
     ).populate('team', 'teamName season division');
 

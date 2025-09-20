@@ -42,8 +42,13 @@ export default function Login() {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to dashboard
-        navigate('/Dashboard');
+        console.log('🟢 Login successful, token stored, navigating to dashboard');
+        
+        // Small delay to ensure localStorage is properly written
+        setTimeout(() => {
+          // Redirect to dashboard
+          navigate('/Dashboard');
+        }, 100);
       } else {
         setError(data.error || 'Login failed');
       }

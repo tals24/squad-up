@@ -182,7 +182,7 @@ const handleSubmit = async (formData) => {
 ## 📋 Examples
 
 See `AddUser.jsx` for a complete real-world implementation.
-See `AddPlayer.example.jsx` for another example.
+See `AddPlayer.jsx` for another example.
 
 ## 🎯 Benefits
 

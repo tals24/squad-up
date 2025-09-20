@@ -8,7 +8,7 @@ import {
   Phone,
   Lock
 } from "lucide-react";
-import { airtableSync } from "@/api/functions";
+// Removed airtableSync - now using MongoDB backend API
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
