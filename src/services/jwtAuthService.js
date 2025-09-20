@@ -29,13 +29,29 @@ class JwtAuthService {
 
   // Get current user (replaces Firebase auth)
   async me() {
-    return new Promise((resolve, reject) => {
-      if (this.currentUser && this.token) {
-        resolve(this.formatUser(this.currentUser));
-      } else {
-        reject(new Error('No authenticated user'));
+    // If we have current user and token in memory, return it
+    if (this.currentUser && this.token) {
+      return this.formatUser(this.currentUser);
+    }
+    
+    // If no in-memory data, try to load from localStorage
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      try {
+        this.token = storedToken;
+        this.userData = JSON.parse(storedUser);
+        this.currentUser = this.userData;
+        
+        console.log('🟡 Restored user from localStorage:', this.currentUser);
+        return this.formatUser(this.currentUser);
+      } catch (error) {
+        console.log('🔴 Failed to parse stored user data:', error);
       }
-    });
+    }
+    
+    throw new Error('No authenticated user');
   }
 
   // Login with email and password

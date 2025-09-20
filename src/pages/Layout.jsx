@@ -66,26 +66,54 @@ export default function Layout({ children, currentPageName }) {
     setAuthError(null);
     
     try {
-      const user = await UserEntity.me();
-      console.log('Firebase user authenticated:', user);
+      // First check if we have a token in localStorage
+      const token = localStorage.getItem('authToken');
+      const userData = localStorage.getItem('user');
       
-      // For now, we'll set admin role for any authenticated user
-      // In Phase 2, we'll integrate with Airtable for proper role management
-      if (user) {
-        setCurrentUser(user);
-        setUserRole('Admin'); // Default to admin for now
-        setIsAuthorized(true);
-        setIsLoading(false);
+      if (!token || !userData) {
+        console.log('🔴 No auth token or user data found, redirecting to login');
+        setIsAuthorized(false);
+        window.location.href = '/Login';
         return;
       }
+
+      // Try to verify the token with the backend
+      try {
+        const user = await UserEntity.verifyToken();
+        console.log('🟢 JWT user authenticated:', user);
+        
+        if (user) {
+          setCurrentUser(user);
+          setUserRole(user.role || 'Admin'); // Use actual role from token
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch (verifyError) {
+        console.log('🔴 Token verification failed, trying fallback user data');
+        
+        // Fallback: use stored user data if token verification fails temporarily
+        try {
+          const parsedUser = JSON.parse(userData);
+          console.log('🟡 Using stored user data as fallback:', parsedUser);
+          
+          setCurrentUser(parsedUser);
+          setUserRole(parsedUser.role || 'Admin');
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        } catch (parseError) {
+          console.log('🔴 Failed to parse stored user data');
+        }
+      }
       
-      // If no user, redirect to login page
+      // If all attempts fail, redirect to login
       setIsAuthorized(false);
       window.location.href = '/Login';
       return;
       
     } catch (error) {
-      console.log('Authentication error:', error);
+      console.log('🔴 Authentication error:', error);
       setIsAuthorized(false);
       setAuthError(error.message);
       // Redirect to login page instead of showing modal
