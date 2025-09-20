@@ -18,12 +18,6 @@ router.get('/all', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
     
-    // Build queries based on user role
-    let teamQuery = {};
-    if (user.role === 'Coach') {
-      teamQuery.coach = user._id;
-    }
-
     console.log(`🔍 User ${user.fullName} (${user.role}) requesting data...`);
     
     // Fetch all data in parallel with error handling
@@ -39,7 +33,7 @@ router.get('/all', authenticateJWT, async (req, res) => {
       sessionDrills
     ] = await Promise.all([
       User.find().select('-password').lean().catch(err => { console.error('Users query error:', err); return []; }),
-      Team.find(teamQuery).populate('coach', 'fullName email role').lean().catch(err => { console.error('Teams query error:', err); return []; }),
+      Team.find().populate('coach', 'fullName email role').lean().catch(err => { console.error('Teams query error:', err); return []; }),
       Player.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Players query error:', err); return []; }),
       Game.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Games query error:', err); return []; }),
       TimelineEvent.find().populate('player game author').lean().catch(err => { console.error('Reports query error:', err); return []; }),
@@ -52,8 +46,8 @@ router.get('/all', authenticateJWT, async (req, res) => {
     console.log(`📊 Initial data counts - Users: ${users.length}, Teams: ${teams.length}, Players: ${players.length}, Games: ${games.length}`);
 
     // Filter data based on user role
-    let filteredTeams = teams;
-    let filteredPlayers = players;
+    let filteredTeams = teams; // All teams are visible to all users
+    let filteredPlayers = players; // All players are visible to all users for reporting
     let filteredGames = games;
     let filteredReports = reports;
     let filteredGameRosters = gameRosters;
@@ -61,26 +55,27 @@ router.get('/all', authenticateJWT, async (req, res) => {
 
     if (user.role === 'Coach') {
       // Get team IDs for this coach (convert to strings for comparison)
-      const teamIds = teams.map(team => team._id.toString());
-      console.log(`🧑‍🏫 Coach ${user.fullName} has access to teams:`, teamIds);
+      const coachTeamIds = teams.filter(team => team.coach && team.coach._id.toString() === user._id.toString()).map(team => team._id.toString());
+      console.log(`🧑‍🏫 Coach ${user.fullName} has access to teams:`, coachTeamIds);
       
-      // Filter players by teams this coach manages
-      filteredPlayers = players.filter(player => {
-        if (!player.team || !player.team._id) return false;
-        return teamIds.includes(player.team._id.toString());
-      });
+      // Keep all players visible for reporting purposes
+      // filteredPlayers = players; // All players remain visible
       
       // Filter games by teams this coach manages  
       filteredGames = games.filter(game => {
         if (!game.team || !game.team._id) return false;
-        return teamIds.includes(game.team._id.toString());
+        return coachTeamIds.includes(game.team._id.toString());
       });
       
       // Filter reports by players in this coach's teams
-      const playerIds = filteredPlayers.map(player => player._id.toString());
+      const coachPlayerIds = players.filter(player => {
+        if (!player.team || !player.team._id) return false;
+        return coachTeamIds.includes(player.team._id.toString());
+      }).map(player => player._id.toString());
+      
       filteredReports = reports.filter(report => {
         if (!report.player || !report.player._id) return false;
-        return playerIds.includes(report.player._id.toString());
+        return coachPlayerIds.includes(report.player._id.toString());
       });
       
       // Filter game rosters by games this coach manages
@@ -93,10 +88,10 @@ router.get('/all', authenticateJWT, async (req, res) => {
       // Filter training sessions by teams this coach manages
       filteredTrainingSessions = trainingSessions.filter(session => {
         if (!session.team || !session.team._id) return false;
-        return teamIds.includes(session.team._id.toString());
+        return coachTeamIds.includes(session.team._id.toString());
       });
       
-      console.log(`📊 Coach data filtered: ${filteredPlayers.length} players, ${filteredGames.length} games, ${filteredReports.length} reports`);
+      console.log(`📊 Coach data filtered: ${filteredPlayers.length} players (all visible), ${filteredGames.length} games, ${filteredReports.length} reports`);
     }
 
     res.json({

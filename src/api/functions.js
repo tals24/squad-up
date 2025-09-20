@@ -41,8 +41,14 @@ export const createTimelineEvent = dataService.createTimelineEvent;
 export const updateTimelineEvent = dataService.updateTimelineEvent;
 export const deleteTimelineEvent = dataService.deleteTimelineEvent;
 
-// Alias for reports (reports are stored as timeline events)
-export const createReport = dataService.createTimelineEvent;
+// Report functions - now using separate endpoints
+export const createGameReport = dataService.createGameReport;
+export const createScoutReport = dataService.createScoutReport;
+export const getGameReports = dataService.getGameReports;
+export const getScoutReports = dataService.getScoutReports;
+
+// Legacy alias for backward compatibility (will be removed)
+export const createReport = dataService.createScoutReport;
 
 export const getDrills = dataService.getDrills;
 export const createDrill = dataService.createDrill;

@@ -11,6 +11,8 @@ import {
 import { getTeams, createPlayer } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function AddPlayer() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -144,13 +146,28 @@ export default function AddPlayer() {
           iconColor="text-brand-purple-400"
         />
 
-        <TextInputField
-          id="DateOfBirth"
-          label="Date of Birth"
-          type="date"
-          icon={Calendar}
-          iconColor="text-brand-green-400"
-        />
+        <div className="space-y-2 w-48">
+          <Label className="text-foreground font-medium flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-brand-green-400" />
+            Date of Birth *
+          </Label>
+          <div className="relative">
+            <Input
+              id="DateOfBirth"
+              type="date"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors text-left"
+              style={{ paddingLeft: '20px', paddingRight: '12px' }}
+              required={true}
+            />
+            <button
+              type="button"
+              className="absolute left-1 top-1/2 transform -translate-y-1/2 p-0 hover:bg-accent/20 rounded transition-colors"
+              onClick={() => document.getElementById('DateOfBirth').showPicker?.()}
+            >
+              <Calendar className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
 
         <SelectField
           id="Team"

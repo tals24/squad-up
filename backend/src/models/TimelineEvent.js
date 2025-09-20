@@ -18,7 +18,9 @@ const timelineEventSchema = new mongoose.Schema({
   game: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Game',
-    required: true
+    required: function() {
+      return this.eventType === 'Game Report';
+    }
   },
   
   author: {
@@ -90,6 +92,6 @@ timelineEventSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('TimelineEvent', timelineEventSchema);
+module.exports = mongoose.model('TimelineEvent', timelineEventSchema, 'timeline_events');
 
 

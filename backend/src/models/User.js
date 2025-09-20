@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
     minlength: 6
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt
+  timestamps: true // Adds creabdAt and updatedAt
 });
 
 // Pre-save middleware to hash password
@@ -94,6 +94,6 @@ userSchema.methods.toPublicJSON = function() {
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema, 'users');
 
 

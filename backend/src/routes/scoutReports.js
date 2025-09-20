@@ -1,14 +1,14 @@
 const express = require('express');
 const { authenticateJWT } = require('../middleware/jwtAuth');
 const { checkTeamAccess } = require('../middleware/auth');
-const TimelineEvent = require('../models/TimelineEvent');
+const ScoutReport = require('../models/ScoutReport');
 
 const router = express.Router();
 
-// Get all timeline events
+// Get all scout reports
 router.get('/', authenticateJWT, async (req, res) => {
   try {
-    const timelineEvents = await TimelineEvent.find()
+    const scoutReports = await ScoutReport.find()
       .populate('player', 'fullName kitNumber position')
       .populate({
         path: 'game',
@@ -20,18 +20,18 @@ router.get('/', authenticateJWT, async (req, res) => {
 
     res.json({
       success: true,
-      data: timelineEvents
+      data: scoutReports
     });
   } catch (error) {
-    console.error('Get timeline events error:', error);
+    console.error('Get scout reports error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get timeline event by ID
+// Get scout report by ID
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const timelineEvent = await TimelineEvent.findById(req.params.id)
+    const scoutReport = await ScoutReport.findById(req.params.id)
       .populate('player', 'fullName kitNumber position')
       .populate({
         path: 'game',
@@ -40,62 +40,72 @@ router.get('/:id', authenticateJWT, async (req, res) => {
       })
       .populate('author', 'fullName role');
 
-    if (!timelineEvent) {
-      return res.status(404).json({ error: 'Timeline event not found' });
+    if (!scoutReport) {
+      return res.status(404).json({ error: 'Scout report not found' });
     }
 
     res.json({
       success: true,
-      data: timelineEvent
+      data: scoutReport
     });
   } catch (error) {
-    console.error('Get timeline event error:', error);
+    console.error('Get scout report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Create new timeline event
+// Create new scout report
 router.post('/', authenticateJWT, async (req, res) => {
   try {
-    const { player, game, eventType, minutesPlayed, goals, assists, generalRating, generalNotes } = req.body;
+    const { 
+      player, 
+      game, 
+      title, 
+      content, 
+      generalRating, 
+      notes 
+    } = req.body;
 
-    const timelineEvent = new TimelineEvent({
+    const scoutReport = new ScoutReport({
       player,
-      game,
+      game: game || null, // Optional for scout reports
       author: req.user._id,
-      eventType,
-      minutesPlayed: minutesPlayed || 0,
-      goals: goals || 0,
-      assists: assists || 0,
+      title,
+      content,
       generalRating: generalRating || 3,
-      generalNotes
+      notes
     });
 
-    await timelineEvent.save();
-    await timelineEvent.populate('player', 'fullName kitNumber position');
-    if (timelineEvent.game) {
-      await timelineEvent.populate('game', 'gameTitle opponent date');
+    await scoutReport.save();
+    await scoutReport.populate('player', 'fullName kitNumber position');
+    if (scoutReport.game) {
+      await scoutReport.populate('game', 'gameTitle opponent date');
     }
-    await timelineEvent.populate('author', 'fullName role');
+    await scoutReport.populate('author', 'fullName role');
 
     res.status(201).json({
       success: true,
-      data: timelineEvent
+      data: scoutReport
     });
   } catch (error) {
-    console.error('Create timeline event error:', error);
+    console.error('Create scout report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Update timeline event
+// Update scout report
 router.put('/:id', authenticateJWT, async (req, res) => {
   try {
-    const { eventType, minutesPlayed, goals, assists, generalRating, generalNotes } = req.body;
+    const { 
+      title, 
+      content, 
+      generalRating, 
+      notes 
+    } = req.body;
 
-    const timelineEvent = await TimelineEvent.findByIdAndUpdate(
+    const scoutReport = await ScoutReport.findByIdAndUpdate(
       req.params.id,
-      { eventType, minutesPlayed, goals, assists, generalRating, generalNotes },
+      { title, content, generalRating, notes },
       { new: true }
     )
     .populate('player', 'fullName kitNumber position')
@@ -106,35 +116,35 @@ router.put('/:id', authenticateJWT, async (req, res) => {
     })
     .populate('author', 'fullName role');
 
-    if (!timelineEvent) {
-      return res.status(404).json({ error: 'Timeline event not found' });
+    if (!scoutReport) {
+      return res.status(404).json({ error: 'Scout report not found' });
     }
 
     res.json({
       success: true,
-      data: timelineEvent
+      data: scoutReport
     });
   } catch (error) {
-    console.error('Update timeline event error:', error);
+    console.error('Update scout report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Delete timeline event
+// Delete scout report
 router.delete('/:id', authenticateJWT, async (req, res) => {
   try {
-    const timelineEvent = await TimelineEvent.findByIdAndDelete(req.params.id);
+    const scoutReport = await ScoutReport.findByIdAndDelete(req.params.id);
 
-    if (!timelineEvent) {
-      return res.status(404).json({ error: 'Timeline event not found' });
+    if (!scoutReport) {
+      return res.status(404).json({ error: 'Scout report not found' });
     }
 
     res.json({
       success: true,
-      message: 'Timeline event deleted successfully'
+      message: 'Scout report deleted successfully'
     });
   } catch (error) {
-    console.error('Delete timeline event error:', error);
+    console.error('Delete scout report error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

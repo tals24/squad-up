@@ -121,8 +121,25 @@ export const getPlayersForTeam = async (teamId) => {
   return await apiCall(`/players?team=${teamId}`);
 };
 
-export const searchAllPlayers = async (searchTerm) => {
-  return await apiCall(`/players?search=${encodeURIComponent(searchTerm)}`);
+export const searchAllPlayers = async ({ searchTerm, teamId }) => {
+  let url = '/players';
+  const params = new URLSearchParams();
+  
+  if (searchTerm) {
+    params.append('search', searchTerm);
+  }
+  
+  if (teamId && teamId !== 'all') {
+    params.append('team', teamId);
+  }
+  
+  if (params.toString()) {
+    url += `?${params.toString()}`;
+  }
+  
+  console.log(`🔍 DataService search - URL: ${url}, searchTerm: "${searchTerm}", teamId: "${teamId}"`);
+  
+  return await apiCall(url);
 };
 
 export const createPlayer = async (playerData) => {
@@ -216,6 +233,56 @@ export const updateTimelineEvent = async (eventId, eventData) => {
 
 export const deleteTimelineEvent = async (eventId) => {
   return await apiCall(`/timeline-events/${eventId}`, {
+    method: 'DELETE',
+  });
+};
+
+// Game Reports API
+export const getGameReports = async () => {
+  return await apiCall('/game-reports');
+};
+
+export const createGameReport = async (reportData) => {
+  return await apiCall('/game-reports', {
+    method: 'POST',
+    body: JSON.stringify(reportData),
+  });
+};
+
+export const updateGameReport = async (reportId, reportData) => {
+  return await apiCall(`/game-reports/${reportId}`, {
+    method: 'PUT',
+    body: JSON.stringify(reportData),
+  });
+};
+
+export const deleteGameReport = async (reportId) => {
+  return await apiCall(`/game-reports/${reportId}`, {
+    method: 'DELETE',
+  });
+};
+
+// Scout Reports API
+export const getScoutReports = async () => {
+  return await apiCall('/scout-reports');
+};
+
+export const createScoutReport = async (reportData) => {
+  return await apiCall('/scout-reports', {
+    method: 'POST',
+    body: JSON.stringify(reportData),
+  });
+};
+
+export const updateScoutReport = async (reportId, reportData) => {
+  return await apiCall(`/scout-reports/${reportId}`, {
+    method: 'PUT',
+    body: JSON.stringify(reportData),
+  });
+};
+
+export const deleteScoutReport = async (reportId) => {
+  return await apiCall(`/scout-reports/${reportId}`, {
     method: 'DELETE',
   });
 };

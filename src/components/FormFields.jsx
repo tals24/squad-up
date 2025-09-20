@@ -1,6 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /**
@@ -16,6 +17,7 @@ export function TextInputField({
   type = "text",
   icon: Icon,
   iconColor = "text-brand-blue",
+  width, // Custom width prop
   formData, // Added to support conditional requirements
   handleChange // Alternative prop name from GenericAddPage
 }) {
@@ -37,7 +39,7 @@ export function TextInputField({
         value={fieldValue}
         onChange={(e) => fieldOnChange(id, e.target.value)}
         placeholder={placeholder}
-        className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20"
+        className={`bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors ${width || ''}`}
         required={isRequired}
       />
     </div>
@@ -79,7 +81,7 @@ export function SelectField({
           console.error(`fieldOnChange is not a function for ${id}:`, { onChange, handleChange, fieldOnChange });
         }
       }}>
-        <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20">
+        <SelectTrigger className="bg-background border-border text-foreground focus:border-brand-blue focus:ring-brand-blue/20 hover:bg-accent/50 transition-colors">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="bg-background border-border text-foreground">
@@ -94,6 +96,46 @@ export function SelectField({
           ))}
         </SelectContent>
       </Select>
+    </div>
+  );
+}
+
+/**
+ * Textarea Field Component
+ */
+export function TextareaField({ 
+  id, 
+  label, 
+  value, 
+  onChange, 
+  placeholder, 
+  required = false,
+  icon: Icon,
+  iconColor = "text-brand-blue",
+  formData, // Added to support conditional requirements
+  handleChange // Alternative prop name from GenericAddPage
+}) {
+  // Handle conditional requirements
+  const isRequired = typeof required === 'function' ? required(formData) : required;
+  
+  // Use the correct value and onChange function
+  const fieldValue = value || (formData && formData[id]) || '';
+  const fieldOnChange = onChange || handleChange;
+  
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
+        {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
+        {label} {isRequired && "*"}
+      </Label>
+      <Textarea
+        id={id}
+        value={fieldValue}
+        onChange={(e) => fieldOnChange(id, e.target.value)}
+        placeholder={placeholder}
+        className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors"
+        required={isRequired}
+      />
     </div>
   );
 }
@@ -119,6 +161,7 @@ export function FormGrid({ children, columns = 2, formData, handleChange, onChan
         const isFormFieldComponent = child.type && (
           child.type === TextInputField || 
           child.type === SelectField ||
+          child.type === TextareaField ||
           (typeof child.type === 'function' && child.type.name && 
            (child.type.name.includes('Field') || child.type.name.includes('Input')))
         );

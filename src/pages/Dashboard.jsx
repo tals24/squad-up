@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { User } from "@/api/entities";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, getPositionBadgeClasses, safeDate, safeFormatDistanceToNow, safeIsFuture, safeIsPast, getGameResult, getResultColor, getResultText, DASHBOARD_COLORS, DRILL_CATEGORY_COLORS, CARD_STYLES } from "@/utils";
 import {
   Users,
   TrendingUp,
@@ -35,151 +35,11 @@ import {
   Grid
 } from "@/components/ui/design-system-components";
 import { useData } from "../components/DataContext";
+import { useDashboardData, useUserRole, useRecentEvents } from "../hooks";
+import { DashboardHeader, GameZone, DashboardStats, RecentActivity } from "../components/dashboard";
 import { format, formatDistanceToNow, isFuture, isPast, addWeeks, startOfWeek, endOfWeek, getYear, getISOWeek } from 'date-fns';
 
-// Helper function to safely parse dates
-const safeDate = (dateString) => {
-  if (!dateString || dateString === '') return null;
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? null : date;
-};
 
-// Helper function to safely format distance to now
-const safeFormatDistanceToNow = (dateString, options = {}) => {
-  const date = safeDate(dateString);
-  if (!date) return 'Invalid date';
-  try {
-    return formatDistanceToNow(date, options);
-  } catch (error) {
-    return 'Invalid date';
-  }
-};
-
-// Helper function to safely check if date is in future
-const safeIsFuture = (dateString) => {
-  const date = safeDate(dateString);
-  if (!date) return false;
-  try {
-    return isFuture(date);
-  } catch (error) {
-    return false;
-  }
-};
-
-// Helper function to safely check if date is in past
-const safeIsPast = (dateString) => {
-  const date = safeDate(dateString);
-  if (!date) return false;
-  try {
-    return isPast(date);
-  } catch (error) {
-    return false;
-  }
-};
-
-// --- Recent Games & Next Game Component ---
-const RecentAndNextGame = ({ games }) => {
-  const recentGames = games
-    .filter(game => game.Date && safeIsPast(game.Date) && game.FinalScore_Display)
-    .sort((a, b) => {
-      const dateA = safeDate(a.Date);
-      const dateB = safeDate(b.Date);
-      if (!dateA || !dateB) return 0;
-      return dateB - dateA;
-    })
-    .slice(0, 5);
-
-  const nextGame = games
-    .filter(game => game.Date && safeIsFuture(game.Date))
-    .sort((a, b) => {
-      const dateA = safeDate(a.Date);
-      const dateB = safeDate(b.Date);
-      if (!dateA || !dateB) return 0;
-      return dateA - dateB;
-    })[0];
-
-  const getGameResult = (game) => {
-    if (!game.FinalScore_Display) return 'unknown';
-    const scores = game.FinalScore_Display.split('-').map(s => parseInt(s.trim()));
-    if (scores.length !== 2 || isNaN(scores[0]) || isNaN(scores[1])) return 'unknown';
-    if (scores[0] > scores[1]) return 'win';
-    if (scores[0] < scores[1]) return 'loss';
-    return 'draw';
-  };
-
-  const getResultColor = (result) => {
-    switch(result) {
-      case 'win': return 'bg-green-500';
-      case 'loss': return 'bg-red-500';
-      case 'draw': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getResultText = (result) => {
-    switch(result) {
-      case 'win': return 'W';
-      case 'loss': return 'L';
-      case 'draw': return 'D';
-      default: return '?';
-    }
-  };
-
-  return (
-    <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-400" />
-          Game Zone
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <h3 className="text-sm font-semibold text-slate-400 mb-2">Recent Results</h3>
-        <div className="flex gap-2 justify-center">
-          {recentGames.length > 0 ? (
-            recentGames.map((game) => {
-              const result = getGameResult(game);
-              return (
-                <div key={game.id} className="flex flex-col items-center gap-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${getResultColor(result)}`}>
-                    {getResultText(result)}
-                  </div>
-                  <span className="text-xs text-slate-400 font-mono">{game.FinalScore_Display}</span>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center text-slate-500 py-2">
-              <p className="text-sm">No recent games</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-      <div className="border-t border-slate-700 mx-6"></div>
-      <CardContent className="pt-4">
-        <h3 className="text-sm font-semibold text-slate-400 mb-2">Next Game</h3>
-        {nextGame ? (
-          <Link to={createPageUrl(`GameDetails?id=${nextGame.id}`)} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors -m-2">
-            <p className="font-bold text-white truncate">{nextGame.GameTitle || "Untitled Game"}</p>
-            <div className="text-sm text-cyan-400 font-mono mt-1">
-              {safeFormatDistanceToNow(nextGame.Date, { addSuffix: true })}
-            </div>
-            {nextGame.Location && (
-              <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
-                <MapPin className="w-3 h-3" />
-                <span>{nextGame.Location}</span>
-              </div>
-            )}
-          </Link>
-        ) : (
-          <div className="text-center text-slate-500 py-2">
-            <p className="text-sm">No upcoming games</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
 
 // --- Weekly Training Plan Overview Component ---
 const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, drills: allDrills }) => {
@@ -238,25 +98,13 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
         return drillsByDay;
     }, [weekSessions, sessionDrills, allDrills]);
 
-    const drillCategoryColors = {
-        'Passing': 'bg-blue-500',
-        'Shooting': 'bg-red-500',
-        'Dribbling': 'bg-yellow-500',
-        'Defense': 'bg-green-500',
-        'Goalkeeping': 'bg-purple-500',
-        'Warm-up': 'bg-orange-500',
-        'Physical': 'bg-pink-500',
-        'Tactics': 'bg-cyan-500',
-        'Conditioning': 'bg-indigo-500',
-        'Small Sided Game': 'bg-emerald-500',
-    };
 
     return (
-        <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col">
+        <Card className={`${DASHBOARD_COLORS.background.card} ${DASHBOARD_COLORS.background.border} shadow-xl ${DASHBOARD_COLORS.effects.hoverShadow} ${DASHBOARD_COLORS.effects.hoverBorder} ${DASHBOARD_COLORS.effects.transition} backdrop-blur-sm flex flex-col`}>
             <CardHeader>
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                        <ListChecks className="w-5 h-5 text-green-400" />
+                    <CardTitle className={`text-lg font-bold ${DASHBOARD_COLORS.text.primary} flex items-center gap-2`}>
+                        <ListChecks className={`w-5 h-5 ${DASHBOARD_COLORS.text.accent}`} />
                         Weekly Training
                     </CardTitle>
                     <div className="flex items-center gap-1">
@@ -268,19 +116,19 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
                         </Button>
                     </div>
                 </div>
-                <p className="text-sm text-slate-400 font-mono">{format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}</p>
+                <p className={`text-sm ${DASHBOARD_COLORS.text.secondary} font-mono`}>{format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}</p>
             </CardHeader>
             <CardContent className="flex-grow">
-                <h3 className="text-sm font-semibold text-slate-400 mb-2">This Week's Schedule</h3>
+                <h3 className={`text-sm font-semibold ${DASHBOARD_COLORS.text.secondary} mb-2`}>This Week's Schedule</h3>
                 {Object.keys(dailyDrills).length > 0 ? (
                     <div className="space-y-3">
                         {Object.entries(dailyDrills).map(([day, drills]) => (
                             <div key={day}>
-                                <h4 className="font-bold text-white text-sm mb-1">{day}</h4>
+                                <h4 className={`font-bold ${DASHBOARD_COLORS.text.primary} text-sm mb-1`}>{day}</h4>
                                 <ul className="space-y-1 pl-2">
                                     {drills.map(drill => (
-                                        <li key={drill.id} className="flex items-center gap-2 text-sm text-slate-400">
-                                            <span className={`w-2 h-2 rounded-full ${drillCategoryColors[drill.Category] || 'bg-slate-500'}`}></span>
+                                        <li key={drill.id} className={`flex items-center gap-2 text-sm ${DASHBOARD_COLORS.text.secondary}`}>
+                                            <span className={`w-2 h-2 rounded-full ${DRILL_CATEGORY_COLORS[drill.Category] || 'bg-slate-500'}`}></span>
                                             <span className="truncate">{drill.DrillName}</span>
                                         </li>
                                     ))}
@@ -296,18 +144,18 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
             </CardContent>
             <div className="border-t border-slate-700 mx-6"></div>
             <CardContent className="pt-4">
-                <h3 className="text-sm font-semibold text-slate-400 mb-2">Quick Actions</h3>
+                <h3 className={`text-sm font-semibold ${DASHBOARD_COLORS.text.secondary} mb-2`}>Quick Actions</h3>
                 {Object.keys(dailyDrills).length > 0 ? (
-                    <Link to={createPageUrl("WeeklyCalendar")} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors -m-2">
-                        <p className="font-bold text-white">View Full Calendar</p>
-                        <div className="text-sm text-green-400 font-mono mt-1">
+                    <Link to={createPageUrl("WeeklyCalendar")} className={`block ${DASHBOARD_COLORS.background.hover} rounded-lg p-2 transition-colors -m-2`}>
+                        <p className={`font-bold ${DASHBOARD_COLORS.text.primary}`}>View Full Calendar</p>
+                        <div className={`text-sm ${DASHBOARD_COLORS.text.accent} font-mono mt-1`}>
                             {Object.keys(dailyDrills).length} training days scheduled
                         </div>
                     </Link>
                 ) : (
                     <div className="text-center">
                         <Link to={createPageUrl("TrainingPlanner")}>
-                           <Button size="sm" variant="outline" className="text-green-400 border-green-400/50 hover:bg-green-400/10 hover:text-green-400">
+                           <Button size="sm" variant="outline" className="bg-slate-800/70 text-green-400 border-green-400/50 hover:bg-slate-700/70 hover:text-green-400">
                                 Plan This Week
                            </Button>
                         </Link>
@@ -402,21 +250,21 @@ const PlayerSpotlight = ({ players, reports }) => {
   );
 
   return (
-    <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm p-4">
+    <Card className={`${DASHBOARD_COLORS.background.card} ${DASHBOARD_COLORS.background.border} shadow-xl ${DASHBOARD_COLORS.effects.hoverShadow} ${DASHBOARD_COLORS.effects.hoverBorder} ${DASHBOARD_COLORS.effects.transition} backdrop-blur-sm p-4`}>
       <CardContent className="p-0">
-        <Link to={createPageUrl(`Player?id=${currentPlayer._id}`)} className="block hover:bg-slate-700/30 rounded-lg p-2 transition-colors">
+        <Link to={createPageUrl(`Player?id=${currentPlayer._id}`)} className={`block ${DASHBOARD_COLORS.background.hover} rounded-lg p-2 transition-colors`}>
           <div className="flex items-center gap-4">
             <div className="relative">
               {currentPlayer.profileImage ? (
                 <img
                   src={currentPlayer.profileImage}
                   alt={currentPlayer.fullName}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-purple-400"
+                  className={`w-16 h-16 rounded-full object-cover border-2 border-${DASHBOARD_COLORS.primary}`}
                   onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                 />
               ) : null }
               <div
-                className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center border-2 border-purple-400"
+                className={`w-16 h-16 bg-gradient-to-r ${DASHBOARD_COLORS.primaryGradient} rounded-full flex items-center justify-center border-2 border-${DASHBOARD_COLORS.primary}`}
                 style={{ display: currentPlayer.profileImage ? 'none' : 'flex' }}
               >
                 <span className="text-white font-bold text-2xl">
@@ -425,13 +273,13 @@ const PlayerSpotlight = ({ players, reports }) => {
               </div>
             </div>
             <div className="flex-1">
-              <p className="font-bold text-lg text-white">{currentPlayer.fullName}</p>
+              <p className={`font-bold text-lg ${DASHBOARD_COLORS.text.primary}`}>{currentPlayer.fullName}</p>
               <div className="flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="text-purple-400 border-purple-400">
+                <Badge variant="outline" className={`${getPositionBadgeClasses(currentPlayer.position)} hover:bg-transparent`}>
                   {currentPlayer.position}
                 </Badge>
                 {currentPlayer.dateOfBirth && getPlayerAge(currentPlayer.dateOfBirth) && (
-                  <span className="text-slate-400">Age {getPlayerAge(currentPlayer.dateOfBirth)}</span>
+                  <span className={DASHBOARD_COLORS.text.secondary}>Age {getPlayerAge(currentPlayer.dateOfBirth)}</span>
                 )}
               </div>
             </div>
@@ -441,7 +289,7 @@ const PlayerSpotlight = ({ players, reports }) => {
         <div className="border-t border-slate-700 my-3"></div>
 
         <div className="px-2">
-            <h4 className="text-sm font-bold text-purple-400 mb-3 text-center">Performance Stats</h4>
+            <h4 className={`text-sm font-bold ${DASHBOARD_COLORS.text.accent} mb-3 text-center`}>Performance Stats</h4>
             {playerStats ? (
                 <div className="grid grid-cols-3 md:grid-cols-2 gap-2">
                     <StatItem label="Rating" value={`${playerStats.averageRating}/5`} />
@@ -459,27 +307,6 @@ const PlayerSpotlight = ({ players, reports }) => {
   );
 };
 
-// --- Stat Card Component ---
-const StatCard = ({ title, value, icon: Icon, linkTo, colorClass }) => (
-  <Link to={linkTo} className="block group">
-    <Card className={`bg-slate-800/70 border-slate-700 shadow-lg hover:shadow-cyan-500/30 hover:border-cyan-500 transition-all duration-300 backdrop-blur-sm`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-             <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-slate-700 border border-slate-600 group-hover:bg-cyan-500/10 group-hover:border-cyan-500 transition-colors`}>
-                <Icon className={`w-6 h-6 text-slate-400 group-hover:text-cyan-400 transition-colors ${colorClass}`} />
-             </div>
-             <div>
-                <p className="text-sm font-medium text-slate-400">{title}</p>
-                <p className="text-2xl font-bold text-white">{value}</p>
-             </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-cyan-400 transition-transform duration-300 group-hover:translate-x-1" />
-        </div>
-      </CardContent>
-    </Card>
-  </Link>
-);
 
 export default function Dashboard() {
   const { users, teams, players, reports, games, trainingSessions, sessionDrills, drills, isLoading: isDataLoading, error } = useData();
@@ -489,83 +316,26 @@ export default function Dashboard() {
     User.me().then(setCurrentUser).catch(console.error);
   }, []);
 
-  const { filteredTeams, filteredPlayers, filteredReports, filteredGames, userRole } = useMemo(() => {
-    if (!currentUser || !users.length) {
-      return { filteredTeams: [], filteredPlayers: [], filteredReports: [], filteredGames: [], userRole: '' };
-    }
-    if (currentUser.role === 'admin') {
-      return {
-        filteredTeams: teams,
-        filteredPlayers: players,
-        filteredReports: reports,
-        filteredGames: games,
-        userRole: 'Admin'
-      };
-    }
+  // Use custom hooks for data filtering and calculations
+  const { filteredTeams, filteredPlayers, filteredReports, filteredGames, userRole } = useDashboardData({
+    currentUser,
+    users,
+    teams,
+    players,
+    reports,
+    games
+  });
 
-    // MongoDB/JWT Backend data structure (no more Airtable!)
-    const backendUser = users.find(u => u.email && u.email.toLowerCase() === currentUser.email.toLowerCase());
-    const userRole = currentUser.role; // Use role from JWT token
+  const { roleDisplay } = useUserRole({
+    currentUser,
+    users,
+    teams
+  });
 
-    let fTeams = teams;
-    let fPlayers = players;
-    let fGames = games;
-
-    if (userRole === 'Coach' && backendUser) {
-      // Filter teams where this user is the coach
-      fTeams = teams.filter(team => team.coach && team.coach._id === backendUser._id);
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
-      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
-    } else if (userRole === 'Division Manager' && backendUser?.department) {
-      // Filter teams by division
-      fTeams = teams.filter(team => team.division === backendUser.department);
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
-      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
-    } else if (userRole === 'Department Manager' && backendUser?.department) {
-      // Filter teams by department
-      fTeams = teams.filter(team => team.division === backendUser.department);
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => player.team && teamIds.includes(player.team._id));
-      fGames = games.filter(game => game.team && teamIds.includes(game.team._id));
-    } else if (userRole !== 'Admin') {
-      // Non-admin users with no specific permissions see nothing
-      fTeams = [];
-      fPlayers = [];
-      fGames = [];
-    }
-
-    const playerIds = fPlayers.map(p => p._id);
-    const fReports = reports.filter(report => report.player && playerIds.includes(report.player._id));
-    const displayRole = userRole || 'Coach';
-
-    return { filteredTeams: fTeams, filteredPlayers: fPlayers, filteredReports: fReports, filteredGames: fGames, userRole: displayRole };
-  }, [currentUser, users, teams, players, reports, games]);
-
-  const recentEvents = useMemo(() => {
-    const pastGames = filteredGames
-        .filter(game => game.date && safeIsPast(game.date))
-        .map(g => ({
-          ...g,
-          type: 'game',
-          eventDate: safeDate(g.date)
-        }))
-        .filter(g => g.eventDate); // Remove games with invalid dates
-
-    const recentReports = filteredReports
-        .filter(r => r.createdAt) // MongoDB uses createdAt field
-        .map(r => ({
-          ...r,
-          type: 'report',
-          eventDate: safeDate(r.createdAt)
-        }))
-        .filter(r => r.eventDate); // Remove reports with invalid dates
-
-    return [...pastGames, ...recentReports]
-        .sort((a, b) => b.eventDate - a.eventDate)
-        .slice(0, 4);
-  }, [filteredGames, filteredReports]);
+  const { recentEvents } = useRecentEvents({
+    filteredGames,
+    filteredReports
+  });
 
   const getPlayerName = (report) => {
     if (!report.player) return "Unknown Player";
@@ -576,6 +346,7 @@ export default function Dashboard() {
     const player = players.find(p => p._id === report.player);
     return player?.fullName || "Unknown Player";
   };
+
 
   if (isDataLoading) {
     return (
@@ -600,83 +371,30 @@ export default function Dashboard() {
     <div className="p-6 md:p-8 bg-slate-900 min-h-screen text-slate-100 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
-              Welcome, <span className="text-cyan-400">{currentUser?.fullName?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'User'}</span>
-            </h1>
-            <p className="text-slate-400 text-lg font-mono">
-              {userRole} Terminal
-            </p>
-          </div>
-          <Link to={createPageUrl("AddReport")}>
-            <Button className="bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400 transition-all duration-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              New Scout Report
-            </Button>
-          </Link>
-        </div>
+        <DashboardHeader 
+          currentUser={currentUser}
+          roleDisplay={roleDisplay}
+        />
 
         {/* Top Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <RecentAndNextGame games={filteredGames} />
+          <GameZone games={filteredGames} />
           <WeeklyTrainingPlanOverview teams={filteredTeams} trainingSessions={trainingSessions} sessionDrills={sessionDrills} drills={drills} />
           <PlayerSpotlight players={filteredPlayers} reports={filteredReports} />
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <StatCard title="My Teams" value={filteredTeams.length} icon={Trophy} linkTo={createPageUrl("Dashboard")} />
-            <StatCard title="Managed Players" value={filteredPlayers.length} icon={Users} linkTo={createPageUrl("Players")} />
-            <StatCard title="Reports Filed" value={filteredReports.length} icon={TrendingUp} linkTo={createPageUrl("Players")} />
-        </div>
+        <DashboardStats 
+          teamsCount={filteredTeams.length}
+          playersCount={filteredPlayers.length}
+          reportsCount={filteredReports.length}
+        />
 
-        {/* Activity Log - מצומצם */}
-        <Card className="bg-slate-800/70 border border-slate-700 shadow-xl backdrop-blur-sm">
-            <CardHeader>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Eye className="w-6 h-6 text-cyan-400" />
-                  Recent Activity
-                </CardTitle>
-                <p className="text-sm text-slate-400">Latest games and reports.</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {recentEvents.length > 0 ? (
-                  recentEvents.map((event) => (
-                    <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-700">
-                        {event.type === 'game' ? <Swords className="w-5 h-5 text-cyan-400" /> : <FileText className="w-5 h-5 text-purple-400" />}
-                      </div>
-                      <div className="flex-1">
-                        {event.type === 'game' ? (
-                            <Link to={createPageUrl(`GameDetails?id=${event.id}`)} className="font-bold text-white hover:text-cyan-400 transition-colors">
-                                {event.GameTitle || 'Game Played'}
-                            </Link>
-                        ) : (
-                            <Link to={createPageUrl(`Player?id=${event.Player[0]}`)} className="font-bold text-white hover:text-purple-400 transition-colors">
-                                Scout Report: {getPlayerName(event)}
-                            </Link>
-                        )}
-                        <p className="text-sm text-slate-400">
-                            {event.type === 'game' ? `Final Score: ${event.FinalScore_Display || 'N/A'}` : `Rating: ${event.GeneralRating || 'N/A'}/5`}
-                        </p>
-                      </div>
-                      <div className="text-right text-sm text-slate-500 font-mono">
-                        {safeFormatDistanceToNow(event.eventDate, { addSuffix: true })}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-500">
-                      <Eye className="w-12 h-12 mx-auto mb-3" />
-                      <p className="font-medium">No recent activity</p>
-                      <p className="text-sm">Data will appear here once games are played or reports are filed.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-        </Card>
+        {/* Activity Log */}
+        <RecentActivity 
+          events={recentEvents}
+          getPlayerName={getPlayerName}
+        />
       </div>
     </div>
   );
