@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { authenticateJWT } = require('../middleware/jwtAuth');
 const { checkTeamAccess } = require('../middleware/auth');
 const Player = require('../models/Player');
@@ -6,23 +7,33 @@ const Team = require('../models/Team');
 
 const router = express.Router();
 
-// Get all players (with role-based filtering)
+// Get all players (with role-based filtering and search)
 router.get('/', authenticateJWT, async (req, res) => {
   try {
     const user = req.user;
+    const { search, team } = req.query;
     let query = {};
 
-    // Apply role-based filtering
-    if (user.role === 'Coach') {
-      // Get teams where user is coach
-      const teams = await Team.find({ coach: user._id });
-      const teamIds = teams.map(team => team._id);
-      query.team = { $in: teamIds };
+    console.log(`🔍 Player search - User: ${user.fullName} (${user.role}), Search: "${search}", Team: "${team}"`);
+
+    // Apply team filter if specified (all users can see all players for reporting)
+    if (team && team !== 'all') {
+      // Convert string to ObjectId for proper comparison
+      query.team = new mongoose.Types.ObjectId(team);
     }
+
+    // Apply search filter if specified
+    if (search && search.trim()) {
+      query.fullName = { $regex: search.trim(), $options: 'i' };
+    }
+
+    console.log(`🔍 Final query:`, JSON.stringify(query, null, 2));
 
     const players = await Player.find(query)
       .populate('team', 'teamName season division')
       .sort({ fullName: 1 });
+
+    console.log(`🔍 Found ${players.length} players`);
 
     res.json({
       success: true,

@@ -1,0 +1,22 @@
+/* Hide browser's default calendar picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* For Firefox */
+input[type="date"] {
+  -moz-appearance: textfield;
+}
+
+/* For other browsers */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+

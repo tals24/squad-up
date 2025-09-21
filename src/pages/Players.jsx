@@ -220,14 +220,18 @@ export default function Players() {
     return age;
   };
 
-  const getTeamName = (teamId) => {
-    // teamId from Airtable's 'Team' linked record field will be an array of record IDs.
-    if (!teamId || !Array.isArray(teamId) || teamId.length === 0) return "No Team";
-
-    // Find the first matching team among all teams from context data
-    // Use `t.id` as the primary identifier for teams from Airtable.
-    const team = teams.find(t => teamId.includes(t.id));
-    return team?.TeamName || team?.Name || "Unknown Team";
+  const getTeamName = (team) => {
+    // MongoDB structure: team is a populated object with _id and teamName
+    if (!team) return "No Team";
+    
+    // If team is already populated (has teamName), return it directly
+    if (typeof team === 'object' && team.teamName) {
+      return team.teamName;
+    }
+    
+    // If team is just an ObjectId, find the team in the teams array
+    const teamObj = teams.find(t => t._id === team);
+    return teamObj?.teamName || "Unknown Team";
   };
 
   if (isContextLoading || !currentUser) {
@@ -311,8 +315,8 @@ export default function Players() {
                 <Grid cols={4} gap="md">
                   {players.length > 0 ? (
             players.map((player) => (
-                      <StaggerItem key={player.id}>
-                        <Link to={createPageUrl(`Player?id=${player.id}`)}>
+                      <StaggerItem key={player._id}>
+                        <Link to={createPageUrl(`Player?id=${player._id}`)}>
                           <AnimatedCard 
                             interactive={true}
                             className="h-full hover:shadow-lg transition-all duration-200"
@@ -380,12 +384,12 @@ export default function Players() {
                   <CardContent className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      <span className="font-medium">{getTeamName(player.Team)}</span>
+                      <span className="font-medium">{getTeamName(player.team)}</span>
                     </div>
-                    {player.DateOfBirth && (
+                    {player.dateOfBirth && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        <span>{new Date(player.DateOfBirth).toLocaleDateString()}</span>
+                        <span>{new Date(player.dateOfBirth).toLocaleDateString()}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t border-border">

@@ -6,21 +6,10 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// Get all teams (with role-based filtering)
+// Get all teams (all teams visible to all users)
 router.get('/', authenticateJWT, async (req, res) => {
   try {
-    const user = req.user;
-    let query = {};
-
-    // Apply role-based filtering
-    if (user.role === 'Coach') {
-      query.coach = user._id;
-    } else if (user.role === 'Division Manager') {
-      // Filter by division - this would need to be implemented based on your division logic
-      // For now, return all teams
-    }
-
-    const teams = await Team.find(query)
+    const teams = await Team.find()
       .populate('coach', 'fullName email role')
       .populate('divisionManager', 'fullName email role')
       .populate('departmentManager', 'fullName email role')

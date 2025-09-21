@@ -86,6 +86,6 @@ playerSchema.virtual('age').get(function() {
   return age;
 });
 
-module.exports = mongoose.model('Player', playerSchema);
+module.exports = mongoose.model('Player', playerSchema, 'players');
 
 

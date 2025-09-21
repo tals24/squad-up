@@ -114,6 +114,6 @@ gameSchema.pre('save', async function(next) {
   next();
 });
 
-module.exports = mongoose.model('Game', gameSchema);
+module.exports = mongoose.model('Game', gameSchema, 'games');
 
 

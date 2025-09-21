@@ -51,6 +51,6 @@ teamSchema.index({ season: 1 });
 teamSchema.index({ division: 1 });
 teamSchema.index({ coach: 1 });
 
-module.exports = mongoose.model('Team', teamSchema);
+module.exports = mongoose.model('Team', teamSchema, 'teams');
 
 
