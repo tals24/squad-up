@@ -46,26 +46,51 @@ export default function TrainingPlanner() {
   const localStorageKey = `trainingPlan_${selectedTeamId}_${weekId}`;
 
   const managedTeams = useMemo(() => {
+    console.log('🔍 TrainingPlanner Debug:', {
+      currentUser: currentUser?.email,
+      usersLength: users.length,
+      teamsLength: teams.length,
+      userRole
+    });
+    
     if (!currentUser || !users.length || !teams.length) {
+      console.log('❌ Missing data:', { currentUser: !!currentUser, users: users.length, teams: teams.length });
       return [];
     }
     
     if (userRole === 'Admin' || userRole === 'Department Manager') {
+      console.log('✅ Admin/Dept Manager - returning all teams:', teams.length);
       return teams;
     }
     
     if (userRole === 'Division Manager') {
-      const airtableUser = users.find(u => u.Email?.toLowerCase() === currentUser.email.toLowerCase());
-      return teams.filter(team => team.Division === airtableUser?.Department);
+      const mongoUser = users.find(u => u.email?.toLowerCase() === currentUser.email.toLowerCase());
+      console.log('🔍 Division Manager - mongoUser:', mongoUser);
+      const filteredTeams = teams.filter(team => team.division === mongoUser?.department);
+      console.log('✅ Division Manager - filtered teams:', filteredTeams.length);
+      return filteredTeams;
     }
     
     if (userRole === 'Coach') {
-      const airtableUser = users.find(u => u.Email?.toLowerCase() === currentUser.email.toLowerCase());
-      return teams.filter(team => {
-        return team.Coach?.includes(airtableUser?.UserID || airtableUser?.id);
+      const mongoUser = users.find(u => u.email?.toLowerCase() === currentUser.email.toLowerCase());
+      console.log('🔍 Coach - mongoUser:', mongoUser);
+      console.log('🔍 Coach - all teams:', teams.map(t => ({ id: t._id, name: t.teamName, coach: t.coach })));
+      
+      const filteredTeams = teams.filter(team => {
+        const isCoach = team.coach?._id === mongoUser?._id || team.coach === mongoUser?._id;
+        console.log(`🔍 Team ${team.teamName} - coach match:`, { 
+          teamCoach: team.coach, 
+          userID: mongoUser?._id, 
+          isCoach 
+        });
+        return isCoach;
       });
+      
+      console.log('✅ Coach - filtered teams:', filteredTeams.length, filteredTeams.map(t => t.teamName));
+      return filteredTeams;
     }
     
+    console.log('❌ No matching role');
     return [];
   }, [currentUser, users, teams, userRole]);
 
@@ -74,15 +99,15 @@ export default function TrainingPlanner() {
       const user = await User.me();
       setCurrentUser(user);
       
-      const airtableUser = users.find(u => u.Email?.toLowerCase() === user.email.toLowerCase());
-      setUserRole(airtableUser?.Role || 'Coach');
+      const mongoUser = users.find(u => u.email?.toLowerCase() === user.email.toLowerCase());
+      setUserRole(mongoUser?.role || 'Coach');
     };
     if (users.length > 0) fetchUser();
   }, [users]);
   
   useEffect(() => {
     if (managedTeams.length > 0 && !selectedTeamId) {
-      const firstTeamId = managedTeams[0].id;
+      const firstTeamId = managedTeams[0]._id || managedTeams[0].id;
       setSelectedTeamId(firstTeamId);
     }
   }, [managedTeams, selectedTeamId]);
@@ -237,8 +262,8 @@ export default function TrainingPlanner() {
               <SelectContent className="bg-slate-800 border-slate-600 text-white">
                 {managedTeams.length > 0 ? (
                   managedTeams.map(team => (
-                    <SelectItem key={team.id} value={team.id} className="focus:bg-slate-700 hover:bg-slate-700">
-                      {team.TeamName}
+                    <SelectItem key={team._id || team.id} value={team._id || team.id} className="focus:bg-slate-700 hover:bg-slate-700">
+                      {team.teamName}
                     </SelectItem>
                   ))
                 ) : (
@@ -276,6 +301,7 @@ export default function TrainingPlanner() {
                     onDrop={handleDrop}
                     onRemoveDrill={handleRemoveDrill}
                     onNotesChange={handleNotesChange}
+                    currentDate={currentDate}
                 />
                 <DrillLibrarySidebar />
             </>

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useData } from "../components/DataContext";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
 import {
   Search,
   Plus,
@@ -393,10 +394,10 @@ const DrillDetailModal = ({ drill, open, setOpen }) => {
         </DialogHeader>
         <div className="space-y-6 pt-4">
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+            <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium ${getCategoryColor(drill?.category || drill?.Category)}`}>
               <Tag className="w-4 h-4 mr-2" /> {drill?.category || drill?.Category}
             </span>
-            <span className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium bg-slate-700 text-slate-300 border border-slate-600">
+            <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium ${getAgeColor()}`}>
               <Users className="w-4 h-4 mr-2" /> {displayAgeGroups(drill?.targetAgeGroup || drill?.TargetAgeGroup)}
             </span>
           </div>
@@ -608,10 +609,10 @@ export default function DrillLibrary() {
                       {drill.description || drill.DrillDescription || drill.Description || drill.Instructions || drill.Details || "No description available."}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(drill.category || drill.Category)}`}>
                         <Tag className="w-3 h-3 mr-1" /> {drill.category || drill.Category}
                       </span>
-                      <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-slate-700 text-slate-300 border border-slate-600">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getAgeColor()}`}>
                         <Users className="w-3 h-3 mr-1" /> {displayAgeGroups(drill.targetAgeGroup || drill.TargetAgeGroup)}
                       </span>
                     </div>

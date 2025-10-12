@@ -28,7 +28,7 @@ const drillSchema = new mongoose.Schema({
   targetAgeGroup: {
     type: [String],
     required: true,
-    enum: ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+', 'U6', 'U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'Senior']
+    enum: ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+']
   },
   
   videoLink: {

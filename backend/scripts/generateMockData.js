@@ -565,31 +565,31 @@ const generateDrills = async (coaches) => {
       name: 'Passing Accuracy',
       description: 'Focus on short and medium range passing accuracy under pressure',
       category: 'Technical',
-      targetAgeGroup: ['U16', 'U18', 'Senior']
+      targetAgeGroup: ['U14-U16', 'U16+']
     },
     {
       name: 'Shooting Practice',
       description: 'Finishing drills from various angles and distances',
       category: 'Technical',
-      targetAgeGroup: ['U14', 'U16', 'U18', 'Senior']
+      targetAgeGroup: ['U12-U14', 'U14-U16', 'U16+']
     },
     {
       name: 'Defensive Shape',
       description: 'Maintaining defensive line and shape during attacks',
       category: 'Tactical',
-      targetAgeGroup: ['U16', 'U18', 'Senior']
+      targetAgeGroup: ['U14-U16', 'U16+']
     },
     {
       name: 'Sprint Intervals',
       description: 'High intensity running to build match fitness',
       category: 'Physical',
-      targetAgeGroup: ['U14', 'U16', 'U18', 'Senior']
+      targetAgeGroup: ['U12-U14', 'U14-U16', 'U16+']
     },
     {
       name: 'Ball Control',
       description: 'First touch and close control in tight spaces',
       category: 'Technical',
-      targetAgeGroup: ['U12', 'U14', 'U16', 'U18']
+      targetAgeGroup: ['U10-U12', 'U12-U14', 'U14-U16']
     }
   ];
   
