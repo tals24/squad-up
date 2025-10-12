@@ -8,3 +8,4 @@ export * from './positionUtils';
 export * from './dateUtils';
 export * from './gameUtils';
 export * from './dashboardConstants';
+export * from './drillLabUtils';

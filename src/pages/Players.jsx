@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User } from "@/api/entities";
 import { Link } from "react-router-dom";
@@ -35,7 +35,7 @@ import {
   FormField,
   Grid
 } from "@/components/ui/design-system-components";
-import { PageLayout, PageHeader, SearchFilter, LoadingState, StandardButton } from "@/components/ui/design-system-components";
+import { PageLayout, LoadingState } from "@/components/ui/design-system-components";
 import { 
   AnimatedButton, 
   AnimatedCard, 
@@ -49,6 +49,10 @@ import { theme } from "@/lib/theme";
 import { createAriaProps, createFormFieldProps } from "@/lib/accessibility";
 import { useData } from "../components/DataContext";
 import { getPlayersForTeam } from "@/api/functions"; // Changed from airtableSync
+import PlayersHeader from "@/components/players/PlayersHeader";
+import PlayerFilters from "@/components/players/PlayerFilters";
+import PlayerGrid from "@/components/players/PlayerGrid";
+import { usePlayersData } from "@/hooks/usePlayersData";
 
 const PLAYERS_PER_PAGE = 12;
 
@@ -70,9 +74,7 @@ export default function Players() {
   const [selectedPosition, setSelectedPosition] = useState("all");
   const [selectedTeam, setSelectedTeam] = useState("all");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const offsets = useRef({}); // Use useRef instead of useState for offsets
-  const [hasNextPage, setHasNextPage] = useState(false);
+  // pagination handled by usePlayersData hook
 
   useEffect(() => {
     User.me().then(setCurrentUser).catch(console.error);
@@ -121,55 +123,7 @@ export default function Players() {
   }, [defaultTeamId, currentUser, selectedTeam, teams]);
 
 
-  const fetchPlayers = useCallback(async (page) => { // Removed 'formula' parameter
-    // If a non-admin user has "all" teams selected (which means no specific team is chosen)
-    // or if they have no teams assigned, prevent fetching all players.
-    if (selectedTeam === 'all' && currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0) {
-      setPlayers([]);
-      setIsLoading(false);
-      return;
-    }
-      
-    setIsLoading(true);
-    // Determine the offset for the current page
-    const offset = page > 1 ? offsets.current[page] : undefined;
-
-    try {
-      // Call the new server-side function
-      const { data, error } = await getPlayersForTeam({
-        teamId: selectedTeam,
-        searchTerm,
-        position: selectedPosition,
-        pageSize: PLAYERS_PER_PAGE,
-        offset,
-      });
-
-      if (error) {
-        console.error("Server-side error fetching players:", error);
-        throw new Error(error.details || 'Failed to fetch players');
-      }
-      
-      if (data?.records) {
-        setPlayers(data.records);
-        if (data.offset) {
-          // Store the offset for the *next* page
-          offsets.current[page + 1] = data.offset;
-          setHasNextPage(true);
-        } else {
-          setHasNextPage(false);
-        }
-      } else {
-        setPlayers([]);
-        setHasNextPage(false);
-      }
-    } catch (err) {
-      console.error("Failed to fetch players:", err);
-      setPlayers([]);
-      setHasNextPage(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedTeam, searchTerm, selectedPosition, currentUser, filteredTeamsForDropdown]); // Added dependencies for selected filters and currentUser/filteredTeamsForDropdown
+  // server-side pagination fetch function removed in favor of context + client filtering
 
 
   // 🔄 SIMPLIFIED: Use players directly from DataContext
@@ -191,22 +145,10 @@ export default function Players() {
   }, [currentPage, fetchPlayers, isContextLoading]);
   */
 
-  // Effect to reset pagination when filters change (except for current page)
-  useEffect(() => {
-    setCurrentPage(1);
-    offsets.current = {}; // Reset the ref object
-  }, [searchTerm, selectedPosition, selectedTeam]); // Dependencies are filters and role formula
+  // Pagination reset handled by usePlayersData hook
 
 
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      setCurrentPage(p => p + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage(p => Math.max(1, p - 1)); // Ensure page doesn't go below 1
-  };
+  // Pagination helpers provided by usePlayersData hook
 
   const getPlayerAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
@@ -234,6 +176,16 @@ export default function Players() {
     return teamObj?.teamName || "Unknown Team";
   };
 
+  const { pagePlayers, hasNext, hasPrev, nextPage, prevPage, currentPage } = usePlayersData({
+    players,
+    teams,
+    currentUser,
+    searchTerm,
+    selectedPosition,
+    selectedTeam,
+    pageSize: PLAYERS_PER_PAGE,
+  });
+
   if (isContextLoading || !currentUser) {
     return <LoadingState message="Loading players..." />;
   }
@@ -242,55 +194,18 @@ export default function Players() {
     <PageTransition>
       <PageLayout>
         {/* Header */}
-        <PageHeader
-          title="My"
-          accentWord="Players"
-          subtitle="Manage and track player development"
-          actionButton={
-            <Link to={createPageUrl("AddPlayer")}>
-              <StandardButton 
-                variant="primary"
-                icon={<Plus className="w-5 h-5" />}
-              >
-                Add Player
-              </StandardButton>
-            </Link>
-          }
-        />
+        <PlayersHeader />
 
         {/* Filters */}
-        <SearchFilter
-          searchValue={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search players..."
-          filters={[
-            {
-              value: selectedPosition,
-              onChange: setSelectedPosition,
-              placeholder: "All Positions",
-              options: [
-                { value: "all", label: "All Positions" },
-                { value: "Goalkeeper", label: "Goalkeeper" },
-                { value: "Defender", label: "Defender" },
-                { value: "Midfielder", label: "Midfielder" },
-                { value: "Forward", label: "Forward" }
-              ]
-            },
-            {
-              value: selectedTeam,
-              onChange: setSelectedTeam,
-              placeholder: "Select Team",
-              options: [
-                ...(currentUser?.role === 'admin' ? [{ value: "all", label: "All Teams" }] : []),
-                ...filteredTeamsForDropdown.map(team => ({
-                  value: team.id,
-                  label: team.TeamName || team.Name
-                })),
-                ...(currentUser?.role !== 'admin' && filteredTeamsForDropdown.length === 0 ? 
-                  [{ value: "no-teams", label: "No teams assigned", disabled: true }] : [])
-              ]
-            }
-          ]}
+        <PlayerFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedPosition={selectedPosition}
+          setSelectedPosition={setSelectedPosition}
+          selectedTeam={selectedTeam}
+          setSelectedTeam={setSelectedTeam}
+          teams={teams}
+          currentUser={currentUser}
         />
 
         {/* Players Grid */}
@@ -311,120 +226,8 @@ export default function Players() {
                 </Grid>
               </StaggerContainer>
             ) : (
-              <StaggerContainer key="content">
-                <Grid cols={4} gap="md">
-                  {players.length > 0 ? (
-            players.map((player) => (
-                      <StaggerItem key={player._id}>
-                        <Link to={createPageUrl(`Player?id=${player._id}`)}>
-                          <AnimatedCard 
-                            interactive={true}
-                            className="h-full hover:shadow-lg transition-all duration-200"
-                            tabIndex={0}
-                            {...createAriaProps({
-                              label: `View ${player.fullName} profile`,
-                              role: 'link'
-                            })}
-                          >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        {player.profileImage ? (
-                          <img
-                            src={player.profileImage}
-                            alt={player.fullName}
-                            className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow-lg"
-                            onError={(e) => {
-                              const self = e.target;
-                              const nextSibling = self.nextSibling;
-                              // Hide image on error
-                              self.style.display = 'none';
-                              // Show fallback div
-                              if (nextSibling) {
-                                nextSibling.style.display = 'flex';
-                              }
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-blue-500 shadow-lg"
-                          style={{ display: player.profileImage ? 'none' : 'flex' }}
-                        >
-                          <span className="text-white font-bold text-xl">
-                            {player.fullName?.charAt(0) || 'P'}
-                          </span>
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-card rounded-full flex items-center justify-center shadow-lg border border-border">
-                          <Trophy className="w-3 h-3 text-blue-500" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg font-bold text-foreground truncate">
-                          {player.fullName}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge
-                            variant="secondary"
-                            className="bg-secondary text-secondary-foreground"
-                          >
-                            {player.position}
-                          </Badge>
-                          {player.kitNumber && (
-                            <Badge variant="outline" className="font-mono border-blue-500 text-primary">#{player.kitNumber}</Badge>
-                          )}
-                          {player.dateOfBirth && (
-                            <span className="text-sm text-muted-foreground font-medium">
-                              Age {getPlayerAge(player.dateOfBirth)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      <span className="font-medium">{getTeamName(player.team)}</span>
-                    </div>
-                    {player.dateOfBirth && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(player.dateOfBirth).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center pt-2 border-t border-border">
-                      <div className="flex items-center gap-1 text-sm text-primary">
-                        <Target className="w-4 h-4" />
-                        <span>View Profile</span>
-                      </div>
-                      <TrendingUp className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors duration-200" />
-                    </div>
-                  </CardContent>
-                          </AnimatedCard>
-              </Link>
-                      </StaggerItem>
-            ))
-          ) : (
-                    <StaggerItem key="no-results">
-            <div className="col-span-full">
-              <Card className="shadow-2xl border-border bg-card">
-                <CardContent className="p-12 text-center">
-                  <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                            <Heading level={3} className="mb-2">No Players Found</Heading>
-                            <Text className="text-neutral-600 mb-6">
-                    {searchTerm || selectedPosition !== "all" || selectedTeam !== "all"
-                      ? "Try adjusting your filters to see more players."
-                                : "No players match your current access permissions or selected team."
-                    }
-                            </Text>
-                </CardContent>
-              </Card>
-            </div>
-                    </StaggerItem>
-                  )}
-                </Grid>
-              </StaggerContainer>
-          )}
+              <PlayerGrid players={pagePlayers} teams={teams} />
+            )}
           </AnimatePresence>
         </motion.div>
 
@@ -438,12 +241,12 @@ export default function Players() {
           <AnimatedButton
             variant="outline"
             size="md"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1 || isLoading}
+            onClick={prevPage}
+            disabled={!hasPrev || isLoading}
             loading={isLoading}
             {...createAriaProps({
               label: 'Go to previous page',
-              disabled: currentPage === 1 || isLoading
+              disabled: !hasPrev || isLoading
             })}
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
@@ -457,12 +260,12 @@ export default function Players() {
           <AnimatedButton
             variant="outline"
             size="md"
-            onClick={handleNextPage}
-            disabled={!hasNextPage || isLoading}
+            onClick={nextPage}
+            disabled={!hasNext || isLoading}
             loading={isLoading}
             {...createAriaProps({
               label: 'Go to next page',
-              disabled: !hasNextPage || isLoading
+              disabled: !hasNext || isLoading
             })}
           >
             Next

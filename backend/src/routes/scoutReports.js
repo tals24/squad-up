@@ -63,13 +63,15 @@ router.post('/', authenticateJWT, async (req, res) => {
       title, 
       content, 
       generalRating, 
-      notes 
+      notes,
+      date
     } = req.body;
 
     const scoutReport = new ScoutReport({
       player,
       game: game || null, // Optional for scout reports
       author: req.user._id,
+      date: date ? new Date(date) : new Date(), // Use provided date or current date
       title,
       content,
       generalRating: generalRating || 3,

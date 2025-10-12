@@ -27,6 +27,49 @@ export function TextInputField({
   // Use the correct value and onChange function
   const fieldValue = value || (formData && formData[id]) || '';
   const fieldOnChange = onChange || handleChange;
+  
+  // Special handling for date inputs to prevent calendar picker issues
+  if (type === "date") {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">
+          {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
+          {label} {isRequired && "*"}
+        </Label>
+        <div className="relative">
+          <Input
+            id={id}
+            type="date"
+            value={fieldValue}
+            onChange={(e) => fieldOnChange(id, e.target.value)}
+            placeholder={placeholder}
+            className={`bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors ${width || ''}`}
+            required={isRequired}
+            style={{ paddingLeft: '20px', paddingRight: '12px' }}
+          />
+          <button
+            type="button"
+            className="absolute left-1 top-1/2 transform -translate-y-1/2 p-0 hover:bg-accent/20 rounded transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const input = document.getElementById(id);
+              if (input && input.showPicker) {
+                input.showPicker();
+              }
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <Icon className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-foreground font-medium flex items-center gap-2">

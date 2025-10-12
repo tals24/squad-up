@@ -1,36 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Clock, Plus } from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { Clock } from 'lucide-react';
 import TimelineItem from './TimelineItem';
 
 const DevelopmentTimeline = ({ playerReports, games, playerId }) => {
   return (
     <Card className="shadow-2xl border-slate-700 bg-slate-800/70 backdrop-blur-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader>
         <CardTitle className="text-xl font-bold text-slate-100 flex items-center gap-3">
           <Clock className="w-6 h-6 text-cyan-400" />
           Development Timeline
         </CardTitle>
-        <Link to={createPageUrl(`AddReport?playerId=${playerId}`)}>
-          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Report
-          </Button>
-        </Link>
       </CardHeader>
       <CardContent className="pr-2">
         {playerReports.length > 0 ? (
           <div className="space-y-8 scrollbar-hover max-h-[60rem] overflow-y-auto pr-4">
             {playerReports.map((report, index) => {
-              const gameForReport = games.find(g => report.Game && report.Game.includes(g.id));
+              // Handle both old Airtable and new MongoDB structures
+              const gameForReport = report.game 
+                ? games.find(g => g._id === report.game._id || g._id === report.game)
+                : games.find(g => report.Game && report.Game.includes(g.id));
               const isLast = index === playerReports.length - 1;
 
               return (
                 <TimelineItem
-                  key={report.id || index}
+                  key={report._id || report.id || `report-${index}`}
                   report={report}
                   gameForReport={gameForReport}
                   isLast={isLast}
