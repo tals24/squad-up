@@ -397,10 +397,10 @@ export const saveTrainingPlan = async (planData) => {
   });
 };
 
-export const loadTrainingPlan = async (planId) => {
-  console.log('Loading training plan from backend...', planId);
+export const loadTrainingPlan = async (planData) => {
+  console.log('Loading training plan from backend...', planData);
   // This would load a complete training plan
-  return await apiCall(`/session-drills/plan/${planId}`);
+  return await apiCall(`/session-drills/plan/${planData.teamId}/${planData.weekIdentifier}`);
 };
 
 // Initialize game roster (create roster entries for a game)
