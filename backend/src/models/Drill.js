@@ -15,19 +15,20 @@ const drillSchema = new mongoose.Schema({
   
   description: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   
   category: {
     type: String,
     required: true,
-    enum: ['Warm-up', 'Technical', 'Tactical', 'Physical', 'Small-sided Games', 'Set Pieces']
+    enum: ['Dribbling', 'Shooting', 'Passing', 'Defense', 'Goalkeeping', 'Warm-up', 'Technical', 'Tactical', 'Physical', 'Small-sided Games', 'Set Pieces']
   },
   
   targetAgeGroup: {
     type: [String],
     required: true,
-    enum: ['U6', 'U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'Senior']
+    enum: ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+', 'U6', 'U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'Senior']
   },
   
   videoLink: {

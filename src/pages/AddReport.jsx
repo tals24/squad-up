@@ -136,16 +136,7 @@ export default function AddReport() {
     try {
       const user = await User.me();
       setCurrentUser(user);
-
-      // If we have a playerId, load the player details
-      if (playerId && players.length > 0) {
-        const player = players.find(p => p._id === playerId);
-        if (player) {
-          setSelectedPlayerDetails(player);
-          setPlayerSearch(player.fullName);
-                }
-            }
-        } catch (error) {
+    } catch (error) {
       console.error("Error loading data:", error);
     }
     setIsLoading(isContextLoading);
@@ -165,6 +156,7 @@ export default function AddReport() {
         content: formData.Content || null,
         generalRating: selectedRating,
         notes: formData.GeneralNotes || null,
+        date: formData.Date || new Date().toISOString().split('T')[0], // Use form date or default to today
         game: null // Scout reports don't require a specific game
       };
 
@@ -201,6 +193,7 @@ export default function AddReport() {
   // Determine back URL based on context
   const getBackUrl = () => {
     if (gameId) return `GameDetails?id=${gameId}`;
+    if (fromPage === "Player" && playerId) return `Player?id=${playerId}`;
     if (fromPage) return fromPage;
     
     // Check if we came from Dashboard by looking at referrer
@@ -265,107 +258,110 @@ export default function AddReport() {
         )}
 
         {/* Player Selection Filters */}
-        {!playerId && (
-          <div className="space-y-4">
-            <Label className="text-foreground font-medium flex items-center gap-2">
-              <Search className="w-4 h-4 text-brand-blue" />
-              Search Player *
-            </Label>
+        <div className="space-y-4">
+          <Label className="text-foreground font-medium flex items-center gap-2">
+            <Search className="w-4 h-4 text-brand-blue" />
+            Search Player *
+          </Label>
             
-            {/* Filter Bar */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Position Filter */}
-                             <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Position</Label>
-                <Select value={selectedPosition} onValueChange={(newValue) => {
-                  setSelectedPosition(newValue);
-                  setSelectedPlayerDetails(null);
-                  setPlayerSearch('');
-                  setShowPlayerDropdown(false);
-                }}>
-                  <SelectTrigger className="bg-background border-border text-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors">
-                    <SelectValue placeholder="Position" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border text-foreground">
-                    <SelectItem value="all">All Positions</SelectItem>
-                    <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
-                    <SelectItem value="Defender">Defender</SelectItem>
-                    <SelectItem value="Midfielder">Midfielder</SelectItem>
-                    <SelectItem value="Forward">Forward</SelectItem>
-                    <SelectItem value="Wing-back">Wing-back</SelectItem>
-                    <SelectItem value="Striker">Striker</SelectItem>
-                  </SelectContent>
-                </Select>
-                          </div>
+          {/* Pre-selected Player Display */}
+          {isPlayerPreSelected && selectedPlayerDetails && (
+            <div className="p-4 border border-border rounded-lg bg-card/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold">
+                  {selectedPlayerDetails.kitNumber || '?'}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-foreground">{selectedPlayerDetails.fullName}</div>
+                  <div className="text-sm text-muted-foreground">
+                    #{selectedPlayerDetails.kitNumber} • {selectedPlayerDetails.position}
+                    {selectedPlayerDetails.team && (
+                      <span className="ml-1">({selectedPlayerDetails.team.teamName})</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-xs text-cyan-400 font-medium">
+                  Pre-selected from player page
+                </div>
+              </div>
+            </div>
+          )}
 
-              {/* Kit Number Filter */}
-                          <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Kit Number</Label>
-                <Input
-                  value={kitNumber}
-                  onChange={(e) => {
-                    setKitNumber(e.target.value);
+          {/* Filter Bar - only show when not pre-selected */}
+          {!isPlayerPreSelected && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Position Filter */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Position</Label>
+                  <Select value={selectedPosition} onValueChange={(newValue) => {
+                    setSelectedPosition(newValue);
                     setSelectedPlayerDetails(null);
                     setPlayerSearch('');
                     setShowPlayerDropdown(false);
-                  }}
-                  placeholder="Exact number"
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors"
-                            />
-                          </div>
+                  }}>
+                    <SelectTrigger className="bg-background border-border text-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors">
+                      <SelectValue placeholder="Position" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border text-foreground">
+                      <SelectItem value="all">All Positions</SelectItem>
+                      <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
+                      <SelectItem value="Defender">Defender</SelectItem>
+                      <SelectItem value="Midfielder">Midfielder</SelectItem>
+                      <SelectItem value="Forward">Forward</SelectItem>
+                      <SelectItem value="Wing-back">Wing-back</SelectItem>
+                      <SelectItem value="Striker">Striker</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Player Search */}
-                         <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">
-                  Player Name
-                  {isPlayerPreSelected && (
-                    <span className="text-xs text-cyan-400 ml-2">(Pre-selected from player page)</span>
-                  )}
-                </Label>
-                <div className="relative" ref={dropdownRef}>
-                  <div className="relative">
-                    <Input
-                      value={playerSearch}
-                      onChange={(e) => {
-                        if (!isPlayerPreSelected) {
+                {/* Kit Number Filter */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Kit Number</Label>
+                  <Input
+                    value={kitNumber}
+                    onChange={(e) => {
+                      setKitNumber(e.target.value);
+                      setSelectedPlayerDetails(null);
+                      setPlayerSearch('');
+                      setShowPlayerDropdown(false);
+                    }}
+                    placeholder="Exact number"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors"
+                  />
+                </div>
+
+                {/* Player Search */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Player Name</Label>
+                  <div className="relative" ref={dropdownRef}>
+                    <div className="relative">
+                      <Input
+                        value={playerSearch}
+                        onChange={(e) => {
                           setPlayerSearch(e.target.value);
                           setShowPlayerDropdown(true);
-                        }
-                      }}
-                      onFocus={() => {
-                        if (!isPlayerPreSelected) {
-                          setShowPlayerDropdown(true);
-                        }
-                      }}
-                      onClick={() => {
-                        if (!isPlayerPreSelected) {
-                          setShowPlayerDropdown(true);
-                        }
-                      }}
-                      placeholder={isPlayerPreSelected ? "Player pre-selected" : "Type player name to search..."}
-                      className={`bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 pr-20 ${
-                        isPlayerPreSelected 
-                          ? 'cursor-not-allowed opacity-75 bg-slate-800/50' 
-                          : 'cursor-text'
-                      }`}
-                      readOnly={isPlayerPreSelected}
-                    />
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                      {selectedPlayerDetails && !isPlayerPreSelected && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedPlayerDetails(null);
-                            setPlayerSearch('');
-                            setShowPlayerDropdown(false);
-                          }}
-                          className="p-1 hover:bg-accent rounded-full transition-colors pointer-events-auto"
-                          title="Remove selected player"
-                        >
-                          <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      )}
-                      {!isPlayerPreSelected && (
+                        }}
+                        onFocus={() => setShowPlayerDropdown(true)}
+                        onClick={() => setShowPlayerDropdown(true)}
+                        placeholder="Type player name to search..."
+                        className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 pr-20"
+                      />
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                        {selectedPlayerDetails && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPlayerDetails(null);
+                              setPlayerSearch('');
+                              setShowPlayerDropdown(false);
+                            }}
+                            className="p-1 hover:bg-accent rounded-full transition-colors pointer-events-auto"
+                            title="Remove selected player"
+                          >
+                            <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => setShowPlayerDropdown(!showPlayerDropdown)}
@@ -374,100 +370,85 @@ export default function AddReport() {
                         >
                           <ChevronDown className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                         </button>
-                      )}
+                      </div>
                     </div>
+                    {showPlayerDropdown && (
+                      <div className="absolute z-10 w-full mt-1 border border-border rounded-lg bg-card max-h-48 overflow-y-auto shadow-lg">
+                        {filteredPlayers.length > 0 ? (
+                          filteredPlayers.map((player) => (
+                            <button
+                              key={player._id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPlayerDetails(player);
+                                setPlayerSearch(player.fullName);
+                                setShowPlayerDropdown(false);
+                              }}
+                              className="w-full py-1.5 px-2 text-left hover:bg-accent transition-colors flex items-center gap-2 text-sm"
+                            >
+                              <div className="w-6 h-6 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                {player.kitNumber || '?'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-foreground truncate">{player.fullName}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  #{player.kitNumber} • {player.position}
+                                  {player.team && (
+                                    <span className="ml-1">
+                                      ({player.team.teamName})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="py-1.5 px-2 text-muted-foreground text-center text-sm">
+                            {playerSearch.trim() || selectedPosition !== 'all' || kitNumber.trim() ? 'No players found' : 'Start typing to search players...'}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {showPlayerDropdown && !isPlayerPreSelected && (
-                    <div className="absolute z-10 w-full mt-1 border border-border rounded-lg bg-card max-h-48 overflow-y-auto shadow-lg">
-                      {filteredPlayers.length > 0 ? (
-                        filteredPlayers.map((player) => (
-                          <button
-                            key={player._id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedPlayerDetails(player);
-                              setPlayerSearch(player.fullName);
-                              setShowPlayerDropdown(false);
-                            }}
-                            className="w-full py-1.5 px-2 text-left hover:bg-accent transition-colors flex items-center gap-2 text-sm"
-                          >
-                            <div className="w-6 h-6 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold text-xs">
-                              {player.kitNumber || '?'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-foreground truncate">{player.fullName}</div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                #{player.kitNumber} • {player.position}
-                                {player.team && (
-                                  <span className="ml-1">
-                                    ({player.team.teamName})
-                                  </span>
-                                )}
-                  </div>
-                      </div>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="py-1.5 px-2 text-muted-foreground text-center text-sm">
-                          {playerSearch.trim() || selectedPosition !== 'all' || kitNumber.trim() ? 'No players found' : 'Start typing to search players...'}
-                      </div>
-                      )}
-                      </div>
-                  )}
                 </div>
               </div>
-                </div>
 
-            {/* Clear Filters Button */}
-            {(selectedPosition !== 'all' || kitNumber.trim() || (playerSearch.trim() && !isPlayerPreSelected)) && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPosition('all');
-                    setKitNumber('');
-                    if (!isPlayerPreSelected) {
+              {/* Clear Filters Button */}
+              {(selectedPosition !== 'all' || kitNumber.trim() || playerSearch.trim()) && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPosition('all');
+                      setKitNumber('');
                       setPlayerSearch('');
                       setSelectedPlayerDetails(null);
-                    }
-                    setShowPlayerDropdown(false);
-                  }}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  <X className="w-3 h-3" />
-                  Clear all filters
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                      setShowPlayerDropdown(false);
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
       </FormGrid>
 
 
       <FormGrid columns={2}>
-        <div className="space-y-2 w-48">
-          <Label className="text-foreground font-medium flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-brand-green-400" />
-            Date *
-          </Label>
-          <div className="relative">
-            <Input
-              id="Date"
-              type="date"
-              className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors text-left"
-              style={{ paddingLeft: '20px', paddingRight: '12px' }}
-              required={true}
-            />
-            <button
-              type="button"
-              className="absolute left-1 top-1/2 transform -translate-y-1/2 p-0 hover:bg-accent/20 rounded transition-colors"
-              onClick={() => document.getElementById('Date').showPicker?.()}
-            >
-              <Calendar className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </div>
+        <TextInputField
+          id="Date"
+          label="Date"
+          type="date"
+          icon={Calendar}
+          iconColor="text-brand-green-400"
+          width="w-48"
+          required={true}
+        />
 
         <div className="space-y-2">
           <Label className="text-foreground font-medium flex items-center gap-2">

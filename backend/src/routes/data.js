@@ -6,6 +6,8 @@ const Player = require('../models/Player');
 const Game = require('../models/Game');
 const GameRoster = require('../models/GameRoster');
 const TimelineEvent = require('../models/TimelineEvent');
+const GameReport = require('../models/GameReport');
+const ScoutReport = require('../models/ScoutReport');
 const Drill = require('../models/Drill');
 const Formation = require('../models/Formation');
 const TrainingSession = require('../models/TrainingSession');
@@ -26,7 +28,9 @@ router.get('/all', authenticateJWT, async (req, res) => {
       teams,
       players,
       games,
-      reports,
+      timelineEvents,
+      gameReports,
+      scoutReports,
       drills,
       gameRosters,
       trainingSessions,
@@ -36,20 +40,29 @@ router.get('/all', authenticateJWT, async (req, res) => {
       Team.find().populate('coach', 'fullName email role').lean().catch(err => { console.error('Teams query error:', err); return []; }),
       Player.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Players query error:', err); return []; }),
       Game.find().populate('team', 'teamName season division').lean().catch(err => { console.error('Games query error:', err); return []; }),
-      TimelineEvent.find().populate('player game author').lean().catch(err => { console.error('Reports query error:', err); return []; }),
+      TimelineEvent.find().populate('player game author').lean().catch(err => { console.error('TimelineEvents query error:', err); return []; }),
+      GameReport.find().populate('player game author').lean().catch(err => { console.error('GameReports query error:', err); return []; }),
+      ScoutReport.find().populate('player author').lean().catch(err => { console.error('ScoutReports query error:', err); return []; }),
       Drill.find().populate('author', 'fullName').lean().catch(err => { console.error('Drills query error:', err); return []; }),
       GameRoster.find().populate('game player').lean().catch(err => { console.error('GameRosters query error:', err); return []; }),
       TrainingSession.find().populate('team', 'teamName').lean().catch(err => { console.error('TrainingSessions query error:', err); return []; }),
       SessionDrill.find().populate('trainingSession drill').lean().catch(err => { console.error('SessionDrills query error:', err); return []; })
     ]);
     
-    console.log(`📊 Initial data counts - Users: ${users.length}, Teams: ${teams.length}, Players: ${players.length}, Games: ${games.length}`);
+    // Combine all reports into a single array
+    const allReports = [
+      ...timelineEvents.map(event => ({ ...event, reportType: 'TimelineEvent' })),
+      ...gameReports.map(report => ({ ...report, reportType: 'GameReport' })),
+      ...scoutReports.map(report => ({ ...report, reportType: 'ScoutReport' }))
+    ];
+
+    console.log(`📊 Initial data counts - Users: ${users.length}, Teams: ${teams.length}, Players: ${players.length}, Games: ${games.length}, Reports: ${allReports.length} (Timeline: ${timelineEvents.length}, Game: ${gameReports.length}, Scout: ${scoutReports.length})`);
 
     // Filter data based on user role
     let filteredTeams = teams; // All teams are visible to all users
     let filteredPlayers = players; // All players are visible to all users for reporting
     let filteredGames = games;
-    let filteredReports = reports;
+    let filteredReports = allReports;
     let filteredGameRosters = gameRosters;
     let filteredTrainingSessions = trainingSessions;
 
@@ -73,7 +86,7 @@ router.get('/all', authenticateJWT, async (req, res) => {
         return coachTeamIds.includes(player.team._id.toString());
       }).map(player => player._id.toString());
       
-      filteredReports = reports.filter(report => {
+      filteredReports = allReports.filter(report => {
         if (!report.player || !report.player._id) return false;
         return coachPlayerIds.includes(report.player._id.toString());
       });

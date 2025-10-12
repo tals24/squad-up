@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 
-export default function DrillDescriptionModal({ isOpen, onClose, description, onSave }) {
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState(description || '');
-
-  const handleSave = () => {
-    onSave(desc);
-    onClose();
-  };
+export default function DrillDescriptionModal({ isOpen, onClose, description, drillName }) {
 
   return (
     <AnimatePresence>
@@ -35,14 +27,16 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
           >
-            <div className="bg-card rounded-xl border border-border shadow-2xl p-6">
+            <div className="bg-slate-800/90 border-slate-700 rounded-xl border shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-card-foreground">Drill Description</h2>
+                <h2 className="text-xl font-bold text-slate-100">
+                  {drillName ? `${drillName}` : 'Drill Description'}
+                </h2>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-slate-400 hover:text-slate-100"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -50,45 +44,25 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, on
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="drill-title" className="text-foreground font-medium">
-                    Drill Title
-                  </Label>
-                  <Input
-                    id="drill-title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter drill title..."
-                    className="mt-2 bg-background border-border text-foreground placeholder:text-muted-foreground"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="drill-description" className="text-foreground font-medium">
+                  <Label htmlFor="drill-description" className="text-slate-100 font-medium">
                     Description & Instructions
                   </Label>
                   <Textarea
                     id="drill-description"
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    placeholder="Describe the drill, instructions, objectives, and variations..."
-                    className="mt-2 h-32 bg-background border-border text-foreground placeholder:text-muted-foreground resize-none"
+                    value={description || 'No description available'}
+                    readOnly
+                    className="mt-2 h-32 bg-slate-700/50 border-slate-600 text-slate-100 resize-none cursor-default"
                   />
                 </div>
               </div>
               
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end mt-6">
                 <Button
                   variant="outline"
                   onClick={onClose}
+                  className="border-slate-600 text-slate-100 hover:bg-slate-700"
                 >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  variant="default"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Description
+                  Close
                 </Button>
               </div>
             </div>

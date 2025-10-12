@@ -20,14 +20,14 @@ const ActivityItem = ({ event, getPlayerName }) => (
     <div className="flex-1">
       {event.type === 'game' ? (
         <Link 
-          to={createPageUrl(`GameDetails?id=${event.id}`)} 
+          to={createPageUrl(`GameDetails?id=${event._id || event.id}`)} 
           className="font-bold text-white hover:text-cyan-400 transition-colors"
         >
-          {event.GameTitle || 'Game Played'}
+          {event.gameTitle || event.GameTitle || 'Game Played'}
         </Link>
       ) : (
         <Link 
-          to={createPageUrl(`Player?id=${event.Player[0]}`)} 
+          to={createPageUrl(`Player?id=${event.player?._id || event.player}`)} 
           className="font-bold text-white hover:text-purple-400 transition-colors"
         >
           Scout Report: {getPlayerName(event)}
@@ -35,8 +35,8 @@ const ActivityItem = ({ event, getPlayerName }) => (
       )}
       <p className="text-sm text-slate-400">
         {event.type === 'game' 
-          ? `Final Score: ${event.FinalScore_Display || 'N/A'}` 
-          : `Rating: ${event.GeneralRating || 'N/A'}/5`
+          ? `Final Score: ${event.finalScore || event.FinalScore_Display || 'N/A'}` 
+          : `Rating: ${event.generalRating || event.GeneralRating || 'N/A'}/5`
         }
       </p>
     </div>
@@ -81,9 +81,9 @@ const RecentActivity = ({ events, getPlayerName }) => {
       <CardContent>
         <div className="space-y-2">
           {events.length > 0 ? (
-            events.map((event) => (
+            events.map((event, index) => (
               <ActivityItem 
-                key={event.id} 
+                key={event._id || event.id || `event-${index}`} 
                 event={event} 
                 getPlayerName={getPlayerName}
               />

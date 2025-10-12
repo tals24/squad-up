@@ -24,11 +24,11 @@ export const useRecentEvents = ({ filteredGames, filteredReports }) => {
 
     // Process recent reports
     const recentReports = filteredReports
-      .filter(r => r.createdAt) // MongoDB uses createdAt field
+      .filter(r => r.date || r.createdAt) // Use report date or fallback to createdAt
       .map(r => ({
         ...r,
         type: 'report',
-        eventDate: safeDate(r.createdAt)
+        eventDate: safeDate(r.date || r.createdAt) // Use report date or fallback to createdAt
       }))
       .filter(r => r.eventDate); // Remove reports with invalid dates
 

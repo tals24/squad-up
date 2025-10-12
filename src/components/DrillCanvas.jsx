@@ -13,6 +13,7 @@ const DrillCanvas = forwardRef(({ activeTool, initialElements, onDrop, onDragOve
 
   // Update elements when initialElements prop changes
   useEffect(() => {
+    console.log('[DrillCanvas] initialElements changed:', initialElements);
     setElements(initialElements || []);
   }, [initialElements]);
 
@@ -586,6 +587,7 @@ const DrillCanvas = forwardRef(({ activeTool, initialElements, onDrop, onDragOve
   }, [drawElements]);
 
   useEffect(() => {
+    console.log('[DrillCanvas] Drawing elements:', elements.length, 'elements');
     drawElements(); // Redraw whenever elements or interactionData change
   }, [elements, interactionData, drawElements]);
 
