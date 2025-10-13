@@ -47,15 +47,41 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
 
     const { weekStart, weekEnd, weekIdentifier, weekSessions } = useMemo(() => {
         const targetDate = addWeeks(new Date(), weekOffset);
-        const start = startOfWeek(targetDate, { weekStartsOn: 0 });
-        const end = endOfWeek(targetDate, { weekStartsOn: 0 });
+        const start = startOfWeek(targetDate, { weekStartsOn: 1 }); // Monday - same as Training Planner
+        const end = endOfWeek(targetDate, { weekStartsOn: 1 }); // Sunday - same as Training Planner
         const id = `${getYear(start)}-${getISOWeek(start)}`;
 
-        const teamIds = new Set(teams.map(t => t.id));
-        const sessions = trainingSessions.filter(session =>
-            session.WeekIdentifier === id &&
-            session.Team?.some(tId => teamIds.has(tId))
-        );
+        console.log('🔍 Dashboard WeeklyTrainingPlanOverview Debug:', {
+            weekIdentifier: id,
+            targetDate: targetDate.toISOString(),
+            weekStart: start.toISOString(),
+            weekEnd: end.toISOString(),
+            teamsCount: teams.length,
+            trainingSessionsCount: trainingSessions.length,
+            teams: teams.map(t => ({ id: t._id || t.id, name: t.teamName })),
+            sessions: trainingSessions.map(s => ({ 
+                id: s._id || s.id, 
+                weekIdentifier: s.weekIdentifier || s.WeekIdentifier,
+                team: s.team,
+                Team: s.Team,
+                sessionTitle: s.sessionTitle
+            }))
+        });
+
+        const teamIds = new Set(teams.map(t => t._id || t.id));
+        
+        console.log('🔍 Team IDs for matching:', Array.from(teamIds));
+        console.log('🔍 Sample session team field:', trainingSessions[0]?.team);
+        const sessions = trainingSessions.filter(session => {
+            const weekMatch = (session.weekIdentifier || session.WeekIdentifier) === id;
+            // Handle both populated team object and team ID
+            const teamMatch = teamIds.has(session.team) || 
+                             (session.team && session.team._id && teamIds.has(session.team._id)) ||
+                             (session.Team && session.Team.some(tId => teamIds.has(tId)));
+            return weekMatch && teamMatch;
+        });
+
+        console.log('🔍 Filtered sessions for this week:', sessions.length, sessions.map(s => s.sessionTitle));
 
         return {
             weekStart: start,
@@ -68,33 +94,72 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
     const dailyDrills = useMemo(() => {
         if (weekSessions.length === 0) return {};
 
-        const sessionIds = new Set(weekSessions.map(s => s.id));
-        const relevantSessionDrills = sessionDrills.filter(sd => sd.TrainingSessions?.some(sId => sessionIds.has(sId)));
+        console.log('🔍 Dashboard dailyDrills debug:');
+        console.log('  - weekSessions:', weekSessions.length);
+        console.log('  - sessionDrills:', sessionDrills.length);
+        console.log('  - allDrills:', allDrills.length);
+
+        const sessionIds = new Set(weekSessions.map(s => s._id || s.id));
+        const relevantSessionDrills = sessionDrills.filter(sd => {
+            // Handle both populated and unpopulated trainingSession fields
+            const sessionId = sd.trainingSession?._id || sd.trainingSession;
+            return sessionIds.has(sessionId) || 
+                   (sd.TrainingSessions && sd.TrainingSessions.some(sId => sessionIds.has(sId)));
+        });
+
+        console.log('  - relevantSessionDrills:', relevantSessionDrills.length);
+        console.log('  - Sample sessionDrills:', sessionDrills.slice(0, 3));
+        console.log('  - Sample sessionIds:', Array.from(sessionIds).slice(0, 3));
+        console.log('  - Sample sessionDrill trainingSession field:', sessionDrills.slice(0, 3).map(sd => ({
+            id: sd._id || sd.id,
+            trainingSession: sd.trainingSession,
+            TrainingSessions: sd.TrainingSessions,
+            drill: sd.drill,
+            Drill: sd.Drill
+        })));
 
         const drillsByDay = {};
-        const drillDetails = new Map(allDrills.map(d => [d.id, d]));
+        const drillDetails = new Map(allDrills.map(d => [d._id || d.id, d]));
 
         for (const session of weekSessions) {
             // Use safe date parsing and formatting
-            const date = safeDate(session.Date);
-            if (!date) continue; // Skip sessions with invalid dates
+            const date = safeDate(session.date || session.Date);
+            if (!date) {
+                console.log('  - Skipping session with invalid date:', session._id || session.id);
+                continue; // Skip sessions with invalid dates
+            }
 
             try {
                 const dayName = format(date, 'EEEE');
                 if (!drillsByDay[dayName]) {
                     drillsByDay[dayName] = [];
                 }
+                const sessionId = session._id || session.id;
                 const drillsForThisSession = relevantSessionDrills
-                    .filter(sd => sd.TrainingSessions?.includes(session.id) && sd.Drill)
-                    .map(sd => drillDetails.get(sd.Drill[0]))
+                    .filter(sd => {
+                        // Handle both populated and unpopulated trainingSession fields
+                        const sdSessionId = sd.trainingSession?._id || sd.trainingSession;
+                        return (sdSessionId === sessionId || sd.TrainingSessions?.includes(sessionId)) && 
+                               (sd.drill || sd.Drill);
+                    })
+                    .map(sd => {
+                        // Handle both populated and unpopulated drill fields
+                        const drillId = sd.drill?._id || sd.drill || sd.Drill?.[0];
+                        const drill = drillDetails.get(drillId);
+                        console.log('  - Drill mapping:', { drillId, drill: drill?.drillName || drill?.DrillName });
+                        return drill;
+                    })
                     .filter(Boolean);
 
+                console.log(`  - ${dayName}: ${drillsForThisSession.length} drills`);
                 drillsByDay[dayName].push(...drillsForThisSession);
             } catch (error) {
                 console.warn('Error formatting date for session:', session.id, error);
                 continue; // Skip sessions with formatting errors
             }
         }
+        
+        console.log('  - Final drillsByDay:', Object.keys(drillsByDay).map(day => ({ day, count: drillsByDay[day].length })));
         return drillsByDay;
     }, [weekSessions, sessionDrills, allDrills]);
 
@@ -121,23 +186,46 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
             <CardContent className="flex-grow">
                 <h3 className={`text-sm font-semibold ${DASHBOARD_COLORS.text.secondary} mb-2`}>This Week's Schedule</h3>
                 {Object.keys(dailyDrills).length > 0 ? (
-                    <div className="space-y-3">
-                        {Object.entries(dailyDrills).map(([day, drills]) => (
-                            <div key={day}>
-                                <h4 className={`font-bold ${DASHBOARD_COLORS.text.primary} text-sm mb-1`}>{day}</h4>
-                                <ul className="space-y-1 pl-2">
-                                    {drills.map(drill => (
-                                        <li key={drill.id} className={`flex items-center gap-2 text-sm ${DASHBOARD_COLORS.text.secondary}`}>
-                                            <span className={`w-2 h-2 rounded-full ${DRILL_CATEGORY_COLORS[drill.Category] || 'bg-slate-500'}`}></span>
-                                            <span className="truncate">{drill.DrillName}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                    <div 
+                        className="max-h-48 overflow-y-auto pr-2"
+                        style={{
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+                        }}
+                    >
+                        <div className="grid grid-cols-7 gap-3 min-w-max pb-2">
+                            {[
+                                { full: 'Sunday', short: 'SUN' },
+                                { full: 'Monday', short: 'MON' },
+                                { full: 'Tuesday', short: 'TUE' },
+                                { full: 'Wednesday', short: 'WED' },
+                                { full: 'Thursday', short: 'THU' },
+                                { full: 'Friday', short: 'FRI' },
+                                { full: 'Saturday', short: 'SAT' }
+                            ].map(({ full: day, short: shortDay }) => {
+                                const drills = dailyDrills[day] || [];
+                                return (
+                                    <div key={day} className="bg-slate-700/50 p-3 rounded-lg border border-slate-600 text-center min-w-[80px]">
+                                        <h4 className={`font-semibold ${DASHBOARD_COLORS.text.primary} text-xs mb-2 uppercase tracking-wider`}>{shortDay}</h4>
+                                        <div className="space-y-1">
+                                            {drills.length > 0 ? (
+                                                drills.map(drill => (
+                                                    <div key={drill._id || drill.id} className={`flex flex-col items-center gap-1 text-xs ${DASHBOARD_COLORS.text.secondary}`}>
+                                                        <span className={`w-2 h-2 rounded-full ${DRILL_CATEGORY_COLORS[drill.category || drill.Category] || 'bg-slate-500'}`}></span>
+                                                        <span className="truncate text-center leading-tight">{drill.drillName || drill.DrillName}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-xs text-slate-500 italic">No drills</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 ) : (
-                    <div className="text-center text-slate-500">
+                    <div className="text-center text-slate-500 py-8">
                         <p className="text-sm">No trainings scheduled</p>
                     </div>
                 )}
@@ -146,11 +234,10 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
             <CardContent className="pt-4">
                 <h3 className={`text-sm font-semibold ${DASHBOARD_COLORS.text.secondary} mb-2`}>Quick Actions</h3>
                 {Object.keys(dailyDrills).length > 0 ? (
-                    <Link to={createPageUrl("WeeklyCalendar")} className={`block ${DASHBOARD_COLORS.background.hover} rounded-lg p-2 transition-colors -m-2`}>
-                        <p className={`font-bold ${DASHBOARD_COLORS.text.primary}`}>View Full Calendar</p>
-                        <div className={`text-sm ${DASHBOARD_COLORS.text.accent} font-mono mt-1`}>
-                            {Object.keys(dailyDrills).length} training days scheduled
-                        </div>
+                    <Link to={`${createPageUrl("TrainingPlanner")}?weekOffset=${weekOffset}`}>
+                        <Button size="sm" variant="outline" className="bg-slate-800/70 text-cyan-400 border-cyan-400/50 hover:bg-slate-700/70 hover:text-cyan-400 w-full">
+                            View Full Calendar
+                        </Button>
                     </Link>
                 ) : (
                     <div className="text-center">

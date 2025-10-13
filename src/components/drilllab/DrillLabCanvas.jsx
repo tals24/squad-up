@@ -51,7 +51,7 @@ export default function DrillLabCanvas({
   }
 
   return (
-    <div className="flex-1 bg-slate-900/50 relative overflow-hidden min-h-0">
+    <div className="flex-1 bg-slate-800/50 relative overflow-hidden min-h-0">
       <div className="absolute inset-0 w-full h-full">
         <DrillCanvas
           initialElements={initialElements}

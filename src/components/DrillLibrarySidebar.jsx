@@ -5,12 +5,16 @@ import { Search, ClipboardList } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
+import DrillMenuDropdown from './DrillMenuDropdown';
+import DrillDetailModal from './DrillDetailModal';
 
-export default function DrillLibrarySidebar() {
+export default function DrillLibrarySidebar({ context = 'library' }) {
   const { drills, isLoading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [ageFilter, setAgeFilter] = useState("all");
+  const [selectedDrill, setSelectedDrill] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const categories = useMemo(() => 
     [...new Set(drills.map(d => d.category || d.Category).filter(Boolean))]
@@ -48,6 +52,23 @@ export default function DrillLibrarySidebar() {
       DrillName: drill.drillName || drill.DrillName,
     });
     e.dataTransfer.setData("application/json", drillData);
+  };
+
+  const handleViewDetails = (drill) => {
+    if (context === 'training-planner') {
+      // In training planner context, show modal
+      setSelectedDrill(drill);
+      setIsDetailModalOpen(true);
+    } else {
+      // In drill library context, navigate to drill library page
+      window.location.href = `/DrillLibrary?drillId=${drill._id || drill.id}`;
+    }
+  };
+
+  const handleRemoveDrill = (drill) => {
+    // This function is not applicable in the sidebar context
+    // Drills can only be removed from the calendar, not from the library
+    console.log('Remove drill not applicable in sidebar context');
   };
 
   if (isLoading) {
@@ -103,24 +124,51 @@ export default function DrillLibrarySidebar() {
             key={drill._id || drill.id}
             draggable
             onDragStart={(e) => handleDragStart(e, drill)}
-            className="p-3 bg-slate-700/30 rounded-lg cursor-grab active:cursor-grabbing hover:bg-slate-700/50 border border-slate-600/50 hover:border-cyan-400/50 transition-colors duration-200"
+            className="p-3 bg-slate-700/30 rounded-lg cursor-grab active:cursor-grabbing hover:bg-slate-700/50 border border-slate-600/50 hover:border-cyan-400/50 transition-colors duration-200 group relative"
           >
-            <p className="font-semibold text-sm text-white">{drill.drillName || drill.DrillName}</p>
-            <div className="flex gap-2 mt-2">
-              {(drill.category || drill.Category) && (
-                <Badge variant="outline" className={`text-xs ${getCategoryColor(drill.category || drill.Category)}`}>
-                  {drill.category || drill.Category}
-                </Badge>
-              )}
-              {(drill.targetAgeGroup || drill.TargetAgeGroup) && (
-                <Badge variant="outline" className={`text-xs ${getAgeColor()}`}>
-                  {drill.targetAgeGroup || drill.TargetAgeGroup}
-                </Badge>
-              )}
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-white truncate">{drill.drillName || drill.DrillName}</p>
+                <div className="flex gap-2 mt-2">
+                  {(drill.category || drill.Category) && (
+                    <Badge variant="outline" className={`text-xs ${getCategoryColor(drill.category || drill.Category)}`}>
+                      {drill.category || drill.Category}
+                    </Badge>
+                  )}
+                  {(drill.targetAgeGroup || drill.TargetAgeGroup) && (
+                    <Badge variant="outline" className={`text-xs ${getAgeColor()}`}>
+                      {drill.targetAgeGroup || drill.TargetAgeGroup}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div 
+                className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <DrillMenuDropdown
+                  drill={drill}
+                  onViewDetails={handleViewDetails}
+                  onRemove={handleRemoveDrill}
+                  showRemove={false}
+                  className="hover:bg-slate-600/50"
+                />
+              </div>
             </div>
           </div>
         ))}
       </div>
+      
+      {/* Drill Detail Modal - only show in training planner context */}
+      {context === 'training-planner' && (
+        <DrillDetailModal
+          drill={selectedDrill}
+          open={isDetailModalOpen}
+          setOpen={setIsDetailModalOpen}
+          source="training-planner"
+        />
+      )}
     </aside>
   );
 }
