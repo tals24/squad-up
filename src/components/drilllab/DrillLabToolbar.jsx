@@ -89,7 +89,11 @@ export default function DrillLabToolbar({
   mode,
   
   // Loading state
-  isLoading
+  isLoading,
+  
+  // Dynamic back button
+  backButtonText = "Back to Library",
+  backButtonAction = onBack
 }) {
   if (isLoading) {
     return (
@@ -153,7 +157,7 @@ export default function DrillLabToolbar({
               variant="outline"
               size="sm"
               disabled={!canUndo || isReadOnly}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-50"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-50 bg-slate-800 hover:bg-slate-700"
             >
               <Undo className="w-4 h-4" />
             </Button>
@@ -163,7 +167,7 @@ export default function DrillLabToolbar({
               variant="outline"
               size="sm"
               disabled={!canRedo || isReadOnly}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-50"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-50 bg-slate-800 hover:bg-slate-700"
             >
               <Redo className="w-4 h-4" />
             </Button>
@@ -176,7 +180,7 @@ export default function DrillLabToolbar({
                 onClick={onDescription} 
                 variant="outline" 
                 size="sm"
-                className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white bg-slate-800"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Description
@@ -190,7 +194,7 @@ export default function DrillLabToolbar({
                 variant="outline" 
                 size="sm"
                 disabled={isSaving}
-                className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white disabled:opacity-50"
+                className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white disabled:opacity-50 bg-slate-800"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? 'Saving...' : 'Save'}
@@ -206,7 +210,7 @@ export default function DrillLabToolbar({
                   variant="outline" 
                   size="icon"
                   disabled={isReadOnly}
-                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-50"
+                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-50 bg-slate-800"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -216,13 +220,13 @@ export default function DrillLabToolbar({
 
           {/* Back Button */}
           <Button 
-            onClick={onBack}
+            onClick={backButtonAction}
             variant="outline" 
             size="sm"
-            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100 bg-slate-800 hover:bg-slate-700"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Library
+            {backButtonText}
           </Button>
         </div>
       </div>

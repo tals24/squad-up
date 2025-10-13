@@ -12,6 +12,78 @@ export default function DrillLab() {
   const mode = useDrillLabMode();
   const canvasRef = useRef(null);
   
+  // Detect where the user came from for dynamic back button
+  const [backButtonConfig, setBackButtonConfig] = useState({
+    text: "Back to Library",
+    action: () => navigateToLibrary(navigate, createPageUrl)
+  });
+
+  // Detect referrer and set appropriate back button
+  useEffect(() => {
+    const referrer = document.referrer;
+    const currentUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    console.log('🔍 DrillLab Debug Info:');
+    console.log('  - referrer:', referrer);
+    console.log('  - currentUrl:', currentUrl);
+    console.log('  - urlParams:', Object.fromEntries(urlParams.entries()));
+    console.log('  - from param:', urlParams.get('from'));
+    
+    // Check if we came from training planner (check URL params or referrer)
+    const isFromTrainingPlanner = referrer.includes('/TrainingPlanner') || 
+                                 referrer.includes('/training-planner') ||
+                                 currentUrl.includes('from=training-planner') ||
+                                 urlParams.get('from') === 'training-planner';
+    
+    const isFromDrillLibrary = referrer.includes('/DrillLibrary') || 
+                              referrer.includes('/drill-library') ||
+                              currentUrl.includes('from=drill-library') ||
+                              urlParams.get('from') === 'drill-library';
+    
+    console.log('🔍 Detection Results:');
+    console.log('  - isFromTrainingPlanner:', isFromTrainingPlanner);
+    console.log('  - isFromDrillLibrary:', isFromDrillLibrary);
+    console.log('  - referrer includes /TrainingPlanner:', referrer.includes('/TrainingPlanner'));
+    console.log('  - referrer includes /training-planner:', referrer.includes('/training-planner'));
+    console.log('  - referrer includes /DrillLibrary:', referrer.includes('/DrillLibrary'));
+    console.log('  - referrer includes /drill-library:', referrer.includes('/drill-library'));
+    
+    // Force detection based on URL parameter if referrer is not reliable
+    if (urlParams.get('from') === 'training-planner') {
+      console.log('✅ Force setting back button to Training Planner (from URL param)');
+      setBackButtonConfig({
+        text: "Back to Training Planner",
+        action: () => navigate('/TrainingPlanner')
+      });
+    } else if (urlParams.get('from') === 'drill-library') {
+      console.log('✅ Force setting back button to Drill Library (from URL param)');
+      setBackButtonConfig({
+        text: "Back to Drill Library",
+        action: () => navigate('/DrillLibrary')
+      });
+    } else if (isFromTrainingPlanner) {
+      console.log('✅ Setting back button to Training Planner (from referrer)');
+      setBackButtonConfig({
+        text: "Back to Training Planner",
+        action: () => navigate('/TrainingPlanner')
+      });
+    } else if (isFromDrillLibrary) {
+      console.log('✅ Setting back button to Drill Library (from referrer)');
+      setBackButtonConfig({
+        text: "Back to Drill Library",
+        action: () => navigate('/DrillLibrary')
+      });
+    } else {
+      console.log('⚠️ Defaulting to Library (no source detected)');
+      // Default to library
+      setBackButtonConfig({
+        text: "Back to Library",
+        action: () => navigateToLibrary(navigate, createPageUrl)
+      });
+    }
+  }, [navigate]);
+  
   // Data management
   const { drillData, setDrillData, isLoading, isSaving, error, saveDrill } = useDrillLabData(
     mode.drillId, 
@@ -174,6 +246,8 @@ export default function DrillLab() {
           isReadOnly={mode.isReadOnly}
           mode={mode.mode}
           isLoading={isLoading}
+          backButtonText={backButtonConfig.text}
+          backButtonAction={backButtonConfig.action}
         />
 
         {/* Canvas */}

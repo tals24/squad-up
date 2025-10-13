@@ -11,6 +11,7 @@ import DrillLibrarySidebar from '../components/DrillLibrarySidebar';
 import { saveTrainingPlan } from '@/api/functions'; // Updated import path
 import { loadTrainingPlan } from '@/api/functions'; // Updated import path
 import ConfirmationToast from '../components/ConfirmationToast';
+import { useSearchParams } from 'react-router-dom';
 
 // Date helpers
 import { startOfWeek, endOfWeek, addWeeks, subWeeks, getYear, getISOWeek, format } from 'date-fns'; // Reordered date-fns imports
@@ -28,13 +29,30 @@ const initialPlanStructure = () => ({
 });
 
 export default function TrainingPlanner() {
-  const { users, teams } = useData();
+  const { users, teams, refreshData } = useData();
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [searchParams] = useSearchParams();
   
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Handle week offset from URL parameter
+  const weekOffset = parseInt(searchParams.get('weekOffset') || '0', 10);
+  const [currentDate, setCurrentDate] = useState(() => addWeeks(new Date(), weekOffset));
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [trainingPlan, setTrainingPlan] = useState(initialPlanStructure()); // Renamed from weeklyPlan
+  
+  // Debug logging for trainingPlan
+  console.log('🔍 TrainingPlanner trainingPlan state:', trainingPlan);
+  
+  // Clear any existing localStorage drafts on component mount
+  useEffect(() => {
+    const allKeys = Object.keys(localStorage);
+    allKeys.forEach(key => {
+      if (key.startsWith('trainingPlan_')) {
+        console.log('🧹 Clearing localStorage draft on mount:', key);
+        localStorage.removeItem(key);
+      }
+    });
+  }, []);
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
   const [hasSavedData, setHasSavedData] = useState(false);
   
@@ -121,8 +139,9 @@ export default function TrainingPlanner() {
       
       // First, check localStorage for existing draft
       const savedDraft = localStorage.getItem(localStorageKey);
+      console.log('🔍 Checking localStorage for draft:', localStorageKey, savedDraft ? 'Found' : 'Not found');
       if (savedDraft) {
-        console.log('Found localStorage draft, loading...');
+        console.log('Found localStorage draft, loading...', Object.keys(JSON.parse(savedDraft)));
         try {
           const parsedDraft = JSON.parse(savedDraft);
           setTrainingPlan(parsedDraft); // Renamed from setWeeklyPlan
@@ -138,11 +157,24 @@ export default function TrainingPlanner() {
       console.log('No localStorage draft found, loading from database...');
       setIsLoadingPlan(true);
       try {
+        console.log('🔍 Loading training plan for:', { teamId: selectedTeamId, weekIdentifier: weekId });
+        console.log('🔍 Current date for week calculation:', currentDate);
+        console.log('🔍 Week ID calculation:', getWeekId(currentDate));
         const response = await loadTrainingPlan({ teamId: selectedTeamId, weekIdentifier: weekId });
+        console.log('🔍 Load response:', response);
+        console.log('🔍 Response data structure:', {
+          success: response.data?.success,
+          hasSavedData: response.data?.data?.hasSavedData,
+          weeklyPlanKeys: response.data?.data?.weeklyPlan ? Object.keys(response.data.data.weeklyPlan) : 'undefined',
+          mondayDrills: response.data?.data?.weeklyPlan?.Monday?.["Warm-up"]?.drills?.length || 0
+        });
         if (response.data?.success) {
-          setTrainingPlan(response.data.weeklyPlan); // Renamed from setWeeklyPlan
-          setHasSavedData(response.data.hasSavedData);
-          console.log('Loaded plan from database:', response.data.hasSavedData ? 'with saved data' : 'empty plan');
+          // Use the loaded plan if it exists, otherwise use initial structure
+          const loadedPlan = response.data.data?.weeklyPlan || initialPlanStructure();
+          console.log('🔍 Setting training plan to:', loadedPlan);
+          setTrainingPlan(loadedPlan);
+          setHasSavedData(response.data.data?.hasSavedData || false);
+          console.log('Loaded plan from database:', response.data.data?.hasSavedData ? 'with saved data' : 'empty plan');
         } else {
           console.error('Failed to load training plan:', response.data?.error);
           setTrainingPlan(initialPlanStructure()); // Renamed from setWeeklyPlan
@@ -162,11 +194,13 @@ export default function TrainingPlanner() {
 
   // Save to localStorage whenever trainingPlan changes (but not when loading from database)
   useEffect(() => {
-    if (selectedTeamId && !isLoadingPlan) {
+    if (selectedTeamId && !isLoadingPlan && !hasSavedData) {
       console.log('Saving to localStorage:', localStorageKey);
       localStorage.setItem(localStorageKey, JSON.stringify(trainingPlan)); // Renamed from weeklyPlan
+    } else if (hasSavedData) {
+      console.log('🧹 Not saving to localStorage - data is saved to database');
     }
-  }, [trainingPlan, localStorageKey, selectedTeamId, isLoadingPlan]); // Renamed from weeklyPlan
+  }, [trainingPlan, localStorageKey, selectedTeamId, isLoadingPlan, hasSavedData]); // Renamed from weeklyPlan
 
   const handleDrop = useCallback((day, slot, drill) => {
     setTrainingPlan(prevPlan => { // Renamed from setWeeklyPlan
@@ -175,18 +209,31 @@ export default function TrainingPlanner() {
       // Prevent adding duplicates
       if (!currentDrills.some(d => d.id === drill.id)) {
         newPlan[day][slot].drills = [...currentDrills, drill];
+        
+        // If this was saved data, mark it as modified (draft)
+        if (hasSavedData) {
+          console.log('📝 Modified saved plan - marking as draft');
+          setHasSavedData(false);
+        }
       }
       return newPlan;
     });
-  }, []);
+  }, [hasSavedData]);
 
   const handleRemoveDrill = useCallback((day, slot, drillId) => {
     setTrainingPlan(prevPlan => { // Renamed from setWeeklyPlan
       const newPlan = { ...prevPlan };
       newPlan[day][slot].drills = newPlan[day][slot].drills.filter(d => d.id !== drillId);
+      
+      // If this was saved data, mark it as modified (draft)
+      if (hasSavedData) {
+        console.log('📝 Modified saved plan - marking as draft');
+        setHasSavedData(false);
+      }
+      
       return newPlan;
     });
-  }, []);
+  }, [hasSavedData]);
 
   const handleNotesChange = useCallback((day, notes) => {
     setTrainingPlan(prevPlan => ({ // Renamed from setWeeklyPlan
@@ -196,7 +243,13 @@ export default function TrainingPlanner() {
         "Small Game": { ...prevPlan[day]["Small Game"], notes }
       }
     }));
-  }, []);
+    
+    // If this was saved data, mark it as modified (draft)
+    if (hasSavedData) {
+      console.log('📝 Modified saved plan - marking as draft');
+      setHasSavedData(false);
+    }
+  }, [hasSavedData]);
   
   const handleSavePlan = async () => {
     if (!selectedTeamId) {
@@ -207,12 +260,40 @@ export default function TrainingPlanner() {
     
     setIsSaving(true);
     try {
+        console.log('🔍 Saving training plan:', { 
+            teamId: selectedTeamId, 
+            weekIdentifier: weekId, 
+            planStructure: Object.keys(trainingPlan),
+            sundayDrills: trainingPlan.Sunday?.["Warm-up"]?.drills?.length || 0
+        });
         const response = await saveTrainingPlan({ weeklyPlan: trainingPlan, teamId: selectedTeamId, weekIdentifier: weekId }); // Pass trainingPlan as weeklyPlan
+        console.log('🔍 Save response:', response);
         if (response.data?.success) {
             // Clear localStorage draft since it's now saved to database
+            console.log('🧹 Clearing localStorage draft:', localStorageKey);
             localStorage.removeItem(localStorageKey);
+            // Also clear any other training plan drafts for this team
+            const allKeys = Object.keys(localStorage);
+            allKeys.forEach(key => {
+              if (key.startsWith(`trainingPlan_${selectedTeamId}_`)) {
+                console.log('🧹 Clearing additional draft:', key);
+                localStorage.removeItem(key);
+              }
+            });
+            // Clear ALL training plan drafts to be extra sure
+            allKeys.forEach(key => {
+              if (key.startsWith('trainingPlan_')) {
+                console.log('🧹 Clearing ALL training plan drafts:', key);
+                localStorage.removeItem(key);
+              }
+            });
             setHasSavedData(true);
-            setConfirmationConfig({ type: 'success', title: 'Plan Saved!', message: 'The weekly training plan has been successfully saved to Airtable.' });
+            
+            // Refresh dashboard data to show new training sessions
+            console.log('🔄 Refreshing dashboard data after training plan save...');
+            await refreshData();
+            
+            setConfirmationConfig({ type: 'success', title: 'Plan Saved!', message: 'The weekly training plan has been successfully saved and dashboard updated.' });
         } else {
             throw new Error(response.data?.error || "An unknown error occurred.");
         }
@@ -302,8 +383,12 @@ export default function TrainingPlanner() {
                     onRemoveDrill={handleRemoveDrill}
                     onNotesChange={handleNotesChange}
                     currentDate={currentDate}
+                    onViewDrillDetails={(drill) => {
+                        console.log('🔍 Viewing drill details:', drill);
+                        // The drill details modal is handled within the WeeklyCalendar component
+                    }}
                 />
-                <DrillLibrarySidebar />
+                <DrillLibrarySidebar context="training-planner" />
             </>
         ) : (
             <div className="flex-1 flex items-center justify-center text-center p-4">

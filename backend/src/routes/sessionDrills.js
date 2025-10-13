@@ -249,6 +249,7 @@ router.get('/plan/:teamId/:weekIdentifier', authenticateJWT, async (req, res) =>
     });
     
     if (sessions.length === 0) {
+      console.log('📅 No training sessions found for:', { teamId, weekIdentifier });
       return res.json({
         success: true,
         data: {
@@ -258,11 +259,20 @@ router.get('/plan/:teamId/:weekIdentifier', authenticateJWT, async (req, res) =>
       });
     }
     
+    console.log('📅 Found training sessions:', sessions.length, sessions.map(s => ({ 
+      id: s._id, 
+      team: s.team, 
+      weekIdentifier: s.weekIdentifier,
+      sessionTitle: s.sessionTitle 
+    })));
+    
     // Get session drills for these sessions
     const sessionIds = sessions.map(s => s._id);
     const sessionDrills = await SessionDrill.find({ 
       trainingSession: { $in: sessionIds } 
-    }).populate('drill', 'drillName category targetAgeGroup');
+    }).populate('drill', 'drillName description instructions details videoLink layoutData duration playersRequired equipment category targetAgeGroup author');
+    
+    console.log('📅 Found session drills:', sessionDrills.length);
     
     // Reconstruct the weekly plan structure
     const weeklyPlan = {
@@ -278,20 +288,44 @@ router.get('/plan/:teamId/:weekIdentifier', authenticateJWT, async (req, res) =>
     // Group session drills by day and slot
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     
-    for (let i = 0; i < sessions.length; i++) {
-      const session = sessions[i];
-      const day = daysOfWeek[i % 7]; // Simple mapping, might need adjustment
+    for (const session of sessions) {
+      // Use the session date to determine the day of the week
+      const sessionDate = new Date(session.date);
+      const dayIndex = sessionDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const day = daysOfWeek[dayIndex];
+      
+      console.log(`📅 Processing session ${session._id} for ${day} (${sessionDate.toDateString()})`);
       
       const dayDrills = sessionDrills.filter(sd => 
         sd.trainingSession.toString() === session._id.toString()
       );
       
+      console.log(`📅 Found ${dayDrills.length} drills for ${day}`);
+      
       for (const sessionDrill of dayDrills) {
         const drillData = {
           id: sessionDrill.drill._id,
-          DrillName: sessionDrill.drillName
+          _id: sessionDrill.drill._id,
+          DrillName: sessionDrill.drillName,
+          drillName: sessionDrill.drill.drillName,
+          description: sessionDrill.drill.description,
+          instructions: sessionDrill.drill.instructions,
+          details: sessionDrill.drill.details,
+          videoLink: sessionDrill.drill.videoLink,
+          VideoLink: sessionDrill.drill.videoLink,
+          layoutData: sessionDrill.drill.layoutData,
+          DrillLayoutData: sessionDrill.drill.layoutData,
+          duration: sessionDrill.drill.duration,
+          playersRequired: sessionDrill.drill.playersRequired,
+          equipment: sessionDrill.drill.equipment,
+          category: sessionDrill.drill.category,
+          Category: sessionDrill.drill.category,
+          targetAgeGroup: sessionDrill.drill.targetAgeGroup,
+          TargetAgeGroup: sessionDrill.drill.targetAgeGroup,
+          author: sessionDrill.drill.author
         };
         
+        console.log(`📅 Adding drill ${drillData.DrillName} to ${day} ${sessionDrill.sessionPart}`);
         weeklyPlan[day][sessionDrill.sessionPart].drills.push(drillData);
         
         if (sessionDrill.sessionPart === "Small Game" && sessionDrill.smallGameNotes) {
@@ -299,6 +333,13 @@ router.get('/plan/:teamId/:weekIdentifier', authenticateJWT, async (req, res) =>
         }
       }
     }
+    
+    console.log('📅 Final weekly plan structure:', Object.keys(weeklyPlan).map(day => ({
+      day,
+      warmup: weeklyPlan[day]["Warm-up"].drills.length,
+      mainPart: weeklyPlan[day]["Main Part"].drills.length,
+      smallGame: weeklyPlan[day]["Small Game"].drills.length
+    })));
     
     res.json({
       success: true,

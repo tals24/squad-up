@@ -45,7 +45,7 @@ router.get('/all', authenticateJWT, async (req, res) => {
       ScoutReport.find().populate('player author').lean().catch(err => { console.error('ScoutReports query error:', err); return []; }),
       Drill.find().populate('author', 'fullName').lean().catch(err => { console.error('Drills query error:', err); return []; }),
       GameRoster.find().populate('game player').lean().catch(err => { console.error('GameRosters query error:', err); return []; }),
-      TrainingSession.find().populate('team', 'teamName').lean().catch(err => { console.error('TrainingSessions query error:', err); return []; }),
+      TrainingSession.find().populate('team', 'teamName _id').lean().catch(err => { console.error('TrainingSessions query error:', err); return []; }),
       SessionDrill.find().populate('trainingSession drill').lean().catch(err => { console.error('SessionDrills query error:', err); return []; })
     ]);
     
@@ -104,7 +104,13 @@ router.get('/all', authenticateJWT, async (req, res) => {
         return coachTeamIds.includes(session.team._id.toString());
       });
       
-      console.log(`📊 Coach data filtered: ${filteredPlayers.length} players (all visible), ${filteredGames.length} games, ${filteredReports.length} reports`);
+      console.log(`📊 Coach data filtered: ${filteredPlayers.length} players (all visible), ${filteredGames.length} games, ${filteredReports.length} reports, ${filteredTrainingSessions.length} training sessions`);
+      console.log(`📊 Training sessions for coach:`, filteredTrainingSessions.map(s => ({ 
+        id: s._id, 
+        team: s.team?.teamName, 
+        weekIdentifier: s.weekIdentifier,
+        sessionTitle: s.sessionTitle 
+      })));
     }
 
     res.json({
