@@ -99,6 +99,26 @@ export default function GameDetails() {
     refreshData
   } = useData();
   
+  // Debug data availability
+  useEffect(() => {
+    console.log('🎮 DataContext Debug:', {
+      games: games?.length || 0,
+      players: players?.length || 0,
+      gameRosters: gameRosters?.length || 0,
+      teams: teams?.length || 0,
+      isLoading,
+      error
+    });
+    
+    if (players && players.length > 0) {
+      console.log('🎮 Sample players:', players.slice(0, 3));
+    }
+    
+    if (teams && teams.length > 0) {
+      console.log('🎮 Available teams:', teams.map(t => ({ id: t._id, name: t.teamName, coach: t.coach?.fullName })));
+    }
+  }, [games, players, gameRosters, teams, isLoading, error]);
+  
   // Local state
   const [game, setGame] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -171,7 +191,7 @@ export default function GameDetails() {
           const parsedDraft = JSON.parse(savedDraft);
           setDraftData(parsedDraft);
           console.log('🎮 Loaded draft data from localStorage:', parsedDraft);
-        } catch (error) {
+    } catch (error) {
           console.error('🎮 Error parsing draft data:', error);
         }
       }
@@ -192,22 +212,30 @@ export default function GameDetails() {
 
     console.log('🎮 Loading team players for game:', game);
     console.log('🎮 Available players:', players?.length || 0);
+    console.log('🎮 Sample player:', players?.[0]);
 
     const teamId = game.team || game.Team || game.teamId || game.TeamId;
     console.log('🎮 Team ID for this game:', teamId);
 
     if (!teamId) {
       console.log('🎮 No team ID found for this game');
-      return;
+        return;
     }
 
     // Get all players from the team
     const teamPlayers = players.filter(player => {
       const playerTeamId = player.team || player.Team || player.teamId || player.TeamId;
+      console.log('🎮 Checking player:', {
+        playerName: player.fullName || player.FullName,
+        playerTeamId,
+        gameTeamId: teamId,
+        match: playerTeamId === teamId
+      });
       return playerTeamId === teamId;
     });
 
     console.log('🎮 Team players found:', teamPlayers.length);
+    console.log('🎮 Team players details:', teamPlayers);
 
     // Convert to roster format with default status
     const rosterData = teamPlayers.map(player => ({
@@ -217,6 +245,7 @@ export default function GameDetails() {
       status: 'Not in Squad' // Default status
     }));
 
+    console.log('🎮 Roster data created:', rosterData);
     setGameRoster(rosterData);
   }, [game, players, gameId]);
 
@@ -265,7 +294,7 @@ export default function GameDetails() {
       console.error('🎮 Error updating game:', error);
       alert('Failed to update game. Please try again.');
     } finally {
-      setIsSaving(false);
+    setIsSaving(false);
     }
   };
 
@@ -349,7 +378,7 @@ export default function GameDetails() {
   // Handle draft data updates
   const handleDraftUpdate = (section, field, value) => {
     setDraftData(prev => ({
-      ...prev,
+        ...prev,
       [section]: {
         ...prev[section],
         [field]: value
@@ -416,39 +445,39 @@ export default function GameDetails() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-cyan-500/30"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin"></div>
-            <div className="absolute inset-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="relative w-20 h-20 mx-auto mb-6">
+          <div className="absolute inset-0 rounded-full border-4 border-cyan-500/30"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin"></div>
+          <div className="absolute inset-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
               <Trophy className="w-8 h-8 text-white" />
-            </div>
           </div>
+        </div>
           <h2 className="text-2xl font-bold text-white mb-2">Loading Game Details</h2>
           <p className="text-slate-400">Fetching match information...</p>
-        </div>
       </div>
-    );
+    </div>
+  );
   }
-
+  
   if (error) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Error Loading Game</h2>
           <p className="text-slate-400 mb-4">{error}</p>
           <Button onClick={() => window.location.reload()} className="bg-cyan-600 hover:bg-cyan-700 text-white">
             Try Again
           </Button>
-        </div>
       </div>
-    );
+    </div>
+  );
   }
 
   if (!game) {
-    return (
+  return (
       <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
@@ -486,21 +515,21 @@ export default function GameDetails() {
       <div className="flex-shrink-0 bg-slate-900/95 backdrop-blur-xl border-b border-cyan-500/20">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Link to={createPageUrl("GamesSchedule")}>
+              <div className="flex items-center gap-4">
+                <Link to={createPageUrl("GamesSchedule")}>
                 <Button 
                   variant="outline" 
                   size="icon" 
                   className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-cyan-500 transition-all duration-300"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              </Link>
-              
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+                
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                   {gameTitle}
-                </h1>
+                  </h1>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-cyan-400" />
@@ -508,20 +537,20 @@ export default function GameDetails() {
                     {date && (
                       <span className="text-sm text-slate-500">{formatTime(date)}</span>
                     )}
-                  </div>
+                    </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-blue-400" />
                     <span className="text-sm text-slate-400">{location}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${getStatusDotColor(status)} animate-pulse`} />
                     <Badge variant="outline" className={`${getStatusColor(status)} font-mono text-xs`}>
                       {status}
                     </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
+                        </div>
+                        </div>
+                      </div>
+                    </div>
 
             <div className="flex items-center gap-3">
               {isPostGame && (
@@ -539,22 +568,22 @@ export default function GameDetails() {
                   <div className="text-center">
                     <p className="text-xs text-slate-400 mb-1 font-mono">FINAL SCORE</p>
                     <p className="text-2xl font-bold text-white font-mono">{finalScore}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              
+                )}
+
               {!isReadOnly && (
                 <>
                   {!isEditing ? (
-                    <Button
+                  <Button
                       onClick={() => setIsEditing(true)}
                       className="bg-cyan-600 hover:bg-cyan-700 text-white"
                     >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit Game
                     </Button>
-                  ) : (
-                    <>
+                    ) : (
+                      <>
                       <Button
                         onClick={handleSave}
                         disabled={isSaving}
@@ -562,14 +591,14 @@ export default function GameDetails() {
                       >
                         <Save className="w-4 h-4 mr-2" />
                         {isSaving ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                      <Button
+                  </Button>
+                  <Button
                         onClick={handleCancel}
-                        variant="outline"
+                    variant="outline"
                         className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                      >
+                  >
                         Cancel
-                      </Button>
+                  </Button>
                     </>
                   )}
                 </>
@@ -580,11 +609,11 @@ export default function GameDetails() {
                   <Lock className="w-4 h-4" />
                   <span className="text-sm">Report Locked</span>
                 </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Two-Column Layout */}
       <div className="flex-1 flex overflow-hidden">
@@ -594,8 +623,8 @@ export default function GameDetails() {
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
               Game Day Roster ({gameRoster.length})
-            </h3>
-          </div>
+                </h3>
+                        </div>
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-2">
               {['Starting Lineup', 'Bench', 'Not in Squad', 'Unavailable'].map(status => {
@@ -608,9 +637,9 @@ export default function GameDetails() {
                       <h4 className="font-semibold text-slate-300 text-sm">{status}</h4>
                       <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600 text-xs">
                         {playersInStatus.length}
-                      </Badge>
-                    </div>
-                    <div className="space-y-1">
+                          </Badge>
+                        </div>
+                <div className="space-y-1">
                       {playersInStatus.map(roster => {
                         const player = roster.player || roster.Player?.[0];
                         const fullName = player?.fullName || player?.FullName || 'Unknown Player';
@@ -632,49 +661,47 @@ export default function GameDetails() {
                               {kitNumber && (
                                 <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
                                   {kitNumber}
-                                </div>
+                          </div>
                               )}
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-white text-sm truncate">{fullName}</p>
                                 <p className="text-xs text-slate-400">{position}</p>
-                              </div>
+                                </div>
                               {isPostGame && !isReadOnly && (
                                 <div className="text-xs text-cyan-400">Stats</div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                     </div>
-                  </div>
+                </div>
                 );
               })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-
-            {/* Tactical Setup - Large and prominent */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-slate-700">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <Target className="w-6 h-6 text-cyan-400" />
-                  Tactical Setup
-                </h2>
-                <p className="text-slate-400 mt-2">Set up your team formation and tactics for this match</p>
-              </div>
-              <div className="p-0">
-                <FormationEditor
-                  gameRoster={gameRoster}
-                  onFormationChange={handleFormationChange}
-                  onSave={handleSaveFormation}
-                  isReadOnly={isReadOnly}
-                />
-              </div>
+        {/* Main Content Area - Full width tactical board */}
+        <div className="flex-1 overflow-hidden">
+          {/* Tactical Setup - Full page tactical board */}
+          <div className="h-full bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-700 flex-shrink-0">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Target className="w-6 h-6 text-cyan-400" />
+                Tactical Setup
+              </h2>
+              <p className="text-slate-400 mt-2">Set up your team formation and tactics for this match</p>
             </div>
+            <div className="flex-1 overflow-hidden">
+              <FormationEditor
+                gameRoster={gameRoster}
+                onFormationChange={handleFormationChange}
+                onSave={handleSaveFormation}
+                isReadOnly={isReadOnly}
+              />
+            </div>
+          </div>
 
             {/* Post-Game Content */}
             {isPostGame && (
@@ -685,32 +712,32 @@ export default function GameDetails() {
                     <CardTitle className="flex items-center gap-2 text-white">
                       <TrendingUp className="w-5 h-5 text-cyan-400" />
                       Individual Player Performance
-                    </CardTitle>
-                  </CardHeader>
+                  </CardTitle>
+                </CardHeader>
                   <CardContent>
                     <p className="text-slate-300 mb-4">
                       Click on players in the left sidebar to track their individual performance and create detailed reports.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center p-4 bg-slate-700/50 rounded-lg">
                         <div className="text-2xl font-bold text-cyan-400 mb-1">
                           {gameRoster.filter(roster => roster.status === 'Starting Lineup').length}
-                        </div>
+                    </div>
                         <div className="text-sm text-slate-400">Starting Players</div>
-                      </div>
+                    </div>
                       <div className="text-center p-4 bg-slate-700/50 rounded-lg">
                         <div className="text-2xl font-bold text-green-400 mb-1">
                           {gameRoster.filter(roster => roster.status === 'Bench').length}
-                        </div>
+                    </div>
                         <div className="text-sm text-slate-400">Bench Players</div>
-                      </div>
+                  </div>
                       <div className="text-center p-4 bg-slate-700/50 rounded-lg">
                         <div className="text-2xl font-bold text-yellow-400 mb-1">
                           {gameRoster.length}
-                        </div>
-                        <div className="text-sm text-slate-400">Total Squad</div>
-                      </div>
                     </div>
+                        <div className="text-sm text-slate-400">Total Squad</div>
+                  </div>
+                </div>
                   </CardContent>
                 </Card>
 
@@ -729,7 +756,7 @@ export default function GameDetails() {
                         {isReadOnly ? (
                           <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
                             {game.defenseSummary || game.DefenseSummary || 'No summary provided'}
-                          </div>
+                      </div>
                         ) : (
                           <Textarea
                             value={draftData.teamSummaries.defenseSummary}
@@ -738,28 +765,28 @@ export default function GameDetails() {
                             placeholder="Describe the defensive performance..."
                           />
                         )}
-                      </div>
+                        </div>
                       <div>
                         <Label className="text-slate-300">Midfield Summary</Label>
                         {isReadOnly ? (
                           <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
                             {game.midfieldSummary || game.MidfieldSummary || 'No summary provided'}
-                          </div>
-                        ) : (
+                    </div>
+                  ) : (
                           <Textarea
                             value={draftData.teamSummaries.midfieldSummary}
                             onChange={(e) => handleDraftUpdate('teamSummaries', 'midfieldSummary', e.target.value)}
                             className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
                             placeholder="Describe the midfield performance..."
                           />
-                        )}
-                      </div>
+                      )}
+                    </div>
                       <div>
                         <Label className="text-slate-300">Attack Summary</Label>
                         {isReadOnly ? (
                           <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
                             {game.attackSummary || game.AttackSummary || 'No summary provided'}
-                          </div>
+                            </div>
                         ) : (
                           <Textarea
                             value={draftData.teamSummaries.attackSummary}
@@ -767,14 +794,14 @@ export default function GameDetails() {
                             className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
                             placeholder="Describe the attacking performance..."
                           />
-                        )}
-                      </div>
+                            )}
+                          </div>
                       <div>
                         <Label className="text-slate-300">General Summary</Label>
                         {isReadOnly ? (
                           <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
                             {game.generalSummary || game.GeneralSummary || 'No summary provided'}
-                          </div>
+                    </div>
                         ) : (
                           <Textarea
                             value={draftData.teamSummaries.generalSummary}
@@ -782,9 +809,9 @@ export default function GameDetails() {
                             className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
                             placeholder="Overall team performance summary..."
                           />
-                        )}
-                      </div>
-                    </div>
+                )}
+              </div>
+            </div>
                   </CardContent>
                 </Card>
 
@@ -805,14 +832,14 @@ export default function GameDetails() {
                         <Lock className="w-4 h-4 mr-2" />
                         {isSaving ? 'Submitting...' : 'Submit & Lock Final Report'}
                       </Button>
-                    </CardContent>
-                  </Card>
+                </CardContent>
+              </Card>
                 )}
               </>
             )}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Modals */}
 
@@ -832,7 +859,7 @@ export default function GameDetails() {
         gameRoster={gameRoster}
         formation={currentFormation}
         onSave={handleSaveMatchReport}
-      />
-    </div>
+        />
+      </div>
   );
 }
