@@ -28,7 +28,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "../components/DataContext";
-import PlayerSelectionModal from "../components/PlayerSelectionModal";
 import FormationEditor from "../components/FormationEditor";
 import PlayerPerformanceModal from "../components/PlayerPerformanceModal";
 import MatchReportModal from "../components/MatchReportModal";
@@ -108,12 +107,9 @@ export default function GameDetails() {
   
   // Roster state
   const [gameRoster, setGameRoster] = useState([]);
-  const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [isLoadingRoster, setIsLoadingRoster] = useState(false);
   
   // Formation state
   const [currentFormation, setCurrentFormation] = useState([]);
-  const [showFormationEditor, setShowFormationEditor] = useState(false);
 
   // Performance tracking state
   const [showPerformanceModal, setShowPerformanceModal] = useState(false);
@@ -190,35 +186,39 @@ export default function GameDetails() {
     }
   }, [gameId, draftData]);
 
-  // Load game roster
+  // Load team players for this game
   useEffect(() => {
-    if (!gameId) return;
+    if (!game || !players) return;
 
-    console.log('🎮 Loading game roster for gameId:', gameId);
-    console.log('🎮 Available gameRosters:', gameRosters?.length || 0);
+    console.log('🎮 Loading team players for game:', game);
+    console.log('🎮 Available players:', players?.length || 0);
 
-    if (!gameRosters || gameRosters.length === 0) {
-      console.log('🎮 No game rosters available, creating mock data for testing');
-      const mockRoster = [
-        { _id: 'mock-roster-1', game: gameId, player: { _id: 'mock-player-1', fullName: 'John Smith', kitNumber: 10, position: 'Midfielder' }, status: 'Starting Lineup' },
-        { _id: 'mock-roster-2', game: gameId, player: { _id: 'mock-player-2', fullName: 'Mike Johnson', kitNumber: 1, position: 'Goalkeeper' }, status: 'Starting Lineup' },
-        { _id: 'mock-roster-3', game: gameId, player: { _id: 'mock-player-3', fullName: 'David Brown', kitNumber: 5, position: 'Defender' }, status: 'Bench' },
-        { _id: 'mock-roster-4', game: gameId, player: { _id: 'mock-player-4', fullName: 'Alex Wilson', kitNumber: 9, position: 'Forward' }, status: 'Not in Squad' }
-      ];
-      setGameRoster(mockRoster);
+    const teamId = game.team || game.Team || game.teamId || game.TeamId;
+    console.log('🎮 Team ID for this game:', teamId);
+
+    if (!teamId) {
+      console.log('🎮 No team ID found for this game');
       return;
     }
 
-    const rosterForGame = gameRosters.filter(roster => {
-      const rosterGameId = roster.game?._id || roster.game || roster.Game?.[0];
-      const match = rosterGameId === gameId;
-      console.log('🎮 Checking roster:', { rosterGameId, gameId, match, roster: roster });
-      return match;
+    // Get all players from the team
+    const teamPlayers = players.filter(player => {
+      const playerTeamId = player.team || player.Team || player.teamId || player.TeamId;
+      return playerTeamId === teamId;
     });
 
-    console.log('🎮 Game roster loaded:', rosterForGame.length, 'players');
-    setGameRoster(rosterForGame);
-  }, [gameId, gameRosters]);
+    console.log('🎮 Team players found:', teamPlayers.length);
+
+    // Convert to roster format with default status
+    const rosterData = teamPlayers.map(player => ({
+      _id: `roster-${player._id || player.id}`,
+      game: gameId,
+      player: player,
+      status: 'Not in Squad' // Default status
+    }));
+
+    setGameRoster(rosterData);
+  }, [game, players, gameId]);
 
   // Handle save
   const handleSave = async () => {
@@ -288,99 +288,14 @@ export default function GameDetails() {
     setIsEditing(false);
   };
 
-  // Get team players for this game
-  const getTeamPlayers = () => {
-    if (!game || !players) return [];
-    
-    const teamId = game.team || game.Team || game.teamId || game.TeamId;
-    console.log('🎮 Getting players for team:', teamId);
-    
-    return players.filter(player => {
-      const playerTeamId = player.team || player.Team || player.teamId || player.TeamId;
-      return playerTeamId === teamId;
-    });
-  };
 
-  // Handle add players to roster
-  const handleAddPlayers = async (selectedPlayers) => {
-    setIsLoadingRoster(true);
-    try {
-      const token = localStorage.getItem('jwtToken');
-      
-      for (const player of selectedPlayers) {
-        const response = await fetch('http://localhost:3001/api/game-rosters', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            game: gameId,
-            player: player._id || player.id,
-            status: 'Not in Squad'
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to add player ${player.fullName}`);
-        }
-      }
-
-      await refreshData();
-      setShowPlayerModal(false);
-      alert('Players added to roster successfully!');
-    } catch (error) {
-      console.error('🎮 Error adding players:', error);
-      alert('Failed to add players. Please try again.');
-    } finally {
-      setIsLoadingRoster(false);
-    }
-  };
-
-  // Handle update player status
-  const handleUpdatePlayerStatus = async (rosterId, newStatus) => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`http://localhost:3001/api/game-rosters/${rosterId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update player status');
-      }
-
-      await refreshData();
-    } catch (error) {
-      console.error('🎮 Error updating player status:', error);
-      alert('Failed to update player status. Please try again.');
-    }
-  };
-
-  // Handle remove player from roster
-  const handleRemovePlayer = async (rosterId) => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`http://localhost:3001/api/game-rosters/${rosterId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to remove player');
-      }
-
-      await refreshData();
-    } catch (error) {
-      console.error('🎮 Error removing player:', error);
-      alert('Failed to remove player. Please try again.');
-    }
+  // Handle update player status (local state only for now)
+  const handleUpdatePlayerStatus = (rosterId, newStatus) => {
+    setGameRoster(prev => prev.map(roster => 
+      roster._id === rosterId 
+        ? { ...roster, status: newStatus }
+        : roster
+    ));
   };
 
   // Formation handlers
@@ -678,18 +593,8 @@ export default function GameDetails() {
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
-              Squad ({gameRoster.length})
+              Game Day Roster ({gameRoster.length})
             </h3>
-            {isPreGame && (
-              <Button
-                onClick={() => setShowPlayerModal(true)}
-                className="mt-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm"
-                disabled={isLoadingRoster}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Add Players
-              </Button>
-            )}
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-2">
@@ -849,55 +754,23 @@ export default function GameDetails() {
               </CardContent>
             </Card>
 
-            {/* Pre-Game Content */}
-            {isPreGame && (
-              <>
-                {/* Squad Management */}
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Users className="w-5 h-5 text-cyan-400" />
-                      Squad Management
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-300 mb-4">
-                      Manage your squad for this match. Assign players to Starting Lineup, Bench, or mark as Unavailable.
-                    </p>
-                    <Button
-                      onClick={() => setShowPlayerModal(true)}
-                      className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                      disabled={isLoadingRoster}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Add Players to Squad
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Tactical Setup */}
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Target className="w-5 h-5 text-cyan-400" />
-                      Tactical Setup
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-300 mb-4">
-                      Set up your team formation and tactics for this match.
-                    </p>
-                    <Button
-                      onClick={() => setShowFormationEditor(true)}
-                      className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                    >
-                      <Target className="w-4 h-4 mr-2" />
-                      Open Formation Editor
-                    </Button>
-                  </CardContent>
-                </Card>
-              </>
-            )}
+            {/* Tactical Setup - Always visible like in screenshot */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Target className="w-5 h-5 text-cyan-400" />
+                  Tactical Setup
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <FormationEditor
+                  gameRoster={gameRoster}
+                  onFormationChange={handleFormationChange}
+                  onSave={handleSaveFormation}
+                  isReadOnly={isReadOnly}
+                />
+              </CardContent>
+            </Card>
 
             {/* Post-Game Content */}
             {isPostGame && (
@@ -1038,38 +911,7 @@ export default function GameDetails() {
       </div>
 
       {/* Modals */}
-      <PlayerSelectionModal
-        isOpen={showPlayerModal}
-        onClose={() => setShowPlayerModal(false)}
-        onAddPlayers={handleAddPlayers}
-        availablePlayers={getTeamPlayers()}
-        existingRoster={gameRoster}
-        isLoading={isLoadingRoster}
-      />
 
-      {showFormationEditor && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Target className="w-6 h-6 text-cyan-400" />
-                  Formation Editor
-                </h2>
-                <Button onClick={() => setShowFormationEditor(false)} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              <FormationEditor
-                gameRoster={gameRoster}
-                onFormationChange={handleFormationChange}
-                onSave={handleSaveFormation}
-                isReadOnly={false}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <PlayerPerformanceModal
         isOpen={showPerformanceModal}
