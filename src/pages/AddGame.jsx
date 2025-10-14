@@ -39,7 +39,9 @@ export default function AddGame() {
       
       // Load teams for team selection using MongoDB backend
       const teamsResponse = await getTeams();
+      console.log('🔍 Teams response:', teamsResponse);
       if (teamsResponse.data?.success && teamsResponse.data?.data) {
+        console.log('🔍 Teams data:', teamsResponse.data.data);
         setTeams(teamsResponse.data.data);
       }
     } catch (error) {
@@ -56,8 +58,13 @@ export default function AddGame() {
         : undefined;
 
       // Find the selected team to get team name
-      const selectedTeam = teams.find(team => team.id === formData.Team);
-      const teamName = selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
+      console.log('🔍 Looking for team with ID:', formData.Team);
+      console.log('🔍 Available teams:', teams.map(t => ({ id: t._id || t.id, name: t.teamName || t.TeamName || t.Name })));
+      
+      const selectedTeam = teams.find(team => (team._id || team.id) === formData.Team);
+      console.log('🔍 Selected team:', selectedTeam);
+      
+      const teamName = selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
       
       // Auto-generate game title: "Team Name vs Opponent"
       const gameTitle = `${teamName} vs ${formData.Opponent}`;
@@ -117,10 +124,18 @@ export default function AddGame() {
   ];
 
   // Create team options from loaded teams
-  const teamOptions = teams.map(team => ({
-    value: team.id,
-    label: team.TeamName || team.Name
-  }));
+  console.log('🔍 Teams array length:', teams.length);
+  console.log('🔍 Teams array:', teams);
+  
+  const teamOptions = teams.map(team => {
+    console.log('🔍 Team object:', team);
+    return {
+      value: team._id || team.id, // Use _id for MongoDB
+      label: team.teamName || team.TeamName || team.Name
+    };
+  });
+  
+  console.log('🔍 Team options:', teamOptions);
 
   return (
     <GenericAddPage
