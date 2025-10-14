@@ -18,10 +18,9 @@ export default function AddGame() {
   const [isLoading, setIsLoading] = useState(true);
 
   const initialFormData = {
-    GameTitle: "",
     Date: "",
     Time: "",
-    Location: "",
+    Venue: "Home", // Changed from Location to Venue with default Home
     Opponent: "",
     Team: "",
     GameType: "League",
@@ -55,14 +54,21 @@ export default function AddGame() {
         ? `${formData.Date}T${formData.Time}:00.000Z`
         : undefined;
 
+      // Find the selected team to get team name
+      const selectedTeam = teams.find(team => team.id === formData.Team);
+      const teamName = selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
+      
+      // Auto-generate game title: "Team Name vs Opponent"
+      const gameTitle = `${teamName} vs ${formData.Opponent}`;
+
       const gameData = {
         team: formData.Team || null,
         opponent: formData.Opponent || null,
         date: gameDateTime,
-        venue: formData.Location || null,
-        type: formData.GameType || 'Friendly',
+        location: formData.Venue || 'Home', // Changed from venue to location
+        gameType: formData.GameType || 'League',
         status: formData.Status || 'Scheduled',
-        title: formData.GameTitle || null
+        gameTitle: gameTitle // Auto-generated title
       };
 
       const response = await createGame(gameData);
@@ -70,7 +76,7 @@ export default function AddGame() {
       if (response.data?.success) {
         return {
           success: true,
-          message: `${formData.GameTitle} has been scheduled successfully!`
+          message: `${gameTitle} has been scheduled successfully!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save game");
@@ -81,8 +87,7 @@ export default function AddGame() {
   };
 
   const isFormValid = (formData) => {
-    return formData.GameTitle?.trim() && 
-           formData.Date?.trim() && 
+    return formData.Date?.trim() && 
            formData.Opponent?.trim() &&
            formData.Team?.trim();
   };
@@ -99,6 +104,11 @@ export default function AddGame() {
     { value: "Scheduled", label: "Scheduled" },
     { value: "Postponed", label: "Postponed" },
     { value: "Cancelled", label: "Cancelled" }
+  ];
+
+  const venueOptions = [
+    { value: "Home", label: "Home" },
+    { value: "Away", label: "Away" }
   ];
 
   // Create team options from loaded teams
@@ -121,16 +131,7 @@ export default function AddGame() {
       isFormValid={isFormValid}
       isLoading={isLoading}
     >
-      <FormGrid columns={1}>
-        <TextInputField
-          id="GameTitle"
-          label="Game Title"
-          placeholder="e.g., vs Manchester United - Premier League"
-          required={true}
-          icon={Trophy}
-          iconColor="text-brand-red"
-        />
-      </FormGrid>
+      {/* Game Title is auto-generated from Team + Opponent */}
 
       <FormGrid columns={2}>
         <TextInputField
@@ -160,10 +161,11 @@ export default function AddGame() {
           iconColor="text-brand-red-400"
         />
 
-        <TextInputField
-          id="Location"
-          label="Location"
-          placeholder="Stadium or venue name"
+        <SelectField
+          id="Venue"
+          label="Venue"
+          placeholder="Select venue"
+          options={venueOptions}
           icon={MapPin}
           iconColor="text-brand-purple-400"
         />
