@@ -366,28 +366,39 @@ const FormationEditor = ({
         
         ctx.stroke();
         
-        // Position label
+        // Position label or kit number
         ctx.fillStyle = '#ffffff';
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(pos.id.toUpperCase(), x, y + 4);
+        
+        if (pos.player) {
+          // Show kit number if player is assigned
+          const kitNumber = pos.player?.kitNumber || pos.player?.KitNumber || '';
+          if (kitNumber) {
+            ctx.fillText(kitNumber.toString(), x, y + 4);
+          } else {
+            ctx.fillText(pos.id.toUpperCase(), x, y + 4);
+          }
+        } else {
+          // Show position label for empty positions
+          ctx.fillText(pos.id.toUpperCase(), x, y + 4);
+        }
         
         // Player name if assigned
         if (pos.player) {
-          ctx.fillStyle = '#e2e8f0';
-          ctx.font = '10px Arial';
+          ctx.fillStyle = '#ffffff'; // More visible white color
+          ctx.font = 'bold 10px Arial';
           const name = pos.playerName || 'Unknown';
-          const maxWidth = 40;
           if (name.length > 8) {
-            ctx.fillText(name.substring(0, 8) + '...', x, y + 20);
+            ctx.fillText(name.substring(0, 8) + '...', x, y + 25); // Increased gap from 20 to 25
           } else {
-            ctx.fillText(name, x, y + 20);
+            ctx.fillText(name, x, y + 25); // Increased gap from 20 to 25
           }
         } else {
           // Show "Click to assign" for empty positions
           ctx.fillStyle = '#94a3b8';
           ctx.font = '8px Arial';
-          ctx.fillText('Click to assign', x, y + 20);
+          ctx.fillText('Click to assign', x, y + 25); // Increased gap from 20 to 25
         }
       });
   }, [formation]);
@@ -657,7 +668,7 @@ const FormationEditor = ({
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">
-                  Assign Player to Position
+                  Assign {formation[selectedPosition]?.position} Player
                 </h3>
                 <Button
                   onClick={() => {
@@ -673,55 +684,70 @@ const FormationEditor = ({
               </div>
               
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {getAvailablePlayers().map((roster) => {
-                  const player = roster.player || roster.Player?.[0];
-                  const playerId = player?._id || player?.id;
-                  const fullName = player?.fullName || player?.FullName || 'Unknown';
-                  const kitNumber = player?.kitNumber || player?.KitNumber || '';
-                  const position = player?.position || player?.Position || 'Unknown';
-                  
-                  return (
-                    <div
-                      key={playerId}
-                      onClick={() => {
-                        if (selectedPosition !== null) {
-                          const newFormation = [...formation];
-                          newFormation[selectedPosition] = {
-                            ...newFormation[selectedPosition],
-                            player: player,
-                            playerId: playerId,
-                            playerName: fullName
-                          };
-                          setFormation(newFormation);
-                          onFormationChange?.(newFormation);
-                          setShowPlayerSelector(false);
-                          setSelectedPosition(null);
-                        }
-                      }}
-                      className="p-3 rounded-lg border border-slate-600 hover:bg-slate-700/50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {kitNumber && (
-                          <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
-                            {kitNumber}
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white truncate">{fullName}</p>
-                          <div className="flex items-center gap-2">
-                            {getPositionIcon(position)}
-                            <span className="text-xs text-slate-400">{position}</span>
+                {getAvailablePlayers()
+                  .filter((roster) => {
+                    const player = roster.player || roster.Player?.[0];
+                    const position = player?.position || player?.Position || 'Unknown';
+                    const targetPosition = formation[selectedPosition]?.position;
+                    
+                    // Filter players by position match
+                    return position === targetPosition;
+                  })
+                  .map((roster) => {
+                    const player = roster.player || roster.Player?.[0];
+                    const playerId = player?._id || player?.id;
+                    const fullName = player?.fullName || player?.FullName || 'Unknown';
+                    const kitNumber = player?.kitNumber || player?.KitNumber || '';
+                    const position = player?.position || player?.Position || 'Unknown';
+                    
+                    return (
+                      <div
+                        key={playerId}
+                        onClick={() => {
+                          if (selectedPosition !== null) {
+                            const newFormation = [...formation];
+                            newFormation[selectedPosition] = {
+                              ...newFormation[selectedPosition],
+                              player: player,
+                              playerId: playerId,
+                              playerName: fullName
+                            };
+                            setFormation(newFormation);
+                            onFormationChange?.(newFormation);
+                            setShowPlayerSelector(false);
+                            setSelectedPosition(null);
+                          }
+                        }}
+                        className="p-3 rounded-lg border border-slate-600 hover:bg-slate-700/50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          {kitNumber && (
+                            <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
+                              {kitNumber}
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">{fullName}</p>
+                            <div className="flex items-center gap-2">
+                              {getPositionIcon(position)}
+                              <span className="text-xs text-slate-400">{position}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
                 
-                {getAvailablePlayers().length === 0 && (
+                {getAvailablePlayers().filter((roster) => {
+                  const player = roster.player || roster.Player?.[0];
+                  const position = player?.position || player?.Position || 'Unknown';
+                  const targetPosition = formation[selectedPosition]?.position;
+                  return position === targetPosition;
+                }).length === 0 && (
                   <div className="text-center py-4">
-                    <p className="text-slate-400">No available players</p>
+                    <p className="text-slate-400">No {formation[selectedPosition]?.position} players available</p>
+                    <p className="text-slate-500 text-sm mt-1">Try adding players to the roster first</p>
                   </div>
                 )}
               </div>
