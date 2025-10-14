@@ -23,6 +23,24 @@ router.get('/', authenticateJWT, async (req, res) => {
   }
 });
 
+// Get game rosters by game ID
+router.get('/game/:gameId', authenticateJWT, async (req, res) => {
+  try {
+    const gameRosters = await GameRoster.find({ game: req.params.gameId })
+      .populate('game', 'gameTitle team')
+      .populate('player', 'fullName kitNumber position team age')
+      .sort({ status: 1, playerName: 1 });
+
+    res.json({
+      success: true,
+      data: gameRosters
+    });
+  } catch (error) {
+    console.error('Get game rosters by game ID error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get game roster by ID
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
