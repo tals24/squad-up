@@ -25,10 +25,25 @@ router.get('/', authenticateJWT, async (req, res) => {
       .lean();
 
     // Add virtual fields manually since .lean() doesn't include them
-    const gamesWithVirtuals = games.map(game => ({
-      ...game,
-      gameTitle: `${game.teamName} vs ${game.opponent}`
-    }));
+    const gamesWithVirtuals = games.map(game => {
+      const gameTitle = `${game.teamName} vs ${game.opponent}`;
+      console.log('🔍 Backend gameTitle generation:', {
+        teamName: game.teamName,
+        opponent: game.opponent,
+        generatedTitle: gameTitle
+      });
+      return {
+        ...game,
+        gameTitle: gameTitle
+      };
+    });
+
+    console.log('🔍 Backend sending games:', gamesWithVirtuals.map(g => ({ 
+      id: g._id, 
+      gameTitle: g.gameTitle, 
+      teamName: g.teamName, 
+      opponent: g.opponent 
+    })));
 
     res.json({
       success: true,

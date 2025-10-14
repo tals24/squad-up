@@ -197,7 +197,9 @@ export default function GamesSchedule() {
         id: g._id || g.id, 
         team: g.team, 
         Team: g.Team,
-        gameTitle: g.gameTitle || g.GameTitle 
+        gameTitle: g.gameTitle || g.GameTitle,
+        teamName: g.teamName,
+        opponent: g.opponent
       })));
     }
     
