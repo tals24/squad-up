@@ -163,8 +163,57 @@ export default function GameDetails() {
     console.log('🎮 Sample gameRoster:', gameRosters?.[0]);
 
     if (!gameRosters || gameRosters.length === 0) {
-      console.log('🎮 No game rosters available, setting empty array');
-      setGameRoster([]);
+      console.log('🎮 No game rosters available, creating mock data for testing');
+      
+      // Create mock roster data for testing
+      const mockRoster = [
+        {
+          _id: 'mock-roster-1',
+          game: gameId,
+          player: {
+            _id: 'mock-player-1',
+            fullName: 'John Smith',
+            kitNumber: 10,
+            position: 'Midfielder'
+          },
+          status: 'Starting Lineup'
+        },
+        {
+          _id: 'mock-roster-2',
+          game: gameId,
+          player: {
+            _id: 'mock-player-2',
+            fullName: 'Mike Johnson',
+            kitNumber: 1,
+            position: 'Goalkeeper'
+          },
+          status: 'Starting Lineup'
+        },
+        {
+          _id: 'mock-roster-3',
+          game: gameId,
+          player: {
+            _id: 'mock-player-3',
+            fullName: 'David Brown',
+            kitNumber: 5,
+            position: 'Defender'
+          },
+          status: 'Bench'
+        },
+        {
+          _id: 'mock-roster-4',
+          game: gameId,
+          player: {
+            _id: 'mock-player-4',
+            fullName: 'Alex Wilson',
+            kitNumber: 9,
+            position: 'Forward'
+          },
+          status: 'Not in Squad'
+        }
+      ];
+      
+      setGameRoster(mockRoster);
       return;
     }
 
@@ -722,7 +771,7 @@ export default function GameDetails() {
                   <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-400 mb-2">No players in roster yet</p>
                   <p className="text-slate-500 text-sm mb-4">
-                    Game ID: {gameId} | Available gameRosters: {gameRosters?.length || 0}
+                    Game ID: {gameId} | Available gameRosters: {gameRosters?.length || 0} | Using mock data for testing
                   </p>
                   <Button
                     onClick={() => setShowPlayerModal(true)}
