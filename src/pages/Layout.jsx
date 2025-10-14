@@ -154,6 +154,7 @@ export default function Layout({ children, currentPageName }) {
   const quickActions = [
     { title: "Add Player", url: createPageUrl("AddPlayer"), icon: Users },
     { title: "Add Team", url: createPageUrl("AddTeam"), icon: Trophy },
+    { title: "Add Game", url: createPageUrl("AddGame"), icon: Calendar },
     { title: "Add Report", url: createPageUrl("AddReport"), icon: TrendingUp },
     { title: "Add User", url: createPageUrl("AddUser"), icon: User },
   ];

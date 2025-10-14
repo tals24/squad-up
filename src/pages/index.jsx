@@ -18,6 +18,8 @@ import AddReport from "./AddReport";
 
 import AddUser from "./AddUser";
 
+import AddGame from "./AddGame";
+
 import Login from "./Login";
 
 import GamesSchedule from "./GamesSchedule";
@@ -55,6 +57,8 @@ const PAGES = {
     AddReport: AddReport,
     
     AddUser: AddUser,
+    
+    AddGame: AddGame,
     
     Login: Login,
     
@@ -108,6 +112,7 @@ function PagesContent() {
             <Route path="/AddTeam" element={<Layout currentPageName="AddTeam"><AddTeam /></Layout>} />
             <Route path="/AddReport" element={<Layout currentPageName="AddReport"><AddReport /></Layout>} />
             <Route path="/AddUser" element={<Layout currentPageName="AddUser"><AddUser /></Layout>} />
+            <Route path="/AddGame" element={<Layout currentPageName="AddGame"><AddGame /></Layout>} />
             <Route path="/GamesSchedule" element={<Layout currentPageName="GamesSchedule"><GamesSchedule /></Layout>} />
             <Route path="/GameDetails" element={<Layout currentPageName="GameDetails"><GameDetails /></Layout>} />
             <Route path="/AccessDenied" element={<Layout currentPageName="AccessDenied"><AccessDenied /></Layout>} />
