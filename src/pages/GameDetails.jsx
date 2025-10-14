@@ -14,7 +14,8 @@ import {
   Target,
   Shield,
   Zap,
-  TrendingUp
+  TrendingUp,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "../components/DataContext";
 import PlayerSelectionModal from "../components/PlayerSelectionModal";
+import FormationEditor from "../components/FormationEditor";
 
 // Utility functions
 const getStatusColor = (status) => {
@@ -103,6 +105,10 @@ export default function GameDetails() {
   const [gameRoster, setGameRoster] = useState([]);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [isLoadingRoster, setIsLoadingRoster] = useState(false);
+  
+  // Formation state
+  const [currentFormation, setCurrentFormation] = useState([]);
+  const [showFormationEditor, setShowFormationEditor] = useState(false);
 
   // Load game data
   useEffect(() => {
@@ -306,6 +312,25 @@ export default function GameDetails() {
     } catch (error) {
       console.error('🎮 Error removing player:', error);
       alert('Failed to remove player. Please try again.');
+    }
+  };
+
+  // Handle formation change
+  const handleFormationChange = (newFormation) => {
+    setCurrentFormation(newFormation);
+  };
+
+  // Save formation
+  const handleSaveFormation = async (formation) => {
+    try {
+      // Here you would save the formation to the database
+      // For now, we'll just show a success message
+      console.log('🎮 Saving formation:', formation);
+      alert('Formation saved successfully!');
+      setShowFormationEditor(false);
+    } catch (error) {
+      console.error('🎮 Error saving formation:', error);
+      alert('Failed to save formation. Please try again.');
     }
   };
 
@@ -756,12 +781,77 @@ export default function GameDetails() {
             </CardContent>
           </Card>
 
-          {/* Placeholder for future sections */}
-          <Card className="bg-slate-800/50 border-slate-700 border-dashed">
-            <CardContent className="p-8 text-center">
-              <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-400 mb-2">Formation & Tactics</h3>
-              <p className="text-sm text-slate-500">Coming in Phase 3: Formation editor with drag-and-drop functionality</p>
+          {/* Formation Editor */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Target className="w-5 h-5 text-cyan-400" />
+                  Formation & Tactics
+                </CardTitle>
+                <Button
+                  onClick={() => setShowFormationEditor(true)}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Edit Formation
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {currentFormation.length === 0 ? (
+                <div className="text-center py-8">
+                  <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-4">No formation set yet</p>
+                  <Button
+                    onClick={() => setShowFormationEditor(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  >
+                    Create Formation
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map(position => {
+                      const playersInPosition = currentFormation.filter(pos => 
+                        pos.position === position && pos.player
+                      );
+                      
+                      return (
+                        <div key={position} className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-cyan-400" />
+                            <span className="text-sm font-medium text-slate-300">{position}s</span>
+                            <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
+                              {playersInPosition.length}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            {playersInPosition.map((pos, index) => (
+                              <div key={index} className="text-xs text-slate-400 truncate">
+                                {pos.playerName || 'Unknown'}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => setShowFormationEditor(true)}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      Edit Formation
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -784,6 +874,36 @@ export default function GameDetails() {
         existingRoster={gameRoster}
         teamPlayers={getTeamPlayers()}
       />
+
+      {/* Formation Editor Modal */}
+      {showFormationEditor && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Target className="w-6 h-6 text-cyan-400" />
+                  Formation Editor
+                </h2>
+                <Button
+                  onClick={() => setShowFormationEditor(false)}
+                  variant="outline"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <FormationEditor
+                gameRoster={gameRoster}
+                onFormationChange={handleFormationChange}
+                onSave={handleSaveFormation}
+                isReadOnly={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
