@@ -37,8 +37,11 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
       return [];
     }
 
-    // Filter reports directly using r.Game and includes(gameId)
-    const gameReports = reports.filter(r => r.Game && Array.isArray(r.Game) && r.Game.includes(gameId));
+    // Filter reports directly using r.game and includes(gameId)
+    const gameReports = reports.filter(r => {
+      const gameField = r.game || r.Game;
+      return gameField && Array.isArray(gameField) && gameField.includes(gameId);
+    });
     
     // console.log(`GameStatsRotator: Found ${gameReports.length} reports for game ${gameId}`); // Debugging removed as per outline
     
@@ -51,26 +54,38 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
     let maxRating = -1;
     
     for (const report of gameReports) {
-      const rating = report.GeneralRating || 0;
+      const rating = report.generalRating || report.GeneralRating || 0;
       if (rating > maxRating) {
         maxRating = rating;
         mvpReport = report;
       }
     }
 
-    if (mvpReport && mvpReport.GeneralRating && mvpReport.GeneralRating > 0) {
-      const mvpPlayer = players.find(p => mvpReport.Player && Array.isArray(mvpReport.Player) && mvpReport.Player.includes(p.id));
+    if (mvpReport && (mvpReport.generalRating || mvpReport.GeneralRating) && (mvpReport.generalRating || mvpReport.GeneralRating) > 0) {
+      const playerField = mvpReport.player || mvpReport.Player;
+      const mvpPlayer = players.find(p => {
+        const playerId = p._id || p.id;
+        return playerField && Array.isArray(playerField) && playerField.includes(playerId);
+      });
       if (mvpPlayer) {
-        availableStats.push({ type: 'mvp', player: mvpPlayer.FullName, rating: mvpReport.GeneralRating });
+        const playerName = mvpPlayer.fullName || mvpPlayer.FullName || 'Unknown Player';
+        const rating = mvpReport.generalRating || mvpReport.GeneralRating;
+        availableStats.push({ type: 'mvp', player: playerName, rating: rating });
       }
     }
 
     // Scorers - players who scored goals
     const scorers = gameReports
-      .filter(r => r.Goals && r.Goals > 0)
+      .filter(r => (r.goals || r.Goals) && (r.goals || r.Goals) > 0)
       .map(r => {
-        const player = players.find(p => r.Player && Array.isArray(r.Player) && r.Player.includes(p.id));
-        return { name: player?.FullName || 'Unknown Player', count: r.Goals };
+        const playerField = r.player || r.Player;
+        const player = players.find(p => {
+          const playerId = p._id || p.id;
+          return playerField && Array.isArray(playerField) && playerField.includes(playerId);
+        });
+        const playerName = player?.fullName || player?.FullName || 'Unknown Player';
+        const goals = r.goals || r.Goals;
+        return { name: playerName, count: goals };
       })
       .filter(s => s.name !== 'Unknown Player');
 
@@ -80,10 +95,16 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
 
     // Assisters - players who made assists
     const assisters = gameReports
-      .filter(r => r.Assists && r.Assists > 0)
+      .filter(r => (r.assists || r.Assists) && (r.assists || r.Assists) > 0)
       .map(r => {
-        const player = players.find(p => r.Player && Array.isArray(r.Player) && r.Player.includes(p.id));
-        return { name: player?.FullName || 'Unknown Player', count: r.Assists };
+        const playerField = r.player || r.Player;
+        const player = players.find(p => {
+          const playerId = p._id || p.id;
+          return playerField && Array.isArray(playerField) && playerField.includes(playerId);
+        });
+        const playerName = player?.fullName || player?.FullName || 'Unknown Player';
+        const assists = r.assists || r.Assists;
+        return { name: playerName, count: assists };
       })
       .filter(a => a.name !== 'Unknown Player');
 
@@ -182,32 +203,38 @@ export default function GamesSchedule() {
     let fTeams = teams;
 
     if (currentUser.role !== 'admin') {
-      const airtableUser = users.find(u =>
-        u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
+      const mongoUser = users.find(u =>
+        (u.email || u.Email) && (u.email || u.Email).toLowerCase() === currentUser.email.toLowerCase()
       );
-      const airtableRole = airtableUser?.Role;
+      const userRole = mongoUser?.role || mongoUser?.Role;
 
-      if (airtableRole === 'Coach' && airtableUser) {
-        fTeams = teams.filter(team =>
-          team.Coach && team.Coach.includes(airtableUser.id)
-        );
-        const teamIds = fTeams.map(team => team.id);
-        fGames = games.filter(game =>
-          game.Team && teamIds.some(id => game.Team.includes(id))
-        );
-      } else if (airtableRole === 'Division Manager' && airtableUser?.Department) {
-        fTeams = teams.filter(team =>
-          team.Division === airtableUser.Department
-        );
-        const teamIds = fTeams.map(team => team.id);
-        fGames = games.filter(game =>
-          game.Team && teamIds.some(id => game.Team.includes(id))
-        );
+      if (userRole === 'Coach' && mongoUser) {
+        fTeams = teams.filter(team => {
+          const coachField = team.coach || team.Coach;
+          const userId = mongoUser._id || mongoUser.id;
+          return coachField && (coachField === userId || (Array.isArray(coachField) && coachField.includes(userId)));
+        });
+        const teamIds = fTeams.map(team => team._id || team.id);
+        fGames = games.filter(game => {
+          const gameTeam = game.team || game.Team;
+          return gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
+        });
+      } else if (userRole === 'Division Manager' && (mongoUser?.department || mongoUser?.Department)) {
+        const department = mongoUser.department || mongoUser.Department;
+        fTeams = teams.filter(team => {
+          const teamDivision = team.division || team.Division;
+          return teamDivision === department;
+        });
+        const teamIds = fTeams.map(team => team._id || team.id);
+        fGames = games.filter(game => {
+          const gameTeam = game.team || game.Team;
+          return gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
+        });
       }
     }
 
     const statuses = [...new Set(fGames
-      .map(game => game.Status)
+      .map(game => game.status || game.Status)
       .filter(status => status)
     )].sort();
 
@@ -218,22 +245,23 @@ export default function GamesSchedule() {
     let gamesToFilter = roleFilteredGames;
 
     if (statusFilter !== "all") {
-      gamesToFilter = gamesToFilter.filter(game => game.Status === statusFilter);
+      gamesToFilter = gamesToFilter.filter(game => (game.status || game.Status) === statusFilter);
     }
     
     // Apply result filter
     if (resultFilter !== "all") {
         gamesToFilter = gamesToFilter.filter(game => {
             // Only filter games that have a final score
-            if (!game.FinalScore_Display) return false;
-            const gameResult = getGameResult(game.FinalScore_Display);
+            const finalScore = game.finalScoreDisplay || game.FinalScore_Display;
+            if (!finalScore) return false;
+            const gameResult = getGameResult(finalScore);
             return gameResult.result === resultFilter;
         });
     }
 
     return gamesToFilter.sort((a, b) => {
-      const dateA = new Date(a.Date || 0);
-      const dateB = new Date(b.Date || 0);
+      const dateA = new Date(a.date || a.Date || 0);
+      const dateB = new Date(b.date || b.Date || 0);
       return dateA - dateB;
     });
   };
@@ -382,13 +410,15 @@ export default function GamesSchedule() {
         <div className="space-y-4">
           {displayedGames.length > 0 ? (
             displayedGames.map((game) => {
-              const gameResult = getGameResult(game.FinalScore_Display);
+              const gameId = game._id || game.id;
+              const finalScore = game.finalScoreDisplay || game.FinalScore_Display;
+              const gameResult = getGameResult(finalScore);
               const ResultIcon = gameResult.icon;
 
               return (
               <Link
-                key={game.id}
-                to={createPageUrl(`GameDetails?id=${game.id}`)}
+                key={gameId}
+                to={createPageUrl(`GameDetails?id=${gameId}`)}
                 className="block group"
               >
                 <Card className="shadow-2xl hover:shadow-cyan-500/20 transition-all duration-300 border border-slate-700 bg-slate-800/70 backdrop-blur-sm group-hover:scale-[1.01] group-hover:border-cyan-500/50 overflow-hidden">
@@ -397,17 +427,17 @@ export default function GamesSchedule() {
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-3">
                           <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                            {game.GameTitle || 'Mission Briefing'}
+                            {game.gameTitle || game.GameTitle || 'Mission Briefing'}
                           </h3>
                           <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full ${getStatusDotColor(game.Status)} animate-pulse`} />
+                            <div className={`w-3 h-3 rounded-full ${getStatusDotColor(game.status || game.Status)} animate-pulse`} />
                             <Badge
                               variant="outline"
-                              className={`text-sm font-mono ${getStatusColor(game.Status)}`}
+                              className={`text-sm font-mono ${getStatusColor(game.status || game.Status)}`}
                             >
-                              {game.Status || 'Unknown'}
+                              {game.status || game.Status || 'Unknown'}
                             </Badge>
-                            {isUpcoming(game.Date) && (
+                            {isUpcoming(game.date || game.Date) && (
                               <Badge variant="outline" className="bg-orange-400/10 text-orange-400 border-orange-400 font-mono">
                                 INCOMING
                               </Badge>
@@ -419,25 +449,25 @@ export default function GamesSchedule() {
                           <div className="flex items-center gap-2 text-slate-300">
                             <Calendar className="w-4 h-4 text-cyan-400" />
                             <div>
-                              <span className="font-mono text-cyan-400">{formatDate(game.Date)}</span>
+                              <span className="font-mono text-cyan-400">{formatDate(game.date || game.Date)}</span>
                               <br />
-                              <span className="text-xs text-slate-500">{formatDetailedDate(game.Date)}</span>
+                              <span className="text-xs text-slate-500">{formatDetailedDate(game.date || game.Date)}</span>
                             </div>
                           </div>
-                          {game.Location && (
+                          {(game.location || game.Location) && (
                             <div className="flex items-center gap-2 text-slate-300">
                               <MapPin className="w-4 h-4 text-blue-400" />
-                              <span className="font-medium">{game.Location}</span>
+                              <span className="font-medium">{game.location || game.Location}</span>
                             </div>
                           )}
                           <div className="flex flex-col gap-1">
-                            {game.FinalScore_Display && (
+                            {finalScore && (
                               <div className="flex items-center gap-2 text-slate-300">
                                 <Trophy className="w-4 h-4 text-yellow-400" />
-                                <span className="font-bold text-yellow-400 font-mono text-lg">{game.FinalScore_Display}</span>
+                                <span className="font-bold text-yellow-400 font-mono text-lg">{finalScore}</span>
                               </div>
                             )}
-                            <GameStatsRotator gameId={game.id} reports={reports} players={players} />
+                            <GameStatsRotator gameId={gameId} reports={reports} players={players} />
                           </div>
                         </div>
                       </div>
