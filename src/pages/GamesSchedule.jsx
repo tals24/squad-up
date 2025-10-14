@@ -182,20 +182,38 @@ export default function GamesSchedule() {
 
   // Add this for debugging - you can remove it later
   useEffect(() => {
-    console.log('GamesSchedule: Data loaded', { 
+    console.log('🔍 GamesSchedule: Data loaded', { 
       gamesCount: games?.length, 
       reportsCount: reports?.length, 
-      playersCount: players?.length 
+      playersCount: players?.length,
+      usersCount: users?.length,
+      teamsCount: teams?.length
     });
     
-    // Log a few sample reports to see their structure
-    if (reports && reports.length > 0) {
-      console.log('Sample reports:', reports.slice(0, 3));
+    // Log sample games to see their structure
+    if (games && games.length > 0) {
+      console.log('🔍 Sample games:', games.slice(0, 3));
     }
-  }, [games, reports, players]);
+    
+    // Log sample teams to see their structure
+    if (teams && teams.length > 0) {
+      console.log('🔍 Sample teams:', teams.slice(0, 3));
+    }
+    
+    // Log current user
+    console.log('🔍 Current user:', currentUser);
+  }, [games, reports, players, users, teams, currentUser]);
 
   const { roleFilteredGames, availableStatuses } = useMemo(() => {
+    console.log('🔍 Role filtering - Input data:', {
+      currentUser: currentUser,
+      usersLength: users.length,
+      teamsLength: teams.length,
+      gamesLength: games.length
+    });
+
     if (!currentUser || users.length === 0 || teams.length === 0 || games.length === 0) {
+      console.log('🔍 Role filtering - Missing data, returning empty arrays');
       return { roleFilteredGames: [], availableStatuses: [] };
     }
 
@@ -203,22 +221,33 @@ export default function GamesSchedule() {
     let fTeams = teams;
 
     if (currentUser.role !== 'admin') {
+      console.log('🔍 Role filtering - Non-admin user, applying filters');
       const mongoUser = users.find(u =>
         (u.email || u.Email) && (u.email || u.Email).toLowerCase() === currentUser.email.toLowerCase()
       );
       const userRole = mongoUser?.role || mongoUser?.Role;
+      
+      console.log('🔍 Role filtering - Found user:', { mongoUser, userRole });
 
       if (userRole === 'Coach' && mongoUser) {
+        console.log('🔍 Role filtering - Coach role, filtering teams');
         fTeams = teams.filter(team => {
           const coachField = team.coach || team.Coach;
           const userId = mongoUser._id || mongoUser.id;
-          return coachField && (coachField === userId || (Array.isArray(coachField) && coachField.includes(userId)));
+          const isMatch = coachField && (coachField === userId || (Array.isArray(coachField) && coachField.includes(userId)));
+          console.log('🔍 Team coach match:', { teamName: team.teamName || team.TeamName, coachField, userId, isMatch });
+          return isMatch;
         });
         const teamIds = fTeams.map(team => team._id || team.id);
+        console.log('🔍 Role filtering - Coach teams:', { fTeamsCount: fTeams.length, teamIds });
+        
         fGames = games.filter(game => {
           const gameTeam = game.team || game.Team;
-          return gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
+          const isMatch = gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
+          console.log('🔍 Game team match:', { gameTitle: game.gameTitle || game.GameTitle, gameTeam, teamIds, isMatch });
+          return isMatch;
         });
+        console.log('🔍 Role filtering - Coach games:', { fGamesCount: fGames.length });
       } else if (userRole === 'Division Manager' && (mongoUser?.department || mongoUser?.Department)) {
         const department = mongoUser.department || mongoUser.Department;
         fTeams = teams.filter(team => {
@@ -231,12 +260,20 @@ export default function GamesSchedule() {
           return gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
         });
       }
+    } else {
+      console.log('🔍 Role filtering - Admin user, showing all games');
     }
 
     const statuses = [...new Set(fGames
       .map(game => game.status || game.Status)
       .filter(status => status)
     )].sort();
+
+    console.log('🔍 Role filtering - Final result:', {
+      roleFilteredGamesCount: fGames.length,
+      availableStatuses: statuses,
+      sampleGames: fGames.slice(0, 2)
+    });
 
     return { roleFilteredGames: fGames, availableStatuses: statuses };
   }, [currentUser, users, teams, games]);
