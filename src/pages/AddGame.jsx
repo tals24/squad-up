@@ -82,6 +82,8 @@ export default function AddGame() {
         gameTitle: gameTitle, // Auto-generated title
         season: season // Auto-detected season
       };
+      
+      console.log('🔍 Sending game data to backend:', gameData);
 
       const response = await createGame(gameData);
 
