@@ -193,11 +193,23 @@ export default function GamesSchedule() {
     // Log sample games to see their structure
     if (games && games.length > 0) {
       console.log('🔍 Sample games:', games.slice(0, 3));
+      console.log('🔍 Game team fields:', games.slice(0, 3).map(g => ({ 
+        id: g._id || g.id, 
+        team: g.team, 
+        Team: g.Team,
+        gameTitle: g.gameTitle || g.GameTitle 
+      })));
     }
     
     // Log sample teams to see their structure
     if (teams && teams.length > 0) {
       console.log('🔍 Sample teams:', teams.slice(0, 3));
+      console.log('🔍 Team coach fields:', teams.slice(0, 3).map(t => ({ 
+        id: t._id || t.id, 
+        coach: t.coach, 
+        Coach: t.Coach,
+        teamName: t.teamName || t.TeamName 
+      })));
     }
     
     // Log current user
@@ -212,7 +224,13 @@ export default function GamesSchedule() {
       gamesLength: games.length
     });
 
-    if (!currentUser || users.length === 0 || teams.length === 0 || games.length === 0) {
+    // Wait for currentUser to be loaded before applying filters
+    if (!currentUser) {
+      console.log('🔍 Role filtering - currentUser not loaded yet, returning empty arrays');
+      return { roleFilteredGames: [], availableStatuses: [] };
+    }
+
+    if (users.length === 0 || teams.length === 0 || games.length === 0) {
       console.log('🔍 Role filtering - Missing data, returning empty arrays');
       return { roleFilteredGames: [], availableStatuses: [] };
     }
