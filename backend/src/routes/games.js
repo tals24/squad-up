@@ -21,11 +21,18 @@ router.get('/', authenticateJWT, async (req, res) => {
 
     const games = await Game.find(query)
       .populate('team', 'teamName season division')
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
+
+    // Add virtual fields manually since .lean() doesn't include them
+    const gamesWithVirtuals = games.map(game => ({
+      ...game,
+      gameTitle: `${game.teamName} vs ${game.opponent}`
+    }));
 
     res.json({
       success: true,
-      data: games
+      data: gamesWithVirtuals
     });
   } catch (error) {
     console.error('Get games error:', error);
