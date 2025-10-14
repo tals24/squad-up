@@ -655,122 +655,26 @@ export default function GameDetails() {
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            {/* Basic Game Info */}
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Trophy className="w-5 h-5 text-cyan-400" />
-                  Game Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Status</Label>
-                    {isEditing ? (
-                      <Select
-                        value={editedGame?.status || 'Scheduled'}
-                        onValueChange={(value) => setEditedGame(prev => ({ ...prev, status: value }))}
-                      >
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Scheduled">Scheduled</SelectItem>
-                          <SelectItem value="Played">Played</SelectItem>
-                          <SelectItem value="Done">Done</SelectItem>
-                          <SelectItem value="Postponed">Postponed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(status)}`} />
-                        <span className="text-white">{status}</span>
-                      </div>
-                    )}
-                  </div>
+          <div className="p-6">
 
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Location</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editedGame?.location || ''}
-                        onChange={(e) => setEditedGame(prev => ({ ...prev, location: e.target.value }))}
-                        className="bg-slate-700 border-slate-600 text-white"
-                        placeholder="Enter location"
-                      />
-                    ) : (
-                      <p className="text-white">{location}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Score Section - Only show for post-game or in edit mode */}
-                {(isPostGame || isEditing) && (
-                  <div className="pt-4 border-t border-slate-700">
-                    <Label className="text-slate-300 mb-3 block">Match Score</Label>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <Label className="text-xs text-slate-400 mb-2 block">Our Score</Label>
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={editedGame?.ourScore ?? ''}
-                            onChange={(e) => setEditedGame(prev => ({ ...prev, ourScore: e.target.value ? parseInt(e.target.value) : null }))}
-                            className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
-                            placeholder="0"
-                          />
-                        ) : (
-                          <div className="bg-slate-700/50 rounded-lg p-4 text-center">
-                            <p className="text-3xl font-bold text-cyan-400">{ourScore ?? '-'}</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="text-2xl font-bold text-slate-500">vs</div>
-                      
-                      <div className="flex-1">
-                        <Label className="text-xs text-slate-400 mb-2 block">Opponent Score</Label>
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={editedGame?.opponentScore ?? ''}
-                            onChange={(e) => setEditedGame(prev => ({ ...prev, opponentScore: e.target.value ? parseInt(e.target.value) : null }))}
-                            className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
-                            placeholder="0"
-                          />
-                        ) : (
-                          <div className="bg-slate-700/50 rounded-lg p-4 text-center">
-                            <p className="text-3xl font-bold text-red-400">{opponentScore ?? '-'}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Tactical Setup - Always visible like in screenshot */}
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Target className="w-5 h-5 text-cyan-400" />
+            {/* Tactical Setup - Large and prominent */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden">
+              <div className="p-6 border-b border-slate-700">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Target className="w-6 h-6 text-cyan-400" />
                   Tactical Setup
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
+                </h2>
+                <p className="text-slate-400 mt-2">Set up your team formation and tactics for this match</p>
+              </div>
+              <div className="p-0">
                 <FormationEditor
                   gameRoster={gameRoster}
                   onFormationChange={handleFormationChange}
                   onSave={handleSaveFormation}
                   isReadOnly={isReadOnly}
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Post-Game Content */}
             {isPostGame && (
