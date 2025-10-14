@@ -100,6 +100,8 @@ const FormationEditor = ({
   const [draggedPlayer, setDraggedPlayer] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [showPlayerSelector, setShowPlayerSelector] = useState(false);
 
   // Initialize formation from template
   useEffect(() => {
@@ -203,6 +205,7 @@ const FormationEditor = ({
   const handleCanvasDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    console.log('🎮 Canvas drag over');
   };
 
   // Handle canvas drop
@@ -336,52 +339,57 @@ const FormationEditor = ({
     // Bottom goal
     ctx.strokeRect(canvas.width / 2 - goalWidth / 2, canvas.height - goalHeight, goalWidth, goalHeight);
     
-    // Draw positions
-    formation.forEach((pos, index) => {
-      const x = (pos.x / 100) * canvas.width;
-      const y = (pos.y / 100) * canvas.height;
-      
-      // Position circle
-      ctx.beginPath();
-      ctx.arc(x, y, 20, 0, 2 * Math.PI);
-      
-      if (pos.player) {
-        // Filled circle for assigned position
-        ctx.fillStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
-                       pos.position === 'Defender' ? '#3b82f6' :
-                       pos.position === 'Midfielder' ? '#10b981' : '#ef4444';
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-      } else {
-        // Empty circle for unassigned position
-        ctx.strokeStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
+      // Draw positions
+      formation.forEach((pos, index) => {
+        const x = (pos.x / 100) * canvas.width;
+        const y = (pos.y / 100) * canvas.height;
+        
+        // Position circle
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, 2 * Math.PI);
+        
+        if (pos.player) {
+          // Filled circle for assigned position
+          ctx.fillStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
                          pos.position === 'Defender' ? '#3b82f6' :
                          pos.position === 'Midfielder' ? '#10b981' : '#ef4444';
-        ctx.lineWidth = 2;
-      }
-      
-      ctx.stroke();
-      
-      // Position label
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(pos.id.toUpperCase(), x, y + 4);
-      
-      // Player name if assigned
-      if (pos.player) {
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = '10px Arial';
-        const name = pos.playerName || 'Unknown';
-        const maxWidth = 40;
-        if (name.length > 8) {
-          ctx.fillText(name.substring(0, 8) + '...', x, y + 20);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
         } else {
-          ctx.fillText(name, x, y + 20);
+          // Empty circle for unassigned position
+          ctx.strokeStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
+                         pos.position === 'Defender' ? '#3b82f6' :
+                         pos.position === 'Midfielder' ? '#10b981' : '#ef4444';
+          ctx.lineWidth = 2;
         }
-      }
-    });
+        
+        ctx.stroke();
+        
+        // Position label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(pos.id.toUpperCase(), x, y + 4);
+        
+        // Player name if assigned
+        if (pos.player) {
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '10px Arial';
+          const name = pos.playerName || 'Unknown';
+          const maxWidth = 40;
+          if (name.length > 8) {
+            ctx.fillText(name.substring(0, 8) + '...', x, y + 20);
+          } else {
+            ctx.fillText(name, x, y + 20);
+          }
+        } else {
+          // Show "Click to assign" for empty positions
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '8px Arial';
+          ctx.fillText('Click to assign', x, y + 20);
+        }
+      });
   }, [formation]);
 
   // Redraw when formation changes
@@ -461,12 +469,15 @@ const FormationEditor = ({
         <div className="lg:col-span-2">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardContent className="p-4">
-              <div className="relative">
+              <div 
+                className="relative"
+                onDragOver={handleCanvasDragOver}
+                onDrop={handleCanvasDrop}
+                title="Drop players here to assign positions"
+              >
                 <canvas
                   ref={canvasRef}
                   className="w-full h-96 border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
-                  onDragOver={handleCanvasDragOver}
-                  onDrop={handleCanvasDrop}
                   onClick={(e) => {
                     if (isReadOnly) return;
                     const canvas = canvasRef.current;
@@ -479,12 +490,18 @@ const FormationEditor = ({
                       const distance = Math.sqrt(
                         Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
                       );
-                      if (distance < 5) {
-                        handlePositionClick(index);
+                      if (distance < 8) { // Increased hit area
+                        if (pos.player) {
+                          // Remove player from position
+                          handlePositionClick(index);
+                        } else {
+                          // Show player selector for empty position
+                          setSelectedPosition(index);
+                          setShowPlayerSelector(true);
+                        }
                       }
                     });
                   }}
-                  title="Drop players here to assign positions"
                 />
                 
                 {isDragging && (
@@ -632,6 +649,86 @@ const FormationEditor = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Player Selector Modal */}
+      {showPlayerSelector && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Assign Player to Position
+                </h3>
+                <Button
+                  onClick={() => {
+                    setShowPlayerSelector(false);
+                    setSelectedPosition(null);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                >
+                  ×
+                </Button>
+              </div>
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {getAvailablePlayers().map((roster) => {
+                  const player = roster.player || roster.Player?.[0];
+                  const playerId = player?._id || player?.id;
+                  const fullName = player?.fullName || player?.FullName || 'Unknown';
+                  const kitNumber = player?.kitNumber || player?.KitNumber || '';
+                  const position = player?.position || player?.Position || 'Unknown';
+                  
+                  return (
+                    <div
+                      key={playerId}
+                      onClick={() => {
+                        if (selectedPosition !== null) {
+                          const newFormation = [...formation];
+                          newFormation[selectedPosition] = {
+                            ...newFormation[selectedPosition],
+                            player: player,
+                            playerId: playerId,
+                            playerName: fullName
+                          };
+                          setFormation(newFormation);
+                          onFormationChange?.(newFormation);
+                          setShowPlayerSelector(false);
+                          setSelectedPosition(null);
+                        }
+                      }}
+                      className="p-3 rounded-lg border border-slate-600 hover:bg-slate-700/50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {kitNumber && (
+                          <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
+                            {kitNumber}
+                          </div>
+                        )}
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white truncate">{fullName}</p>
+                          <div className="flex items-center gap-2">
+                            {getPositionIcon(position)}
+                            <span className="text-xs text-slate-400">{position}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {getAvailablePlayers().length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-slate-400">No available players</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
