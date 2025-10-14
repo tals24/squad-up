@@ -113,13 +113,19 @@ router.get('/all', authenticateJWT, async (req, res) => {
       })));
     }
 
+    // Add gameTitle virtual field to games
+    const gamesWithTitles = filteredGames.map(game => ({
+      ...game,
+      gameTitle: `${game.teamName} vs ${game.opponent}`
+    }));
+
     res.json({
       success: true,
       data: {
         users,
         teams: filteredTeams,
         players: filteredPlayers,
-        games: filteredGames,
+        games: gamesWithTitles,
         reports: filteredReports,
         drills,
         gameRosters: filteredGameRosters,
