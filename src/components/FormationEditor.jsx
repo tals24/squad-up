@@ -623,43 +623,6 @@ const FormationEditor = ({
         </div>
       </div>
 
-      {/* Formation Summary */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-cyan-400" />
-            <span className="text-white font-semibold">Formation Summary</span>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map(position => {
-              const playersInPosition = formation.filter(pos => 
-                pos.position === position && pos.player
-              );
-              
-              return (
-                <div key={position} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    {getPositionIcon(position)}
-                    <span className="text-sm font-medium text-slate-300">{position}s</span>
-                    <Badge variant="outline" className={`${getPositionColor(position)} text-xs`}>
-                      {playersInPosition.length}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    {playersInPosition.map((pos, index) => (
-                      <div key={index} className="text-xs text-slate-400 truncate">
-                        {pos.playerName || 'Unknown'}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Player Selector Modal */}
       {showPlayerSelector && (
