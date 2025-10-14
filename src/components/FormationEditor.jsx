@@ -185,6 +185,7 @@ const FormationEditor = ({
   const handlePlayerDragStart = (e, player) => {
     if (isReadOnly) return;
     
+    console.log('🎮 Drag start:', player);
     setDraggedPlayer(player);
     setIsDragging(true);
     
@@ -195,6 +196,7 @@ const FormationEditor = ({
     });
     
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify(player));
   };
 
   // Handle canvas drag over
@@ -206,12 +208,29 @@ const FormationEditor = ({
   // Handle canvas drop
   const handleCanvasDrop = (e) => {
     e.preventDefault();
-    if (!draggedPlayer || isReadOnly) return;
+    console.log('🎮 Canvas drop event');
+    
+    let playerData;
+    try {
+      playerData = JSON.parse(e.dataTransfer.getData('text/plain'));
+    } catch (error) {
+      console.log('🎮 No drag data found, using draggedPlayer state');
+      playerData = draggedPlayer;
+    }
+    
+    if (!playerData || isReadOnly) {
+      console.log('🎮 No player data or read-only mode');
+      setDraggedPlayer(null);
+      setIsDragging(false);
+      return;
+    }
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    console.log('🎮 Drop coordinates:', { x, y });
 
     // Find closest position
     let closestPos = null;
@@ -227,29 +246,35 @@ const FormationEditor = ({
       }
     });
 
+    console.log('🎮 Closest position:', closestPos, 'Distance:', minDistance);
+
     if (closestPos !== null) {
       const newFormation = [...formation];
-      const playerId = draggedPlayer.player?._id || draggedPlayer.player?.id;
-      const playerName = draggedPlayer.player?.fullName || draggedPlayer.player?.FullName || 'Unknown';
+      const playerId = playerData.player?._id || playerData.player?.id;
+      const playerName = playerData.player?.fullName || playerData.player?.FullName || 'Unknown';
+      
+      console.log('🎮 Assigning player:', { playerId, playerName, position: formation[closestPos].id });
       
       // Remove player from any existing position
       newFormation.forEach(pos => {
         if (pos.playerId === playerId) {
           pos.player = null;
           pos.playerId = null;
+          pos.playerName = null;
         }
       });
       
       // Assign player to new position
       newFormation[closestPos] = {
         ...newFormation[closestPos],
-        player: draggedPlayer.player,
+        player: playerData.player,
         playerId: playerId,
         playerName: playerName
       };
       
       setFormation(newFormation);
       onFormationChange?.(newFormation);
+      console.log('🎮 Formation updated');
     }
 
     setDraggedPlayer(null);
@@ -439,7 +464,7 @@ const FormationEditor = ({
               <div className="relative">
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-96 border border-slate-600 rounded-lg cursor-crosshair"
+                  className="w-full h-96 border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
                   onDragOver={handleCanvasDragOver}
                   onDrop={handleCanvasDrop}
                   onClick={(e) => {
@@ -459,6 +484,7 @@ const FormationEditor = ({
                       }
                     });
                   }}
+                  title="Drop players here to assign positions"
                 />
                 
                 {isDragging && (
@@ -498,27 +524,61 @@ const FormationEditor = ({
                       key={playerId}
                       draggable={!isReadOnly}
                       onDragStart={(e) => handlePlayerDragStart(e, roster)}
-                      className={`p-3 rounded-lg border cursor-move transition-all duration-200 ${
+                      onDragEnd={() => {
+                        setDraggedPlayer(null);
+                        setIsDragging(false);
+                      }}
+                      className={`p-3 rounded-lg border transition-all duration-200 ${
                         isReadOnly 
                           ? 'bg-slate-700/50 border-slate-600 cursor-not-allowed' 
-                          : 'bg-slate-700/50 border-slate-600 hover:bg-slate-700/70 hover:border-cyan-500/50'
+                          : 'bg-slate-700/50 border-slate-600 hover:bg-slate-700/70 hover:border-cyan-500/50 cursor-grab active:cursor-grabbing'
                       }`}
+                      title={isReadOnly ? 'Read-only mode' : 'Drag to pitch to assign position'}
                     >
-                      <div className="flex items-center gap-3">
-                        {kitNumber && (
-                          <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
-                            {kitNumber}
+                        <div className="flex items-center gap-3">
+                          {kitNumber && (
+                            <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
+                              {kitNumber}
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">{fullName}</p>
+                            <div className="flex items-center gap-2">
+                              {getPositionIcon(position)}
+                              <span className="text-xs text-slate-400">{position}</span>
+                            </div>
                           </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white truncate">{fullName}</p>
-                          <div className="flex items-center gap-2">
-                            {getPositionIcon(position)}
-                            <span className="text-xs text-slate-400">{position}</span>
-                          </div>
+                          
+                          {!isReadOnly && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                // Auto-assign to first available position
+                                const availablePos = formation.find(pos => !pos.player);
+                                if (availablePos) {
+                                  const posIndex = formation.indexOf(availablePos);
+                                  const newFormation = [...formation];
+                                  const playerId = player?.fullName || player?.FullName || 'Unknown';
+                                  
+                                  newFormation[posIndex] = {
+                                    ...newFormation[posIndex],
+                                    player: player,
+                                    playerId: playerId,
+                                    playerName: player?.fullName || player?.FullName || 'Unknown'
+                                  };
+                                  
+                                  setFormation(newFormation);
+                                  onFormationChange?.(newFormation);
+                                }
+                              }}
+                              className="h-6 px-2 text-xs border-slate-500 text-slate-300 hover:bg-slate-600"
+                            >
+                              Assign
+                            </Button>
+                          )}
                         </div>
-                      </div>
                     </div>
                   );
                 })}
