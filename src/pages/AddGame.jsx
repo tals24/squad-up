@@ -66,9 +66,6 @@ export default function AddGame() {
       
       const teamName = selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
       
-      // Auto-generate game title: "Team Name vs Opponent"
-      const gameTitle = `${teamName} vs ${formData.Opponent}`;
-      
       // Auto-detect season based on game date
       const season = getSeasonFromDate(gameDateTime);
 
@@ -78,9 +75,9 @@ export default function AddGame() {
         date: gameDateTime,
         location: formData.Venue || 'Home', // Changed from venue to location
         gameType: formData.GameType || 'League',
-        status: formData.Status || 'Scheduled',
-        gameTitle: gameTitle, // Auto-generated title
-        season: season // Auto-detected season
+        status: formData.Status || 'Scheduled'
+        // gameTitle is now calculated on the backend via virtual field
+        // season is also calculated on the backend from team data
       };
       
       console.log('🔍 Sending game data to backend:', gameData);
@@ -90,7 +87,7 @@ export default function AddGame() {
       if (response.data?.success) {
         return {
           success: true,
-          message: `${gameTitle} has been scheduled successfully for the ${season} season!`
+          message: `${teamName} vs ${formData.Opponent} has been scheduled successfully for the ${season} season!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save game");

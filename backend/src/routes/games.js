@@ -57,8 +57,8 @@ router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
 router.post('/', authenticateJWT, async (req, res) => {
   try {
     console.log('🔍 Create game request body:', req.body);
-    const { team, opponent, date, location, status, gameTitle, gameType } = req.body;
-    console.log('🔍 Extracted fields:', { team, opponent, date, location, status, gameTitle, gameType });
+    const { team, opponent, date, location, status, gameType } = req.body;
+    console.log('🔍 Extracted fields:', { team, opponent, date, location, status, gameType });
 
     // Get team details for lookups
     const teamDoc = await Team.findById(team);
@@ -74,8 +74,8 @@ router.post('/', authenticateJWT, async (req, res) => {
       date,
       location,
       status: status || 'Scheduled',
-      gameTitle: gameTitle || `${teamDoc.teamName} vs ${opponent}`, // Use provided title or generate default
       gameType: gameType || 'League' // Use provided type or default to League
+      // gameTitle is now calculated dynamically via virtual field
     });
 
     await game.save();
