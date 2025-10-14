@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { useData } from "../components/DataContext";
 import PlayerSelectionModal from "../components/PlayerSelectionModal";
 import FormationEditor from "../components/FormationEditor";
+import PlayerPerformanceModal from "../components/PlayerPerformanceModal";
 
 // Utility functions
 const getStatusColor = (status) => {
@@ -121,6 +122,10 @@ export default function GameDetails() {
   // Formation state
   const [currentFormation, setCurrentFormation] = useState([]);
   const [showFormationEditor, setShowFormationEditor] = useState(false);
+
+  // Performance tracking state
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
+  const [selectedPlayerForPerformance, setSelectedPlayerForPerformance] = useState(null);
 
   // Load game data
   useEffect(() => {
@@ -411,6 +416,24 @@ export default function GameDetails() {
       console.error('🎮 Error saving formation:', error);
       alert('Failed to save formation. Please try again.');
     }
+  };
+
+  // Performance tracking handlers
+  const handleOpenPerformanceModal = (player) => {
+    setSelectedPlayerForPerformance(player);
+    setShowPerformanceModal(true);
+  };
+
+  const handleClosePerformanceModal = () => {
+    setShowPerformanceModal(false);
+    setSelectedPlayerForPerformance(null);
+  };
+
+  const handleSavePerformance = (performanceData) => {
+    console.log('🎮 Saving performance data:', performanceData);
+    // TODO: Save performance data to backend
+    setShowPerformanceModal(false);
+    setSelectedPlayerForPerformance(null);
   };
 
   // Loading state
@@ -843,6 +866,14 @@ export default function GameDetails() {
                                       <Button
                                         size="sm"
                                         variant="outline"
+                                        onClick={() => handleOpenPerformanceModal(player)}
+                                        className="h-8 px-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 text-xs"
+                                      >
+                                        Stats
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
                                         onClick={() => handleRemovePlayer(rosterId)}
                                         className="h-8 w-8 p-0 border-red-500/50 text-red-400 hover:bg-red-500/20"
                                       >
@@ -937,11 +968,46 @@ export default function GameDetails() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700 border-dashed">
-            <CardContent className="p-8 text-center">
-              <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-400 mb-2">Performance Tracking</h3>
-              <p className="text-sm text-slate-500">Coming in Phase 4: Individual player performance and statistics</p>
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <TrendingUp className="w-5 h-5 text-purple-400" />
+                Performance Tracking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                    <div className="text-2xl font-bold text-cyan-400 mb-1">
+                      {gameRoster.filter(roster => roster.status === 'Starting Lineup').length}
+                    </div>
+                    <div className="text-sm text-slate-400">Starting Players</div>
+                  </div>
+                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400 mb-1">
+                      {gameRoster.filter(roster => roster.status === 'Bench').length}
+                    </div>
+                    <div className="text-sm text-slate-400">Bench Players</div>
+                  </div>
+                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-400 mb-1">
+                      {gameRoster.length}
+                    </div>
+                    <div className="text-sm text-slate-400">Total Roster</div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-slate-600 pt-4">
+                  <p className="text-slate-300 text-sm mb-3">
+                    Click "Stats" on any player card above to track their performance metrics including goals, assists, passes, tackles, and more.
+                  </p>
+                  <div className="flex items-center gap-2 text-slate-400 text-sm">
+                    <Target className="w-4 h-4" />
+                    <span>Track individual player statistics and performance ratings</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -986,6 +1052,15 @@ export default function GameDetails() {
           </div>
         </div>
       )}
+
+      {/* Player Performance Modal */}
+      <PlayerPerformanceModal
+        isOpen={showPerformanceModal}
+        onClose={handleClosePerformanceModal}
+        player={selectedPlayerForPerformance}
+        gameId={gameId}
+        onSave={handleSavePerformance}
+      />
     </div>
   );
 }
