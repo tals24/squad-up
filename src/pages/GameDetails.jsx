@@ -95,6 +95,18 @@ export default function GameDetails() {
     refreshData
   } = useData();
   
+  // Debug data availability
+  useEffect(() => {
+    console.log('🎮 DataContext Debug:', {
+      games: games?.length || 0,
+      players: players?.length || 0,
+      gameRosters: gameRosters?.length || 0,
+      teams: teams?.length || 0,
+      isLoading,
+      error
+    });
+  }, [games, players, gameRosters, teams, isLoading, error]);
+  
   // Local state
   const [game, setGame] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -144,14 +156,32 @@ export default function GameDetails() {
 
   // Load game roster
   useEffect(() => {
-    if (!gameId || !gameRosters) return;
+    if (!gameId) return;
+
+    console.log('🎮 Loading game roster for gameId:', gameId);
+    console.log('🎮 Available gameRosters:', gameRosters?.length || 0);
+    console.log('🎮 Sample gameRoster:', gameRosters?.[0]);
+
+    if (!gameRosters || gameRosters.length === 0) {
+      console.log('🎮 No game rosters available, setting empty array');
+      setGameRoster([]);
+      return;
+    }
 
     const rosterForGame = gameRosters.filter(roster => {
       const rosterGameId = roster.game?._id || roster.game || roster.Game?.[0];
-      return rosterGameId === gameId;
+      const match = rosterGameId === gameId;
+      console.log('🎮 Checking roster:', {
+        rosterGameId,
+        gameId,
+        match,
+        roster: roster
+      });
+      return match;
     });
 
     console.log('🎮 Game roster loaded:', rosterForGame.length, 'players');
+    console.log('🎮 Roster details:', rosterForGame);
     setGameRoster(rosterForGame);
   }, [gameId, gameRosters]);
 
@@ -690,7 +720,10 @@ export default function GameDetails() {
               {gameRoster.length === 0 ? (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-4">No players in roster yet</p>
+                  <p className="text-slate-400 mb-2">No players in roster yet</p>
+                  <p className="text-slate-500 text-sm mb-4">
+                    Game ID: {gameId} | Available gameRosters: {gameRosters?.length || 0}
+                  </p>
                   <Button
                     onClick={() => setShowPlayerModal(true)}
                     className="bg-cyan-600 hover:bg-cyan-700 text-white"

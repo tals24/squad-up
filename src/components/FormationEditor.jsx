@@ -116,15 +116,23 @@ const FormationEditor = ({
 
   // Get available players (not already assigned)
   const getAvailablePlayers = useCallback(() => {
+    if (!gameRoster || gameRoster.length === 0) {
+      console.log('🎮 FormationEditor: No game roster available');
+      return [];
+    }
+    
     const assignedPlayerIds = formation
       .filter(pos => pos.player)
       .map(pos => pos.playerId);
     
-    return gameRoster.filter(roster => {
+    const available = gameRoster.filter(roster => {
       const playerId = roster.player?._id || roster.player?.id;
       return !assignedPlayerIds.includes(playerId);
     });
-  }, [formation, gameRosters]);
+    
+    console.log('🎮 FormationEditor: Available players:', available.length);
+    return available;
+  }, [formation, gameRoster]);
 
   // Get position icon
   const getPositionIcon = (position) => {
