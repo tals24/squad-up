@@ -252,8 +252,37 @@ export default function GamesSchedule() {
         fTeams = teams.filter(team => {
           const coachField = team.coach || team.Coach;
           const userId = mongoUser._id || mongoUser.id;
-          const isMatch = coachField && (coachField === userId || (Array.isArray(coachField) && coachField.includes(userId)));
-          console.log('🔍 Team coach match:', { teamName: team.teamName || team.TeamName, coachField, userId, isMatch });
+          
+          // Handle both populated and unpopulated coach fields
+          let isMatch = false;
+          if (typeof coachField === 'string') {
+            // Unpopulated: coach field is just the ID string
+            isMatch = coachField === userId;
+          } else if (coachField && typeof coachField === 'object') {
+            // Populated: coach field is the full user object
+            const coachId = coachField._id || coachField.id;
+            isMatch = coachId === userId;
+          } else if (Array.isArray(coachField)) {
+            // Array of coach IDs or objects
+            isMatch = coachField.some(coach => {
+              if (typeof coach === 'string') {
+                return coach === userId;
+              } else if (coach && typeof coach === 'object') {
+                const coachId = coach._id || coach.id;
+                return coachId === userId;
+              }
+              return false;
+            });
+          }
+          
+          console.log('🔍 Team coach match:', { 
+            teamName: team.teamName || team.TeamName, 
+            coachField, 
+            userId, 
+            isMatch,
+            coachFieldType: typeof coachField,
+            coachFieldIsArray: Array.isArray(coachField)
+          });
           return isMatch;
         });
         const teamIds = fTeams.map(team => team._id || team.id);
@@ -261,8 +290,37 @@ export default function GamesSchedule() {
         
         fGames = games.filter(game => {
           const gameTeam = game.team || game.Team;
-          const isMatch = gameTeam && (teamIds.includes(gameTeam) || (Array.isArray(gameTeam) && teamIds.some(id => gameTeam.includes(id))));
-          console.log('🔍 Game team match:', { gameTitle: game.gameTitle || game.GameTitle, gameTeam, teamIds, isMatch });
+          
+          // Handle both populated and unpopulated team fields
+          let isMatch = false;
+          if (typeof gameTeam === 'string') {
+            // Unpopulated: team field is just the ID string
+            isMatch = teamIds.includes(gameTeam);
+          } else if (gameTeam && typeof gameTeam === 'object') {
+            // Populated: team field is the full team object
+            const teamId = gameTeam._id || gameTeam.id;
+            isMatch = teamIds.includes(teamId);
+          } else if (Array.isArray(gameTeam)) {
+            // Array of team IDs or objects
+            isMatch = gameTeam.some(team => {
+              if (typeof team === 'string') {
+                return teamIds.includes(team);
+              } else if (team && typeof team === 'object') {
+                const teamId = team._id || team.id;
+                return teamIds.includes(teamId);
+              }
+              return false;
+            });
+          }
+          
+          console.log('🔍 Game team match:', { 
+            gameTitle: game.gameTitle || game.GameTitle, 
+            gameTeam, 
+            teamIds, 
+            isMatch,
+            gameTeamType: typeof gameTeam,
+            gameTeamIsArray: Array.isArray(gameTeam)
+          });
           return isMatch;
         });
         console.log('🔍 Role filtering - Coach games:', { fGamesCount: fGames.length });
