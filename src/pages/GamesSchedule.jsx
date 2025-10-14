@@ -540,11 +540,13 @@ export default function GamesSchedule() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-3">
-                          <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                            {game.gameTitle || game.GameTitle || 'Mission Briefing'}
-                          </h3>
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+                              {game.gameTitle || game.GameTitle || 'Mission Briefing'}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                             <div className={`w-3 h-3 rounded-full ${getStatusDotColor(game.status || game.Status)} animate-pulse`} />
                             <Badge
                               variant="outline"
