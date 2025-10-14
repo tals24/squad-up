@@ -15,7 +15,8 @@ import {
   Shield,
   Zap,
   TrendingUp,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import { useData } from "../components/DataContext";
 import PlayerSelectionModal from "../components/PlayerSelectionModal";
 import FormationEditor from "../components/FormationEditor";
 import PlayerPerformanceModal from "../components/PlayerPerformanceModal";
+import MatchReportModal from "../components/MatchReportModal";
 
 // Utility functions
 const getStatusColor = (status) => {
@@ -126,6 +128,9 @@ export default function GameDetails() {
   // Performance tracking state
   const [showPerformanceModal, setShowPerformanceModal] = useState(false);
   const [selectedPlayerForPerformance, setSelectedPlayerForPerformance] = useState(null);
+
+  // Match report state
+  const [showMatchReport, setShowMatchReport] = useState(false);
 
   // Load game data
   useEffect(() => {
@@ -436,6 +441,21 @@ export default function GameDetails() {
     setSelectedPlayerForPerformance(null);
   };
 
+  // Match report handlers
+  const handleOpenMatchReport = () => {
+    setShowMatchReport(true);
+  };
+
+  const handleCloseMatchReport = () => {
+    setShowMatchReport(false);
+  };
+
+  const handleSaveMatchReport = (reportData) => {
+    console.log('🎮 Saving match report:', reportData);
+    // TODO: Save match report to backend
+    setShowMatchReport(false);
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -528,6 +548,14 @@ export default function GameDetails() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Button
+                onClick={handleOpenMatchReport}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Generate Report
+              </Button>
+              
               {finalScore && !isEditing && (
                 <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl px-6 py-3">
                   <div className="text-center">
@@ -1060,6 +1088,16 @@ export default function GameDetails() {
         player={selectedPlayerForPerformance}
         gameId={gameId}
         onSave={handleSavePerformance}
+      />
+
+      {/* Match Report Modal */}
+      <MatchReportModal
+        isOpen={showMatchReport}
+        onClose={handleCloseMatchReport}
+        game={game}
+        gameRoster={gameRoster}
+        formation={currentFormation}
+        onSave={handleSaveMatchReport}
       />
     </div>
   );
