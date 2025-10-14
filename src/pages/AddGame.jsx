@@ -9,6 +9,7 @@ import {
   Target
 } from "lucide-react";
 import { getTeams, createGame } from "@/api/functions";
+import { getSeasonFromDate } from "@/utils/seasonUtils";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
@@ -60,6 +61,9 @@ export default function AddGame() {
       
       // Auto-generate game title: "Team Name vs Opponent"
       const gameTitle = `${teamName} vs ${formData.Opponent}`;
+      
+      // Auto-detect season based on game date
+      const season = getSeasonFromDate(gameDateTime);
 
       const gameData = {
         team: formData.Team || null,
@@ -68,7 +72,8 @@ export default function AddGame() {
         location: formData.Venue || 'Home', // Changed from venue to location
         gameType: formData.GameType || 'League',
         status: formData.Status || 'Scheduled',
-        gameTitle: gameTitle // Auto-generated title
+        gameTitle: gameTitle, // Auto-generated title
+        season: season // Auto-detected season
       };
 
       const response = await createGame(gameData);
@@ -76,7 +81,7 @@ export default function AddGame() {
       if (response.data?.success) {
         return {
           success: true,
-          message: `${gameTitle} has been scheduled successfully!`
+          message: `${gameTitle} has been scheduled successfully for the ${season} season!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save game");
