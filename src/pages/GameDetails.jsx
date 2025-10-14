@@ -16,7 +16,9 @@ import {
   Zap,
   TrendingUp,
   X,
-  FileText
+  FileText,
+  Lock,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,18 +100,6 @@ export default function GameDetails() {
     refreshData
   } = useData();
   
-  // Debug data availability
-  useEffect(() => {
-    console.log('🎮 DataContext Debug:', {
-      games: games?.length || 0,
-      players: players?.length || 0,
-      gameRosters: gameRosters?.length || 0,
-      teams: teams?.length || 0,
-      isLoading,
-      error
-    });
-  }, [games, players, gameRosters, teams, isLoading, error]);
-  
   // Local state
   const [game, setGame] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -131,6 +121,18 @@ export default function GameDetails() {
 
   // Match report state
   const [showMatchReport, setShowMatchReport] = useState(false);
+
+  // Draft state for localStorage
+  const [draftData, setDraftData] = useState({
+    scores: { ourScore: null, opponentScore: null },
+    playerReports: {},
+    teamSummaries: {
+      defenseSummary: '',
+      midfieldSummary: '',
+      attackSummary: '',
+      generalSummary: ''
+    }
+  });
 
   // Load game data
   useEffect(() => {
@@ -164,65 +166,45 @@ export default function GameDetails() {
     }
   }, [gameId, games]);
 
+  // Load draft data from localStorage
+  useEffect(() => {
+    if (gameId) {
+      const savedDraft = localStorage.getItem(`gameDraft_${gameId}`);
+      if (savedDraft) {
+        try {
+          const parsedDraft = JSON.parse(savedDraft);
+          setDraftData(parsedDraft);
+          console.log('🎮 Loaded draft data from localStorage:', parsedDraft);
+        } catch (error) {
+          console.error('🎮 Error parsing draft data:', error);
+        }
+      }
+    }
+  }, [gameId]);
+
+  // Save draft data to localStorage
+  useEffect(() => {
+    if (gameId && draftData) {
+      localStorage.setItem(`gameDraft_${gameId}`, JSON.stringify(draftData));
+      console.log('🎮 Saved draft data to localStorage:', draftData);
+    }
+  }, [gameId, draftData]);
+
   // Load game roster
   useEffect(() => {
     if (!gameId) return;
 
     console.log('🎮 Loading game roster for gameId:', gameId);
     console.log('🎮 Available gameRosters:', gameRosters?.length || 0);
-    console.log('🎮 Sample gameRoster:', gameRosters?.[0]);
 
     if (!gameRosters || gameRosters.length === 0) {
       console.log('🎮 No game rosters available, creating mock data for testing');
-      
-      // Create mock roster data for testing
       const mockRoster = [
-        {
-          _id: 'mock-roster-1',
-          game: gameId,
-          player: {
-            _id: 'mock-player-1',
-            fullName: 'John Smith',
-            kitNumber: 10,
-            position: 'Midfielder'
-          },
-          status: 'Starting Lineup'
-        },
-        {
-          _id: 'mock-roster-2',
-          game: gameId,
-          player: {
-            _id: 'mock-player-2',
-            fullName: 'Mike Johnson',
-            kitNumber: 1,
-            position: 'Goalkeeper'
-          },
-          status: 'Starting Lineup'
-        },
-        {
-          _id: 'mock-roster-3',
-          game: gameId,
-          player: {
-            _id: 'mock-player-3',
-            fullName: 'David Brown',
-            kitNumber: 5,
-            position: 'Defender'
-          },
-          status: 'Bench'
-        },
-        {
-          _id: 'mock-roster-4',
-          game: gameId,
-          player: {
-            _id: 'mock-player-4',
-            fullName: 'Alex Wilson',
-            kitNumber: 9,
-            position: 'Forward'
-          },
-          status: 'Not in Squad'
-        }
+        { _id: 'mock-roster-1', game: gameId, player: { _id: 'mock-player-1', fullName: 'John Smith', kitNumber: 10, position: 'Midfielder' }, status: 'Starting Lineup' },
+        { _id: 'mock-roster-2', game: gameId, player: { _id: 'mock-player-2', fullName: 'Mike Johnson', kitNumber: 1, position: 'Goalkeeper' }, status: 'Starting Lineup' },
+        { _id: 'mock-roster-3', game: gameId, player: { _id: 'mock-player-3', fullName: 'David Brown', kitNumber: 5, position: 'Defender' }, status: 'Bench' },
+        { _id: 'mock-roster-4', game: gameId, player: { _id: 'mock-player-4', fullName: 'Alex Wilson', kitNumber: 9, position: 'Forward' }, status: 'Not in Squad' }
       ];
-      
       setGameRoster(mockRoster);
       return;
     }
@@ -230,17 +212,11 @@ export default function GameDetails() {
     const rosterForGame = gameRosters.filter(roster => {
       const rosterGameId = roster.game?._id || roster.game || roster.Game?.[0];
       const match = rosterGameId === gameId;
-      console.log('🎮 Checking roster:', {
-        rosterGameId,
-        gameId,
-        match,
-        roster: roster
-      });
+      console.log('🎮 Checking roster:', { rosterGameId, gameId, match, roster: roster });
       return match;
     });
 
     console.log('🎮 Game roster loaded:', rosterForGame.length, 'players');
-    console.log('🎮 Roster details:', rosterForGame);
     setGameRoster(rosterForGame);
   }, [gameId, gameRosters]);
 
@@ -271,7 +247,19 @@ export default function GameDetails() {
       await refreshData();
       setIsEditing(false);
       
-      // Show success message (you can add a toast here)
+      // Clear draft data after successful save
+      localStorage.removeItem(`gameDraft_${gameId}`);
+      setDraftData({
+        scores: { ourScore: null, opponentScore: null },
+        playerReports: {},
+        teamSummaries: {
+          defenseSummary: '',
+          midfieldSummary: '',
+          attackSummary: '',
+          generalSummary: ''
+        }
+      });
+      
       alert('Game updated successfully!');
     } catch (error) {
       console.error('🎮 Error updating game:', error);
@@ -302,27 +290,23 @@ export default function GameDetails() {
 
   // Get team players for this game
   const getTeamPlayers = () => {
-    if (!game || !players || !teams) return [];
+    if (!game || !players) return [];
     
-    const gameTeam = game.team || game.Team;
-    const teamId = gameTeam?._id || gameTeam || gameTeam?.[0];
+    const teamId = game.team || game.Team || game.teamId || game.TeamId;
+    console.log('🎮 Getting players for team:', teamId);
     
     return players.filter(player => {
-      const playerTeam = player.team || player.Team;
-      const playerTeamId = playerTeam?._id || playerTeam || playerTeam?.[0];
+      const playerTeamId = player.team || player.Team || player.teamId || player.TeamId;
       return playerTeamId === teamId;
     });
   };
 
-  // Add players to roster
+  // Handle add players to roster
   const handleAddPlayers = async (selectedPlayers) => {
-    if (!gameId || selectedPlayers.length === 0) return;
-
     setIsLoadingRoster(true);
     try {
       const token = localStorage.getItem('jwtToken');
       
-      // Add each player to the roster
       for (const player of selectedPlayers) {
         const response = await fetch('http://localhost:3001/api/game-rosters', {
           method: 'POST',
@@ -338,13 +322,13 @@ export default function GameDetails() {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to add player ${player.fullName || player.FullName}`);
+          throw new Error(`Failed to add player ${player.fullName}`);
         }
       }
 
-      // Refresh data
       await refreshData();
-      alert(`Successfully added ${selectedPlayers.length} player(s) to the roster!`);
+      setShowPlayerModal(false);
+      alert('Players added to roster successfully!');
     } catch (error) {
       console.error('🎮 Error adding players:', error);
       alert('Failed to add players. Please try again.');
@@ -353,7 +337,7 @@ export default function GameDetails() {
     }
   };
 
-  // Update player status
+  // Handle update player status
   const handleUpdatePlayerStatus = async (rosterId, newStatus) => {
     try {
       const token = localStorage.getItem('jwtToken');
@@ -370,7 +354,6 @@ export default function GameDetails() {
         throw new Error('Failed to update player status');
       }
 
-      // Refresh data
       await refreshData();
     } catch (error) {
       console.error('🎮 Error updating player status:', error);
@@ -378,10 +361,8 @@ export default function GameDetails() {
     }
   };
 
-  // Remove player from roster
+  // Handle remove player from roster
   const handleRemovePlayer = async (rosterId) => {
-    if (!confirm('Are you sure you want to remove this player from the roster?')) return;
-
     try {
       const token = localStorage.getItem('jwtToken');
       const response = await fetch(`http://localhost:3001/api/game-rosters/${rosterId}`, {
@@ -395,25 +376,20 @@ export default function GameDetails() {
         throw new Error('Failed to remove player');
       }
 
-      // Refresh data
       await refreshData();
-      alert('Player removed from roster successfully!');
     } catch (error) {
       console.error('🎮 Error removing player:', error);
       alert('Failed to remove player. Please try again.');
     }
   };
 
-  // Handle formation change
-  const handleFormationChange = (newFormation) => {
-    setCurrentFormation(newFormation);
+  // Formation handlers
+  const handleFormationChange = (formation) => {
+    setCurrentFormation(formation);
   };
 
-  // Save formation
   const handleSaveFormation = async (formation) => {
     try {
-      // Here you would save the formation to the database
-      // For now, we'll just show a success message
       console.log('🎮 Saving formation:', formation);
       alert('Formation saved successfully!');
       setShowFormationEditor(false);
@@ -436,7 +412,7 @@ export default function GameDetails() {
 
   const handleSavePerformance = (performanceData) => {
     console.log('🎮 Saving performance data:', performanceData);
-    // TODO: Save performance data to backend
+    // TODO: Save performance data to backend and create TimelineEvent
     setShowPerformanceModal(false);
     setSelectedPlayerForPerformance(null);
   };
@@ -452,8 +428,74 @@ export default function GameDetails() {
 
   const handleSaveMatchReport = (reportData) => {
     console.log('🎮 Saving match report:', reportData);
-    // TODO: Save match report to backend
     setShowMatchReport(false);
+  };
+
+  // Handle draft data updates
+  const handleDraftUpdate = (section, field, value) => {
+    setDraftData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  };
+
+  // Handle final submission and lock
+  const handleSubmitAndLock = async () => {
+    if (!gameId) return;
+
+    setIsSaving(true);
+    try {
+      // Save all draft data to backend
+      const token = localStorage.getItem('jwtToken');
+      
+      // Update game with final scores and summaries
+      const gameUpdate = {
+        ourScore: draftData.scores.ourScore,
+        opponentScore: draftData.scores.opponentScore,
+        defenseSummary: draftData.teamSummaries.defenseSummary,
+        midfieldSummary: draftData.teamSummaries.midfieldSummary,
+        attackSummary: draftData.teamSummaries.attackSummary,
+        generalSummary: draftData.teamSummaries.generalSummary,
+        status: 'Done'
+      };
+
+      const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(gameUpdate)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit final report');
+      }
+
+      // Clear draft data
+      localStorage.removeItem(`gameDraft_${gameId}`);
+      setDraftData({
+        scores: { ourScore: null, opponentScore: null },
+        playerReports: {},
+        teamSummaries: {
+          defenseSummary: '',
+          midfieldSummary: '',
+          attackSummary: '',
+          generalSummary: ''
+        }
+      });
+
+      await refreshData();
+      alert('Final report submitted and locked successfully!');
+    } catch (error) {
+      console.error('🎮 Error submitting final report:', error);
+      alert('Failed to submit final report. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Loading state
@@ -465,27 +507,41 @@ export default function GameDetails() {
             <div className="absolute inset-0 rounded-full border-4 border-cyan-500/30"></div>
             <div className="absolute inset-0 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin"></div>
             <div className="absolute inset-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
+              <Trophy className="w-8 h-8 text-white" />
             </div>
           </div>
-          <p className="text-slate-300 font-medium text-lg">Loading Game Details...</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Loading Game Details</h2>
+          <p className="text-slate-400">Fetching match information...</p>
         </div>
       </div>
     );
   }
 
-  // No game found
+  if (error) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Game</h2>
+          <p className="text-slate-400 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} className="bg-cyan-600 hover:bg-cyan-700 text-white">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!game) {
     return (
       <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-slate-300 font-medium text-lg mb-4">Game not found</p>
+          <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Game Not Found</h2>
+          <p className="text-slate-400 mb-4">The requested game could not be found.</p>
           <Link to={createPageUrl("GamesSchedule")}>
-            <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-              Back to Games Schedule
+            <Button className="bg-cyan-600 hover:bg-cyan-700 text-white">
+              Back to Games
             </Button>
           </Link>
         </div>
@@ -503,6 +559,11 @@ export default function GameDetails() {
   const ourScore = game.ourScore ?? game.OurScore;
   const opponentScore = game.opponentScore ?? game.OpponentScore;
   const finalScore = game.finalScoreDisplay || game.FinalScore_Display;
+
+  // Determine if this is a pre-game or post-game state
+  const isPreGame = status === 'Scheduled';
+  const isPostGame = status === 'Played' || status === 'Done';
+  const isReadOnly = status === 'Done' && !isEditing;
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col overflow-hidden">
@@ -548,13 +609,15 @@ export default function GameDetails() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button
-                onClick={handleOpenMatchReport}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Generate Report
-              </Button>
+              {isPostGame && (
+                <Button
+                  onClick={handleOpenMatchReport}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generate Report
+                </Button>
+              )}
               
               {finalScore && !isEditing && (
                 <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 rounded-xl px-6 py-3">
@@ -565,493 +628,425 @@ export default function GameDetails() {
                 </div>
               )}
               
-              {!isEditing ? (
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Game
-                </Button>
-              ) : (
+              {!isReadOnly && (
                 <>
-                  <Button
-                    onClick={handleCancel}
-                    variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
+                  {!isEditing ? (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Game
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
                         <Save className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                      <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  )}
                 </>
+              )}
+
+              {isReadOnly && (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Lock className="w-4 h-4" />
+                  <span className="text-sm">Report Locked</span>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Basic Game Info */}
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Trophy className="w-5 h-5 text-cyan-400" />
-                Game Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Status</Label>
-                  {isEditing ? (
-                    <Select
-                      value={editedGame?.status || 'Scheduled'}
-                      onValueChange={(value) => setEditedGame(prev => ({ ...prev, status: value }))}
-                    >
-                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Scheduled">Scheduled</SelectItem>
-                        <SelectItem value="Played">Played</SelectItem>
-                        <SelectItem value="Done">Done</SelectItem>
-                        <SelectItem value="Postponed">Postponed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
+      {/* Two-Column Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Column - Sticky Player Navigation */}
+        <div className="w-80 bg-slate-800/50 border-r border-slate-700 flex flex-col">
+          <div className="p-4 border-b border-slate-700">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              Squad ({gameRoster.length})
+            </h3>
+            {isPreGame && (
+              <Button
+                onClick={() => setShowPlayerModal(true)}
+                className="mt-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm"
+                disabled={isLoadingRoster}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Add Players
+              </Button>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-2">
+              {['Starting Lineup', 'Bench', 'Not in Squad', 'Unavailable'].map(status => {
+                const playersInStatus = gameRoster.filter(roster => roster.status === status || roster.Status === status);
+                if (playersInStatus.length === 0) return null;
+                
+                return (
+                  <div key={status} className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getStatusDotColor(status)}`} />
-                      <span className="text-white">{status}</span>
+                      <h4 className="font-semibold text-slate-300 text-sm">{status}</h4>
+                      <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600 text-xs">
+                        {playersInStatus.length}
+                      </Badge>
                     </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-300">Location</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedGame?.location || ''}
-                      onChange={(e) => setEditedGame(prev => ({ ...prev, location: e.target.value }))}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="Enter location"
-                    />
-                  ) : (
-                    <p className="text-white">{location}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Score Section */}
-              {(status === 'Played' || status === 'Done' || isEditing) && (
-                <div className="pt-4 border-t border-slate-700">
-                  <Label className="text-slate-300 mb-3 block">Match Score</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Label className="text-xs text-slate-400 mb-2 block">Our Score</Label>
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          min="0"
-                          value={editedGame?.ourScore ?? ''}
-                          onChange={(e) => setEditedGame(prev => ({ ...prev, ourScore: e.target.value ? parseInt(e.target.value) : null }))}
-                          className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
-                          placeholder="0"
-                        />
-                      ) : (
-                        <div className="bg-slate-700/50 rounded-lg p-4 text-center">
-                          <p className="text-3xl font-bold text-cyan-400">{ourScore ?? '-'}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="text-2xl font-bold text-slate-500">vs</div>
-                    
-                    <div className="flex-1">
-                      <Label className="text-xs text-slate-400 mb-2 block">Opponent Score</Label>
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          min="0"
-                          value={editedGame?.opponentScore ?? ''}
-                          onChange={(e) => setEditedGame(prev => ({ ...prev, opponentScore: e.target.value ? parseInt(e.target.value) : null }))}
-                          className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
-                          placeholder="0"
-                        />
-                      ) : (
-                        <div className="bg-slate-700/50 rounded-lg p-4 text-center">
-                          <p className="text-3xl font-bold text-red-400">{opponentScore ?? '-'}</p>
-                        </div>
-                      )}
+                    <div className="space-y-1">
+                      {playersInStatus.map(roster => {
+                        const player = roster.player || roster.Player?.[0];
+                        const fullName = player?.fullName || player?.FullName || 'Unknown Player';
+                        const kitNumber = player?.kitNumber || player?.KitNumber || '';
+                        const position = player?.position || player?.Position || 'Unknown';
+                        const rosterId = roster._id || roster.id;
+                        
+                        return (
+                          <div
+                            key={rosterId}
+                            className="p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:bg-slate-700/70 cursor-pointer transition-colors"
+                            onClick={() => {
+                              if (isPostGame && !isReadOnly) {
+                                handleOpenPerformanceModal(player);
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              {kitNumber && (
+                                <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
+                                  {kitNumber}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white text-sm truncate">{fullName}</p>
+                                <p className="text-xs text-slate-400">{position}</p>
+                              </div>
+                              {isPostGame && !isReadOnly && (
+                                <div className="text-xs text-cyan-400">Stats</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-          {/* Match Analysis - Only show for played games or in edit mode */}
-          {(status === 'Played' || status === 'Done' || isEditing) && (
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Basic Game Info */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
-                  <Target className="w-5 h-5 text-purple-400" />
-                  Match Analysis
+                  <Trophy className="w-5 h-5 text-cyan-400" />
+                  Game Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-slate-300">
-                      <Shield className="w-4 h-4 text-blue-400" />
-                      Defense Summary
-                    </Label>
+                    <Label className="text-slate-300">Status</Label>
                     {isEditing ? (
-                      <Textarea
-                        value={editedGame?.defenseSummary || ''}
-                        onChange={(e) => setEditedGame(prev => ({ ...prev, defenseSummary: e.target.value }))}
-                        placeholder="How did the defense perform?"
-                        className="bg-slate-700 border-slate-600 text-white min-h-[100px]"
-                      />
+                      <Select
+                        value={editedGame?.status || 'Scheduled'}
+                        onValueChange={(value) => setEditedGame(prev => ({ ...prev, status: value }))}
+                      >
+                        <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Scheduled">Scheduled</SelectItem>
+                          <SelectItem value="Played">Played</SelectItem>
+                          <SelectItem value="Done">Done</SelectItem>
+                          <SelectItem value="Postponed">Postponed</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
-                      <p className="text-slate-300 bg-slate-700/30 p-3 rounded-lg min-h-[100px]">
-                        {game.defenseSummary || game.DefenseSummary || 'No summary available'}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(status)}`} />
+                        <span className="text-white">{status}</span>
+                      </div>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-slate-300">
-                      <Zap className="w-4 h-4 text-yellow-400" />
-                      Midfield Summary
-                    </Label>
+                    <Label className="text-slate-300">Location</Label>
                     {isEditing ? (
-                      <Textarea
-                        value={editedGame?.midfieldSummary || ''}
-                        onChange={(e) => setEditedGame(prev => ({ ...prev, midfieldSummary: e.target.value }))}
-                        placeholder="How did the midfield perform?"
-                        className="bg-slate-700 border-slate-600 text-white min-h-[100px]"
+                      <Input
+                        value={editedGame?.location || ''}
+                        onChange={(e) => setEditedGame(prev => ({ ...prev, location: e.target.value }))}
+                        className="bg-slate-700 border-slate-600 text-white"
+                        placeholder="Enter location"
                       />
                     ) : (
-                      <p className="text-slate-300 bg-slate-700/30 p-3 rounded-lg min-h-[100px]">
-                        {game.midfieldSummary || game.MidfieldSummary || 'No summary available'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-slate-300">
-                      <TrendingUp className="w-4 h-4 text-red-400" />
-                      Attack Summary
-                    </Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editedGame?.attackSummary || ''}
-                        onChange={(e) => setEditedGame(prev => ({ ...prev, attackSummary: e.target.value }))}
-                        placeholder="How did the attack perform?"
-                        className="bg-slate-700 border-slate-600 text-white min-h-[100px]"
-                      />
-                    ) : (
-                      <p className="text-slate-300 bg-slate-700/30 p-3 rounded-lg min-h-[100px]">
-                        {game.attackSummary || game.AttackSummary || 'No summary available'}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-slate-300">
-                      <Trophy className="w-4 h-4 text-green-400" />
-                      General Summary
-                    </Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editedGame?.generalSummary || ''}
-                        onChange={(e) => setEditedGame(prev => ({ ...prev, generalSummary: e.target.value }))}
-                        placeholder="Overall game summary"
-                        className="bg-slate-700 border-slate-600 text-white min-h-[100px]"
-                      />
-                    ) : (
-                      <p className="text-slate-300 bg-slate-700/30 p-3 rounded-lg min-h-[100px]">
-                        {game.generalSummary || game.GeneralSummary || 'No summary available'}
-                      </p>
+                      <p className="text-white">{location}</p>
                     )}
                   </div>
                 </div>
+
+                {/* Score Section - Only show for post-game or in edit mode */}
+                {(isPostGame || isEditing) && (
+                  <div className="pt-4 border-t border-slate-700">
+                    <Label className="text-slate-300 mb-3 block">Match Score</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label className="text-xs text-slate-400 mb-2 block">Our Score</Label>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            min="0"
+                            value={editedGame?.ourScore ?? ''}
+                            onChange={(e) => setEditedGame(prev => ({ ...prev, ourScore: e.target.value ? parseInt(e.target.value) : null }))}
+                            className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
+                            placeholder="0"
+                          />
+                        ) : (
+                          <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p className="text-3xl font-bold text-cyan-400">{ourScore ?? '-'}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="text-2xl font-bold text-slate-500">vs</div>
+                      
+                      <div className="flex-1">
+                        <Label className="text-xs text-slate-400 mb-2 block">Opponent Score</Label>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            min="0"
+                            value={editedGame?.opponentScore ?? ''}
+                            onChange={(e) => setEditedGame(prev => ({ ...prev, opponentScore: e.target.value ? parseInt(e.target.value) : null }))}
+                            className="bg-slate-700 border-slate-600 text-white text-center text-2xl font-bold"
+                            placeholder="0"
+                          />
+                        ) : (
+                          <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p className="text-3xl font-bold text-red-400">{opponentScore ?? '-'}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
 
-          {/* Player Roster Management */}
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Users className="w-5 h-5 text-cyan-400" />
-                  Player Roster ({gameRoster.length} players)
-                </CardTitle>
-                <Button
-                  onClick={() => setShowPlayerModal(true)}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                  disabled={isLoadingRoster}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Add Players
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {gameRoster.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">No players in roster yet</p>
-                  <p className="text-slate-500 text-sm mb-4">
-                    Game ID: {gameId} | Available gameRosters: {gameRosters?.length || 0} | Using mock data for testing
-                  </p>
-                  <Button
-                    onClick={() => setShowPlayerModal(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                  >
-                    Add Players to Roster
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Group players by status */}
-                  {['Starting Lineup', 'Bench', 'Not in Squad', 'Unavailable'].map(status => {
-                    const playersInStatus = gameRoster.filter(roster => 
-                      roster.status === status || roster.Status === status
-                    );
-                    
-                    if (playersInStatus.length === 0) return null;
+            {/* Pre-Game Content */}
+            {isPreGame && (
+              <>
+                {/* Squad Management */}
+                <Card className="bg-slate-800/50 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Users className="w-5 h-5 text-cyan-400" />
+                      Squad Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-300 mb-4">
+                      Manage your squad for this match. Assign players to Starting Lineup, Bench, or mark as Unavailable.
+                    </p>
+                    <Button
+                      onClick={() => setShowPlayerModal(true)}
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                      disabled={isLoadingRoster}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Add Players to Squad
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                    return (
-                      <div key={status} className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-300">{status}</h4>
-                          <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
-                            {playersInStatus.length}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {playersInStatus.map(roster => {
-                            const player = roster.player || roster.Player?.[0];
-                            const playerId = player?._id || player?.id;
-                            const fullName = player?.fullName || player?.FullName || 'Unknown Player';
-                            const kitNumber = player?.kitNumber || player?.KitNumber || '';
-                            const position = player?.position || player?.Position || 'Unknown';
-                            const rosterId = roster._id || roster.id;
-
-                            return (
-                              <Card key={rosterId} className="bg-slate-700/50 border-slate-600">
-                                <CardContent className="p-3">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      {kitNumber && (
-                                        <div className="w-8 h-8 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
-                                          {kitNumber}
-                                        </div>
-                                      )}
-                                      <div className="min-w-0 flex-1">
-                                        <p className="font-medium text-white truncate">{fullName}</p>
-                                        <p className="text-xs text-slate-400">{position}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2">
-                                      <Select
-                                        value={roster.status || roster.Status || 'Not in Squad'}
-                                        onValueChange={(value) => handleUpdatePlayerStatus(rosterId, value)}
-                                      >
-                                        <SelectTrigger className="w-32 h-8 bg-slate-600 border-slate-500 text-white text-xs">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="Starting Lineup">Starting</SelectItem>
-                                          <SelectItem value="Bench">Bench</SelectItem>
-                                          <SelectItem value="Not in Squad">Not in Squad</SelectItem>
-                                          <SelectItem value="Unavailable">Unavailable</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleOpenPerformanceModal(player)}
-                                        className="h-8 px-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 text-xs"
-                                      >
-                                        Stats
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleRemovePlayer(rosterId)}
-                                        className="h-8 w-8 p-0 border-red-500/50 text-red-400 hover:bg-red-500/20"
-                                      >
-                                        ×
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Formation Editor */}
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Target className="w-5 h-5 text-cyan-400" />
-                  Formation & Tactics
-                </CardTitle>
-                <Button
-                  onClick={() => setShowFormationEditor(true)}
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                >
-                  <Target className="w-4 h-4 mr-2" />
-                  Edit Formation
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {currentFormation.length === 0 ? (
-                <div className="text-center py-8">
-                  <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-4">No formation set yet</p>
-                  <Button
-                    onClick={() => setShowFormationEditor(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                  >
-                    Create Formation
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map(position => {
-                      const playersInPosition = currentFormation.filter(pos => 
-                        pos.position === position && pos.player
-                      );
-                      
-                      return (
-                        <div key={position} className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Target className="w-4 h-4 text-cyan-400" />
-                            <span className="text-sm font-medium text-slate-300">{position}s</span>
-                            <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
-                              {playersInPosition.length}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-1">
-                            {playersInPosition.map((pos, index) => (
-                              <div key={index} className="text-xs text-slate-400 truncate">
-                                {pos.playerName || 'Unknown'}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
+                {/* Tactical Setup */}
+                <Card className="bg-slate-800/50 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Target className="w-5 h-5 text-cyan-400" />
+                      Tactical Setup
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-300 mb-4">
+                      Set up your team formation and tactics for this match.
+                    </p>
                     <Button
                       onClick={() => setShowFormationEditor(true)}
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white"
                     >
                       <Target className="w-4 h-4 mr-2" />
-                      Edit Formation
+                      Open Formation Editor
                     </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <TrendingUp className="w-5 h-5 text-purple-400" />
-                Performance Tracking
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                    <div className="text-2xl font-bold text-cyan-400 mb-1">
-                      {gameRoster.filter(roster => roster.status === 'Starting Lineup').length}
+            {/* Post-Game Content */}
+            {isPostGame && (
+              <>
+                {/* Individual Player Performance Reports */}
+                <Card className="bg-slate-800/50 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <TrendingUp className="w-5 h-5 text-cyan-400" />
+                      Individual Player Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-300 mb-4">
+                      Click on players in the left sidebar to track their individual performance and create detailed reports.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                        <div className="text-2xl font-bold text-cyan-400 mb-1">
+                          {gameRoster.filter(roster => roster.status === 'Starting Lineup').length}
+                        </div>
+                        <div className="text-sm text-slate-400">Starting Players</div>
+                      </div>
+                      <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-400 mb-1">
+                          {gameRoster.filter(roster => roster.status === 'Bench').length}
+                        </div>
+                        <div className="text-sm text-slate-400">Bench Players</div>
+                      </div>
+                      <div className="text-center p-4 bg-slate-700/50 rounded-lg">
+                        <div className="text-2xl font-bold text-yellow-400 mb-1">
+                          {gameRoster.length}
+                        </div>
+                        <div className="text-sm text-slate-400">Total Squad</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-400">Starting Players</div>
-                  </div>
-                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-400 mb-1">
-                      {gameRoster.filter(roster => roster.status === 'Bench').length}
+                  </CardContent>
+                </Card>
+
+                {/* Team Performance Summaries */}
+                <Card className="bg-slate-800/50 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Shield className="w-5 h-5 text-cyan-400" />
+                      Team Performance Summaries
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-slate-300">Defense Summary</Label>
+                        {isReadOnly ? (
+                          <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
+                            {game.defenseSummary || game.DefenseSummary || 'No summary provided'}
+                          </div>
+                        ) : (
+                          <Textarea
+                            value={draftData.teamSummaries.defenseSummary}
+                            onChange={(e) => handleDraftUpdate('teamSummaries', 'defenseSummary', e.target.value)}
+                            className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
+                            placeholder="Describe the defensive performance..."
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Midfield Summary</Label>
+                        {isReadOnly ? (
+                          <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
+                            {game.midfieldSummary || game.MidfieldSummary || 'No summary provided'}
+                          </div>
+                        ) : (
+                          <Textarea
+                            value={draftData.teamSummaries.midfieldSummary}
+                            onChange={(e) => handleDraftUpdate('teamSummaries', 'midfieldSummary', e.target.value)}
+                            className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
+                            placeholder="Describe the midfield performance..."
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Attack Summary</Label>
+                        {isReadOnly ? (
+                          <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
+                            {game.attackSummary || game.AttackSummary || 'No summary provided'}
+                          </div>
+                        ) : (
+                          <Textarea
+                            value={draftData.teamSummaries.attackSummary}
+                            onChange={(e) => handleDraftUpdate('teamSummaries', 'attackSummary', e.target.value)}
+                            className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
+                            placeholder="Describe the attacking performance..."
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">General Summary</Label>
+                        {isReadOnly ? (
+                          <div className="text-slate-300 mt-2 p-3 bg-slate-700/50 rounded-lg">
+                            {game.generalSummary || game.GeneralSummary || 'No summary provided'}
+                          </div>
+                        ) : (
+                          <Textarea
+                            value={draftData.teamSummaries.generalSummary}
+                            onChange={(e) => handleDraftUpdate('teamSummaries', 'generalSummary', e.target.value)}
+                            className="w-full h-24 bg-slate-700 border-slate-600 text-white placeholder-slate-400 resize-none"
+                            placeholder="Overall team performance summary..."
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-400">Bench Players</div>
-                  </div>
-                  <div className="text-center p-4 bg-slate-700/50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-400 mb-1">
-                      {gameRoster.length}
-                    </div>
-                    <div className="text-sm text-slate-400">Total Roster</div>
-                  </div>
-                </div>
-                
-                <div className="border-t border-slate-600 pt-4">
-                  <p className="text-slate-300 text-sm mb-3">
-                    Click "Stats" on any player card above to track their performance metrics including goals, assists, passes, tackles, and more.
-                  </p>
-                  <div className="flex items-center gap-2 text-slate-400 text-sm">
-                    <Target className="w-4 h-4" />
-                    <span>Track individual player statistics and performance ratings</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+
+                {/* Submit & Lock Final Report */}
+                {!isReadOnly && (
+                  <Card className="bg-slate-800/50 border-slate-700 border-dashed">
+                    <CardContent className="p-8 text-center">
+                      <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-white mb-2">Submit & Lock Final Report</h3>
+                      <p className="text-slate-400 mb-4">
+                        Once you've completed all performance reports and team summaries, submit the final report to lock all data.
+                      </p>
+                      <Button
+                        onClick={handleSubmitAndLock}
+                        disabled={isSaving}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Lock className="w-4 h-4 mr-2" />
+                        {isSaving ? 'Submitting...' : 'Submit & Lock Final Report'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Player Selection Modal */}
+      {/* Modals */}
       <PlayerSelectionModal
         isOpen={showPlayerModal}
         onClose={() => setShowPlayerModal(false)}
-        onConfirm={handleAddPlayers}
-        gameId={gameId}
+        onAddPlayers={handleAddPlayers}
+        availablePlayers={getTeamPlayers()}
         existingRoster={gameRoster}
-        teamPlayers={getTeamPlayers()}
+        isLoading={isLoadingRoster}
       />
 
-      {/* Formation Editor Modal */}
       {showFormationEditor && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
@@ -1061,15 +1056,10 @@ export default function GameDetails() {
                   <Target className="w-6 h-6 text-cyan-400" />
                   Formation Editor
                 </h2>
-                <Button
-                  onClick={() => setShowFormationEditor(false)}
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
+                <Button onClick={() => setShowFormationEditor(false)} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              
               <FormationEditor
                 gameRoster={gameRoster}
                 onFormationChange={handleFormationChange}
@@ -1081,7 +1071,6 @@ export default function GameDetails() {
         </div>
       )}
 
-      {/* Player Performance Modal */}
       <PlayerPerformanceModal
         isOpen={showPerformanceModal}
         onClose={handleClosePerformanceModal}
@@ -1090,7 +1079,6 @@ export default function GameDetails() {
         onSave={handleSavePerformance}
       />
 
-      {/* Match Report Modal */}
       <MatchReportModal
         isOpen={showMatchReport}
         onClose={handleCloseMatchReport}
