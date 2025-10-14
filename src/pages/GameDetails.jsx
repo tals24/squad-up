@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "../components/DataContext";
+import PlayerSelectionModal from "../components/PlayerSelectionModal";
 
 // Utility functions
 const getStatusColor = (status) => {
@@ -84,6 +85,9 @@ export default function GameDetails() {
 
   const { 
     games,
+    players,
+    gameRosters,
+    teams,
     isLoading,
     error,
     refreshData
@@ -94,6 +98,11 @@ export default function GameDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedGame, setEditedGame] = useState(null);
+  
+  // Roster state
+  const [gameRoster, setGameRoster] = useState([]);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [isLoadingRoster, setIsLoadingRoster] = useState(false);
 
   // Load game data
   useEffect(() => {
@@ -126,6 +135,19 @@ export default function GameDetails() {
       console.log('🎮 Game not found in games array');
     }
   }, [gameId, games]);
+
+  // Load game roster
+  useEffect(() => {
+    if (!gameId || !gameRosters) return;
+
+    const rosterForGame = gameRosters.filter(roster => {
+      const rosterGameId = roster.game?._id || roster.game || roster.Game?.[0];
+      return rosterGameId === gameId;
+    });
+
+    console.log('🎮 Game roster loaded:', rosterForGame.length, 'players');
+    setGameRoster(rosterForGame);
+  }, [gameId, gameRosters]);
 
   // Handle save
   const handleSave = async () => {
@@ -181,6 +203,110 @@ export default function GameDetails() {
       });
     }
     setIsEditing(false);
+  };
+
+  // Get team players for this game
+  const getTeamPlayers = () => {
+    if (!game || !players || !teams) return [];
+    
+    const gameTeam = game.team || game.Team;
+    const teamId = gameTeam?._id || gameTeam || gameTeam?.[0];
+    
+    return players.filter(player => {
+      const playerTeam = player.team || player.Team;
+      const playerTeamId = playerTeam?._id || playerTeam || playerTeam?.[0];
+      return playerTeamId === teamId;
+    });
+  };
+
+  // Add players to roster
+  const handleAddPlayers = async (selectedPlayers) => {
+    if (!gameId || selectedPlayers.length === 0) return;
+
+    setIsLoadingRoster(true);
+    try {
+      const token = localStorage.getItem('jwtToken');
+      
+      // Add each player to the roster
+      for (const player of selectedPlayers) {
+        const response = await fetch('http://localhost:3001/api/game-rosters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            game: gameId,
+            player: player._id || player.id,
+            status: 'Not in Squad'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to add player ${player.fullName || player.FullName}`);
+        }
+      }
+
+      // Refresh data
+      await refreshData();
+      alert(`Successfully added ${selectedPlayers.length} player(s) to the roster!`);
+    } catch (error) {
+      console.error('🎮 Error adding players:', error);
+      alert('Failed to add players. Please try again.');
+    } finally {
+      setIsLoadingRoster(false);
+    }
+  };
+
+  // Update player status
+  const handleUpdatePlayerStatus = async (rosterId, newStatus) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch(`http://localhost:3001/api/game-rosters/${rosterId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update player status');
+      }
+
+      // Refresh data
+      await refreshData();
+    } catch (error) {
+      console.error('🎮 Error updating player status:', error);
+      alert('Failed to update player status. Please try again.');
+    }
+  };
+
+  // Remove player from roster
+  const handleRemovePlayer = async (rosterId) => {
+    if (!confirm('Are you sure you want to remove this player from the roster?')) return;
+
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch(`http://localhost:3001/api/game-rosters/${rosterId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove player');
+      }
+
+      // Refresh data
+      await refreshData();
+      alert('Player removed from roster successfully!');
+    } catch (error) {
+      console.error('🎮 Error removing player:', error);
+      alert('Failed to remove player. Please try again.');
+    }
   };
 
   // Loading state
@@ -517,16 +643,147 @@ export default function GameDetails() {
             </Card>
           )}
 
+          {/* Player Roster Management */}
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Users className="w-5 h-5 text-cyan-400" />
+                  Player Roster ({gameRoster.length} players)
+                </CardTitle>
+                <Button
+                  onClick={() => setShowPlayerModal(true)}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  disabled={isLoadingRoster}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Add Players
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {gameRoster.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-4">No players in roster yet</p>
+                  <Button
+                    onClick={() => setShowPlayerModal(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  >
+                    Add Players to Roster
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Group players by status */}
+                  {['Starting Lineup', 'Bench', 'Not in Squad', 'Unavailable'].map(status => {
+                    const playersInStatus = gameRoster.filter(roster => 
+                      roster.status === status || roster.Status === status
+                    );
+                    
+                    if (playersInStatus.length === 0) return null;
+
+                    return (
+                      <div key={status} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-slate-300">{status}</h4>
+                          <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
+                            {playersInStatus.length}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {playersInStatus.map(roster => {
+                            const player = roster.player || roster.Player?.[0];
+                            const playerId = player?._id || player?.id;
+                            const fullName = player?.fullName || player?.FullName || 'Unknown Player';
+                            const kitNumber = player?.kitNumber || player?.KitNumber || '';
+                            const position = player?.position || player?.Position || 'Unknown';
+                            const rosterId = roster._id || roster.id;
+
+                            return (
+                              <Card key={rosterId} className="bg-slate-700/50 border-slate-600">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      {kitNumber && (
+                                        <div className="w-8 h-8 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
+                                          {kitNumber}
+                                        </div>
+                                      )}
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-medium text-white truncate">{fullName}</p>
+                                        <p className="text-xs text-slate-400">{position}</p>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      <Select
+                                        value={roster.status || roster.Status || 'Not in Squad'}
+                                        onValueChange={(value) => handleUpdatePlayerStatus(rosterId, value)}
+                                      >
+                                        <SelectTrigger className="w-32 h-8 bg-slate-600 border-slate-500 text-white text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Starting Lineup">Starting</SelectItem>
+                                          <SelectItem value="Bench">Bench</SelectItem>
+                                          <SelectItem value="Not in Squad">Not in Squad</SelectItem>
+                                          <SelectItem value="Unavailable">Unavailable</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleRemovePlayer(rosterId)}
+                                        className="h-8 w-8 p-0 border-red-500/50 text-red-400 hover:bg-red-500/20"
+                                      >
+                                        ×
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Placeholder for future sections */}
           <Card className="bg-slate-800/50 border-slate-700 border-dashed">
             <CardContent className="p-8 text-center">
-              <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-400 mb-2">Player Roster & Performance</h3>
-              <p className="text-sm text-slate-500">Coming in Phase 2-4: Player roster, formations, and performance tracking</p>
+              <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-400 mb-2">Formation & Tactics</h3>
+              <p className="text-sm text-slate-500">Coming in Phase 3: Formation editor with drag-and-drop functionality</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700 border-dashed">
+            <CardContent className="p-8 text-center">
+              <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-400 mb-2">Performance Tracking</h3>
+              <p className="text-sm text-slate-500">Coming in Phase 4: Individual player performance and statistics</p>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Player Selection Modal */}
+      <PlayerSelectionModal
+        isOpen={showPlayerModal}
+        onClose={() => setShowPlayerModal(false)}
+        onConfirm={handleAddPlayers}
+        gameId={gameId}
+        existingRoster={gameRoster}
+        teamPlayers={getTeamPlayers()}
+      />
     </div>
   );
 }
