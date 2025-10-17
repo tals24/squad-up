@@ -98,7 +98,7 @@ export default function GameDetails() {
     error,
     refreshData
   } = useData();
-  
+
   // Debug data availability
   useEffect(() => {
     console.log('🎮 DataContext Debug:', {
@@ -834,7 +834,6 @@ export default function GameDetails() {
                       </Button>
                 </CardContent>
               </Card>
-                )}
               </>
             )}
             </div>
