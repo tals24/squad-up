@@ -215,7 +215,11 @@ const FormationEditor = ({
     
     let playerData;
     try {
-      playerData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      // Try to get data from different formats
+      const jsonData = e.dataTransfer.getData('application/json');
+      const textData = e.dataTransfer.getData('text/plain');
+      playerData = JSON.parse(jsonData || textData);
+      console.log('🎮 Player data from drag:', playerData);
     } catch (error) {
       console.log('🎮 No drag data found, using draggedPlayer state');
       playerData = draggedPlayer;
@@ -476,18 +480,18 @@ const FormationEditor = ({
       </div>
 
       {/* Formation Canvas - Full Width & Height */}
-      <div className="h-full w-full flex flex-col">
-        <Card className="flex-1 bg-slate-800/50 border-slate-700 flex flex-col">
-          <CardContent className="p-4 flex-1 flex flex-col">
+      <div className="h-full w-full flex flex-col min-h-0">
+        <Card className="flex-1 bg-slate-800/50 border-slate-700 flex flex-col min-h-0">
+          <CardContent className="p-4 flex-1 flex flex-col min-h-0">
             <div 
-              className="relative flex-1"
+              className={`relative flex-1 min-h-0 ${isDragging ? 'ring-2 ring-cyan-500/50' : ''}`}
               onDragOver={handleCanvasDragOver}
               onDrop={handleCanvasDrop}
               title="Drop players here to assign positions"
             >
               <canvas
                 ref={canvasRef}
-                className="w-full h-full border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
+                className="w-full h-full min-h-[600px] border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
                 onClick={(e) => {
                     if (isReadOnly) return;
                     const canvas = canvasRef.current;
