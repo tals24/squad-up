@@ -475,21 +475,20 @@ const FormationEditor = ({
         </div>
       </div>
 
-      {/* Formation Canvas - Full Width */}
-      <div className="h-full w-full">
-        <div className="h-full">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div 
-                className="relative"
-                onDragOver={handleCanvasDragOver}
-                onDrop={handleCanvasDrop}
-                title="Drop players here to assign positions"
-              >
-                <canvas
-                  ref={canvasRef}
-                  className="w-full h-96 border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
-                  onClick={(e) => {
+      {/* Formation Canvas - Full Width & Height */}
+      <div className="h-full w-full flex flex-col">
+        <Card className="flex-1 bg-slate-800/50 border-slate-700 flex flex-col">
+          <CardContent className="p-4 flex-1 flex flex-col">
+            <div 
+              className="relative flex-1"
+              onDragOver={handleCanvasDragOver}
+              onDrop={handleCanvasDrop}
+              title="Drop players here to assign positions"
+            >
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
+                onClick={(e) => {
                     if (isReadOnly) return;
                     const canvas = canvasRef.current;
                     const rect = canvas.getBoundingClientRect();
@@ -525,8 +524,6 @@ const FormationEditor = ({
               </div>
             </CardContent>
           </Card>
-        </div>
-
       </div>
 
 

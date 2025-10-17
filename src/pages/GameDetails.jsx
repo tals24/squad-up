@@ -655,12 +655,23 @@ export default function GameDetails() {
                         return (
                           <div
                             key={rosterId}
-                            className="p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:bg-slate-700/70 cursor-pointer transition-colors"
+                            draggable={!isReadOnly}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('application/json', JSON.stringify(roster));
+                              e.currentTarget.classList.add('opacity-50');
+                            }}
+                            onDragEnd={(e) => {
+                              e.currentTarget.classList.remove('opacity-50');
+                            }}
+                            className={`p-2 rounded-lg bg-slate-700/50 border border-slate-600 hover:bg-slate-700/70 transition-colors ${
+                              isReadOnly ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
+                            }`}
                             onClick={() => {
                               if (isPostGame && !isReadOnly) {
                                 handleOpenPerformanceModal(player);
                               }
                             }}
+                            title={isReadOnly ? 'Read-only mode' : 'Drag to formation or click for details'}
                           >
                             <div className="flex items-center gap-2">
                               {kitNumber && (
