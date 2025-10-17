@@ -214,17 +214,21 @@ export default function GameDetails() {
     console.log('🎮 Available players:', players?.length || 0);
     console.log('🎮 Sample player:', players?.[0]);
 
-    const teamId = game.team || game.Team || game.teamId || game.TeamId;
+    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    const teamId = typeof teamObj === 'object' ? teamObj._id : teamObj;
     console.log('🎮 Team ID for this game:', teamId);
+    console.log('🎮 Team object:', teamObj);
 
     if (!teamId) {
       console.log('🎮 No team ID found for this game');
-        return;
+      return;
     }
 
     // Get all players from the team
     const teamPlayers = players.filter(player => {
-      const playerTeamId = player.team || player.Team || player.teamId || player.TeamId;
+      const playerTeamObj = player.team || player.Team || player.teamId || player.TeamId;
+      const playerTeamId = typeof playerTeamObj === 'object' ? playerTeamObj._id : playerTeamObj;
+      
       console.log('🎮 Checking player:', {
         playerName: player.fullName || player.FullName,
         playerTeamId,
@@ -617,14 +621,15 @@ export default function GameDetails() {
 
       {/* Two-Column Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Column - Sticky Player Navigation */}
+        {/* Left Column - Game Day Roster Sidebar */}
         <div className="w-80 bg-slate-800/50 border-r border-slate-700 flex flex-col">
           <div className="p-4 border-b border-slate-700">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
               Game Day Roster ({gameRoster.length})
-                </h3>
-                        </div>
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Drag players to the formation or click to assign</p>
+          </div>
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-2">
               {['Starting Lineup', 'Bench', 'Not in Squad', 'Unavailable'].map(status => {
@@ -683,28 +688,51 @@ export default function GameDetails() {
           </div>
 
         {/* Main Content Area - Full width tactical board */}
-        <div className="flex-1 overflow-hidden">
-          {/* Tactical Setup - Full page tactical board */}
-          <div className="h-full bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-700 flex-shrink-0">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Target className="w-6 h-6 text-cyan-400" />
-                Tactical Setup
-              </h2>
-              <p className="text-slate-400 mt-2">Set up your team formation and tactics for this match</p>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <FormationEditor
-                gameRoster={gameRoster}
-                onFormationChange={handleFormationChange}
-                onSave={handleSaveFormation}
-                isReadOnly={isReadOnly}
-              />
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Tactical Setup Header */}
+          <div className="p-4 border-b border-slate-700 flex-shrink-0 bg-slate-800/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                  <Target className="w-5 h-5 text-cyan-400" />
+                  Tactical Setup
+                </h2>
+                <p className="text-sm text-slate-400 mt-1">Set up your team formation and tactics for this match</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setCurrentFormation(formationTemplates['4-3-3'])}
+                  variant="outline"
+                  size="sm"
+                  className="text-slate-300 border-slate-600 hover:bg-slate-700"
+                >
+                  Reset Formation
+                </Button>
+                <Button
+                  onClick={handleSaveFormation}
+                  disabled={isSaving}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                >
+                  {isSaving ? 'Saving...' : 'Save Formation'}
+                </Button>
+              </div>
             </div>
           </div>
 
-            {/* Post-Game Content */}
-            {isPostGame && (
+          {/* Tactical Board - Full Size */}
+          <div className="flex-1 overflow-hidden">
+            <FormationEditor
+              gameRoster={gameRoster}
+              onFormationChange={handleFormationChange}
+              onSave={handleSaveFormation}
+              isReadOnly={isReadOnly}
+            />
+          </div>
+        </div>
+
+        {/* Post-Game Content - In a separate scrollable area */}
+        {isPostGame && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-900/30">
               <>
                 {/* Individual Player Performance Reports */}
                 <Card className="bg-slate-800/50 border-slate-700">
@@ -832,17 +860,15 @@ export default function GameDetails() {
                         <Lock className="w-4 h-4 mr-2" />
                         {isSaving ? 'Submitting...' : 'Submit & Lock Final Report'}
                       </Button>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
               </>
-            )}
-            </div>
           </div>
-        </div>
+        )}
+      </div>
 
       {/* Modals */}
-
-
       <PlayerPerformanceModal
         isOpen={showPerformanceModal}
         onClose={handleClosePerformanceModal}
@@ -858,7 +884,7 @@ export default function GameDetails() {
         gameRoster={gameRoster}
         formation={currentFormation}
         onSave={handleSaveMatchReport}
-        />
-      </div>
+      />
+    </div>
   );
 }

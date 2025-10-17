@@ -475,9 +475,9 @@ const FormationEditor = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formation Canvas */}
-        <div className="lg:col-span-2">
+      {/* Formation Canvas - Full Width */}
+      <div className="h-full w-full">
+        <div className="h-full">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardContent className="p-4">
               <div 
@@ -527,100 +527,6 @@ const FormationEditor = ({
           </Card>
         </div>
 
-        {/* Available Players */}
-        <div className="space-y-4">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <span className="text-white font-semibold">Available Players</span>
-                <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
-                  {getAvailablePlayers().length}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {getAvailablePlayers().map((roster) => {
-                  const player = roster.player || roster.Player?.[0];
-                  const playerId = player?._id || player?.id;
-                  const fullName = player?.fullName || player?.FullName || 'Unknown';
-                  const kitNumber = player?.kitNumber || player?.KitNumber || '';
-                  const position = player?.position || player?.Position || 'Unknown';
-                  
-                  return (
-                    <div
-                      key={playerId}
-                      draggable={!isReadOnly}
-                      onDragStart={(e) => handlePlayerDragStart(e, roster)}
-                      onDragEnd={() => {
-                        setDraggedPlayer(null);
-                        setIsDragging(false);
-                      }}
-                      className={`p-3 rounded-lg border transition-all duration-200 ${
-                        isReadOnly 
-                          ? 'bg-slate-700/50 border-slate-600 cursor-not-allowed' 
-                          : 'bg-slate-700/50 border-slate-600 hover:bg-slate-700/70 hover:border-cyan-500/50 cursor-grab active:cursor-grabbing'
-                      }`}
-                      title={isReadOnly ? 'Read-only mode' : 'Drag to pitch to assign position'}
-                    >
-                        <div className="flex items-center gap-3">
-                          {kitNumber && (
-                            <div className="w-6 h-6 bg-cyan-500/20 rounded text-xs flex items-center justify-center font-bold text-cyan-400">
-                              {kitNumber}
-                            </div>
-                          )}
-                          
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{fullName}</p>
-                            <div className="flex items-center gap-2">
-                              {getPositionIcon(position)}
-                              <span className="text-xs text-slate-400">{position}</span>
-                            </div>
-                          </div>
-                          
-                          {!isReadOnly && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                // Auto-assign to first available position
-                                const availablePos = formation.find(pos => !pos.player);
-                                if (availablePos) {
-                                  const posIndex = formation.indexOf(availablePos);
-                                  const newFormation = [...formation];
-                                  const playerId = player?.fullName || player?.FullName || 'Unknown';
-                                  
-                                  newFormation[posIndex] = {
-                                    ...newFormation[posIndex],
-                                    player: player,
-                                    playerId: playerId,
-                                    playerName: player?.fullName || player?.FullName || 'Unknown'
-                                  };
-                                  
-                                  setFormation(newFormation);
-                                  onFormationChange?.(newFormation);
-                                }
-                              }}
-                              className="h-6 px-2 text-xs border-slate-500 text-slate-300 hover:bg-slate-600"
-                            >
-                              Assign
-                            </Button>
-                          )}
-                        </div>
-                    </div>
-                  );
-                })}
-                
-                {getAvailablePlayers().length === 0 && (
-                  <div className="text-center py-4">
-                    <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm">All players assigned</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
 
