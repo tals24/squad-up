@@ -394,15 +394,15 @@ const FormationEditor = ({
           ctx.font = 'bold 10px Arial';
           const name = pos.playerName || 'Unknown';
           if (name.length > 8) {
-            ctx.fillText(name.substring(0, 8) + '...', x, y + 25); // Increased gap from 20 to 25
+            ctx.fillText(name.substring(0, 8) + '...', x, y + 32); // Increased gap to 32
           } else {
-            ctx.fillText(name, x, y + 25); // Increased gap from 20 to 25
+            ctx.fillText(name, x, y + 32); // Increased gap to 32
           }
         } else {
           // Show "Click to assign" for empty positions
           ctx.fillStyle = '#94a3b8';
-          ctx.font = '8px Arial';
-          ctx.fillText('Click to assign', x, y + 25); // Increased gap from 20 to 25
+          ctx.font = 'bold 9px Arial'; // Made bolder and slightly larger
+          ctx.fillText('Click to assign', x, y + 32); // Increased gap to 32
         }
       });
   }, [formation]);
