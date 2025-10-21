@@ -270,7 +270,7 @@ export default function AddReport() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold">
                   {selectedPlayerDetails.kitNumber || '?'}
-                </div>
+                          </div>
                 <div className="flex-1">
                   <div className="font-medium text-foreground">{selectedPlayerDetails.fullName}</div>
                   <div className="text-sm text-muted-foreground">
@@ -292,7 +292,7 @@ export default function AddReport() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Position Filter */}
-                <div className="space-y-2">
+                  <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Position</Label>
                   <Select value={selectedPosition} onValueChange={(newValue) => {
                     setSelectedPosition(newValue);
@@ -302,7 +302,7 @@ export default function AddReport() {
                   }}>
                     <SelectTrigger className="bg-background border-border text-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors">
                       <SelectValue placeholder="Position" />
-                    </SelectTrigger>
+                      </SelectTrigger>
                     <SelectContent className="bg-background border-border text-foreground">
                       <SelectItem value="all">All Positions</SelectItem>
                       <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
@@ -311,12 +311,12 @@ export default function AddReport() {
                       <SelectItem value="Forward">Forward</SelectItem>
                       <SelectItem value="Wing-back">Wing-back</SelectItem>
                       <SelectItem value="Striker">Striker</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                 {/* Kit Number Filter */}
-                <div className="space-y-2">
+                      <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Kit Number</Label>
                   <Input
                     value={kitNumber}
@@ -329,10 +329,10 @@ export default function AddReport() {
                     placeholder="Exact number"
                     className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors"
                   />
-                </div>
+                      </div>
 
                 {/* Player Search */}
-                <div className="space-y-2">
+                      <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Player Name</Label>
                   <div className="relative" ref={dropdownRef}>
                     <div className="relative">
@@ -408,10 +408,10 @@ export default function AddReport() {
                           </div>
                         )}
                       </div>
-                    )}
+                  )}
                   </div>
                 </div>
-              </div>
+                </div>
 
               {/* Clear Filters Button */}
               {(selectedPosition !== 'all' || kitNumber.trim() || playerSearch.trim()) && (
@@ -432,8 +432,8 @@ export default function AddReport() {
                   </button>
                 </div>
               )}
-            </>
-          )}
+                      </>
+                    )}
         </div>
 
       </FormGrid>

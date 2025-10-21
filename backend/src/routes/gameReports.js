@@ -24,6 +24,25 @@ router.get('/', authenticateJWT, async (req, res) => {
   }
 });
 
+// Get game reports by game ID
+router.get('/game/:gameId', authenticateJWT, async (req, res) => {
+  try {
+    const gameReports = await GameReport.find({ game: req.params.gameId })
+      .populate('player', 'fullName kitNumber position')
+      .populate('game', 'gameTitle opponent date')
+      .populate('author', 'fullName role')
+      .sort({ 'player.fullName': 1 });
+
+    res.json({
+      success: true,
+      data: gameReports
+    });
+  } catch (error) {
+    console.error('Get game reports by game error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get game report by ID
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
@@ -152,6 +171,72 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     });
   } catch (error) {
     console.error('Delete game report error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Batch create/update game reports (for final submission)
+router.post('/batch', authenticateJWT, async (req, res) => {
+  try {
+    const { gameId, reports } = req.body;
+    // reports should be array of { playerId, minutesPlayed, goals, assists, rating_physical, rating_technical, rating_tactical, rating_mental, notes }
+
+    if (!gameId || !Array.isArray(reports)) {
+      return res.status(400).json({ error: 'Invalid request format. Expected { gameId, reports: [{ playerId, ... }] }' });
+    }
+
+    const results = [];
+    
+    for (const reportData of reports) {
+      const { playerId, minutesPlayed, goals, assists, rating_physical, rating_technical, rating_tactical, rating_mental, notes } = reportData;
+      
+      // Find existing report or create new
+      let gameReport = await GameReport.findOne({ 
+        game: gameId, 
+        player: playerId 
+      });
+
+      if (gameReport) {
+        // Update existing
+        gameReport.minutesPlayed = minutesPlayed !== undefined ? minutesPlayed : gameReport.minutesPlayed;
+        gameReport.goals = goals !== undefined ? goals : gameReport.goals;
+        gameReport.assists = assists !== undefined ? assists : gameReport.assists;
+        gameReport.rating_physical = rating_physical !== undefined ? rating_physical : gameReport.rating_physical;
+        gameReport.rating_technical = rating_technical !== undefined ? rating_technical : gameReport.rating_technical;
+        gameReport.rating_tactical = rating_tactical !== undefined ? rating_tactical : gameReport.rating_tactical;
+        gameReport.rating_mental = rating_mental !== undefined ? rating_mental : gameReport.rating_mental;
+        gameReport.notes = notes !== undefined ? notes : gameReport.notes;
+        gameReport.author = req.user._id;
+        await gameReport.save();
+      } else {
+        // Create new
+        gameReport = new GameReport({
+          game: gameId,
+          player: playerId,
+          author: req.user._id,
+          minutesPlayed: minutesPlayed || 0,
+          goals: goals || 0,
+          assists: assists || 0,
+          rating_physical: rating_physical || 3,
+          rating_technical: rating_technical || 3,
+          rating_tactical: rating_tactical || 3,
+          rating_mental: rating_mental || 3,
+          notes
+        });
+        await gameReport.save();
+      }
+      
+      await gameReport.populate('player game author');
+      results.push(gameReport);
+    }
+
+    res.json({
+      success: true,
+      data: results,
+      message: `Updated ${results.length} game reports`
+    });
+  } catch (error) {
+    console.error('Batch update game reports error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
