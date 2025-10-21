@@ -218,8 +218,8 @@ export default function Layout({ children, currentPageName }) {
     );
   }
 
-  // Check if current page is DrillLab to render full-screen
-  if (currentPageName === "DrillLab") {
+  // Check if current page is DrillDesigner to render full-screen
+  if (currentPageName === "DrillDesigner") {
     return (
       <ThemeProvider>
         <DataProvider>

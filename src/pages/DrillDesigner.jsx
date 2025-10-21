@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { DrillLabHeader, DrillLabToolbar, DrillLabCanvas } from '@/components/drilllab';
+import { DrillDesignerHeader, DrillDesignerToolbar, DrillDesignerCanvas } from '@/components/drilldesigner';
 import DrillDescriptionModal from '../components/DrillDescriptionModal';
 import ConfirmationToast from '../components/ConfirmationToast';
 import { useDrillLabData, useDrillLabHistory, useDrillLabMode } from '@/hooks';
 import { postMessageToParent, navigateToLibrary, formatElementsForSave } from '@/utils/drillLabUtils';
 
-export default function DrillLab() {
+export default function DrillDesigner() {
   const navigate = useNavigate();
   const mode = useDrillLabMode();
   const canvasRef = useRef(null);
@@ -223,7 +223,7 @@ export default function DrillLab() {
     <>
       <div className="h-screen bg-slate-900 flex flex-col overflow-hidden">
         {/* Header */}
-        <DrillLabHeader
+        <DrillDesignerHeader
           drillName={drillData.name}
           mode={mode.mode}
           isReadOnly={mode.isReadOnly}
@@ -231,7 +231,7 @@ export default function DrillLab() {
         />
 
         {/* Toolbar */}
-        <DrillLabToolbar
+        <DrillDesignerToolbar
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={undo}
@@ -251,7 +251,7 @@ export default function DrillLab() {
         />
 
         {/* Canvas */}
-        <DrillLabCanvas
+        <DrillDesignerCanvas
           initialElements={currentElements}
           onElementsChange={handleElementsChange}
           isLoading={isLoading}
