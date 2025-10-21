@@ -3,25 +3,50 @@
  * Centralized route configuration
  */
 
-// Page Imports
-import Dashboard from '@/pages/Dashboard';
-import Players from '@/pages/Players';
-import Player from '@/pages/Player';
+// Feature Imports
+import {
+  GameDetailsPage,
+  GamesSchedulePage,
+  AddGamePage,
+} from '@/features/game-management';
+
+import {
+  PlayersPage,
+  PlayerDetailPage,
+  AddPlayerPage,
+} from '@/features/player-management';
+
+import {
+  DrillLibraryPage,
+  DrillDesignerPage,
+} from '@/features/drill-system';
+
+import {
+  TrainingPlannerPage,
+} from '@/features/training-management';
+
+import {
+  DashboardPage,
+  AnalyticsPage,
+} from '@/features/analytics';
+
+import {
+  AddTeamPage,
+  TacticBoardPage,
+} from '@/features/team-management';
+
+import {
+  LoginPage,
+  AddUserPage,
+  AccessDeniedPage,
+} from '@/features/user-management';
+
+import {
+  AddReportPage,
+} from '@/features/reporting';
+
+// Page Imports (not migrated - misc pages)
 import SyncStatus from '@/pages/SyncStatus';
-import Analytics from '@/pages/Analytics';
-import AddPlayer from '@/pages/AddPlayer';
-import AddTeam from '@/pages/AddTeam';
-import AddReport from '@/pages/AddReport';
-import AddUser from '@/pages/AddUser';
-import AddGame from '@/pages/AddGame';
-import Login from '@/pages/Login';
-import GamesSchedule from '@/pages/GamesSchedule';
-import GameDetails from '@/pages/GameDetails';
-import AccessDenied from '@/pages/AccessDenied';
-import DrillLibrary from '@/pages/DrillLibrary';
-import TacticBoard from '@/pages/TacticBoard';
-import TrainingPlanner from '@/pages/TrainingPlanner';
-import DrillDesigner from '@/pages/DrillDesigner';
 
 /**
  * Public routes (no authentication required)
@@ -29,12 +54,12 @@ import DrillDesigner from '@/pages/DrillDesigner';
 export const publicRoutes = [
   {
     path: '/',
-    element: Login,
+    element: LoginPage,
     name: 'Login',
   },
   {
     path: '/Login',
-    element: Login,
+    element: LoginPage,
     name: 'Login',
   },
 ];
@@ -45,17 +70,17 @@ export const publicRoutes = [
 export const protectedRoutes = [
   {
     path: '/Dashboard',
-    element: Dashboard,
+    element: DashboardPage,
     name: 'Dashboard',
   },
   {
     path: '/Players',
-    element: Players,
+    element: PlayersPage,
     name: 'Players',
   },
   {
     path: '/Player',
-    element: Player,
+    element: PlayerDetailPage,
     name: 'Player',
   },
   {
@@ -65,67 +90,67 @@ export const protectedRoutes = [
   },
   {
     path: '/Analytics',
-    element: Analytics,
+    element: AnalyticsPage,
     name: 'Analytics',
   },
   {
     path: '/AddPlayer',
-    element: AddPlayer,
+    element: AddPlayerPage,
     name: 'AddPlayer',
   },
   {
     path: '/AddTeam',
-    element: AddTeam,
+    element: AddTeamPage,
     name: 'AddTeam',
   },
   {
     path: '/AddReport',
-    element: AddReport,
+    element: AddReportPage,
     name: 'AddReport',
   },
   {
     path: '/AddUser',
-    element: AddUser,
+    element: AddUserPage,
     name: 'AddUser',
   },
   {
     path: '/AddGame',
-    element: AddGame,
+    element: AddGamePage,
     name: 'AddGame',
   },
   {
     path: '/GamesSchedule',
-    element: GamesSchedule,
+    element: GamesSchedulePage,
     name: 'GamesSchedule',
   },
   {
     path: '/GameDetails',
-    element: GameDetails,
+    element: GameDetailsPage,
     name: 'GameDetails',
   },
   {
     path: '/AccessDenied',
-    element: AccessDenied,
+    element: AccessDeniedPage,
     name: 'AccessDenied',
   },
   {
     path: '/DrillLibrary',
-    element: DrillLibrary,
+    element: DrillLibraryPage,
     name: 'DrillLibrary',
   },
   {
     path: '/TacticBoard',
-    element: TacticBoard,
+    element: TacticBoardPage,
     name: 'TacticBoard',
   },
   {
     path: '/TrainingPlanner',
-    element: TrainingPlanner,
+    element: TrainingPlannerPage,
     name: 'TrainingPlanner',
   },
   {
     path: '/DrillDesigner',
-    element: DrillDesigner,
+    element: DrillDesignerPage,
     name: 'DrillDesigner',
   },
 ];
