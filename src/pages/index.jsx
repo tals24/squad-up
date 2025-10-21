@@ -34,7 +34,7 @@ import TacticBoard from "./TacticBoard";
 
 import TrainingPlanner from "./TrainingPlanner";
 
-import DrillLab from "./DrillLab";
+import DrillDesigner from "./DrillDesigner";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -74,7 +74,7 @@ const PAGES = {
     
     TrainingPlanner: TrainingPlanner,
     
-    DrillLab: DrillLab,
+    DrillDesigner: DrillDesigner,
     
 }
 
@@ -119,7 +119,7 @@ function PagesContent() {
             <Route path="/DrillLibrary" element={<Layout currentPageName="DrillLibrary"><DrillLibrary /></Layout>} />
             <Route path="/TacticBoard" element={<Layout currentPageName="TacticBoard"><TacticBoard /></Layout>} />
             <Route path="/TrainingPlanner" element={<Layout currentPageName="TrainingPlanner"><TrainingPlanner /></Layout>} />
-            <Route path="/DrillLab" element={<Layout currentPageName="DrillLab"><DrillLab /></Layout>} />
+            <Route path="/DrillDesigner" element={<Layout currentPageName="DrillDesigner"><DrillDesigner /></Layout>} />
         </Routes>
     );
 }

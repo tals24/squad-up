@@ -66,7 +66,7 @@ const SoccerBallSVG = () => (
   </svg>
 );
 
-export default function DrillLabToolbar({
+export default function DrillDesignerToolbar({
   // History controls
   canUndo,
   canRedo,

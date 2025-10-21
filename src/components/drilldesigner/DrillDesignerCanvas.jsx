@@ -2,7 +2,7 @@ import React from 'react';
 import DrillCanvas from '../DrillCanvas';
 import { Loader2 } from 'lucide-react';
 
-export default function DrillLabCanvas({ 
+export default function DrillDesignerCanvas({ 
   initialElements, 
   onElementsChange, 
   isLoading, 
