@@ -17,6 +17,7 @@ export default function TacticalBoard({
   onPositionDrop, 
   onRemovePlayer,
   onPlayerClick,
+  onPositionClick,
   isDragging, 
   isScheduled, 
   isPlayed,
@@ -122,6 +123,19 @@ export default function TacticalBoard({
                 style={{
                   left: `${posData.x}%`,
                   top: `${posData.y}%`,
+                }}
+                onClick={(e) => {
+                  // Handle click on empty position to assign player
+                  if (!isOccupied && isScheduled && !isReadOnly) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 Click on empty position:', {
+                      posId,
+                      label: posData.label,
+                      type: posData.type
+                    });
+                    onPositionClick?.(posId, posData);
+                  }
                 }}
                 onDragOver={(e) => {
                   if (isScheduled && !isReadOnly) {
