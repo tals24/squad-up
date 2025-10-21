@@ -190,7 +190,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           gameId,
@@ -283,7 +283,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ status: "Played" }),
       });
@@ -299,7 +299,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ gameId, rosters: rosterUpdates }),
       });
@@ -325,7 +325,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ status: "Postponed" }),
       });
@@ -368,7 +368,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           gameId,
@@ -423,7 +423,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           status: "Done",
@@ -454,7 +454,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ gameId, reports: reportUpdates }),
       });
