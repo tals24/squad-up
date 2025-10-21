@@ -841,11 +841,10 @@ export default function GameDetails() {
         </div>
       </div>
 
-      {/* Main Content - 3 Column Layout */}
-      <div className="max-w-[1800px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-[280px_1fr_280px] gap-6 h-[calc(100vh-180px)]">
-          {/* Left Sidebar - Roster */}
-          <div className="bg-slate-900/90 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden flex flex-col">
+      {/* Main Content - 3 Column Layout - Seamless Integration */}
+      <div className="flex h-[calc(100vh-120px)]">
+        {/* Left Sidebar - Roster - Connected to main nav */}
+        <div className="w-[280px] bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
             <div className="p-4 border-b border-slate-700/50">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-cyan-400" />
@@ -946,7 +945,8 @@ export default function GameDetails() {
             </div>
           </div>
 
-          {/* Center - Tactical Board */}
+        {/* Center - Tactical Board - Seamless Integration */}
+        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm">
           <TacticalBoard
             formations={formations}
             formationType={formationType}
@@ -963,15 +963,15 @@ export default function GameDetails() {
             hasReport={hasReport}
             needsReport={needsReport}
           />
+        </div>
 
-          {/* Right Sidebar - Stats & Summaries */}
-          <div 
-            className="space-y-4 overflow-y-auto"
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
-            }}
-          >
+        {/* Right Sidebar - Stats & Summaries - Seamlessly connected */}
+        <div className="w-[280px] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 space-y-4 overflow-y-auto p-4"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+          }}
+        >
             {/* Match Stats - Only show for Played/Done */}
             {(isPlayed || isDone) && (
               <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
@@ -1099,6 +1099,16 @@ export default function GameDetails() {
         </div>
       </div>
 
+      {/* Final Report Confirmation Dialog */}
+      <FinalReportDialog
+        open={showFinalReportDialog}
+        onOpenChange={setShowFinalReportDialog}
+        finalScore={finalScore}
+        teamSummary={teamSummary}
+        onConfirm={handleConfirmFinalSubmission}
+        isSaving={isSaving}
+      />
+
       {/* Player Performance Dialog */}
       <PlayerPerformanceDialog
         open={showPlayerPerfDialog}
@@ -1110,15 +1120,6 @@ export default function GameDetails() {
         isReadOnly={isDone}
       />
 
-      {/* Final Report Confirmation Dialog */}
-      <FinalReportDialog
-        open={showFinalReportDialog}
-        onOpenChange={setShowFinalReportDialog}
-        finalScore={finalScore}
-        teamSummary={teamSummary}
-        onConfirm={handleConfirmFinalSubmission}
-        isSaving={isSaving}
-      />
     </div>
   );
 }
@@ -1281,10 +1282,11 @@ function TacticalBoard({
   });
 
   return (
-    <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50 flex flex-col h-full">
-      <CardHeader className="pb-3 border-b border-slate-700/50">
+    <div className="flex flex-col h-full">
+      {/* Seamless Header */}
+      <div className="p-4 border-b border-slate-700/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold text-white">Tactical Setup</CardTitle>
+          <h2 className="text-lg font-bold text-white">Tactical Setup</h2>
           
           {/* Formation Selector */}
           <Select value={formationType} onValueChange={onFormationChange} disabled={!isScheduled || isReadOnly}>
@@ -1300,28 +1302,29 @@ function TacticalBoard({
             </SelectContent>
           </Select>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 p-0 relative">
+      {/* Seamless Content Area */}
+      <div className="flex-1 relative">
         {/* Football Pitch */}
         <div className="absolute inset-0 bg-gradient-to-b from-green-700 via-green-600 to-green-800">
           {/* Grid Pattern */}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-40"
             style={{
-              backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              backgroundImage: "linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)",
               backgroundSize: "20px 20px",
             }}
           />
 
           {/* Field Markings */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             {/* Center circle */}
             <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="0.3" />
             <circle cx="50" cy="50" r="0.5" fill="rgba(255,255,255,0.8)" />
             
-            {/* Halfway line */}
-            <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.8)" strokeWidth="0.3" />
+            {/* Halfway line - extends fully across the pitch */}
+            <line x1="-37" y1="50" x2="137" y2="50" stroke="rgba(255,255,255,0.8)" strokeWidth="0.3" />
             
             {/* Top penalty box */}
             <rect x="25" y="0" width="50" height="18" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="0.3" />
@@ -1468,8 +1471,8 @@ function TacticalBoard({
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
