@@ -9,10 +9,11 @@ const gameSchema = new mongoose.Schema({
   },
   
   // Formula field (equivalent to GameTitle formula in Airtable)
-  gameTitle: {
-    type: String,
-    required: true
-  },
+  // Removed: gameTitle is now calculated dynamically
+  // gameTitle: {
+  //   type: String,
+  //   required: true
+  // },
   
   // Link to Team
   team: {
@@ -101,12 +102,17 @@ gameSchema.index({ date: 1 });
 gameSchema.index({ status: 1 });
 gameSchema.index({ season: 1 });
 
-// Pre-save middleware to generate gameTitle and finalScoreDisplay
+// Virtual field for gameTitle (calculated dynamically)
+gameSchema.virtual('gameTitle').get(function() {
+  return `${this.teamName} vs ${this.opponent}`;
+});
+
+// Ensure virtual fields are included in JSON output
+gameSchema.set('toJSON', { virtuals: true });
+gameSchema.set('toObject', { virtuals: true });
+
+// Pre-save middleware to generate finalScoreDisplay
 gameSchema.pre('save', async function(next) {
-  if (this.isNew || this.isModified('opponent') || this.isModified('season') || this.isModified('teamName')) {
-    this.gameTitle = `${this.season} ${this.teamName} vs ${this.opponent}`;
-  }
-  
   if (this.ourScore !== null && this.opponentScore !== null) {
     this.finalScoreDisplay = `${this.ourScore} - ${this.opponentScore}`;
   }

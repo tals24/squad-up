@@ -46,16 +46,35 @@ const WeeklyTrainingPlanOverview = ({ teams, trainingSessions, sessionDrills, dr
     const [weekOffset, setWeekOffset] = useState(0);
 
     const { weekStart, weekEnd, weekIdentifier, weekSessions } = useMemo(() => {
-        const targetDate = addWeeks(new Date(), weekOffset);
-        const start = startOfWeek(targetDate, { weekStartsOn: 1 }); // Monday - same as Training Planner
-        const end = endOfWeek(targetDate, { weekStartsOn: 1 }); // Sunday - same as Training Planner
-        const id = `${getYear(start)}-${getISOWeek(start)}`;
+        const now = new Date();
+        const targetDate = addWeeks(now, weekOffset);
+        const start = startOfWeek(targetDate, { weekStartsOn: 0 }); // Sunday - same as Training Planner
+        const end = endOfWeek(targetDate, { weekStartsOn: 0 }); // Sunday - same as Training Planner
+        
+        // Use the same week ID calculation as Training Planner
+        const id = `${getYear(targetDate)}-${getISOWeek(targetDate)}`;
+        
+        console.log('🔍 Dashboard Date Calculation Debug:', {
+            now: now.toISOString(),
+            weekOffset: weekOffset,
+            targetDate: targetDate.toISOString(),
+            start: start.toISOString(),
+            end: end.toISOString(),
+            startFormatted: format(start, 'MMM d'),
+            endFormatted: format(end, 'MMM d, yyyy'),
+            weekIdFromTargetDate: `${getYear(targetDate)}-${getISOWeek(targetDate)}`,
+            weekIdFromStart: `${getYear(start)}-${getISOWeek(start)}`
+        });
 
         console.log('🔍 Dashboard WeeklyTrainingPlanOverview Debug:', {
             weekIdentifier: id,
+            weekOffset: weekOffset,
+            currentDate: new Date().toISOString(),
             targetDate: targetDate.toISOString(),
             weekStart: start.toISOString(),
             weekEnd: end.toISOString(),
+            weekStartFormatted: format(start, 'MMM d'),
+            weekEndFormatted: format(end, 'MMM d, yyyy'),
             teamsCount: teams.length,
             trainingSessionsCount: trainingSessions.length,
             teams: teams.map(t => ({ id: t._id || t.id, name: t.teamName })),

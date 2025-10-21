@@ -21,11 +21,33 @@ router.get('/', authenticateJWT, async (req, res) => {
 
     const games = await Game.find(query)
       .populate('team', 'teamName season division')
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
+
+    // Add virtual fields manually since .lean() doesn't include them
+    const gamesWithVirtuals = games.map(game => {
+      const gameTitle = `${game.teamName} vs ${game.opponent}`;
+      console.log('🔍 Backend gameTitle generation:', {
+        teamName: game.teamName,
+        opponent: game.opponent,
+        generatedTitle: gameTitle
+      });
+      return {
+        ...game,
+        gameTitle: gameTitle
+      };
+    });
+
+    console.log('🔍 Backend sending games:', gamesWithVirtuals.map(g => ({ 
+      id: g._id, 
+      gameTitle: g.gameTitle, 
+      teamName: g.teamName, 
+      opponent: g.opponent 
+    })));
 
     res.json({
       success: true,
-      data: games
+      data: gamesWithVirtuals
     });
   } catch (error) {
     console.error('Get games error:', error);
@@ -56,7 +78,9 @@ router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
 // Create new game
 router.post('/', authenticateJWT, async (req, res) => {
   try {
-    const { team, opponent, date, location, status } = req.body;
+    console.log('🔍 Create game request body:', req.body);
+    const { team, opponent, date, location, status, gameType } = req.body;
+    console.log('🔍 Extracted fields:', { team, opponent, date, location, status, gameType });
 
     // Get team details for lookups
     const teamDoc = await Team.findById(team);
@@ -71,7 +95,9 @@ router.post('/', authenticateJWT, async (req, res) => {
       opponent,
       date,
       location,
-      status: status || 'Scheduled'
+      status: status || 'Scheduled',
+      gameType: gameType || 'League' // Use provided type or default to League
+      // gameTitle is now calculated dynamically via virtual field
     });
 
     await game.save();

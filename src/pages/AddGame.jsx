@@ -9,6 +9,7 @@ import {
   Target
 } from "lucide-react";
 import { getTeams, createGame } from "@/api/functions";
+import { getSeasonFromDate } from "@/utils/seasonUtils";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
 
@@ -18,10 +19,9 @@ export default function AddGame() {
   const [isLoading, setIsLoading] = useState(true);
 
   const initialFormData = {
-    GameTitle: "",
     Date: "",
     Time: "",
-    Location: "",
+    Venue: "Home", // Changed from Location to Venue with default Home
     Opponent: "",
     Team: "",
     GameType: "League",
@@ -39,7 +39,9 @@ export default function AddGame() {
       
       // Load teams for team selection using MongoDB backend
       const teamsResponse = await getTeams();
+      console.log('🔍 Teams response:', teamsResponse);
       if (teamsResponse.data?.success && teamsResponse.data?.data) {
+        console.log('🔍 Teams data:', teamsResponse.data.data);
         setTeams(teamsResponse.data.data);
       }
     } catch (error) {
@@ -55,22 +57,37 @@ export default function AddGame() {
         ? `${formData.Date}T${formData.Time}:00.000Z`
         : undefined;
 
+      // Find the selected team to get team name
+      console.log('🔍 Looking for team with ID:', formData.Team);
+      console.log('🔍 Available teams:', teams.map(t => ({ id: t._id || t.id, name: t.teamName || t.TeamName || t.Name })));
+      
+      const selectedTeam = teams.find(team => (team._id || team.id) === formData.Team);
+      console.log('🔍 Selected team:', selectedTeam);
+      
+      const teamName = selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
+      
+      // Auto-detect season based on game date
+      const season = getSeasonFromDate(gameDateTime);
+
       const gameData = {
         team: formData.Team || null,
         opponent: formData.Opponent || null,
         date: gameDateTime,
-        venue: formData.Location || null,
-        type: formData.GameType || 'Friendly',
-        status: formData.Status || 'Scheduled',
-        title: formData.GameTitle || null
+        location: formData.Venue || 'Home', // Changed from venue to location
+        gameType: formData.GameType || 'League',
+        status: formData.Status || 'Scheduled'
+        // gameTitle is now calculated on the backend via virtual field
+        // season is also calculated on the backend from team data
       };
+      
+      console.log('🔍 Sending game data to backend:', gameData);
 
       const response = await createGame(gameData);
 
       if (response.data?.success) {
         return {
           success: true,
-          message: `${formData.GameTitle} has been scheduled successfully!`
+          message: `${teamName} vs ${formData.Opponent} has been scheduled successfully for the ${season} season!`
         };
       } else {
         throw new Error(response.data?.error || "Failed to save game");
@@ -81,8 +98,7 @@ export default function AddGame() {
   };
 
   const isFormValid = (formData) => {
-    return formData.GameTitle?.trim() && 
-           formData.Date?.trim() && 
+    return formData.Date?.trim() && 
            formData.Opponent?.trim() &&
            formData.Team?.trim();
   };
@@ -101,11 +117,24 @@ export default function AddGame() {
     { value: "Cancelled", label: "Cancelled" }
   ];
 
+  const venueOptions = [
+    { value: "Home", label: "Home" },
+    { value: "Away", label: "Away" }
+  ];
+
   // Create team options from loaded teams
-  const teamOptions = teams.map(team => ({
-    value: team.id,
-    label: team.TeamName || team.Name
-  }));
+  console.log('🔍 Teams array length:', teams.length);
+  console.log('🔍 Teams array:', teams);
+  
+  const teamOptions = teams.map(team => {
+    console.log('🔍 Team object:', team);
+    return {
+      value: team._id || team.id, // Use _id for MongoDB
+      label: team.teamName || team.TeamName || team.Name
+    };
+  });
+  
+  console.log('🔍 Team options:', teamOptions);
 
   return (
     <GenericAddPage
@@ -121,16 +150,7 @@ export default function AddGame() {
       isFormValid={isFormValid}
       isLoading={isLoading}
     >
-      <FormGrid columns={1}>
-        <TextInputField
-          id="GameTitle"
-          label="Game Title"
-          placeholder="e.g., vs Manchester United - Premier League"
-          required={true}
-          icon={Trophy}
-          iconColor="text-brand-red"
-        />
-      </FormGrid>
+      {/* Game Title is auto-generated from Team + Opponent */}
 
       <FormGrid columns={2}>
         <TextInputField
@@ -160,10 +180,11 @@ export default function AddGame() {
           iconColor="text-brand-red-400"
         />
 
-        <TextInputField
-          id="Location"
-          label="Location"
-          placeholder="Stadium or venue name"
+        <SelectField
+          id="Venue"
+          label="Venue"
+          placeholder="Select venue"
+          options={venueOptions}
           icon={MapPin}
           iconColor="text-brand-purple-400"
         />

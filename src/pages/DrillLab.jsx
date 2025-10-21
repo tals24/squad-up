@@ -162,15 +162,15 @@ export default function DrillLab() {
       
       if (result.success) {
         setConfirmationConfig({
-          type: 'success',
-          title: 'Tactic Board Saved! 🚀',
-          message: 'Your drill diagram has been successfully saved.'
+            type: 'success',
+            title: 'Tactic Board Saved! 🚀',
+            message: 'Your drill diagram has been successfully saved.'
         });
         setShowConfirmation(true);
       } else {
-        setConfirmationConfig({
-          type: 'error',
-          title: 'Save Failed',
+         setConfirmationConfig({
+            type: 'error',
+            title: 'Save Failed',
           message: result.error || 'Could not save the diagram. Please try again.'
         });
         setShowConfirmation(true);
@@ -240,7 +240,7 @@ export default function DrillLab() {
           onClear={handleClear}
           onBack={handleBack}
           onDescription={handleDescription}
-          activeTool={activeTool}
+          activeTool={activeTool} 
           onToolSelect={setActiveTool}
           isSaving={isSaving}
           isReadOnly={mode.isReadOnly}

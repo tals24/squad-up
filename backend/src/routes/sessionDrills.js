@@ -158,8 +158,19 @@ router.post('/batch', authenticateJWT, async (req, res) => {
       console.log(`📅 Processing ${day}:`, Object.keys(dayPlan));
       
       // Create training session for this day
-      const sessionDate = new Date();
-      sessionDate.setDate(sessionDate.getDate() + daysOfWeek.indexOf(day));
+      // Calculate the actual date for this day in the week based on weekIdentifier
+      const [year, week] = weekIdentifier.split('-').map(Number);
+      const weekStart = new Date(year, 0, 1); // January 1st of the year
+      const dayOfYear = (week - 1) * 7; // Approximate day of year for the week
+      weekStart.setDate(weekStart.getDate() + dayOfYear);
+      
+      // Adjust to the actual start of the week (Sunday)
+      const dayOfWeek = weekStart.getDay();
+      weekStart.setDate(weekStart.getDate() - dayOfWeek);
+      
+      const dayIndex = daysOfWeek.indexOf(day);
+      const sessionDate = new Date(weekStart);
+      sessionDate.setDate(weekStart.getDate() + dayIndex);
       
       // Get team name for the session title
       const Team = require('../models/Team');
