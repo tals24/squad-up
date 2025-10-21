@@ -12,6 +12,7 @@ import TacticalBoard from "./components/TacticalBoard";
 import MatchAnalysisSidebar from "./components/MatchAnalysisSidebar";
 import PlayerPerformanceDialog from "./components/dialogs/PlayerPerformanceDialog";
 import FinalReportDialog from "./components/dialogs/FinalReportDialog";
+import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -40,6 +41,9 @@ export default function GameDetails() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerPerfData, setPlayerPerfData] = useState({});
   const [showFinalReportDialog, setShowFinalReportDialog] = useState(false);
+  const [showPlayerSelectionDialog, setShowPlayerSelectionDialog] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [selectedPositionData, setSelectedPositionData] = useState(null);
   const [draggedPlayer, setDraggedPlayer] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [manualFormationMode, setManualFormationMode] = useState(false);
@@ -186,7 +190,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           gameId,
@@ -279,7 +283,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ status: "Played" }),
       });
@@ -295,7 +299,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ gameId, rosters: rosterUpdates }),
       });
@@ -321,7 +325,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ status: "Postponed" }),
       });
@@ -364,7 +368,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           gameId,
@@ -419,7 +423,7 @@ export default function GameDetails() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
           status: "Done",
@@ -450,7 +454,7 @@ export default function GameDetails() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ gameId, reports: reportUpdates }),
       });
@@ -551,6 +555,43 @@ export default function GameDetails() {
     }
   };
 
+  const handlePositionClick = (posId, posData) => {
+    console.log('🎯 Position clicked:', { posId, posData });
+    setSelectedPosition(posId);
+    setSelectedPositionData(posData);
+    setShowPlayerSelectionDialog(true);
+  };
+
+  const handleSelectPlayerForPosition = (player) => {
+    if (!selectedPosition) return;
+    
+    console.log('✅ Assigning player to position:', {
+      posId: selectedPosition,
+      player: player.fullName
+    });
+
+    // Remove player from any existing position first
+    const newFormation = { ...formation };
+    Object.keys(newFormation).forEach((posId) => {
+      if (newFormation[posId]?._id === player._id) {
+        newFormation[posId] = null;
+      }
+    });
+
+    // Assign to new position
+    newFormation[selectedPosition] = player;
+    setFormation(newFormation);
+    
+    // Update player status
+    updatePlayerStatus(player._id, "Playing");
+    setManualFormationMode(true);
+
+    // Close dialog and reset
+    setShowPlayerSelectionDialog(false);
+    setSelectedPosition(null);
+    setSelectedPositionData(null);
+  };
+
   // Render loading/error states
   if (isLoading) {
     return (
@@ -623,6 +664,7 @@ export default function GameDetails() {
             onPositionDrop={handlePositionDrop}
             onRemovePlayer={handleRemovePlayerFromPosition}
             onPlayerClick={handleOpenPerformanceDialog}
+            onPositionClick={handlePositionClick}
             isDragging={isDragging}
             isScheduled={isScheduled}
             isPlayed={isPlayed}
@@ -660,6 +702,19 @@ export default function GameDetails() {
         onDataChange={setPlayerPerfData}
         onSave={handleSavePerformanceReport}
         isReadOnly={isDone}
+      />
+
+      <PlayerSelectionDialog
+        open={showPlayerSelectionDialog}
+        onClose={() => {
+          setShowPlayerSelectionDialog(false);
+          setSelectedPosition(null);
+          setSelectedPositionData(null);
+        }}
+        position={selectedPosition}
+        positionData={selectedPositionData}
+        availablePlayers={squadPlayers}
+        onSelectPlayer={handleSelectPlayerForPosition}
       />
     </div>
   );
