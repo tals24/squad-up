@@ -1,7 +1,7 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/primitives/dialog";
+import { Badge } from '@/shared/ui/primitives/badge';
+import { Button } from '@/shared/ui/primitives/button';
 import { Tag, Users, Eye, Play, Clock, Users2, Wrench, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';

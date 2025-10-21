@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useData } from "../../components/DataContext";
+import { useData } from "@/app/providers/DataProvider";
 
 // Import formation configurations
 import { formations } from "./formations";

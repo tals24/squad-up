@@ -16,17 +16,17 @@ import {
   Plus, // Added Plus icon
   Loader2 // Added Loader2 icon
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useData } from "../components/DataContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import { Button } from "@/shared/ui/primitives/button";
+import { Badge } from "@/shared/ui/primitives/badge";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
+import { Textarea } from "@/shared/ui/primitives/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/primitives/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
+import { useData } from "@/app/providers/DataProvider";
 import { getFormations, createFormation, updateFormation, deleteFormation, createTimelineEvent } from "@/api/functions";
-import ConfirmationToast from "../components/ConfirmationToast";
+import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import FormationEditorModal from "../components/FormationEditorModal";
 
 export default function TacticBoard() {

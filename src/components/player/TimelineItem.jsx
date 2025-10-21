@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/primitives/badge';
 import { Award, Eye, Star, Clock, Trophy, Users, Target } from 'lucide-react';
 
 const StatBox = ({ value, label, icon: Icon, color }) => (

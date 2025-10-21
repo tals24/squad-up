@@ -5,7 +5,7 @@
  * breakpoint management, and device detection.
  */
 
-import { breakpoints } from './theme';
+import { breakpoints } from "@/shared/lib/theme";
 
 // ===========================================
 // BREAKPOINT UTILITIES

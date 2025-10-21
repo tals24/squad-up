@@ -16,12 +16,12 @@ import {
 import { createScoutReport } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, TextareaField, FormGrid } from "../components/FormFields";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useData } from "../components/DataContext";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
+import { Textarea } from "@/shared/ui/primitives/textarea";
+import { Button } from "@/shared/ui/primitives/button";
+import { useData } from "@/app/providers/DataProvider";
 
 
 export default function AddReport() {

@@ -8,8 +8,8 @@ import {
   Mail,
   ArrowLeft
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import { Button } from "@/shared/ui/primitives/button";
 import { User } from "@/api/entities";
 
 export default function AccessDenied() {

@@ -1,11 +1,11 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/shared/ui/primitives/button";
+import { Badge } from "@/shared/ui/primitives/badge";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/shared/ui/primitives/popover";
 import { Ban, Check, AlertCircle, MoreVertical } from "lucide-react";
 
 export default function PlayerCard({ 

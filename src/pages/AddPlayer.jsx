@@ -11,8 +11,8 @@ import {
 import { getTeams, createPlayer } from "@/api/functions";
 import GenericAddPage from "../components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "../components/FormFields";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/shared/ui/primitives/input";
+import { Label } from "@/shared/ui/primitives/label";
 
 export default function AddPlayer() {
   const [currentUser, setCurrentUser] = useState(null);

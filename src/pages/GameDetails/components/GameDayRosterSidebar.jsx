@@ -1,6 +1,6 @@
 import React from "react";
 import { Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/primitives/badge";
 import PlayerCard from "./PlayerCard";
 
 export default function GameDayRosterSidebar({

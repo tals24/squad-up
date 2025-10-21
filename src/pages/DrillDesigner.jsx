@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { DrillDesignerHeader, DrillDesignerToolbar, DrillDesignerCanvas } from '@/components/drilldesigner';
 import DrillDescriptionModal from '../components/DrillDescriptionModal';
-import ConfirmationToast from '../components/ConfirmationToast';
+import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import { useDrillLabData, useDrillLabHistory, useDrillLabMode } from '@/hooks';
 import { postMessageToParent, navigateToLibrary, formatElementsForSave } from '@/utils/drillLabUtils';
 

@@ -33,8 +33,8 @@ import {
   Heading,
   Text,
   Grid
-} from "@/components/ui/design-system-components";
-import { useData } from "../components/DataContext";
+} from "@/shared/ui/primitives/design-system-components";
+import { useData } from "@/app/providers/DataProvider";
 import { useDashboardData, useUserRole, useRecentEvents } from "../hooks";
 import { DashboardHeader, GameZone, DashboardStats, RecentActivity } from "../components/dashboard";
 import { format, formatDistanceToNow, isFuture, isPast, addWeeks, startOfWeek, endOfWeek, getYear, getISOWeek } from 'date-fns';

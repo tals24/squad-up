@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter
-} from "@/components/ui/design-system-components";
+} from "@/shared/ui/primitives/design-system-components";
 
 export default function DrillDetailDialog({ drill, open, setOpen }) {
   if (!drill) return null;

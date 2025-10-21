@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardTitle } from '@/shared/ui/primitives/card';
+import { Badge } from '@/shared/ui/primitives/badge';
 import { Users, Calendar, Phone, Hash } from 'lucide-react';
 import ProfileImage from './ProfileImage';
-import { useData } from '../../components/DataContext';
+import { useData } from "@/app/providers/DataProvider";
 import { getPositionBadgeClasses } from '@/utils';
 
 const PlayerProfileCard = ({ player }) => {

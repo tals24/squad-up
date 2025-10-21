@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useData } from "../../../../components/DataContext";
+import { useData } from "@/app/providers/DataProvider";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ClipboardList, Target } from "lucide-react";
@@ -20,7 +20,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue
-} from "@/components/ui/design-system-components";
+} from "@/shared/ui/primitives/design-system-components";
 import { createDrill, getDrills } from "@/api/functions";
 import { User } from "@/api/entities";
 

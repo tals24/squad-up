@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { MoreVertical, Eye, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/primitives/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/primitives/dropdown-menu';
 
 const DrillMenuDropdown = ({ drill, onViewDetails, onRemove, className = "", showRemove = true }) => {
   const [isOpen, setIsOpen] = useState(false);

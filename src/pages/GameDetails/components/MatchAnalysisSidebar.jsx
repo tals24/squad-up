@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
+import { Textarea } from "@/shared/ui/primitives/textarea";
 import { Trophy, Zap, Star } from "lucide-react";
 
 export default function MatchAnalysisSidebar({

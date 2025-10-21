@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/ui/primitives/button';
+import { Textarea } from '@/shared/ui/primitives/textarea';
+import { Label } from '@/shared/ui/primitives/label';
 
 export default function DrillDescriptionModal({ isOpen, onClose, description, drillName }) {
 

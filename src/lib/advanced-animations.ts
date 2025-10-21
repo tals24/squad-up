@@ -6,7 +6,7 @@
  */
 
 import { Variants, Transition, MotionValue, useMotionValue, useTransform } from 'framer-motion';
-import { theme } from './theme';
+import { theme } from "@/shared/lib/theme";
 
 // ===========================================
 // SHARED ELEMENT TRANSITIONS

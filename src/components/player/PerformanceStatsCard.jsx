@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
 import { TrendingUp, Star, Trophy, Users, Clock, Eye } from 'lucide-react';
 
 const StatBox = ({ value, label, icon: Icon, color }) => (

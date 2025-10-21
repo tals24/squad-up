@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from './DataContext';
-import { Input } from '@/components/ui/input';
+import { useData } from '@/app/providers/DataProvider';
+import { Input } from '@/shared/ui/primitives/input';
 import { Search, ClipboardList } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
+import { Badge } from "@/shared/ui/primitives/badge";
 import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
 import DrillMenuDropdown from './DrillMenuDropdown';
 import DrillDetailModal from './DrillDetailModal';

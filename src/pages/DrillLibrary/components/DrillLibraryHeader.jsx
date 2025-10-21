@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus } from "lucide-react";
-import { PageHeader, SearchFilter, StandardButton } from "@/components/ui/design-system-components";
+import { PageHeader, SearchFilter, StandardButton } from "@/shared/ui/primitives/design-system-components";
 
 export default function DrillLibraryHeader({
   searchTerm,

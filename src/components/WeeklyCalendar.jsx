@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PlusCircle, X } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/shared/ui/primitives/textarea';
 import { startOfWeek, addDays, format } from 'date-fns';
 import DrillMenuDropdown from './DrillMenuDropdown';
 import DrillDetailModal from './DrillDetailModal';

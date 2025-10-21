@@ -10,7 +10,7 @@ import {
   Alert,
   Text,
   Heading
-} from '@/components/ui/design-system-components';
+} from '@/shared/ui/primitives/design-system-components';
 import { Mail, Lock, Shield, AlertCircle } from 'lucide-react';
 
 export default function LoginModal({ onLoginSuccess, onClose }) {

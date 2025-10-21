@@ -1,5 +1,5 @@
 import React from 'react';
-import { SearchFilter } from '@/components/ui/design-system-components';
+import { SearchFilter } from '@/shared/ui/primitives/design-system-components';
 
 export default function PlayerFilters({
   searchTerm,

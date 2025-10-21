@@ -21,7 +21,7 @@ import {
   Lightbulb,
   Clock
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/shared/lib/utils";
 import {
   Card,
   CardContent,
@@ -41,12 +41,12 @@ import {
   Text,
   Container,
   Section,
-} from '@/components/ui/design-system-components';
+} from '@/shared/ui/primitives/design-system-components';
 import { 
   AdvancedCard,
   ChoreographedList,
   ScrollReveal,
-} from '@/components/ui/advanced-animated-components';
+} from '@/shared/ui/primitives/advanced-animated-components';
 import { ThemeManager, ThemeValidator, CustomTheme, ThemeSchedule } from '@/lib/advanced-theming';
 
 // ===========================================

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useData } from '../../components/DataContext';
+import { useData } from "@/app/providers/DataProvider";
 import { User } from '@/api/entities';
 import { saveTrainingPlan, loadTrainingPlan } from '@/api/functions';
 import { useSearchParams } from 'react-router-dom';
 import { addWeeks, getYear, getISOWeek } from 'date-fns';
-import ConfirmationToast from '../../components/ConfirmationToast';
+import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import TrainingPlannerHeader from './components/TrainingPlannerHeader';
 import TrainingPlannerContent from './components/TrainingPlannerContent';
 

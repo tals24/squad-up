@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Target, Clock, Trophy, Zap, Shield, TrendingUp, Save, Edit } from 'lucide-react';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge } from '@/components/ui/design-system-components';
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge } from '@/shared/ui/primitives/design-system-components';
 
 const PlayerPerformanceModal = ({ 
   isOpen, 

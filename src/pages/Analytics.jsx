@@ -11,12 +11,12 @@ import {
   PieChart,
   Activity
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageLayout, PageHeader, DataCard, LoadingState, EmptyState } from "@/components/ui/design-system-components";
-import { useData } from "../components/DataContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import { Badge } from "@/shared/ui/primitives/badge";
+import { Progress } from "@/shared/ui/primitives/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
+import { PageLayout, PageHeader, DataCard, LoadingState, EmptyState } from "@/shared/ui/primitives/design-system-components";
+import { useData } from "@/app/providers/DataProvider";
 
 export default function Analytics() {
   const { users, teams, players, reports, isLoading: isDataLoading } = useData();

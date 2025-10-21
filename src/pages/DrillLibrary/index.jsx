@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { useData } from "../../components/DataContext";
-import { PageLayout } from "@/components/ui/design-system-components";
-import ConfirmationToast from "../../components/ConfirmationToast";
+import { useData } from "@/app/providers/DataProvider";
+import { PageLayout } from "@/shared/ui/primitives/design-system-components";
+import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import DrillLibraryHeader from "./components/DrillLibraryHeader";
 import DrillGrid from "./components/DrillGrid";
 import AddDrillDialog from "./components/dialogs/AddDrillDialog";

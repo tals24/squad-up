@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Trophy, Calendar, Target, TrendingUp } from 'lucide-react';
-import { AnimatedCard, StaggerContainer, StaggerItem } from '@/components/ui/animated-components';
-import { Card, CardContent, CardHeader, CardTitle, Grid, Heading, Text } from '@/components/ui/design-system-components';
+import { AnimatedCard, StaggerContainer, StaggerItem } from '@/shared/ui/primitives/animated-components';
+import { Card, CardContent, CardHeader, CardTitle, Grid, Heading, Text } from '@/shared/ui/primitives/design-system-components';
 import { createPageUrl } from '@/utils';
 
 function getPlayerAge(dateOfBirth) {

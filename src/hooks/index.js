@@ -1,7 +1,9 @@
+// Re-export from shared hooks
+export * from '@/shared/hooks';
+
 // Dashboard hooks
 export * from './useDashboardData';
 export * from './useUserRole';
-export * from './useRecentEvents';
 
 // Players hooks
 export * from './usePlayersData';

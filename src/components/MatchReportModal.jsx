@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Trophy, Users, Target, TrendingUp, Download, Save, Edit, BarChart3, PieChart } from 'lucide-react';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge, Textarea } from '@/components/ui/design-system-components';
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge, Textarea } from '@/shared/ui/primitives/design-system-components';
 
 const MatchReportModal = ({ 
   isOpen, 

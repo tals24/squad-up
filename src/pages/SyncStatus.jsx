@@ -14,10 +14,10 @@ import {
   Clock,
   Settings
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { PageLayout, PageHeader, DataCard, StandardButton } from "@/components/ui/design-system-components";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import { Button } from "@/shared/ui/primitives/button";
+import { Badge } from "@/shared/ui/primitives/badge";
+import { PageLayout, PageHeader, DataCard, StandardButton } from "@/shared/ui/primitives/design-system-components";
 // Removed airtableSync - now using MongoDB backend
 
 export default function SyncStatus() {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/design-system-components';
+import { Button } from '@/shared/ui/primitives/design-system-components';
 import { createPageUrl } from '@/utils';
 import { DASHBOARD_COLORS } from '@/utils';
 

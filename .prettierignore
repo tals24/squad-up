@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Backend
+backend/
+
+# Config files
+*.config.js
+*.config.ts
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Docs
+*.md
+

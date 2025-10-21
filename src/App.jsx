@@ -1,15 +1,15 @@
-import './App.css'
-import Pages from "@/pages/index.jsx"
-import { Toaster } from "@/components/ui/toaster"
-import './api/testConnection' // Load test connection
+import './App.css';
+import AppRouter from '@/app/router';
+import { Toaster } from '@/shared/ui';
+import './api/testConnection'; // Load test connection
 
 function App() {
   return (
     <>
-      <Pages />
+      <AppRouter />
       <Toaster />
     </>
-  )
+  );
 }
 
-export default App 
+export default App; 

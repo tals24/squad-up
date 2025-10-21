@@ -20,11 +20,11 @@ import {
   ShieldCheck, // for goals
   Award // for assists
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PageLayout, PageHeader, SearchFilter, DataCard, LoadingState, EmptyState } from "@/components/ui/design-system-components";
-import { useData } from "../components/DataContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import { Badge } from "@/shared/ui/primitives/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
+import { PageLayout, PageHeader, SearchFilter, DataCard, LoadingState, EmptyState } from "@/shared/ui/primitives/design-system-components";
+import { useData } from "@/app/providers/DataProvider";
 
 // --- Game Stats Rotator Component ---
 const GameStatsRotator = ({ gameId, reports, players }) => {

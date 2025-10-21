@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Users, TrendingUp, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/design-system-components';
+import { Card, CardContent } from '@/shared/ui/primitives/design-system-components';
 import { createPageUrl, DASHBOARD_COLORS } from '@/utils';
 
 /**

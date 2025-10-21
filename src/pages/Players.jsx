@@ -34,8 +34,8 @@ import {
   Text,
   FormField,
   Grid
-} from "@/components/ui/design-system-components";
-import { PageLayout, LoadingState } from "@/components/ui/design-system-components";
+} from "@/shared/ui/primitives/design-system-components";
+import { PageLayout, LoadingState } from "@/shared/ui/primitives/design-system-components";
 import { 
   AnimatedButton, 
   AnimatedCard, 
@@ -44,10 +44,10 @@ import {
   StaggerContainer,
   StaggerItem,
   LoadingSpinner
-} from "@/components/ui/animated-components";
-import { theme } from "@/lib/theme";
-import { createAriaProps, createFormFieldProps } from "@/lib/accessibility";
-import { useData } from "../components/DataContext";
+} from "@/shared/ui/primitives/animated-components";
+import { theme } from "@/shared/lib/theme";
+import { createAriaProps, createFormFieldProps } from "@/shared/lib/accessibility";
+import { useData } from "@/app/providers/DataProvider";
 import { getPlayersForTeam } from "@/api/functions"; // Changed from airtableSync
 import PlayersHeader from "@/components/players/PlayersHeader";
 import PlayerFilters from "@/components/players/PlayerFilters";

@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/primitives/select";
 import { Check, AlertCircle } from "lucide-react";
 
 export default function TacticalBoard({ 
