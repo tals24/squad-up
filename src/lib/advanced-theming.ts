@@ -5,7 +5,7 @@
  * for Phase 4 enhancements.
  */
 
-import { colors as defaultColors } from './theme';
+import { colors as defaultColors } from "@/shared/lib/theme";
 import { colors as darkColors } from './dark-mode';
 
 // ===========================================

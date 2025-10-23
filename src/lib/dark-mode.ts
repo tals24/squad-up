@@ -5,7 +5,7 @@
  * system preference detection, and persistent storage.
  */
 
-import { colors as lightColors } from './theme';
+import { colors as lightColors } from "@/shared/lib/theme";
 
 // ===========================================
 // DARK MODE COLOR PALETTE
