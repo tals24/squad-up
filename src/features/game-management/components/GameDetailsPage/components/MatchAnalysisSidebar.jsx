@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
-import { Textarea } from "@/shared/ui/primitives/textarea";
-import { Trophy, Zap, Star } from "lucide-react";
+import { Button } from "@/shared/ui/primitives/button";
+import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle } from "lucide-react";
 
 export default function MatchAnalysisSidebar({
   isPlayed,
@@ -9,6 +9,7 @@ export default function MatchAnalysisSidebar({
   matchStats,
   teamSummary,
   setTeamSummary,
+  onTeamSummaryClick,
 }) {
   return (
     <div 
@@ -95,49 +96,81 @@ export default function MatchAnalysisSidebar({
             <CardTitle className="text-lg font-bold text-white">Team Summaries</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Defense</label>
-              <Textarea
-                value={teamSummary.defenseSummary}
-                onChange={(e) => setTeamSummary((prev) => ({ ...prev, defenseSummary: e.target.value }))}
-                disabled={isDone}
-                placeholder="Defensive performance..."
-                className="text-sm bg-slate-800 border-slate-700 text-white min-h-[60px]"
-              />
-            </div>
+            {/* Defense Button */}
+            <Button
+              onClick={() => onTeamSummaryClick("defense")}
+              disabled={isDone}
+              className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
+            >
+              <Shield className="w-4 h-4 text-blue-400" />
+              <span className="flex-1 text-left">Defense</span>
+              {teamSummary.defenseSummary && teamSummary.defenseSummary.trim() ? (
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              ) : (
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <AlertCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </Button>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Midfield</label>
-              <Textarea
-                value={teamSummary.midfieldSummary}
-                onChange={(e) => setTeamSummary((prev) => ({ ...prev, midfieldSummary: e.target.value }))}
-                disabled={isDone}
-                placeholder="Midfield performance..."
-                className="text-sm bg-slate-800 border-slate-700 text-white min-h-[60px]"
-              />
-            </div>
+            {/* Midfield Button */}
+            <Button
+              onClick={() => onTeamSummaryClick("midfield")}
+              disabled={isDone}
+              className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
+            >
+              <Zap className="w-4 h-4 text-green-400" />
+              <span className="flex-1 text-left">Midfield</span>
+              {teamSummary.midfieldSummary && teamSummary.midfieldSummary.trim() ? (
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              ) : (
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <AlertCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </Button>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Attack</label>
-              <Textarea
-                value={teamSummary.attackSummary}
-                onChange={(e) => setTeamSummary((prev) => ({ ...prev, attackSummary: e.target.value }))}
-                disabled={isDone}
-                placeholder="Attacking performance..."
-                className="text-sm bg-slate-800 border-slate-700 text-white min-h-[60px]"
-              />
-            </div>
+            {/* Attack Button */}
+            <Button
+              onClick={() => onTeamSummaryClick("attack")}
+              disabled={isDone}
+              className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
+            >
+              <Target className="w-4 h-4 text-red-400" />
+              <span className="flex-1 text-left">Attack</span>
+              {teamSummary.attackSummary && teamSummary.attackSummary.trim() ? (
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              ) : (
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <AlertCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </Button>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">General</label>
-              <Textarea
-                value={teamSummary.generalSummary}
-                onChange={(e) => setTeamSummary((prev) => ({ ...prev, generalSummary: e.target.value }))}
-                disabled={isDone}
-                placeholder="Overall game summary..."
-                className="text-sm bg-slate-800 border-slate-700 text-white min-h-[60px]"
-              />
-            </div>
+            {/* General Button */}
+            <Button
+              onClick={() => onTeamSummaryClick("general")}
+              disabled={isDone}
+              className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
+            >
+              <FileText className="w-4 h-4 text-purple-400" />
+              <span className="flex-1 text-left">General</span>
+              {teamSummary.generalSummary && teamSummary.generalSummary.trim() ? (
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              ) : (
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                  <AlertCircle className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </Button>
           </CardContent>
         </Card>
       )}
