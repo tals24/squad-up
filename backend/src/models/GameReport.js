@@ -105,13 +105,12 @@ gameReportSchema.index({ game: 1 });
 gameReportSchema.index({ author: 1 });
 gameReportSchema.index({ date: -1 });
 
-// Validation: assists cannot exceed goals
-gameReportSchema.pre('save', function(next) {
-  if (this.assists > this.goals) {
-    return next(new Error('Assists cannot be greater than goals'));
-  }
-  next();
-});
+// Note: Assists validation is handled at the game level (in routes/gameReports.js)
+// Validation logic:
+// - A player CAN have more assists than their own goals (e.g., 5 assists, 2 goals is valid)
+// - BUT: Total assists across all players CANNOT exceed team total goals
+// - Example: 3-0 with 2 assists = valid | 0-0 with 3 assists = invalid
+// Every assist must correspond to a goal scored by the team
 
 // Virtual for overall rating
 gameReportSchema.virtual('overallRating').get(function() {

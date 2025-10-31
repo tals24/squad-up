@@ -13,12 +13,17 @@ import {
   Save,
   Edit,
   AlertCircle,
+  Clock,
 } from "lucide-react";
+
+import MinutesProgressIndicator from "./MinutesProgressIndicator";
 
 export default function GameDetailsHeader({
   game,
   finalScore,
   setFinalScore,
+  matchDuration,
+  setMatchDuration,
   missingReportsCount,
   teamSummary,
   isSaving,
@@ -29,6 +34,7 @@ export default function GameDetailsHeader({
   handlePostpone,
   handleSubmitFinalReport,
   handleEditReport,
+  playerReports,
 }) {
   const navigate = useNavigate();
 
@@ -43,6 +49,7 @@ export default function GameDetailsHeader({
   return (
     <div className="border-b border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800 shadow-xl backdrop-blur-sm">
       <div className="max-w-[1800px] mx-auto px-6 py-4">
+        {/* Top Row: Title and Actions */}
         <div className="flex items-center justify-between">
           {/* Left: Back + Title */}
           <div className="flex items-center gap-4">
@@ -110,25 +117,81 @@ export default function GameDetailsHeader({
 
             {/* Score Input (Editable - Played only) */}
             {isPlayed && !isDone && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Score:</span>
-                <Input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={finalScore.ourScore}
-                  onChange={(e) => setFinalScore((prev) => ({ ...prev, ourScore: parseInt(e.target.value) || 0 }))}
-                  className="w-16 text-center bg-slate-800 border-slate-700 text-white"
-                />
-                <span className="text-slate-400">-</span>
-                <Input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={finalScore.opponentScore}
-                  onChange={(e) => setFinalScore((prev) => ({ ...prev, opponentScore: parseInt(e.target.value) || 0 }))}
-                  className="w-16 text-center bg-slate-800 border-slate-700 text-white"
-                />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-400">Score:</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="99"
+                    value={finalScore.ourScore}
+                    onChange={(e) => setFinalScore((prev) => ({ ...prev, ourScore: parseInt(e.target.value) || 0 }))}
+                    className="w-16 text-center bg-slate-800 border-slate-700 text-white"
+                  />
+                  <span className="text-slate-400">-</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="99"
+                    value={finalScore.opponentScore}
+                    onChange={(e) => setFinalScore((prev) => ({ ...prev, opponentScore: parseInt(e.target.value) || 0 }))}
+                    className="w-16 text-center bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+                
+                {/* Extra Time Input */}
+                <div className="flex items-center gap-2 pl-4 border-l border-slate-700">
+                  <Clock className="w-4 h-4 text-cyan-400" />
+                  <span className="text-sm text-slate-400">Extra Time:</span>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="15"
+                      placeholder="1st"
+                      title="First Half Extra Time"
+                      value={matchDuration.firstHalfExtraTime || ''}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        const newMatchDuration = { 
+                          ...matchDuration, 
+                          firstHalfExtraTime: value 
+                        };
+                        console.log('🔍 [GameDetailsHeader] Updating firstHalfExtraTime:', {
+                          oldValue: matchDuration.firstHalfExtraTime,
+                          newValue: value,
+                          newMatchDuration
+                        });
+                        setMatchDuration(newMatchDuration);
+                      }}
+                      className="w-14 text-center bg-slate-800 border-slate-700 text-white text-xs"
+                    />
+                    <span className="text-slate-600">+</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="15"
+                      placeholder="2nd"
+                      title="Second Half Extra Time"
+                      value={matchDuration.secondHalfExtraTime || ''}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        const newMatchDuration = { 
+                          ...matchDuration, 
+                          secondHalfExtraTime: value 
+                        };
+                        console.log('🔍 [GameDetailsHeader] Updating secondHalfExtraTime:', {
+                          oldValue: matchDuration.secondHalfExtraTime,
+                          newValue: value,
+                          newMatchDuration
+                        });
+                        setMatchDuration(newMatchDuration);
+                      }}
+                      className="w-14 text-center bg-slate-800 border-slate-700 text-white text-xs"
+                    />
+                    <span className="text-xs text-slate-500">min</span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -191,6 +254,17 @@ export default function GameDetailsHeader({
             )}
           </div>
         </div>
+        
+        {/* Bottom Row: Minutes Progress Indicator (Only for Played/Done status) */}
+        {(isPlayed || isDone) && playerReports && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50 flex justify-end">
+            <MinutesProgressIndicator 
+              playerReports={playerReports}
+              game={game}
+              matchDuration={matchDuration}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

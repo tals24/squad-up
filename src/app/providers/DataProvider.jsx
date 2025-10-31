@@ -19,6 +19,7 @@ export const DataProvider = ({ children }) => {
         players: [],
         games: [],
         reports: [],
+        gameReports: [], // Add gameReports to initial state
         drills: [],
         gameRosters: [],
         trainingSessions: [], // Added new state for training sessions
@@ -56,11 +57,17 @@ export const DataProvider = ({ children }) => {
                 players: apiData.players || [],
                 games: apiData.games || [],
                 reports: apiData.reports || [],
+                gameReports: apiData.gameReports || [], // Extract gameReports separately
                 drills: apiData.drills || [],
                 gameRosters: apiData.gameRosters || [],
                 trainingSessions: apiData.trainingSessions || [], // Populating new state from response
                 sessionDrills: apiData.sessionDrills || [],       // Populating new state from response
             };
+            
+            // If gameReports not provided, filter from reports
+            if (!newData.gameReports || newData.gameReports.length === 0) {
+                newData.gameReports = (apiData.reports || []).filter(report => report.reportType === 'GameReport');
+            }
             
             setData(newData);
             
@@ -70,6 +77,7 @@ export const DataProvider = ({ children }) => {
                 players: newData.players.length,
                 games: newData.games.length,
                 reports: newData.reports.length,
+                gameReports: newData.gameReports.length,
                 drills: newData.drills.length,
                 gameRosters: newData.gameRosters.length,
                 trainingSessions: newData.trainingSessions.length,

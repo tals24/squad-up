@@ -5,6 +5,24 @@ import { useData } from "@/app/providers/DataProvider";
 // Import formation configurations
 import { formations } from "./formations";
 
+// Import validation utilities
+import { 
+  validateSquad, 
+  validatePlayerPosition, 
+  validateMinutesPlayed, 
+  validateGoalsScored, 
+  validateReportCompleteness,
+  validateStartingLineup,
+  validateGoalkeeper
+} from "../../utils/squadValidation";
+import {
+  validateMinutesForSubmission,
+  getMinutesSummary
+} from "../../utils/minutesValidation";
+
+// Import shared components
+import { ConfirmationModal } from "@/shared/components";
+
 // Import modular components
 import GameDetailsHeader from "./components/GameDetailsHeader";
 import GameDayRosterSidebar from "./components/GameDayRosterSidebar";
@@ -13,6 +31,7 @@ import MatchAnalysisSidebar from "./components/MatchAnalysisSidebar";
 import PlayerPerformanceDialog from "./components/dialogs/PlayerPerformanceDialog";
 import FinalReportDialog from "./components/dialogs/FinalReportDialog";
 import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
+import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -27,6 +46,11 @@ export default function GameDetails() {
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
+  const [matchDuration, setMatchDuration] = useState({
+    regularTime: 90,
+    firstHalfExtraTime: 0,
+    secondHalfExtraTime: 0
+  });
   const [teamSummary, setTeamSummary] = useState({
     defenseSummary: "",
     midfieldSummary: "",
@@ -47,6 +71,24 @@ export default function GameDetails() {
   const [draggedPlayer, setDraggedPlayer] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [manualFormationMode, setManualFormationMode] = useState(false);
+  
+  // Team Summary Dialog state
+  const [showTeamSummaryDialog, setShowTeamSummaryDialog] = useState(false);
+  const [selectedSummaryType, setSelectedSummaryType] = useState(null);
+  
+  // Validation state
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationConfig, setConfirmationConfig] = useState({
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    cancelText: "Cancel",
+    onConfirm: null,
+    onCancel: null,
+    type: "warning"
+  });
+  const [pendingAction, setPendingAction] = useState(null);
+  const [pendingPlayerPosition, setPendingPlayerPosition] = useState(null);
 
   // Get current formation positions
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
@@ -57,7 +99,36 @@ export default function GameDetails() {
 
     const foundGame = games.find((g) => g._id === gameId);
     if (foundGame) {
-      setGame(foundGame);
+      // 🔍 DEBUG: Log backend game data
+      console.log('🔍 [GameDetails] Backend game data:', {
+        gameId: foundGame._id,
+        status: foundGame.status,
+        matchDuration: foundGame.matchDuration,
+        hasMatchDuration: !!foundGame.matchDuration,
+        matchDurationType: typeof foundGame.matchDuration,
+        matchDurationKeys: foundGame.matchDuration ? Object.keys(foundGame.matchDuration) : null
+      });
+      
+      // Initialize match duration from game data FIRST (before setting game)
+      // This ensures we have the correct matchDuration before game object is set
+      const gameMatchDuration = foundGame.matchDuration || {};
+      const loadedMatchDuration = {
+        regularTime: gameMatchDuration.regularTime || 90,
+        firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
+        secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
+      };
+      
+      // 🔍 DEBUG: Log loaded matchDuration
+      console.log('🔍 [GameDetails] Loaded matchDuration state:', loadedMatchDuration);
+      console.log('🔍 [GameDetails] Calculated total:', loadedMatchDuration.regularTime + loadedMatchDuration.firstHalfExtraTime + loadedMatchDuration.secondHalfExtraTime);
+      
+      setMatchDuration(loadedMatchDuration);
+      
+      // Set game object, ensuring matchDuration is included
+      setGame({
+        ...foundGame,
+        matchDuration: loadedMatchDuration
+      });
       setIsReadOnly(foundGame.status === "Done");
       
       if (foundGame.ourScore !== null) {
@@ -125,11 +196,45 @@ export default function GameDetails() {
 
   // Load existing game reports
   useEffect(() => {
-    if (!gameId || !gameReports || gameReports.length === 0) return;
+    // 🔍 DEBUG: Log gameReports loading
+    console.log('🔍 [GameDetails] Loading game reports:', {
+      hasGameId: !!gameId,
+      gameId,
+      hasGameReports: !!gameReports,
+      gameReportsLength: gameReports?.length || 0,
+      gameReportsType: typeof gameReports,
+      isLoading,
+      isArray: Array.isArray(gameReports)
+    });
+    
+    // Wait for data to load
+    if (isLoading) {
+      console.log('🔍 [GameDetails] Still loading data, skipping reports load');
+      return;
+    }
+    
+    if (!gameId) {
+      console.log('🔍 [GameDetails] Skipping game reports load - no gameId');
+      return;
+    }
+    
+    // gameReports might be empty array, which is valid (no reports exist yet)
+    // But it must be an array, not undefined
+    if (!gameReports || !Array.isArray(gameReports)) {
+      console.log('🔍 [GameDetails] Skipping game reports load - gameReports not available or not array');
+      return;
+    }
 
     const reportsForGame = gameReports.filter((report) => {
       const reportGameId = typeof report.game === "object" ? report.game._id : report.game;
       return reportGameId === gameId;
+    });
+
+    // 🔍 DEBUG: Log filtered reports
+    console.log('🔍 [GameDetails] Reports for game:', {
+      totalReports: gameReports.length,
+      reportsForGame: reportsForGame.length,
+      reportIds: reportsForGame.map(r => r._id)
     });
 
     if (reportsForGame.length > 0) {
@@ -144,9 +249,19 @@ export default function GameDetails() {
           notes: report.notes || "",
         };
       });
+      
+      // 🔍 DEBUG: Log loaded reports
+      console.log('🔍 [GameDetails] Setting localPlayerReports:', {
+        reportCount: Object.keys(reports).length,
+        playerIds: Object.keys(reports),
+        sampleReport: Object.values(reports)[0]
+      });
+      
       setLocalPlayerReports(reports);
+    } else {
+      console.log('🔍 [GameDetails] No reports found for this game');
     }
-  }, [gameId, gameReports]);
+  }, [gameId, gameReports, isLoading]);
 
   // Auto-build formation from roster (only when NOT in manual mode)
   useEffect(() => {
@@ -194,11 +309,19 @@ export default function GameDetails() {
         },
         body: JSON.stringify({
           gameId,
-          rosters: [{ playerId, status: newStatus }],
+          rosters: [{
+            playerId,
+            playerName: gamePlayers.find(p => p._id === playerId)?.fullName || gamePlayers.find(p => p._id === playerId)?.name || 'Unknown Player',
+            gameTitle: game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game',
+            rosterEntry: newStatus,
+            status: newStatus
+          }],
         }),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔍 Backend auto-save error response:', errorText);
         console.error("Failed to auto-save roster status");
       }
     } catch (error) {
@@ -274,9 +397,88 @@ export default function GameDetails() {
   }, [localPlayerReports, gamePlayers]);
 
   // Handlers
+  // Validation handlers
+  const showConfirmation = (config) => {
+    setConfirmationConfig(config);
+    setShowConfirmationModal(true);
+  };
+
+  const handleConfirmation = () => {
+    if (confirmationConfig.onConfirm) {
+      confirmationConfig.onConfirm();
+    }
+    setShowConfirmationModal(false);
+  };
+
+  const handleConfirmationCancel = () => {
+    if (confirmationConfig.onCancel) {
+      confirmationConfig.onCancel();
+    }
+    setShowConfirmationModal(false);
+  };
+
+  // Validated game was played handler
   const handleGameWasPlayed = async () => {
     if (!game) return;
     
+    // Run squad validation
+    console.log('🔍 Validation inputs:', {
+      formation: Object.keys(formation).length,
+      benchPlayers: benchPlayers.length,
+      benchPlayersList: benchPlayers.map(p => p.fullName)
+    });
+    const squadValidation = validateSquad(formation, benchPlayers, localRosterStatuses);
+    console.log('🔍 Validation result:', squadValidation);
+    
+    // Check if starting lineup is valid (mandatory 11 players)
+    if (!squadValidation.startingLineup.isValid) {
+      showConfirmation({
+        title: "Invalid Starting Lineup",
+        message: `❌ Cannot mark game as played: ${squadValidation.startingLineup.message}`,
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
+      return;
+    }
+    
+    // Check if goalkeeper is assigned
+    if (!squadValidation.goalkeeper.hasGoalkeeper) {
+      showConfirmation({
+        title: "Missing Goalkeeper",
+        message: `❌ Cannot mark game as played: ${squadValidation.goalkeeper.message}`,
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
+      return;
+    }
+    
+    // Check bench size and show confirmation if needed
+    if (squadValidation.needsConfirmation) {
+      setPendingAction(() => executeGameWasPlayed);
+      showConfirmation({
+        title: "Bench Size Warning",
+        message: squadValidation.bench.confirmationMessage,
+        confirmText: "Continue",
+        cancelText: "Go Back",
+        onConfirm: () => executeGameWasPlayed(),
+        onCancel: () => {},
+        type: "warning"
+      });
+      return;
+    }
+    
+    // If all validations pass, proceed directly
+    await executeGameWasPlayed();
+  };
+
+  // Execute the actual game was played logic
+  const executeGameWasPlayed = async () => {
     setIsSaving(true);
     try {
       const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
@@ -292,8 +494,19 @@ export default function GameDetails() {
 
       const rosterUpdates = gamePlayers.map((player) => ({
         playerId: player._id,
+        playerName: player.fullName || player.name || 'Unknown Player',
+        gameTitle: game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game',
+        rosterEntry: getPlayerStatus(player._id),
         status: getPlayerStatus(player._id),
       }));
+
+      console.log('🔍 Game object structure:', game);
+      console.log('🔍 Game properties:', Object.keys(game));
+      console.log('🔍 Game title fallback:', game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game');
+      console.log('🔍 Sample player data:', gamePlayers[0]);
+      console.log('🔍 Player name fallback:', gamePlayers[0]?.fullName || gamePlayers[0]?.name || 'Unknown Player');
+      console.log('🔍 Roster updates being sent:', rosterUpdates);
+      console.log('🔍 First roster item details:', JSON.stringify(rosterUpdates[0], null, 2));
 
       const rosterResponse = await fetch(`http://localhost:3001/api/game-rosters/batch`, {
         method: "POST",
@@ -304,13 +517,25 @@ export default function GameDetails() {
         body: JSON.stringify({ gameId, rosters: rosterUpdates }),
       });
 
-      if (!rosterResponse.ok) throw new Error("Failed to update rosters");
+      if (!rosterResponse.ok) {
+        const errorText = await rosterResponse.text();
+        console.error('🔍 Backend roster error response:', errorText);
+        throw new Error(`Failed to update rosters: ${rosterResponse.status} - ${errorText}`);
+      }
 
       await refreshData();
       setGame((prev) => ({ ...prev, status: "Played" }));
     } catch (error) {
       console.error("Error updating game:", error);
-      alert("Failed to update game status");
+      showConfirmation({
+        title: "Error",
+        message: "Failed to update game status",
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -336,7 +561,15 @@ export default function GameDetails() {
       window.location.href = "/GamesSchedule";
     } catch (error) {
       console.error("Error postponing game:", error);
-      alert("Failed to postpone game");
+      showConfirmation({
+        title: "Error",
+        message: "Failed to postpone game",
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -398,18 +631,35 @@ export default function GameDetails() {
   };
 
   const handleSubmitFinalReport = async () => {
-    if (missingReportsCount > 0) {
-      alert(`${missingReportsCount} player reports are missing`);
+    // Use comprehensive validation for "Played" status
+    const validation = validatePlayedStatus();
+    
+    if (validation.hasErrors) {
+      showConfirmation({
+        title: "Validation Errors",
+        message: validation.messages.join("\n\n"),
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "error"
+      });
       return;
     }
 
-    if (finalScore.ourScore === null || finalScore.opponentScore === null) {
-      alert("Please enter the final score");
-      return;
-    }
-
-    if (!teamSummary.defenseSummary || !teamSummary.midfieldSummary || !teamSummary.attackSummary || !teamSummary.generalSummary) {
-      alert("Please fill in all team summary fields");
+    if (validation.needsConfirmation) {
+      showConfirmation({
+        title: "Confirmation Required",
+        message: validation.confirmationMessage,
+        confirmText: "Continue",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          setShowConfirmationModal(false);
+          setShowFinalReportDialog(true);
+        },
+        onCancel: () => setShowConfirmationModal(false),
+        type: "warning"
+      });
       return;
     }
 
@@ -419,24 +669,58 @@ export default function GameDetails() {
   const handleConfirmFinalSubmission = async () => {
     setIsSaving(true);
     try {
+      // 🔍 DEBUG: Log what we're sending
+      const requestBody = {
+        status: "Done",
+        ourScore: finalScore.ourScore,
+        opponentScore: finalScore.opponentScore,
+        matchDuration: matchDuration,
+        defenseSummary: teamSummary.defenseSummary,
+        midfieldSummary: teamSummary.midfieldSummary,
+        attackSummary: teamSummary.attackSummary,
+        generalSummary: teamSummary.generalSummary,
+      };
+      
+      console.log('🔍 [GameDetails] Sending final report submission:', {
+        gameId,
+        matchDuration: requestBody.matchDuration,
+        matchDurationType: typeof requestBody.matchDuration,
+        matchDurationKeys: requestBody.matchDuration ? Object.keys(requestBody.matchDuration) : null,
+        matchDurationValue: JSON.stringify(requestBody.matchDuration),
+        fullRequestBody: requestBody
+      });
+      
       const gameResponse = await fetch(`http://localhost:3001/api/games/${gameId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          status: "Done",
-          ourScore: finalScore.ourScore,
-          opponentScore: finalScore.opponentScore,
-          defenseSummary: teamSummary.defenseSummary,
-          midfieldSummary: teamSummary.midfieldSummary,
-          attackSummary: teamSummary.attackSummary,
-          generalSummary: teamSummary.generalSummary,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!gameResponse.ok) throw new Error("Failed to update game");
+      // 🔍 DEBUG: Log response
+      const responseData = await gameResponse.json();
+      console.log('🔍 [GameDetails] Backend response:', {
+        ok: gameResponse.ok,
+        status: gameResponse.status,
+        responseData: responseData,
+        gameMatchDuration: responseData?.data?.matchDuration,
+        savedMatchDuration: responseData?.data?.matchDuration
+      });
+      
+      if (!gameResponse.ok) {
+        // Try to extract error message from response
+        let errorMessage = "Failed to update game";
+        try {
+          const errorData = responseData;
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Failed to update game: ${gameResponse.status} ${gameResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       const reportUpdates = Object.entries(localPlayerReports).map(([playerId, report]) => ({
         playerId,
@@ -459,16 +743,50 @@ export default function GameDetails() {
         body: JSON.stringify({ gameId, reports: reportUpdates }),
       });
 
-      if (!reportsResponse.ok) throw new Error("Failed to update reports");
+      if (!reportsResponse.ok) {
+        // Try to extract error message from response
+        let errorMessage = "Failed to update reports";
+        try {
+          const errorData = await reportsResponse.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Failed to update reports: ${reportsResponse.status} ${reportsResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       await refreshData();
       setIsReadOnly(true);
       setShowFinalReportDialog(false);
-      setGame((prev) => ({ ...prev, status: "Done" }));
-      alert("Final report submitted successfully!");
+      // Preserve matchDuration when updating game status
+      setGame((prev) => ({ 
+        ...prev, 
+        status: "Done",
+        matchDuration: matchDuration // Preserve the matchDuration state
+      }));
+      showConfirmation({
+        title: "Success",
+        message: "Final report submitted successfully!",
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "success"
+      });
     } catch (error) {
       console.error("Error submitting final report:", error);
-      alert("Failed to submit final report");
+      // Extract error message from error object
+      const errorMessage = error.message || error.toString() || "Failed to submit final report";
+      showConfirmation({
+        title: "Error",
+        message: errorMessage,
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -477,6 +795,102 @@ export default function GameDetails() {
   const handleEditReport = () => {
     setIsReadOnly(false);
     setGame((prev) => ({ ...prev, status: "Played" }));
+  };
+
+  // Team Summary handlers
+  const handleTeamSummaryClick = (summaryType) => {
+    setSelectedSummaryType(summaryType);
+    setShowTeamSummaryDialog(true);
+  };
+
+  const handleTeamSummarySave = (summaryType, value) => {
+    setTeamSummary((prev) => ({
+      ...prev,
+      [`${summaryType}Summary`]: value
+    }));
+  };
+
+  const getCurrentSummaryValue = () => {
+    if (!selectedSummaryType) return "";
+    return teamSummary[`${selectedSummaryType}Summary`] || "";
+  };
+
+  // Check if all team summaries are filled
+  const areAllTeamSummariesFilled = () => {
+    return (
+      teamSummary.defenseSummary && teamSummary.defenseSummary.trim() &&
+      teamSummary.midfieldSummary && teamSummary.midfieldSummary.trim() &&
+      teamSummary.attackSummary && teamSummary.attackSummary.trim() &&
+      teamSummary.generalSummary && teamSummary.generalSummary.trim()
+    );
+  };
+
+  // Comprehensive validation for "Played" status (final report submission)
+  const validatePlayedStatus = () => {
+    const validations = [];
+    let hasErrors = false;
+    let needsConfirmation = false;
+    let confirmationMessage = "";
+
+    // 1. Basic squad validation (no bench validation for "Played" status)
+    // Bench validation only applies when marking game as "Played", not for final submission
+    const startingLineupValidation = validateStartingLineup(formation);
+    if (!startingLineupValidation.isValid) {
+      hasErrors = true;
+      validations.push(startingLineupValidation.message);
+    }
+    
+    const goalkeeperValidation = validateGoalkeeper(formation);
+    if (!goalkeeperValidation.hasGoalkeeper) {
+      hasErrors = true;
+      validations.push(goalkeeperValidation.message);
+    }
+
+    // 2. Goals scored validation
+    const goalsValidation = validateGoalsScored(finalScore, localPlayerReports);
+    if (!goalsValidation.isValid) {
+      hasErrors = true;
+      validations.push(goalsValidation.message);
+    }
+    if (goalsValidation.needsConfirmation) {
+      needsConfirmation = true;
+      confirmationMessage = goalsValidation.confirmationMessage;
+    }
+
+    // 3. Team minutes validation
+    // Pass all players (starting lineup + bench) for proper name lookup
+    // Create a temporary game object with current matchDuration for validation
+    const gameWithMatchDuration = {
+      ...game,
+      matchDuration: matchDuration
+    };
+    const allPlayers = [...playersOnPitch, ...benchPlayers];
+    const minutesValidation = validateMinutesForSubmission(
+      localPlayerReports, 
+      gameWithMatchDuration, 
+      allPlayers
+    );
+    if (!minutesValidation.isValid) {
+      hasErrors = true;
+      validations.push(...minutesValidation.errors);
+    }
+    if (minutesValidation.warnings.length > 0) {
+      validations.push(...minutesValidation.warnings.map(w => `⚠️ ${w}`));
+    }
+
+    // 4. Team summaries validation
+    if (!areAllTeamSummariesFilled()) {
+      hasErrors = true;
+      validations.push("All team summary reports must be completed");
+    }
+
+    return {
+      isValid: !hasErrors,
+      hasErrors,
+      needsConfirmation,
+      confirmationMessage,
+      messages: validations
+    };
   };
 
   // Drag and drop handlers
@@ -516,25 +930,55 @@ export default function GameDetails() {
       return;
     }
     
-    console.log(`✅ Assigning player ${draggedPlayer.fullName} to position ${posId}`);
+    // Get position data for validation
+    const positionData = positions[posId];
+    
+    // Validate player position
+    const positionValidation = validatePlayerPosition(draggedPlayer, positionData);
+    
+    // If player is being placed out of position, show confirmation
+    if (!positionValidation.isNaturalPosition) {
+      setPendingPlayerPosition({ player: draggedPlayer, position: posId, positionData });
+      showConfirmation({
+        title: "Out of Position Warning",
+        message: `${draggedPlayer.fullName} is being placed out of their natural position. Are you sure you want to place them here?`,
+        confirmText: "Confirm",
+        cancelText: "Cancel",
+        onConfirm: () => executePositionDrop(draggedPlayer, posId),
+        onCancel: () => {
+          setIsDragging(false);
+          setDraggedPlayer(null);
+        },
+        type: "warning"
+      });
+      return;
+    }
+    
+    // If position is natural, proceed directly
+    executePositionDrop(draggedPlayer, posId);
+  };
+
+  // Execute the actual position drop logic
+  const executePositionDrop = (player, posId) => {
+    console.log(`✅ Assigning player ${player.fullName} to position ${posId}`);
     
     setFormation((prev) => {
       const updated = { ...prev };
       
       Object.keys(updated).forEach((key) => {
-        if (updated[key]?._id === draggedPlayer._id) {
-          console.log(`🧹 Removing ${draggedPlayer.fullName} from position ${key}`);
+        if (updated[key]?._id === player._id) {
+          console.log(`🧹 Removing ${player.fullName} from position ${key}`);
           updated[key] = null;
         }
       });
       
-      updated[posId] = draggedPlayer;
+      updated[posId] = player;
       
       console.log('🔄 Formation updated:', Object.entries(updated).filter(([_, p]) => p !== null).map(([pos, p]) => ({ pos, player: p.fullName })));
       return updated;
     });
     
-    updatePlayerStatus(draggedPlayer._id, "Starting Lineup");
+    updatePlayerStatus(player._id, "Starting Lineup");
     
     setIsDragging(false);
     setDraggedPlayer(null);
@@ -583,7 +1027,7 @@ export default function GameDetails() {
     setFormation(newFormation);
     
     // Update player status
-    updatePlayerStatus(player._id, "Playing");
+    updatePlayerStatus(player._id, "Starting Lineup");
     setManualFormationMode(true);
 
     // Close dialog and reset
@@ -622,6 +1066,8 @@ export default function GameDetails() {
         game={game}
         finalScore={finalScore}
         setFinalScore={setFinalScore}
+        matchDuration={matchDuration}
+        setMatchDuration={setMatchDuration}
         missingReportsCount={missingReportsCount}
         teamSummary={teamSummary}
         isSaving={isSaving}
@@ -632,6 +1078,7 @@ export default function GameDetails() {
         handlePostpone={handlePostpone}
         handleSubmitFinalReport={handleSubmitFinalReport}
         handleEditReport={handleEditReport}
+        playerReports={localPlayerReports}
       />
 
       {/* Main Content - 3 Column Layout */}
@@ -669,6 +1116,7 @@ export default function GameDetails() {
             isScheduled={isScheduled}
             isPlayed={isPlayed}
             isReadOnly={isDone}
+            isDone={isDone}
             hasReport={hasReport}
             needsReport={needsReport}
           />
@@ -681,6 +1129,7 @@ export default function GameDetails() {
           matchStats={matchStats}
           teamSummary={teamSummary}
           setTeamSummary={setTeamSummary}
+          onTeamSummaryClick={handleTeamSummaryClick}
         />
       </div>
 
@@ -702,6 +1151,9 @@ export default function GameDetails() {
         onDataChange={setPlayerPerfData}
         onSave={handleSavePerformanceReport}
         isReadOnly={isDone}
+        isStarting={!!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id))}
+        game={game}
+        matchDuration={matchDuration}
       />
 
       <PlayerSelectionDialog
@@ -715,6 +1167,29 @@ export default function GameDetails() {
         positionData={selectedPositionData}
         availablePlayers={squadPlayers}
         onSelectPlayer={handleSelectPlayerForPosition}
+      />
+
+      <TeamSummaryDialog
+        open={showTeamSummaryDialog}
+        onOpenChange={setShowTeamSummaryDialog}
+        summaryType={selectedSummaryType}
+        currentValue={getCurrentSummaryValue()}
+        onSave={handleTeamSummarySave}
+        isSaving={isSaving}
+      />
+
+      {/* Confirmation Modal for Validations */}
+      <ConfirmationModal
+        isOpen={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}
+        title={confirmationConfig.title}
+        message={confirmationConfig.message}
+        confirmText={confirmationConfig.confirmText}
+        cancelText={confirmationConfig.cancelText}
+        onConfirm={handleConfirmation}
+        onCancel={handleConfirmationCancel}
+        type={confirmationConfig.type}
+        isLoading={isSaving}
       />
     </div>
   );

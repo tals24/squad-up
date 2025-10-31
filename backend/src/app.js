@@ -22,6 +22,7 @@ const formationRoutes = require('./routes/formations');
 const trainingSessionRoutes = require('./routes/trainingSessions');
 const sessionDrillRoutes = require('./routes/sessionDrills');
 const dataRoutes = require('./routes/data');
+const minutesValidationRoutes = require('./routes/minutesValidation');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/games', minutesValidationRoutes); // Minutes validation routes (under /api/games/:gameId/...)
 app.use('/api/game-rosters', gameRosterRoutes);
 app.use('/api/timeline-events', timelineEventRoutes);
 app.use('/api/game-reports', gameReportRoutes);

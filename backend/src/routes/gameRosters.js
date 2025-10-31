@@ -146,7 +146,7 @@ router.post('/batch', authenticateJWT, async (req, res) => {
     const results = [];
     
     for (const rosterData of rosters) {
-      const { playerId, status } = rosterData;
+      const { playerId, status, playerName, gameTitle, rosterEntry } = rosterData;
       
       // Find existing roster entry or create new
       let gameRoster = await GameRoster.findOne({ 
@@ -157,13 +157,19 @@ router.post('/batch', authenticateJWT, async (req, res) => {
       if (gameRoster) {
         // Update existing
         gameRoster.status = status;
+        if (playerName) gameRoster.playerName = playerName;
+        if (gameTitle) gameRoster.gameTitle = gameTitle;
+        if (rosterEntry) gameRoster.rosterEntry = rosterEntry;
         await gameRoster.save();
       } else {
         // Create new
         gameRoster = new GameRoster({
           game: gameId,
           player: playerId,
-          status: status || 'Not in Squad'
+          status: status || 'Not in Squad',
+          playerName: playerName || '',
+          gameTitle: gameTitle || '',
+          rosterEntry: rosterEntry || ''
         });
         await gameRoster.save();
       }

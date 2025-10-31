@@ -22,6 +22,7 @@ export default function TacticalBoard({
   isScheduled, 
   isPlayed,
   isReadOnly,
+  isDone,
   hasReport,
   needsReport
 }) {
@@ -155,24 +156,26 @@ export default function TacticalBoard({
                 {/* Position Circle */}
                 {isOccupied ? (
                   <div
-                    className="relative group"
+                    className={`relative group ${(isPlayed || isDone) ? "cursor-pointer" : ""}`}
                     onClick={() => {
-                      if (isPlayed && !isReadOnly) {
+                      // Allow clicking when played or done (to view reports) - works in both edit and read-only mode
+                      if (isPlayed || isDone) {
                         onPlayerClick(player);
                       }
                     }}
+                    title={(isPlayed || isDone) ? `Click to view ${player.fullName}'s report` : ""}
                   >
                     <div
                       style={{ 
                         ...getPositionGradientStyle(posData.type),
                         boxShadow: "0 0 6px rgba(0,0,0,0.3)",
                         border: "2px solid rgba(255, 255, 255, 0.8)",
-                        pointerEvents: "none"
+                        // Remove pointerEvents: "none" to allow clicking for report viewing
                       }}
                       className={`
                         w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm
                         transition-all
-                        ${isPlayed && !isReadOnly ? "cursor-pointer hover:scale-110" : ""}
+                        ${(isPlayed || isDone) ? "cursor-pointer hover:scale-110" : ""}
                         group-hover:scale-110
                       `}
                     >
@@ -181,7 +184,7 @@ export default function TacticalBoard({
                       </span>
 
                       {/* Report Status Badge */}
-                      {isPlayed && hasReport(player._id) && (
+                      {(isPlayed || isDone) && hasReport(player._id) && (
                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                           <Check className="w-3 h-3 text-white" />
                         </div>

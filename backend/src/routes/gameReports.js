@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateJWT } = require('../middleware/jwtAuth');
 const { checkTeamAccess } = require('../middleware/auth');
 const GameReport = require('../models/GameReport');
+const Game = require('../models/Game');
 
 const router = express.Router();
 
@@ -185,6 +186,23 @@ router.post('/batch', authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format. Expected { gameId, reports: [{ playerId, ... }] }' });
     }
 
+    // Get the game to check team score
+    const game = await Game.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Validate: Total assists cannot exceed team goals
+    // Every assist must have a goal (team scored), but not every goal must have an assist
+    const totalAssists = reports.reduce((sum, report) => sum + (report.assists || 0), 0);
+    const teamGoals = game.ourScore || 0;
+
+    if (totalAssists > teamGoals) {
+      return res.status(400).json({ 
+        error: `Total assists (${totalAssists}) cannot exceed team goals (${teamGoals}). Every assist must correspond to a goal scored by the team.` 
+      });
+    }
+
     const results = [];
     
     for (const reportData of reports) {
@@ -237,7 +255,9 @@ router.post('/batch', authenticateJWT, async (req, res) => {
     });
   } catch (error) {
     console.error('Batch update game reports error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    // Return the actual error message from validation or other errors
+    const errorMessage = error.message || 'Internal server error';
+    res.status(500).json({ error: errorMessage });
   }
 });
 

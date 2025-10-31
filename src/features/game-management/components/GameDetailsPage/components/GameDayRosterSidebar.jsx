@@ -56,6 +56,7 @@ export default function GameDayRosterSidebar({
                   isScheduled={isScheduled}
                   isPlayed={isPlayed}
                   isReadOnly={isDone}
+                  isDone={isDone}
                 />
               ))}
             </div>
@@ -84,6 +85,7 @@ export default function GameDayRosterSidebar({
                   isScheduled={isScheduled}
                   isPlayed={isPlayed}
                   isReadOnly={isDone}
+                  isDone={isDone}
                 />
               ))}
             </div>
@@ -112,6 +114,7 @@ export default function GameDayRosterSidebar({
                   isScheduled={isScheduled}
                   isPlayed={isPlayed}
                   isReadOnly={isDone}
+                  isDone={isDone}
                 />
               ))}
             </div>
