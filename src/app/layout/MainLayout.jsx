@@ -148,7 +148,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Drill Library", url: createPageUrl("DrillLibrary"), icon: ClipboardList, color: "text-orange-400" },
     { title: "Tactic Board", url: createPageUrl("TacticBoard"), icon: Target, color: "text-red-400" },
     { title: "Analytics", url: createPageUrl("Analytics"), icon: TrendingUp, color: "text-yellow-400" },
-    { title: "Sync Status", url: createPageUrl("SyncStatus"), icon: Settings, color: "text-slate-400" },
+    { title: "Settings", url: createPageUrl("Settings"), icon: Settings, color: "text-slate-400" },
   ];
 
   const quickActions = [
