@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Textarea } from "@/shared/ui/primitives/textarea";
@@ -17,9 +17,24 @@ export default function PlayerPerformanceDialog({
   data, 
   onDataChange, 
   onSave, 
-  isReadOnly 
+  isReadOnly,
+  isStarting = false,
 }) {
   if (!player) return null;
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const minutesPlayed = useMemo(() => Number(data?.minutesPlayed || 0), [data]);
+
+  const handleSaveClick = () => {
+    // Block save if player is in starting lineup and minutesPlayed is 0
+    if (isStarting && minutesPlayed <= 0) {
+      setErrorMessage("Starting lineup players must have minutes played (greater than 0).");
+      return;
+    }
+    setErrorMessage("");
+    onSave();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,6 +64,9 @@ export default function PlayerPerformanceDialog({
               disabled={isReadOnly}
               className="bg-slate-800 border-slate-700 text-white"
             />
+            {isStarting && errorMessage && (
+              <div className="mt-1 text-xs text-red-400">{errorMessage}</div>
+            )}
           </div>
 
           {/* Goals */}
@@ -118,7 +136,7 @@ export default function PlayerPerformanceDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-400">
               Cancel
             </Button>
-            <Button onClick={onSave} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
+            <Button onClick={handleSaveClick} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
               Save Report
             </Button>
           </DialogFooter>

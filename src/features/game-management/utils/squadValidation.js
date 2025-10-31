@@ -170,3 +170,135 @@ export const validateSquad = (formation, benchPlayers, localRosterStatuses) => {
     ]
   };
 };
+
+/**
+ * Validates that starting lineup players have minutes played
+ * @param {Array} startingLineup - Array of players in starting lineup
+ * @param {Object} playerReports - Object containing player reports by player ID
+ * @returns {Object} - { isValid: boolean, message: string, needsConfirmation: boolean }
+ */
+export const validateMinutesPlayed = (startingLineup, playerReports) => {
+  if (!startingLineup || startingLineup.length === 0) {
+    return {
+      isValid: false,
+      message: "No starting lineup players found",
+      needsConfirmation: false
+    };
+  }
+
+  const playersWithoutMinutes = startingLineup.filter(player => {
+    const report = playerReports[player._id];
+    const minutes = report?.minutesPlayed || 0;
+    return minutes <= 0;
+  });
+
+  if (playersWithoutMinutes.length > 0) {
+    const playerNames = playersWithoutMinutes.map(p => p.fullName || p.name).join(", ");
+    return {
+      isValid: false,
+      message: `Starting lineup players must have minutes played: ${playerNames}`,
+      needsConfirmation: false
+    };
+  }
+
+  return {
+    isValid: true,
+    message: "All starting lineup players have minutes played",
+    needsConfirmation: false
+  };
+};
+
+/**
+ * Validates goals scored consistency
+ * @param {Object} teamScore - { ourScore: number, opponentScore: number }
+ * @param {Object} playerReports - Object containing player reports by player ID
+ * @returns {Object} - { isValid: boolean, message: string, needsConfirmation: boolean }
+ */
+export const validateGoalsScored = (teamScore, playerReports) => {
+  if (!teamScore || teamScore.ourScore === null || teamScore.ourScore === undefined) {
+    return {
+      isValid: false,
+      message: "Team score must be entered",
+      needsConfirmation: false
+    };
+  }
+
+  if (!playerReports || Object.keys(playerReports).length === 0) {
+    return {
+      isValid: false,
+      message: "Player reports not found",
+      needsConfirmation: false
+    };
+  }
+
+  // Calculate total goals scored by players
+  const totalPlayerGoals = Object.values(playerReports).reduce((total, report) => {
+    const goals = report?.goalsScored || 0;
+    return total + goals;
+  }, 0);
+
+  const teamGoals = teamScore.ourScore;
+
+  // Error case: Player goals exceed team score (impossible)
+  if (totalPlayerGoals > teamGoals) {
+    return {
+      isValid: false,
+      message: `Player goals (${totalPlayerGoals}) exceed team score (${teamGoals}). Please correct the player goal data.`,
+      needsConfirmation: false
+    };
+  }
+
+  // Warning case: Team score higher than player goals (own goals possible)
+  if (teamGoals > totalPlayerGoals) {
+    const ownGoals = teamGoals - totalPlayerGoals;
+    return {
+      isValid: true,
+      message: `Team scored ${teamGoals} goals, but players only scored ${totalPlayerGoals} goals`,
+      needsConfirmation: true,
+      confirmationMessage: `Team scored ${teamGoals} goals, but players only scored ${totalPlayerGoals} goals. This suggests ${ownGoals} own goals. Are you sure this is correct?`
+    };
+  }
+
+  // Perfect match
+  return {
+    isValid: true,
+    message: "Goals scored match team score",
+    needsConfirmation: false
+  };
+};
+
+/**
+ * Validates report completeness for starting lineup players
+ * @param {Array} startingLineup - Array of players in starting lineup
+ * @param {Object} playerReports - Object containing player reports by player ID
+ * @returns {Object} - { isValid: boolean, message: string, needsConfirmation: boolean }
+ */
+export const validateReportCompleteness = (startingLineup, playerReports) => {
+  if (!startingLineup || startingLineup.length === 0) {
+    return {
+      isValid: false,
+      message: "No starting lineup players found",
+      needsConfirmation: false
+    };
+  }
+
+  const playersWithoutReports = startingLineup.filter(player => {
+    const report = playerReports[player._id];
+    return !report || !report.minutesPlayed;
+  });
+
+  if (playersWithoutReports.length > 0) {
+    const playerNames = playersWithoutReports.map(p => p.fullName || p.name).join(", ");
+    return {
+      isValid: false,
+      message: `Starting lineup players must have complete reports: ${playerNames}`,
+      needsConfirmation: false
+    };
+  }
+
+  return {
+    isValid: true,
+    message: "All starting lineup players have complete reports",
+    needsConfirmation: false
+  };
+};

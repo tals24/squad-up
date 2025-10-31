@@ -6,7 +6,13 @@ import { useData } from "@/app/providers/DataProvider";
 import { formations } from "./formations";
 
 // Import validation utilities
-import { validateSquad, validatePlayerPosition } from "../../utils/squadValidation";
+import { 
+  validateSquad, 
+  validatePlayerPosition, 
+  validateMinutesPlayed, 
+  validateGoalsScored, 
+  validateReportCompleteness 
+} from "../../utils/squadValidation";
 
 // Import shared components
 import { ConfirmationModal } from "@/shared/components";
@@ -541,40 +547,33 @@ export default function GameDetails() {
   };
 
   const handleSubmitFinalReport = async () => {
-    if (missingReportsCount > 0) {
+    // Use comprehensive validation for "Played" status
+    const validation = validatePlayedStatus();
+    
+    if (validation.hasErrors) {
       showConfirmation({
-        title: "Missing Reports",
-        message: `${missingReportsCount} player reports are missing`,
+        title: "Validation Errors",
+        message: validation.messages.join("\n\n"),
         confirmText: "OK",
         cancelText: null,
         onConfirm: () => setShowConfirmationModal(false),
         onCancel: null,
-        type: "warning"
+        type: "error"
       });
       return;
     }
 
-    if (finalScore.ourScore === null || finalScore.opponentScore === null) {
+    if (validation.needsConfirmation) {
       showConfirmation({
-        title: "Missing Score",
-        message: "Please enter the final score",
-        confirmText: "OK",
-        cancelText: null,
-        onConfirm: () => setShowConfirmationModal(false),
-        onCancel: null,
-        type: "warning"
-      });
-      return;
-    }
-
-    if (!areAllTeamSummariesFilled()) {
-      showConfirmation({
-        title: "Incomplete Team Summaries",
-        message: "Please fill in all team summary reports (Defense, Midfield, Attack, and General) before submitting the final report",
-        confirmText: "OK",
-        cancelText: null,
-        onConfirm: () => setShowConfirmationModal(false),
-        onCancel: null,
+        title: "Confirmation Required",
+        message: validation.confirmationMessage,
+        confirmText: "Continue",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          setShowConfirmationModal(false);
+          setShowFinalReportDialog(true);
+        },
+        onCancel: () => setShowConfirmationModal(false),
         type: "warning"
       });
       return;
@@ -688,6 +687,67 @@ export default function GameDetails() {
       teamSummary.attackSummary && teamSummary.attackSummary.trim() &&
       teamSummary.generalSummary && teamSummary.generalSummary.trim()
     );
+  };
+
+  // Comprehensive validation for "Played" status
+  const validatePlayedStatus = () => {
+    const validations = [];
+    let hasErrors = false;
+    let needsConfirmation = false;
+    let confirmationMessage = "";
+
+    // 1. Basic squad validation
+    const squadValidation = validateSquad(formation, benchPlayers, localRosterStatuses);
+    if (!squadValidation.isValid) {
+      hasErrors = true;
+      validations.push(squadValidation.startingLineup.message);
+      if (squadValidation.goalkeeper && !squadValidation.goalkeeper.hasGoalkeeper) {
+        validations.push(squadValidation.goalkeeper.message);
+      }
+    }
+    if (squadValidation.needsConfirmation) {
+      needsConfirmation = true;
+      confirmationMessage = squadValidation.bench.confirmationMessage;
+    }
+
+    // 2. Minutes played validation (only for starting lineup)
+    const minutesValidation = validateMinutesPlayed(playersOnPitch, playerPerfData);
+    if (!minutesValidation.isValid) {
+      hasErrors = true;
+      validations.push(minutesValidation.message);
+    }
+
+    // 3. Goals scored validation
+    const goalsValidation = validateGoalsScored(finalScore, playerPerfData);
+    if (!goalsValidation.isValid) {
+      hasErrors = true;
+      validations.push(goalsValidation.message);
+    }
+    if (goalsValidation.needsConfirmation) {
+      needsConfirmation = true;
+      confirmationMessage = goalsValidation.confirmationMessage;
+    }
+
+    // 4. Report completeness validation
+    const reportValidation = validateReportCompleteness(playersOnPitch, playerPerfData);
+    if (!reportValidation.isValid) {
+      hasErrors = true;
+      validations.push(reportValidation.message);
+    }
+
+    // 5. Team summaries validation
+    if (!areAllTeamSummariesFilled()) {
+      hasErrors = true;
+      validations.push("All team summary reports must be completed");
+    }
+
+    return {
+      isValid: !hasErrors,
+      hasErrors,
+      needsConfirmation,
+      confirmationMessage,
+      messages: validations
+    };
   };
 
   // Drag and drop handlers
@@ -944,6 +1004,7 @@ export default function GameDetails() {
         onDataChange={setPlayerPerfData}
         onSave={handleSavePerformanceReport}
         isReadOnly={isDone}
+        isStarting={!!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id))}
       />
 
       <PlayerSelectionDialog
