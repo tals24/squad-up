@@ -11,6 +11,13 @@
  * @returns {Object} - { isValid: boolean, message: string }
  */
 export const validateStartingLineup = (formation) => {
+  if (!formation || typeof formation !== 'object') {
+    return {
+      isValid: false,
+      message: "No players assigned to starting lineup"
+    };
+  }
+  
   const playersOnPitch = Object.values(formation).filter(player => player !== null && player !== undefined);
   
   if (playersOnPitch.length === 0) {
@@ -46,6 +53,15 @@ export const validateStartingLineup = (formation) => {
  * @returns {Object} - { isValid: boolean, message: string, needsConfirmation: boolean }
  */
 export const validateBenchSize = (benchPlayers) => {
+  if (!benchPlayers || !Array.isArray(benchPlayers)) {
+    return {
+      isValid: true,
+      message: "No players on the bench",
+      needsConfirmation: true,
+      confirmationMessage: "You have no players on the bench. Are you sure you want to continue?"
+    };
+  }
+  
   const benchCount = benchPlayers.length;
   
   if (benchCount >= 7) {
@@ -125,6 +141,13 @@ export const validatePlayerPosition = (player, positionData) => {
  * @returns {Object} - { hasGoalkeeper: boolean, message: string }
  */
 export const validateGoalkeeper = (formation) => {
+  if (!formation || typeof formation !== 'object') {
+    return {
+      hasGoalkeeper: false,
+      message: "No goalkeeper assigned to the team"
+    };
+  }
+  
   const gkPosition = formation.gk;
   
   if (!gkPosition) {
@@ -232,12 +255,29 @@ export const validateGoalsScored = (teamScore, playerReports) => {
   }
 
   // Calculate total goals scored by players
+  // Support both 'goalsScored' and 'goals' field names for compatibility
   const totalPlayerGoals = Object.values(playerReports).reduce((total, report) => {
-    const goals = report?.goalsScored || 0;
+    const goals = report?.goalsScored || report?.goals || 0;
     return total + goals;
   }, 0);
 
   const teamGoals = teamScore.ourScore;
+
+  // Calculate total assists across all players
+  const totalAssists = Object.values(playerReports).reduce((total, report) => {
+    const assists = report?.assists || 0;
+    return total + assists;
+  }, 0);
+
+  // Error case: Total assists exceed team goals (impossible)
+  // Every assist must correspond to a goal scored by the team
+  if (totalAssists > teamGoals) {
+    return {
+      isValid: false,
+      message: `Total assists (${totalAssists}) cannot exceed team goals (${teamGoals}). Every assist must correspond to a goal scored by the team.`,
+      needsConfirmation: false
+    };
+  }
 
   // Error case: Player goals exceed team score (impossible)
   if (totalPlayerGoals > teamGoals) {

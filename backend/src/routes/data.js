@@ -119,6 +119,11 @@ router.get('/all', authenticateJWT, async (req, res) => {
       gameTitle: `${game.teamName} vs ${game.opponent}`
     }));
 
+    // Filter gameReports separately for easier access
+    // Reports include TimelineEvent, GameReport, and ScoutReport
+    // But we also need gameReports separately for game details page
+    const filteredGameReports = filteredReports.filter(report => report.reportType === 'GameReport');
+    
     res.json({
       success: true,
       data: {
@@ -127,6 +132,7 @@ router.get('/all', authenticateJWT, async (req, res) => {
         players: filteredPlayers,
         games: gamesWithTitles,
         reports: filteredReports,
+        gameReports: filteredGameReports, // Add gameReports separately for convenience
         drills,
         gameRosters: filteredGameRosters,
         trainingSessions: filteredTrainingSessions,

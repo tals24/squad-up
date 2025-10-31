@@ -10,7 +10,10 @@ import {
   validateBenchSize,
   validatePlayerPosition,
   validateGoalkeeper,
-  validateSquad
+  validateSquad,
+  validateMinutesPlayed,
+  validateGoalsScored,
+  validateReportCompleteness
 } from '../squadValidation';
 
 // Mock data for testing
@@ -117,8 +120,17 @@ describe('Squad Validation Utilities', () => {
   });
 
   describe('validateBenchSize', () => {
-    it('should validate adequate bench size (6+ players)', () => {
-      const benchPlayers = mockPlayers.slice(11, 17); // 6 players
+    it('should validate adequate bench size (7+ players)', () => {
+      // Create array with exactly 7 players
+      const benchPlayers = [
+        mockPlayers[11],
+        mockPlayers[12],
+        mockPlayers[13],
+        mockPlayers[14],
+        mockPlayers[15],
+        mockPlayers[16],
+        { _id: '18', name: 'Extra Player', position: 'Midfielder' } // Add one more to make 7
+      ];
       const result = validateBenchSize(benchPlayers);
       
       expect(result.isValid).toBe(true);
@@ -127,7 +139,8 @@ describe('Squad Validation Utilities', () => {
     });
 
     it('should validate more than adequate bench size', () => {
-      const benchPlayers = mockPlayers.slice(11, 20); // 9 players
+      // Create array with 9 players (7+ is adequate)
+      const benchPlayers = Array.from({ length: 9 }, (_, i) => mockPlayers[11 + i] || { _id: `player${11 + i}`, name: `Player ${11 + i}` });
       const result = validateBenchSize(benchPlayers);
       
       expect(result.isValid).toBe(true);
@@ -135,23 +148,24 @@ describe('Squad Validation Utilities', () => {
       expect(result.needsConfirmation).toBe(false);
     });
 
-    it('should require confirmation for small bench (1-5 players)', () => {
+    it('should require confirmation for small bench (1-6 players)', () => {
       const benchPlayers = mockPlayers.slice(11, 15); // 4 players
       const result = validateBenchSize(benchPlayers);
       
       expect(result.isValid).toBe(true);
-      expect(result.message).toBe('Only 4 players on bench (recommended: 6+)');
+      expect(result.message).toBe('Only 4 players on bench (recommended: 7+)');
       expect(result.needsConfirmation).toBe(true);
-      expect(result.confirmationMessage).toBe('You have fewer than 6 bench players. Are you sure you want to continue?');
+      expect(result.confirmationMessage).toBe('You have fewer than 7 bench players. Are you sure you want to continue?');
     });
 
-    it('should handle empty bench', () => {
+    it('should require confirmation for empty bench', () => {
       const benchPlayers = [];
       const result = validateBenchSize(benchPlayers);
       
-      expect(result.isValid).toBe(false);
+      expect(result.isValid).toBe(true);
       expect(result.message).toBe('No players on the bench');
-      expect(result.needsConfirmation).toBe(false);
+      expect(result.needsConfirmation).toBe(true);
+      expect(result.confirmationMessage).toBe('You have no players on the bench. Are you sure you want to continue?');
     });
 
     it('should handle single bench player', () => {
@@ -159,8 +173,9 @@ describe('Squad Validation Utilities', () => {
       const result = validateBenchSize(benchPlayers);
       
       expect(result.isValid).toBe(true);
-      expect(result.message).toBe('Only 1 players on bench (recommended: 6+)');
+      expect(result.message).toBe('Only 1 players on bench (recommended: 7+)');
       expect(result.needsConfirmation).toBe(true);
+      expect(result.confirmationMessage).toBe('You have fewer than 7 bench players. Are you sure you want to continue?');
     });
   });
 
@@ -297,7 +312,16 @@ describe('Squad Validation Utilities', () => {
   });
 
   describe('validateSquad', () => {
-    const mockBenchPlayers = mockPlayers.slice(11, 17); // 6 players
+    // Create array with exactly 7 players (adequate)
+    const mockBenchPlayers = [
+      mockPlayers[11],
+      mockPlayers[12],
+      mockPlayers[13],
+      mockPlayers[14],
+      mockPlayers[15],
+      mockPlayers[16],
+      { _id: '18', name: 'Extra Player', position: 'Midfielder' }
+    ];
     const mockRosterStatuses = {
       '1': 'Starting Lineup',
       '2': 'Starting Lineup',
@@ -368,13 +392,14 @@ describe('Squad Validation Utilities', () => {
       expect(result.goalkeeper.hasGoalkeeper).toBe(false);
     });
 
-    it('should handle empty bench', () => {
+    it('should require confirmation for empty bench', () => {
       const emptyBench = [];
       const result = validateSquad(mockFormation, emptyBench, mockRosterStatuses);
       
-      expect(result.isValid).toBe(false);
+      expect(result.isValid).toBe(true);
       expect(result.startingLineup.isValid).toBe(true);
-      expect(result.bench.isValid).toBe(false);
+      expect(result.bench.isValid).toBe(true);
+      expect(result.bench.needsConfirmation).toBe(true);
       expect(result.goalkeeper.hasGoalkeeper).toBe(true);
     });
 
@@ -405,15 +430,19 @@ describe('Squad Validation Utilities', () => {
     it('should handle undefined bench players', () => {
       const result = validateBenchSize(undefined);
       
-      expect(result.isValid).toBe(false);
+      expect(result.isValid).toBe(true);
       expect(result.message).toBe('No players on the bench');
+      expect(result.needsConfirmation).toBe(true);
+      expect(result.confirmationMessage).toBe('You have no players on the bench. Are you sure you want to continue?');
     });
 
     it('should handle null bench players', () => {
       const result = validateBenchSize(null);
       
-      expect(result.isValid).toBe(false);
+      expect(result.isValid).toBe(true);
       expect(result.message).toBe('No players on the bench');
+      expect(result.needsConfirmation).toBe(true);
+      expect(result.confirmationMessage).toBe('You have no players on the bench. Are you sure you want to continue?');
     });
 
     it('should handle undefined formation in goalkeeper validation', () => {
@@ -428,6 +457,260 @@ describe('Squad Validation Utilities', () => {
       
       expect(result.hasGoalkeeper).toBe(false);
       expect(result.message).toBe('No goalkeeper assigned to the team');
+    });
+  });
+
+  describe('validateMinutesPlayed', () => {
+    const mockStartingLineup = [
+      { _id: '1', fullName: 'John Doe', name: 'John Doe' },
+      { _id: '2', fullName: 'Mike Smith', name: 'Mike Smith' },
+      { _id: '3', fullName: 'Tom Wilson', name: 'Tom Wilson' }
+    ];
+
+    it('should validate when all starting lineup players have minutes', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0 },
+        '2': { minutesPlayed: 85, goals: 1, assists: 0 },
+        '3': { minutesPlayed: 90, goals: 0, assists: 1 }
+      };
+
+      const result = validateMinutesPlayed(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(true);
+      expect(result.message).toBe('All starting lineup players have minutes played');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should reject when some starting lineup players have no minutes', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0 },
+        '2': { minutesPlayed: 0, goals: 0, assists: 0 },
+        '3': { minutesPlayed: 85, goals: 0, assists: 0 }
+      };
+
+      const result = validateMinutesPlayed(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Starting lineup players must have minutes played');
+      expect(result.message).toContain('Mike Smith');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should reject when all starting lineup players have zero minutes', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 0, goals: 0, assists: 0 },
+        '2': { minutesPlayed: 0, goals: 0, assists: 0 },
+        '3': { minutesPlayed: 0, goals: 0, assists: 0 }
+      };
+
+      const result = validateMinutesPlayed(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Starting lineup players must have minutes played');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle missing player reports', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0 }
+      };
+
+      const result = validateMinutesPlayed(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Starting lineup players must have minutes played');
+    });
+
+    it('should handle empty starting lineup', () => {
+      const playerReports = {};
+      const result = validateMinutesPlayed([], playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('No starting lineup players found');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle null/undefined starting lineup', () => {
+      const playerReports = {};
+      const result = validateMinutesPlayed(null, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('No starting lineup players found');
+    });
+  });
+
+  describe('validateGoalsScored', () => {
+    const mockPlayerReports = {
+      '1': { goals: 2, assists: 1 },
+      '2': { goals: 1, assists: 0 },
+      '3': { goals: 0, assists: 1 }
+    };
+
+    it('should validate perfect match between team goals and player goals', () => {
+      const teamScore = { ourScore: 3, opponentScore: 1 };
+      const result = validateGoalsScored(teamScore, mockPlayerReports);
+
+      expect(result.isValid).toBe(true);
+      expect(result.message).toBe('Goals scored match team score');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should return error when player goals exceed team score', () => {
+      const teamScore = { ourScore: 2, opponentScore: 1 };
+      const result = validateGoalsScored(teamScore, mockPlayerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Player goals (3) exceed team score (2)');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should return warning when team score exceeds player goals (own goals)', () => {
+      const teamScore = { ourScore: 5, opponentScore: 1 };
+      const result = validateGoalsScored(teamScore, mockPlayerReports);
+
+      expect(result.isValid).toBe(true);
+      expect(result.needsConfirmation).toBe(true);
+      expect(result.confirmationMessage).toContain('This suggests 2 own goals');
+    });
+
+    it('should return error when assists exceed team goals', () => {
+      const teamScore = { ourScore: 1, opponentScore: 0 };
+      const reportsWithManyAssists = {
+        '1': { goals: 1, assists: 3 }
+      };
+      const result = validateGoalsScored(teamScore, reportsWithManyAssists);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Total assists (3) cannot exceed team goals (1)');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should validate when assists match team goals exactly', () => {
+      const teamScore = { ourScore: 3, opponentScore: 1 };
+      const reportsWithAssists = {
+        '1': { goals: 2, assists: 1 },
+        '2': { goals: 1, assists: 2 }
+      };
+      const result = validateGoalsScored(teamScore, reportsWithAssists);
+
+      expect(result.isValid).toBe(true);
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle missing team score', () => {
+      const result = validateGoalsScored(null, mockPlayerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('Team score must be entered');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle undefined team score', () => {
+      const teamScore = { ourScore: null, opponentScore: 1 };
+      const result = validateGoalsScored(teamScore, mockPlayerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('Team score must be entered');
+    });
+
+    it('should handle empty player reports', () => {
+      const teamScore = { ourScore: 3, opponentScore: 1 };
+      const result = validateGoalsScored(teamScore, {});
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('Player reports not found');
+    });
+
+    it('should support both goals and goalsScored field names', () => {
+      const teamScore = { ourScore: 3, opponentScore: 1 };
+      const reportsWithGoalsScored = {
+        '1': { goalsScored: 2, assists: 1 },
+        '2': { goalsScored: 1, assists: 0 }
+      };
+      const result = validateGoalsScored(teamScore, reportsWithGoalsScored);
+
+      expect(result.isValid).toBe(true);
+      expect(result.message).toBe('Goals scored match team score');
+    });
+
+    it('should handle zero goals scenario', () => {
+      const teamScore = { ourScore: 0, opponentScore: 2 };
+      const reportsNoGoals = {
+        '1': { goals: 0, assists: 0 },
+        '2': { goals: 0, assists: 0 }
+      };
+      const result = validateGoalsScored(teamScore, reportsNoGoals);
+
+      expect(result.isValid).toBe(true);
+      expect(result.message).toBe('Goals scored match team score');
+    });
+  });
+
+  describe('validateReportCompleteness', () => {
+    const mockStartingLineup = [
+      { _id: '1', fullName: 'John Doe', name: 'John Doe' },
+      { _id: '2', fullName: 'Mike Smith', name: 'Mike Smith' },
+      { _id: '3', fullName: 'Tom Wilson', name: 'Tom Wilson' }
+    ];
+
+    it('should validate when all starting lineup players have complete reports', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0, rating: 4 },
+        '2': { minutesPlayed: 85, goals: 1, assists: 0, rating: 5 },
+        '3': { minutesPlayed: 90, goals: 0, assists: 1, rating: 3 }
+      };
+
+      const result = validateReportCompleteness(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(true);
+      expect(result.message).toBe('All starting lineup players have complete reports');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should reject when some players have no report', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0 },
+        // Missing report for player '2'
+        '3': { minutesPlayed: 85, goals: 0, assists: 0 }
+      };
+
+      const result = validateReportCompleteness(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Starting lineup players must have complete reports');
+      expect(result.message).toContain('Mike Smith');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should reject when some players have reports without minutesPlayed', () => {
+      const playerReports = {
+        '1': { minutesPlayed: 90, goals: 0, assists: 0 },
+        '2': { goals: 1, assists: 0 }, // Missing minutesPlayed
+        '3': { minutesPlayed: 85, goals: 0, assists: 0 }
+      };
+
+      const result = validateReportCompleteness(mockStartingLineup, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain('Starting lineup players must have complete reports');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle empty starting lineup', () => {
+      const playerReports = {};
+      const result = validateReportCompleteness([], playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('No starting lineup players found');
+      expect(result.needsConfirmation).toBe(false);
+    });
+
+    it('should handle null/undefined starting lineup', () => {
+      const playerReports = {};
+      const result = validateReportCompleteness(null, playerReports);
+
+      expect(result.isValid).toBe(false);
+      expect(result.message).toBe('No starting lineup players found');
     });
   });
 });

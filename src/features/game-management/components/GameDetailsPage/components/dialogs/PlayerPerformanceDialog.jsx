@@ -10,6 +10,8 @@ import {
   DialogFooter,
 } from "@/shared/ui/primitives/dialog";
 
+import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
+
 export default function PlayerPerformanceDialog({ 
   open, 
   onOpenChange, 
@@ -19,19 +21,33 @@ export default function PlayerPerformanceDialog({
   onSave, 
   isReadOnly,
   isStarting = false,
+  game,
+  matchDuration,
 }) {
   if (!player) return null;
 
   const [errorMessage, setErrorMessage] = useState("");
 
   const minutesPlayed = useMemo(() => Number(data?.minutesPlayed || 0), [data]);
+  // Use matchDuration prop if available (real-time from header), otherwise fallback to game.matchDuration
+  const maxMinutes = useMemo(() => {
+    const duration = matchDuration || game?.matchDuration;
+    return calculateTotalMatchDuration(duration);
+  }, [matchDuration, game]);
 
   const handleSaveClick = () => {
-    // Block save if player is in starting lineup and minutesPlayed is 0
+    // Validate starting lineup player must have minutes > 0
     if (isStarting && minutesPlayed <= 0) {
       setErrorMessage("Starting lineup players must have minutes played (greater than 0).");
       return;
     }
+    
+    // Validate player cannot exceed match duration
+    if (minutesPlayed > maxMinutes) {
+      setErrorMessage(`Player cannot play more than ${maxMinutes} minutes (match duration + extra time).`);
+      return;
+    }
+    
     setErrorMessage("");
     onSave();
   };
@@ -54,17 +70,23 @@ export default function PlayerPerformanceDialog({
         <div className="space-y-4 mt-4">
           {/* Minutes Played */}
           <div>
-            <label className="text-sm font-semibold text-slate-400 mb-1 block">Minutes Played</label>
+            <label className="text-sm font-semibold text-slate-400 mb-1 block">
+              Minutes Played
+              <span className="text-xs text-slate-500 ml-2">(Max: {maxMinutes} min)</span>
+            </label>
             <Input
               type="number"
               min="0"
-              max="120"
+              max={maxMinutes}
               value={data.minutesPlayed}
-              onChange={(e) => onDataChange({ ...data, minutesPlayed: parseInt(e.target.value) || 0 })}
+              onChange={(e) => {
+                onDataChange({ ...data, minutesPlayed: parseInt(e.target.value) || 0 });
+                setErrorMessage(""); // Clear error when user types
+              }}
               disabled={isReadOnly}
               className="bg-slate-800 border-slate-700 text-white"
             />
-            {isStarting && errorMessage && (
+            {errorMessage && (
               <div className="mt-1 text-xs text-red-400">{errorMessage}</div>
             )}
           </div>
@@ -131,16 +153,22 @@ export default function PlayerPerformanceDialog({
           </div>
         </div>
 
-        {!isReadOnly && (
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-400">
-              Cancel
+        <DialogFooter className="mt-4">
+          {isReadOnly ? (
+            <Button onClick={() => onOpenChange(false)} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
+              Close
             </Button>
-            <Button onClick={handleSaveClick} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
-              Save Report
-            </Button>
-          </DialogFooter>
-        )}
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-400">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveClick} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
+                Save Report
+              </Button>
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

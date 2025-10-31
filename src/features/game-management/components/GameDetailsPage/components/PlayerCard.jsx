@@ -19,7 +19,8 @@ export default function PlayerCard({
   onDragEnd, 
   isScheduled, 
   isPlayed, 
-  isReadOnly 
+  isReadOnly,
+  isDone 
 }) {
   const isDraggable = isScheduled && status !== "Unavailable" && !isReadOnly;
   const showStatusMenu = isScheduled && !isReadOnly;
@@ -59,25 +60,27 @@ export default function PlayerCard({
       {/* Kit Number Circle */}
       <button
         onClick={(e) => {
-          if (isPlayed && !isReadOnly) {
+          // Allow clicking when played or done (to view reports) - works in both edit and read-only mode
+          const canView = isPlayed || isDone;
+          if (canView) {
             e.stopPropagation();
             onOpenPerformance();
           }
         }}
-        disabled={!(isPlayed && !isReadOnly)}
+        disabled={!(isPlayed || isDone)}
         style={{
           ...getPositionGradientStyle(),
           boxShadow: "0 0 6px rgba(0,0,0,0.3)",
         }}
         className={`
           relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0
-          ${isPlayed && !isReadOnly ? "hover:scale-110 cursor-pointer" : ""}
+          ${(isPlayed || isDone) ? "hover:scale-110 cursor-pointer transition-transform" : ""}
         `}
       >
         {player.kitNumber || "?"}
         
         {/* Report Status Badge */}
-        {isPlayed && hasReport && (
+        {(isPlayed || isDone) && hasReport && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
             <Check className="w-3 h-3 text-white" />
           </div>

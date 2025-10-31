@@ -11,8 +11,14 @@ import {
   validatePlayerPosition, 
   validateMinutesPlayed, 
   validateGoalsScored, 
-  validateReportCompleteness 
+  validateReportCompleteness,
+  validateStartingLineup,
+  validateGoalkeeper
 } from "../../utils/squadValidation";
+import {
+  validateMinutesForSubmission,
+  getMinutesSummary
+} from "../../utils/minutesValidation";
 
 // Import shared components
 import { ConfirmationModal } from "@/shared/components";
@@ -40,6 +46,11 @@ export default function GameDetails() {
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
+  const [matchDuration, setMatchDuration] = useState({
+    regularTime: 90,
+    firstHalfExtraTime: 0,
+    secondHalfExtraTime: 0
+  });
   const [teamSummary, setTeamSummary] = useState({
     defenseSummary: "",
     midfieldSummary: "",
@@ -88,7 +99,36 @@ export default function GameDetails() {
 
     const foundGame = games.find((g) => g._id === gameId);
     if (foundGame) {
-      setGame(foundGame);
+      // 🔍 DEBUG: Log backend game data
+      console.log('🔍 [GameDetails] Backend game data:', {
+        gameId: foundGame._id,
+        status: foundGame.status,
+        matchDuration: foundGame.matchDuration,
+        hasMatchDuration: !!foundGame.matchDuration,
+        matchDurationType: typeof foundGame.matchDuration,
+        matchDurationKeys: foundGame.matchDuration ? Object.keys(foundGame.matchDuration) : null
+      });
+      
+      // Initialize match duration from game data FIRST (before setting game)
+      // This ensures we have the correct matchDuration before game object is set
+      const gameMatchDuration = foundGame.matchDuration || {};
+      const loadedMatchDuration = {
+        regularTime: gameMatchDuration.regularTime || 90,
+        firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
+        secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
+      };
+      
+      // 🔍 DEBUG: Log loaded matchDuration
+      console.log('🔍 [GameDetails] Loaded matchDuration state:', loadedMatchDuration);
+      console.log('🔍 [GameDetails] Calculated total:', loadedMatchDuration.regularTime + loadedMatchDuration.firstHalfExtraTime + loadedMatchDuration.secondHalfExtraTime);
+      
+      setMatchDuration(loadedMatchDuration);
+      
+      // Set game object, ensuring matchDuration is included
+      setGame({
+        ...foundGame,
+        matchDuration: loadedMatchDuration
+      });
       setIsReadOnly(foundGame.status === "Done");
       
       if (foundGame.ourScore !== null) {
@@ -156,11 +196,45 @@ export default function GameDetails() {
 
   // Load existing game reports
   useEffect(() => {
-    if (!gameId || !gameReports || gameReports.length === 0) return;
+    // 🔍 DEBUG: Log gameReports loading
+    console.log('🔍 [GameDetails] Loading game reports:', {
+      hasGameId: !!gameId,
+      gameId,
+      hasGameReports: !!gameReports,
+      gameReportsLength: gameReports?.length || 0,
+      gameReportsType: typeof gameReports,
+      isLoading,
+      isArray: Array.isArray(gameReports)
+    });
+    
+    // Wait for data to load
+    if (isLoading) {
+      console.log('🔍 [GameDetails] Still loading data, skipping reports load');
+      return;
+    }
+    
+    if (!gameId) {
+      console.log('🔍 [GameDetails] Skipping game reports load - no gameId');
+      return;
+    }
+    
+    // gameReports might be empty array, which is valid (no reports exist yet)
+    // But it must be an array, not undefined
+    if (!gameReports || !Array.isArray(gameReports)) {
+      console.log('🔍 [GameDetails] Skipping game reports load - gameReports not available or not array');
+      return;
+    }
 
     const reportsForGame = gameReports.filter((report) => {
       const reportGameId = typeof report.game === "object" ? report.game._id : report.game;
       return reportGameId === gameId;
+    });
+
+    // 🔍 DEBUG: Log filtered reports
+    console.log('🔍 [GameDetails] Reports for game:', {
+      totalReports: gameReports.length,
+      reportsForGame: reportsForGame.length,
+      reportIds: reportsForGame.map(r => r._id)
     });
 
     if (reportsForGame.length > 0) {
@@ -175,9 +249,19 @@ export default function GameDetails() {
           notes: report.notes || "",
         };
       });
+      
+      // 🔍 DEBUG: Log loaded reports
+      console.log('🔍 [GameDetails] Setting localPlayerReports:', {
+        reportCount: Object.keys(reports).length,
+        playerIds: Object.keys(reports),
+        sampleReport: Object.values(reports)[0]
+      });
+      
       setLocalPlayerReports(reports);
+    } else {
+      console.log('🔍 [GameDetails] No reports found for this game');
     }
-  }, [gameId, gameReports]);
+  }, [gameId, gameReports, isLoading]);
 
   // Auto-build formation from roster (only when NOT in manual mode)
   useEffect(() => {
@@ -585,24 +669,58 @@ export default function GameDetails() {
   const handleConfirmFinalSubmission = async () => {
     setIsSaving(true);
     try {
+      // 🔍 DEBUG: Log what we're sending
+      const requestBody = {
+        status: "Done",
+        ourScore: finalScore.ourScore,
+        opponentScore: finalScore.opponentScore,
+        matchDuration: matchDuration,
+        defenseSummary: teamSummary.defenseSummary,
+        midfieldSummary: teamSummary.midfieldSummary,
+        attackSummary: teamSummary.attackSummary,
+        generalSummary: teamSummary.generalSummary,
+      };
+      
+      console.log('🔍 [GameDetails] Sending final report submission:', {
+        gameId,
+        matchDuration: requestBody.matchDuration,
+        matchDurationType: typeof requestBody.matchDuration,
+        matchDurationKeys: requestBody.matchDuration ? Object.keys(requestBody.matchDuration) : null,
+        matchDurationValue: JSON.stringify(requestBody.matchDuration),
+        fullRequestBody: requestBody
+      });
+      
       const gameResponse = await fetch(`http://localhost:3001/api/games/${gameId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          status: "Done",
-          ourScore: finalScore.ourScore,
-          opponentScore: finalScore.opponentScore,
-          defenseSummary: teamSummary.defenseSummary,
-          midfieldSummary: teamSummary.midfieldSummary,
-          attackSummary: teamSummary.attackSummary,
-          generalSummary: teamSummary.generalSummary,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!gameResponse.ok) throw new Error("Failed to update game");
+      // 🔍 DEBUG: Log response
+      const responseData = await gameResponse.json();
+      console.log('🔍 [GameDetails] Backend response:', {
+        ok: gameResponse.ok,
+        status: gameResponse.status,
+        responseData: responseData,
+        gameMatchDuration: responseData?.data?.matchDuration,
+        savedMatchDuration: responseData?.data?.matchDuration
+      });
+      
+      if (!gameResponse.ok) {
+        // Try to extract error message from response
+        let errorMessage = "Failed to update game";
+        try {
+          const errorData = responseData;
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Failed to update game: ${gameResponse.status} ${gameResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       const reportUpdates = Object.entries(localPlayerReports).map(([playerId, report]) => ({
         playerId,
@@ -625,12 +743,28 @@ export default function GameDetails() {
         body: JSON.stringify({ gameId, reports: reportUpdates }),
       });
 
-      if (!reportsResponse.ok) throw new Error("Failed to update reports");
+      if (!reportsResponse.ok) {
+        // Try to extract error message from response
+        let errorMessage = "Failed to update reports";
+        try {
+          const errorData = await reportsResponse.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = `Failed to update reports: ${reportsResponse.status} ${reportsResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       await refreshData();
       setIsReadOnly(true);
       setShowFinalReportDialog(false);
-      setGame((prev) => ({ ...prev, status: "Done" }));
+      // Preserve matchDuration when updating game status
+      setGame((prev) => ({ 
+        ...prev, 
+        status: "Done",
+        matchDuration: matchDuration // Preserve the matchDuration state
+      }));
       showConfirmation({
         title: "Success",
         message: "Final report submitted successfully!",
@@ -642,9 +776,11 @@ export default function GameDetails() {
       });
     } catch (error) {
       console.error("Error submitting final report:", error);
+      // Extract error message from error object
+      const errorMessage = error.message || error.toString() || "Failed to submit final report";
       showConfirmation({
         title: "Error",
-        message: "Failed to submit final report",
+        message: errorMessage,
         confirmText: "OK",
         cancelText: null,
         onConfirm: () => setShowConfirmationModal(false),
@@ -689,36 +825,29 @@ export default function GameDetails() {
     );
   };
 
-  // Comprehensive validation for "Played" status
+  // Comprehensive validation for "Played" status (final report submission)
   const validatePlayedStatus = () => {
     const validations = [];
     let hasErrors = false;
     let needsConfirmation = false;
     let confirmationMessage = "";
 
-    // 1. Basic squad validation
-    const squadValidation = validateSquad(formation, benchPlayers, localRosterStatuses);
-    if (!squadValidation.isValid) {
+    // 1. Basic squad validation (no bench validation for "Played" status)
+    // Bench validation only applies when marking game as "Played", not for final submission
+    const startingLineupValidation = validateStartingLineup(formation);
+    if (!startingLineupValidation.isValid) {
       hasErrors = true;
-      validations.push(squadValidation.startingLineup.message);
-      if (squadValidation.goalkeeper && !squadValidation.goalkeeper.hasGoalkeeper) {
-        validations.push(squadValidation.goalkeeper.message);
-      }
+      validations.push(startingLineupValidation.message);
     }
-    if (squadValidation.needsConfirmation) {
-      needsConfirmation = true;
-      confirmationMessage = squadValidation.bench.confirmationMessage;
+    
+    const goalkeeperValidation = validateGoalkeeper(formation);
+    if (!goalkeeperValidation.hasGoalkeeper) {
+      hasErrors = true;
+      validations.push(goalkeeperValidation.message);
     }
 
-    // 2. Minutes played validation (only for starting lineup)
-    const minutesValidation = validateMinutesPlayed(playersOnPitch, playerPerfData);
-    if (!minutesValidation.isValid) {
-      hasErrors = true;
-      validations.push(minutesValidation.message);
-    }
-
-    // 3. Goals scored validation
-    const goalsValidation = validateGoalsScored(finalScore, playerPerfData);
+    // 2. Goals scored validation
+    const goalsValidation = validateGoalsScored(finalScore, localPlayerReports);
     if (!goalsValidation.isValid) {
       hasErrors = true;
       validations.push(goalsValidation.message);
@@ -728,14 +857,28 @@ export default function GameDetails() {
       confirmationMessage = goalsValidation.confirmationMessage;
     }
 
-    // 4. Report completeness validation
-    const reportValidation = validateReportCompleteness(playersOnPitch, playerPerfData);
-    if (!reportValidation.isValid) {
+    // 3. Team minutes validation
+    // Pass all players (starting lineup + bench) for proper name lookup
+    // Create a temporary game object with current matchDuration for validation
+    const gameWithMatchDuration = {
+      ...game,
+      matchDuration: matchDuration
+    };
+    const allPlayers = [...playersOnPitch, ...benchPlayers];
+    const minutesValidation = validateMinutesForSubmission(
+      localPlayerReports, 
+      gameWithMatchDuration, 
+      allPlayers
+    );
+    if (!minutesValidation.isValid) {
       hasErrors = true;
-      validations.push(reportValidation.message);
+      validations.push(...minutesValidation.errors);
+    }
+    if (minutesValidation.warnings.length > 0) {
+      validations.push(...minutesValidation.warnings.map(w => `⚠️ ${w}`));
     }
 
-    // 5. Team summaries validation
+    // 4. Team summaries validation
     if (!areAllTeamSummariesFilled()) {
       hasErrors = true;
       validations.push("All team summary reports must be completed");
@@ -923,6 +1066,8 @@ export default function GameDetails() {
         game={game}
         finalScore={finalScore}
         setFinalScore={setFinalScore}
+        matchDuration={matchDuration}
+        setMatchDuration={setMatchDuration}
         missingReportsCount={missingReportsCount}
         teamSummary={teamSummary}
         isSaving={isSaving}
@@ -933,6 +1078,7 @@ export default function GameDetails() {
         handlePostpone={handlePostpone}
         handleSubmitFinalReport={handleSubmitFinalReport}
         handleEditReport={handleEditReport}
+        playerReports={localPlayerReports}
       />
 
       {/* Main Content - 3 Column Layout */}
@@ -970,6 +1116,7 @@ export default function GameDetails() {
             isScheduled={isScheduled}
             isPlayed={isPlayed}
             isReadOnly={isDone}
+            isDone={isDone}
             hasReport={hasReport}
             needsReport={needsReport}
           />
@@ -1005,6 +1152,8 @@ export default function GameDetails() {
         onSave={handleSavePerformanceReport}
         isReadOnly={isDone}
         isStarting={!!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id))}
+        game={game}
+        matchDuration={matchDuration}
       />
 
       <PlayerSelectionDialog

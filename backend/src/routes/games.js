@@ -27,6 +27,18 @@ router.get('/', authenticateJWT, async (req, res) => {
     // Add virtual fields manually since .lean() doesn't include them
     const gamesWithVirtuals = games.map(game => {
       const gameTitle = `${game.teamName} vs ${game.opponent}`;
+      
+      // 🔍 DEBUG: Log matchDuration for each game
+      console.log('🔍 [Backend GET /games] Game matchDuration:', {
+        gameId: game._id,
+        status: game.status,
+        matchDuration: game.matchDuration,
+        hasMatchDuration: !!game.matchDuration,
+        matchDurationType: typeof game.matchDuration,
+        matchDurationKeys: game.matchDuration ? Object.keys(game.matchDuration) : null,
+        totalMatchDuration: game.totalMatchDuration
+      });
+      
       console.log('🔍 Backend gameTitle generation:', {
         teamName: game.teamName,
         opponent: game.opponent,
@@ -42,7 +54,10 @@ router.get('/', authenticateJWT, async (req, res) => {
       id: g._id, 
       gameTitle: g.gameTitle, 
       teamName: g.teamName, 
-      opponent: g.opponent 
+      opponent: g.opponent,
+      status: g.status,
+      hasMatchDuration: !!g.matchDuration,
+      matchDuration: g.matchDuration
     })));
 
     res.json({
@@ -116,13 +131,86 @@ router.post('/', authenticateJWT, async (req, res) => {
 // Update game
 router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
   try {
-    const { opponent, date, location, status, ourScore, opponentScore, defenseSummary, midfieldSummary, attackSummary, generalSummary } = req.body;
+    // 🔍 DEBUG: Log request received
+    console.log('🔍 [Backend PUT /games/:id] Request received:', {
+      gameId: req.params.id,
+      hasBody: !!req.body,
+      bodyKeys: req.body ? Object.keys(req.body) : null,
+      matchDurationInBody: req.body?.matchDuration,
+      matchDurationType: typeof req.body?.matchDuration,
+      fullBody: JSON.stringify(req.body)
+    });
+    
+    const { 
+      opponent, 
+      date, 
+      location, 
+      status, 
+      ourScore, 
+      opponentScore, 
+      defenseSummary, 
+      midfieldSummary, 
+      attackSummary, 
+      generalSummary,
+      matchDuration 
+    } = req.body;
+
+    // Prepare update object
+    const updateData = {
+      opponent,
+      date,
+      location,
+      status,
+      ourScore,
+      opponentScore,
+      defenseSummary,
+      midfieldSummary,
+      attackSummary,
+      generalSummary
+    };
+
+    // If matchDuration is provided, update it
+    if (matchDuration) {
+      // 🔍 DEBUG: Log matchDuration being saved
+      console.log('🔍 [Backend PUT /games/:id] Saving matchDuration:', {
+        gameId: req.params.id,
+        receivedMatchDuration: matchDuration,
+        matchDurationType: typeof matchDuration,
+        matchDurationKeys: matchDuration ? Object.keys(matchDuration) : null
+      });
+      
+      updateData.matchDuration = {
+        regularTime: matchDuration.regularTime || 90,
+        firstHalfExtraTime: matchDuration.firstHalfExtraTime || 0,
+        secondHalfExtraTime: matchDuration.secondHalfExtraTime || 0
+      };
+      
+      // Calculate and store total match duration
+      const { calculateTotalMatchDuration } = require('../services/minutesValidation');
+      updateData.totalMatchDuration = calculateTotalMatchDuration(updateData.matchDuration);
+      
+      // 🔍 DEBUG: Log calculated values
+      console.log('🔍 [Backend PUT /games/:id] Calculated matchDuration:', {
+        matchDuration: updateData.matchDuration,
+        totalMatchDuration: updateData.totalMatchDuration
+      });
+    } else {
+      console.log('🔍 [Backend PUT /games/:id] No matchDuration provided in request');
+    }
 
     const game = await Game.findByIdAndUpdate(
       req.params.id,
-      { opponent, date, location, status, ourScore, opponentScore, defenseSummary, midfieldSummary, attackSummary, generalSummary },
+      updateData,
       { new: true }
     ).populate('team', 'teamName season division');
+    
+    // 🔍 DEBUG: Log saved game
+    console.log('🔍 [Backend PUT /games/:id] Saved game matchDuration:', {
+      gameId: game._id,
+      status: game.status,
+      matchDuration: game.matchDuration,
+      totalMatchDuration: game.totalMatchDuration
+    });
 
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
