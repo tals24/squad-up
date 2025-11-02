@@ -3,10 +3,10 @@ const router = express.Router();
 const Goal = require('../models/Goal');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
-const { authenticate } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Apply authentication middleware to all routes
-router.use(authenticate);
+router.use(authenticateToken);
 
 /**
  * POST /api/games/:gameId/goals
