@@ -25,6 +25,8 @@ const dataRoutes = require('./routes/data');
 const minutesValidationRoutes = require('./routes/minutesValidation');
 const goalRoutes = require('./routes/goals');
 const analyticsRoutes = require('./routes/analytics');
+const substitutionRoutes = require('./routes/substitutions');
+const disciplinaryActionRoutes = require('./routes/disciplinaryActions');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,6 +64,8 @@ app.use('/api/players', playerRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/games', minutesValidationRoutes); // Minutes validation routes (under /api/games/:gameId/...)
 app.use('/api/games', goalRoutes); // Goal routes (under /api/games/:gameId/goals)
+app.use('/api/games', substitutionRoutes); // Substitution routes (under /api/games/:gameId/substitutions)
+app.use('/api/games', disciplinaryActionRoutes); // Disciplinary routes (under /api/games/:gameId/disciplinary-actions)
 app.use('/api/game-rosters', gameRosterRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/timeline-events', timelineEventRoutes);
