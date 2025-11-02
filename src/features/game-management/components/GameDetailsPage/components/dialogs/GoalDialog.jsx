@@ -50,37 +50,18 @@ export default function GoalDialog({
   gamePlayers = [],
   existingGoals = [],
   matchDuration = 90,
-  isReadOnly = false,
-  currentScore = { ourScore: 0, opponentScore: 0 } // Add current score to calculate match state
+  isReadOnly = false
 }) {
   const [goalData, setGoalData] = useState({
-    goalNumber: null,
     minute: null,
     scorerId: null,
     assistedById: null,
     goalInvolvement: [],
-    goalType: 'open-play',
-    matchState: 'drawing'
+    goalType: 'open-play'
   });
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-
-  // Auto-calculate match state based on minute and score
-  const calculateMatchState = (minute, goalsList) => {
-    // Get all goals scored before this minute
-    const goalsBeforeThisMinute = goalsList.filter(g => g.minute < minute);
-    const ourGoalsCount = goalsBeforeThisMinute.length;
-    const opponentScore = currentScore.opponentScore;
-
-    if (ourGoalsCount > opponentScore) {
-      return 'winning';
-    } else if (ourGoalsCount < opponentScore) {
-      return 'losing';
-    } else {
-      return 'drawing';
-    }
-  };
 
   // Initialize form data when dialog opens or goal changes
   useEffect(() => {
@@ -88,51 +69,28 @@ export default function GoalDialog({
       if (goal) {
         // Editing existing goal
         setGoalData({
-          goalNumber: goal.goalNumber,
           minute: goal.minute,
           scorerId: goal.scorerId?._id || goal.scorerId,
           assistedById: goal.assistedById?._id || goal.assistedById || null,
           goalInvolvement: goal.goalInvolvement || [],
-          goalType: goal.goalType || 'open-play',
-          matchState: goal.matchState || 'drawing'
+          goalType: goal.goalType || 'open-play'
         });
       } else {
-        // Creating new goal - auto-calculate goal number based on minute order
-        // Sort existing goals by minute to determine the next goal number
-        const sortedGoals = [...existingGoals].sort((a, b) => a.minute - b.minute);
-        const nextGoalNumber = sortedGoals.length + 1;
-        
+        // Creating new goal
         setGoalData({
-          goalNumber: nextGoalNumber,
           minute: null,
           scorerId: null,
           assistedById: null,
           goalInvolvement: [],
-          goalType: 'open-play',
-          matchState: 'drawing'
+          goalType: 'open-play'
         });
       }
       setErrors({});
     }
-  }, [isOpen, goal, existingGoals]);
-
-  // Auto-calculate match state when minute changes
-  useEffect(() => {
-    if (goalData.minute && !goal) { // Only auto-calculate for new goals
-      const matchState = calculateMatchState(goalData.minute, existingGoals);
-      setGoalData(prev => ({
-        ...prev,
-        matchState
-      }));
-    }
-  }, [goalData.minute]);
+  }, [isOpen, goal]);
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!goalData.goalNumber || goalData.goalNumber < 1) {
-      newErrors.goalNumber = 'Goal number is required';
-    }
 
     if (!goalData.minute || goalData.minute < 1) {
       newErrors.minute = 'Minute is required';
@@ -232,33 +190,21 @@ export default function GoalDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Goal Number & Minute */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="goalNumber" className="text-slate-300">
-                Goal Number (Auto-calculated)
-              </Label>
-              <div className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white">
-                #{goalData.goalNumber || '?'}
-              </div>
-              <p className="text-xs text-slate-500">Based on chronological order</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
-              <Input
-                id="minute"
-                type="number"
-                min="1"
-                max={matchDuration}
-                value={goalData.minute || ''}
-                onChange={(e) => setGoalData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
-                disabled={isReadOnly}
-                className="bg-slate-800 border-slate-700 text-white"
-                placeholder={`1-${matchDuration}`}
-              />
-              {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
-            </div>
+          {/* Minute */}
+          <div className="space-y-2">
+            <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
+            <Input
+              id="minute"
+              type="number"
+              min="1"
+              max={matchDuration}
+              value={goalData.minute || ''}
+              onChange={(e) => setGoalData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
+              disabled={isReadOnly}
+              className="bg-slate-800 border-slate-700 text-white"
+              placeholder={`1-${matchDuration}`}
+            />
+            {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
           </div>
 
           {/* Scorer */}
@@ -377,37 +323,25 @@ export default function GoalDialog({
             </div>
           )}
 
-          {/* Goal Type & Match State */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="goalType" className="text-slate-300">Goal Type</Label>
-              <Select
-                value={goalData.goalType}
-                onValueChange={(value) => setGoalData(prev => ({ ...prev, goalType: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {GOAL_TYPES.map(type => (
-                    <SelectItem key={type.value} value={type.value} className="text-white">
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="matchState" className="text-slate-300">
-                Match State (Auto-calculated)
-              </Label>
-              <div className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white capitalize">
-                {goalData.matchState}
-              </div>
-              <p className="text-xs text-slate-500">Based on score at goal minute</p>
-            </div>
+          {/* Goal Type */}
+          <div className="space-y-2">
+            <Label htmlFor="goalType" className="text-slate-300">Goal Type</Label>
+            <Select
+              value={goalData.goalType}
+              onValueChange={(value) => setGoalData(prev => ({ ...prev, goalType: value }))}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                {GOAL_TYPES.map(type => (
+                  <SelectItem key={type.value} value={type.value} className="text-white">
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {errors.submit && (
