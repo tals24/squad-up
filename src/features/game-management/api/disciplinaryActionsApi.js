@@ -1,91 +1,104 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Fetch all disciplinary actions for a game
- * @param {string} gameId - The game ID
- * @returns {Promise<Array>} Array of disciplinary actions
  */
 export const fetchDisciplinaryActions = async (gameId) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.get(
-    `${API_BASE_URL}/games/${gameId}/disciplinary-actions`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/games/${gameId}/disciplinary-actions`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
     }
-  );
-  return response.data;
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch disciplinary actions');
+  }
+
+  const data = await response.json();
+  return data.actions || [];
 };
 
 /**
  * Fetch disciplinary actions for a specific player in a game
- * @param {string} gameId - The game ID
- * @param {string} playerId - The player ID
- * @returns {Promise<Array>} Array of disciplinary actions for the player
  */
 export const fetchPlayerDisciplinaryActions = async (gameId, playerId) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.get(
-    `${API_BASE_URL}/games/${gameId}/disciplinary-actions/player/${playerId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/games/${gameId}/disciplinary-actions/player/${playerId}`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
     }
-  );
-  return response.data;
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch player disciplinary actions');
+  }
+
+  const data = await response.json();
+  return data.actions || [];
 };
 
 /**
  * Create a new disciplinary action
- * @param {string} gameId - The game ID
- * @param {Object} actionData - Disciplinary action data
- * @returns {Promise<Object>} Created disciplinary action
  */
 export const createDisciplinaryAction = async (gameId, actionData) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.post(
-    `${API_BASE_URL}/games/${gameId}/disciplinary-actions`,
-    actionData,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-  return response.data;
+  const response = await fetch(`${API_URL}/api/games/${gameId}/disciplinary-actions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(actionData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create disciplinary action');
+  }
+
+  const data = await response.json();
+  return data.action;
 };
 
 /**
  * Update an existing disciplinary action
- * @param {string} gameId - The game ID
- * @param {string} actionId - The disciplinary action ID
- * @param {Object} actionData - Updated disciplinary action data
- * @returns {Promise<Object>} Updated disciplinary action
  */
 export const updateDisciplinaryAction = async (gameId, actionId, actionData) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.put(
-    `${API_BASE_URL}/games/${gameId}/disciplinary-actions/${actionId}`,
-    actionData,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-  return response.data;
+  const response = await fetch(`${API_URL}/api/games/${gameId}/disciplinary-actions/${actionId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(actionData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update disciplinary action');
+  }
+
+  const data = await response.json();
+  return data.action;
 };
 
 /**
  * Delete a disciplinary action
- * @param {string} gameId - The game ID
- * @param {string} actionId - The disciplinary action ID
- * @returns {Promise<Object>} Deletion confirmation
  */
 export const deleteDisciplinaryAction = async (gameId, actionId) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.delete(
-    `${API_BASE_URL}/games/${gameId}/disciplinary-actions/${actionId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/games/${gameId}/disciplinary-actions/${actionId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
     }
-  );
-  return response.data;
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete disciplinary action');
+  }
+
+  const data = await response.json();
+  return data;
 };
 

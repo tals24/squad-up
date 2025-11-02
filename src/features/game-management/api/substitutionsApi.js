@@ -1,74 +1,85 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Fetch all substitutions for a game
- * @param {string} gameId - The game ID
- * @returns {Promise<Array>} Array of substitutions
  */
 export const fetchSubstitutions = async (gameId) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.get(
-    `${API_BASE_URL}/games/${gameId}/substitutions`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/games/${gameId}/substitutions`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
     }
-  );
-  return response.data;
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch substitutions');
+  }
+
+  const data = await response.json();
+  return data.substitutions || [];
 };
 
 /**
  * Create a new substitution
- * @param {string} gameId - The game ID
- * @param {Object} substitutionData - Substitution data
- * @returns {Promise<Object>} Created substitution
  */
 export const createSubstitution = async (gameId, substitutionData) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.post(
-    `${API_BASE_URL}/games/${gameId}/substitutions`,
-    substitutionData,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-  return response.data;
+  const response = await fetch(`${API_URL}/api/games/${gameId}/substitutions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(substitutionData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create substitution');
+  }
+
+  const data = await response.json();
+  return data.substitution;
 };
 
 /**
  * Update an existing substitution
- * @param {string} gameId - The game ID
- * @param {string} subId - The substitution ID
- * @param {Object} substitutionData - Updated substitution data
- * @returns {Promise<Object>} Updated substitution
  */
 export const updateSubstitution = async (gameId, subId, substitutionData) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.put(
-    `${API_BASE_URL}/games/${gameId}/substitutions/${subId}`,
-    substitutionData,
-    {
-      headers: { Authorization: `Bearer ${token}` }
-    }
-  );
-  return response.data;
+  const response = await fetch(`${API_URL}/api/games/${gameId}/substitutions/${subId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(substitutionData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update substitution');
+  }
+
+  const data = await response.json();
+  return data.substitution;
 };
 
 /**
  * Delete a substitution
- * @param {string} gameId - The game ID
- * @param {string} subId - The substitution ID
- * @returns {Promise<Object>} Deletion confirmation
  */
 export const deleteSubstitution = async (gameId, subId) => {
-  const token = localStorage.getItem('authToken');
-  const response = await axios.delete(
-    `${API_BASE_URL}/games/${gameId}/substitutions/${subId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/games/${gameId}/substitutions/${subId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json'
     }
-  );
-  return response.data;
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete substitution');
+  }
+
+  const data = await response.json();
+  return data;
 };
 
