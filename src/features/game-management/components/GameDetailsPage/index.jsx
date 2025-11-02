@@ -33,9 +33,11 @@ import FinalReportDialog from "./components/dialogs/FinalReportDialog";
 import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 import GoalDialog from "./components/dialogs/GoalDialog";
+import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
+import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from "../../api/substitutionsApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -66,6 +68,11 @@ export default function GameDetails() {
   const [goals, setGoals] = useState([]);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
+  
+  // Substitutions state
+  const [substitutions, setSubstitutions] = useState([]);
+  const [showSubstitutionDialog, setShowSubstitutionDialog] = useState(false);
+  const [selectedSubstitution, setSelectedSubstitution] = useState(null);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -216,7 +223,17 @@ export default function GameDetails() {
       }
     };
     
+    const loadSubstitutions = async () => {
+      try {
+        const subsData = await fetchSubstitutions(gameId);
+        setSubstitutions(subsData);
+      } catch (error) {
+        console.error('Error fetching substitutions:', error);
+      }
+    };
+    
     loadGoals();
+    loadSubstitutions();
   }, [gameId, game]);
 
   // Load existing game reports
@@ -894,6 +911,50 @@ export default function GameDetails() {
     }
   };
 
+  // Substitution handlers
+  const handleAddSubstitution = () => {
+    setSelectedSubstitution(null);
+    setShowSubstitutionDialog(true);
+  };
+
+  const handleEditSubstitution = (substitution) => {
+    setSelectedSubstitution(substitution);
+    setShowSubstitutionDialog(true);
+  };
+
+  const handleDeleteSubstitution = async (subId) => {
+    if (!window.confirm('Are you sure you want to delete this substitution?')) {
+      return;
+    }
+
+    try {
+      await deleteSubstitution(gameId, subId);
+      setSubstitutions(prevSubs => prevSubs.filter(s => s._id !== subId));
+    } catch (error) {
+      console.error('Error deleting substitution:', error);
+      alert('Failed to delete substitution: ' + error.message);
+    }
+  };
+
+  const handleSaveSubstitution = async (subData) => {
+    try {
+      if (selectedSubstitution) {
+        // Update existing substitution
+        const updatedSub = await updateSubstitution(gameId, selectedSubstitution._id, subData);
+        setSubstitutions(prevSubs => prevSubs.map(s => s._id === updatedSub._id ? updatedSub : s));
+      } else {
+        // Create new substitution
+        const newSub = await createSubstitution(gameId, subData);
+        setSubstitutions(prevSubs => [...prevSubs, newSub]);
+      }
+      setShowSubstitutionDialog(false);
+      setSelectedSubstitution(null);
+    } catch (error) {
+      console.error('Error saving substitution:', error);
+      throw error; // Re-throw to let SubstitutionDialog handle it
+    }
+  };
+
   // Comprehensive validation for "Played" status (final report submission)
   const validatePlayedStatus = () => {
     const validations = [];
@@ -1203,6 +1264,10 @@ export default function GameDetails() {
           onAddGoal={handleAddGoal}
           onEditGoal={handleEditGoal}
           onDeleteGoal={handleDeleteGoal}
+          substitutions={substitutions}
+          onAddSubstitution={handleAddSubstitution}
+          onEditSubstitution={handleEditSubstitution}
+          onDeleteSubstitution={handleDeleteSubstitution}
         />
       </div>
 
@@ -1261,6 +1326,20 @@ export default function GameDetails() {
         goal={selectedGoal}
         gamePlayers={gamePlayers}
         existingGoals={goals}
+        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        isReadOnly={isDone}
+      />
+
+      <SubstitutionDialog
+        isOpen={showSubstitutionDialog}
+        onClose={() => {
+          setShowSubstitutionDialog(false);
+          setSelectedSubstitution(null);
+        }}
+        onSave={handleSaveSubstitution}
+        substitution={selectedSubstitution}
+        playersOnPitch={Object.values(formation).filter(player => player && player._id)}
+        benchPlayers={benchPlayers}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
       />

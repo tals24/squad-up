@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";
-import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock } from "lucide-react";
+import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock, ArrowRightLeft, ArrowUp, ArrowDown } from "lucide-react";
 
 export default function MatchAnalysisSidebar({
   isPlayed,
@@ -14,6 +14,10 @@ export default function MatchAnalysisSidebar({
   onAddGoal,
   onEditGoal,
   onDeleteGoal,
+  substitutions = [],
+  onAddSubstitution,
+  onEditSubstitution,
+  onDeleteSubstitution,
 }) {
   return (
     <div 
@@ -121,6 +125,113 @@ export default function MatchAnalysisSidebar({
             ) : (
               <p className="text-sm text-slate-500 text-center py-4">
                 No goals recorded yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Substitutions Section - Only show for Played/Done */}
+      {(isPlayed || isDone) && (
+        <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <ArrowRightLeft className="w-5 h-5 text-orange-400" />
+                Substitutions ({substitutions.length})
+              </CardTitle>
+              {!isDone && onAddSubstitution && (
+                <Button
+                  onClick={onAddSubstitution}
+                  size="sm"
+                  className="h-7 px-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {substitutions.length > 0 ? (
+              <div className="space-y-2">
+                {substitutions
+                  .sort((a, b) => a.minute - b.minute)
+                  .map((sub) => (
+                    <div
+                      key={sub._id}
+                      className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-orange-500/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span className="text-xs text-slate-400">{sub.minute}'</span>
+                        </div>
+                        {!isDone && onEditSubstitution && onDeleteSubstitution && (
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={() => onEditSubstitution(sub)}
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-cyan-400 hover:text-cyan-300"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              onClick={() => onDeleteSubstitution(sub._id)}
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-1">
+                        {/* Player Out */}
+                        <div className="flex items-center gap-1">
+                          <ArrowDown className="w-3 h-3 text-red-400" />
+                          <span className="text-sm text-white">
+                            #{sub.playerOutId?.jerseyNumber || '?'} {sub.playerOutId?.name || 'Unknown'}
+                          </span>
+                        </div>
+                        
+                        {/* Player In */}
+                        <div className="flex items-center gap-1">
+                          <ArrowUp className="w-3 h-3 text-green-400" />
+                          <span className="text-sm text-white">
+                            #{sub.playerInId?.jerseyNumber || '?'} {sub.playerInId?.name || 'Unknown'}
+                          </span>
+                        </div>
+                        
+                        {/* Reason & Match State */}
+                        <div className="flex items-center gap-2 ml-4 mt-1">
+                          {sub.reason && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                              {sub.reason.replace('-', ' ')}
+                            </span>
+                          )}
+                          {sub.matchState && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                              {sub.matchState}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Tactical Note */}
+                        {sub.tacticalNote && sub.tacticalNote.trim() && (
+                          <div className="text-xs text-slate-400 ml-4 mt-1 italic">
+                            "{sub.tacticalNote}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">
+                No substitutions recorded yet
               </p>
             )}
           </CardContent>
