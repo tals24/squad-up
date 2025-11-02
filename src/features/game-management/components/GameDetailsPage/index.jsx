@@ -394,6 +394,11 @@ export default function GameDetails() {
     });
   }, [gamePlayers, playersOnPitch, localRosterStatuses]);
 
+  // Active game players (lineup + bench) - only these can score/assist
+  const activeGamePlayers = useMemo(() => {
+    return [...playersOnPitch, ...benchPlayers];
+  }, [playersOnPitch, benchPlayers]);
+
   // Helper: Check if player has report
   const hasReport = (playerId) => {
     return localPlayerReports[playerId] !== undefined && localPlayerReports[playerId].minutesPlayed !== undefined;
@@ -1350,7 +1355,7 @@ export default function GameDetails() {
         }}
         onSave={handleSaveGoal}
         goal={selectedGoal}
-        gamePlayers={gamePlayers}
+        gamePlayers={activeGamePlayers}
         existingGoals={goals}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}

@@ -47,7 +47,7 @@ export default function GoalDialog({
   onClose,
   onSave,
   goal = null,
-  gamePlayers = [],
+  gamePlayers = [], // Only players in lineup + bench (filtered in parent)
   existingGoals = [],
   matchDuration = 90,
   isReadOnly = false
