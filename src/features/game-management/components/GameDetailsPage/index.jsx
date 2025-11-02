@@ -32,6 +32,10 @@ import PlayerPerformanceDialog from "./components/dialogs/PlayerPerformanceDialo
 import FinalReportDialog from "./components/dialogs/FinalReportDialog";
 import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
+import GoalDialog from "./components/dialogs/GoalDialog";
+
+// Import API functions
+import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -57,6 +61,11 @@ export default function GameDetails() {
     attackSummary: "",
     generalSummary: "",
   });
+  
+  // Goals state
+  const [goals, setGoals] = useState([]);
+  const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -193,6 +202,22 @@ export default function GameDetails() {
       setLocalRosterStatuses(initialStatuses);
     }
   }, [gameId, gameRosters, gamePlayers]);
+
+  // Load goals for the game
+  useEffect(() => {
+    if (!gameId || !game) return;
+    
+    const loadGoals = async () => {
+      try {
+        const goalsData = await fetchGoals(gameId);
+        setGoals(goalsData);
+      } catch (error) {
+        console.error('Error fetching goals:', error);
+      }
+    };
+    
+    loadGoals();
+  }, [gameId, game]);
 
   // Load existing game reports
   useEffect(() => {
@@ -825,6 +850,50 @@ export default function GameDetails() {
     );
   };
 
+  // Goal handlers
+  const handleAddGoal = () => {
+    setSelectedGoal(null);
+    setShowGoalDialog(true);
+  };
+
+  const handleEditGoal = (goal) => {
+    setSelectedGoal(goal);
+    setShowGoalDialog(true);
+  };
+
+  const handleDeleteGoal = async (goalId) => {
+    if (!window.confirm('Are you sure you want to delete this goal?')) {
+      return;
+    }
+
+    try {
+      await deleteGoal(gameId, goalId);
+      setGoals(prevGoals => prevGoals.filter(g => g._id !== goalId));
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      alert('Failed to delete goal: ' + error.message);
+    }
+  };
+
+  const handleSaveGoal = async (goalData) => {
+    try {
+      if (selectedGoal) {
+        // Update existing goal
+        const updatedGoal = await updateGoal(gameId, selectedGoal._id, goalData);
+        setGoals(prevGoals => prevGoals.map(g => g._id === updatedGoal._id ? updatedGoal : g));
+      } else {
+        // Create new goal
+        const newGoal = await createGoal(gameId, goalData);
+        setGoals(prevGoals => [...prevGoals, newGoal]);
+      }
+      setShowGoalDialog(false);
+      setSelectedGoal(null);
+    } catch (error) {
+      console.error('Error saving goal:', error);
+      throw error; // Re-throw to let GoalDialog handle it
+    }
+  };
+
   // Comprehensive validation for "Played" status (final report submission)
   const validatePlayedStatus = () => {
     const validations = [];
@@ -1130,6 +1199,10 @@ export default function GameDetails() {
           teamSummary={teamSummary}
           setTeamSummary={setTeamSummary}
           onTeamSummaryClick={handleTeamSummaryClick}
+          goals={goals}
+          onAddGoal={handleAddGoal}
+          onEditGoal={handleEditGoal}
+          onDeleteGoal={handleDeleteGoal}
         />
       </div>
 
@@ -1176,6 +1249,20 @@ export default function GameDetails() {
         currentValue={getCurrentSummaryValue()}
         onSave={handleTeamSummarySave}
         isSaving={isSaving}
+      />
+
+      <GoalDialog
+        isOpen={showGoalDialog}
+        onClose={() => {
+          setShowGoalDialog(false);
+          setSelectedGoal(null);
+        }}
+        onSave={handleSaveGoal}
+        goal={selectedGoal}
+        gamePlayers={gamePlayers}
+        existingGoals={goals}
+        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        isReadOnly={isDone}
       />
 
       {/* Confirmation Modal for Validations */}
