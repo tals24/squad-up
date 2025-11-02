@@ -207,33 +207,7 @@ export default function PlayerPerformanceDialog({
             )}
           </div>
 
-          {/* Goals */}
-          <div>
-            <label className="text-sm font-semibold text-slate-400 mb-1 block">Goals</label>
-            <Input
-              type="number"
-              min="0"
-              max="99"
-              value={data.goals}
-              onChange={(e) => onDataChange({ ...data, goals: parseInt(e.target.value) || 0 })}
-              disabled={isReadOnly}
-              className="bg-slate-800 border-slate-700 text-white"
-            />
-          </div>
-
-          {/* Assists */}
-          <div>
-            <label className="text-sm font-semibold text-slate-400 mb-1 block">Assists</label>
-            <Input
-              type="number"
-              min="0"
-              max="99"
-              value={data.assists}
-              onChange={(e) => onDataChange({ ...data, assists: parseInt(e.target.value) || 0 })}
-              disabled={isReadOnly}
-              className="bg-slate-800 border-slate-700 text-white"
-            />
-          </div>
+          {/* Note: Goals and Assists are now tracked via the Goal Dialog in the sidebar */}
 
           {/* Rating */}
           <div>

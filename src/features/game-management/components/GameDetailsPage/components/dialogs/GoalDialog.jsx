@@ -50,7 +50,8 @@ export default function GoalDialog({
   gamePlayers = [],
   existingGoals = [],
   matchDuration = 90,
-  isReadOnly = false
+  isReadOnly = false,
+  currentScore = { ourScore: 0, opponentScore: 0 } // Add current score to calculate match state
 }) {
   const [goalData, setGoalData] = useState({
     goalNumber: null,
@@ -64,6 +65,22 @@ export default function GoalDialog({
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-calculate match state based on minute and score
+  const calculateMatchState = (minute, goalsList) => {
+    // Get all goals scored before this minute
+    const goalsBeforeThisMinute = goalsList.filter(g => g.minute < minute);
+    const ourGoalsCount = goalsBeforeThisMinute.length;
+    const opponentScore = currentScore.opponentScore;
+
+    if (ourGoalsCount > opponentScore) {
+      return 'winning';
+    } else if (ourGoalsCount < opponentScore) {
+      return 'losing';
+    } else {
+      return 'drawing';
+    }
+  };
 
   // Initialize form data when dialog opens or goal changes
   useEffect(() => {
@@ -80,8 +97,11 @@ export default function GoalDialog({
           matchState: goal.matchState || 'drawing'
         });
       } else {
-        // Creating new goal - auto-increment goal number
-        const nextGoalNumber = existingGoals.length + 1;
+        // Creating new goal - auto-calculate goal number based on minute order
+        // Sort existing goals by minute to determine the next goal number
+        const sortedGoals = [...existingGoals].sort((a, b) => a.minute - b.minute);
+        const nextGoalNumber = sortedGoals.length + 1;
+        
         setGoalData({
           goalNumber: nextGoalNumber,
           minute: null,
@@ -95,6 +115,17 @@ export default function GoalDialog({
       setErrors({});
     }
   }, [isOpen, goal, existingGoals]);
+
+  // Auto-calculate match state when minute changes
+  useEffect(() => {
+    if (goalData.minute && !goal) { // Only auto-calculate for new goals
+      const matchState = calculateMatchState(goalData.minute, existingGoals);
+      setGoalData(prev => ({
+        ...prev,
+        matchState
+      }));
+    }
+  }, [goalData.minute]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -204,21 +235,17 @@ export default function GoalDialog({
           {/* Goal Number & Minute */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="goalNumber" className="text-slate-300">Goal Number</Label>
-              <Input
-                id="goalNumber"
-                type="number"
-                min="1"
-                value={goalData.goalNumber || ''}
-                onChange={(e) => setGoalData(prev => ({ ...prev, goalNumber: parseInt(e.target.value) }))}
-                disabled={isReadOnly}
-                className="bg-slate-800 border-slate-700 text-white"
-              />
-              {errors.goalNumber && <p className="text-red-400 text-sm">{errors.goalNumber}</p>}
+              <Label htmlFor="goalNumber" className="text-slate-300">
+                Goal Number (Auto-calculated)
+              </Label>
+              <div className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white">
+                #{goalData.goalNumber || '?'}
+              </div>
+              <p className="text-xs text-slate-500">Based on chronological order</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="minute" className="text-slate-300">Minute</Label>
+              <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
               <Input
                 id="minute"
                 type="number"
@@ -248,7 +275,7 @@ export default function GoalDialog({
               <SelectContent className="bg-slate-800 border-slate-700">
                 {gamePlayers.map(player => (
                   <SelectItem key={player._id} value={player._id} className="text-white">
-                    #{player.jerseyNumber} {player.name}
+                    #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -273,7 +300,7 @@ export default function GoalDialog({
                   .filter(p => p._id !== goalData.scorerId)
                   .map(player => (
                     <SelectItem key={player._id} value={player._id} className="text-white">
-                      #{player.jerseyNumber} {player.name}
+                      #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -310,7 +337,7 @@ export default function GoalDialog({
                       <SelectContent className="bg-slate-800 border-slate-700">
                         {getAvailablePlayersForInvolvement().map(player => (
                           <SelectItem key={player._id} value={player._id} className="text-white">
-                            #{player.jerseyNumber} {player.name}
+                            #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -373,23 +400,13 @@ export default function GoalDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="matchState" className="text-slate-300">Match State</Label>
-              <Select
-                value={goalData.matchState}
-                onValueChange={(value) => setGoalData(prev => ({ ...prev, matchState: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {MATCH_STATES.map(state => (
-                    <SelectItem key={state.value} value={state.value} className="text-white">
-                      {state.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="matchState" className="text-slate-300">
+                Match State (Auto-calculated)
+              </Label>
+              <div className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white capitalize">
+                {goalData.matchState}
+              </div>
+              <p className="text-xs text-slate-500">Based on score at goal minute</p>
             </div>
           </div>
 

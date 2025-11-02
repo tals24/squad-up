@@ -1327,6 +1327,7 @@ export default function GameDetails() {
         gamePlayers={gamePlayers}
         existingGoals={goals}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        currentScore={finalScore}
         isReadOnly={isDone}
       />
 
