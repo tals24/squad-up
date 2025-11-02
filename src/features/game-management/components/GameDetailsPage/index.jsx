@@ -33,6 +33,7 @@ import FinalReportDialog from "./components/dialogs/FinalReportDialog";
 import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 import GoalDialog from "./components/dialogs/GoalDialog";
+import OpponentGoalDialog from "./components/dialogs/OpponentGoalDialog";
 import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
 
 // Import API functions
@@ -68,11 +69,12 @@ export default function GameDetails() {
   const [goals, setGoals] = useState([]);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
+  const [showOpponentGoalDialog, setShowOpponentGoalDialog] = useState(false);
   
   // Substitutions state
   const [substitutions, setSubstitutions] = useState([]);
   const [showSubstitutionDialog, setShowSubstitutionDialog] = useState(false);
-  const [selectedSubstitution, setSelectedSubstitution] = useState(null);
+  const [selectedSubstitution] = useState(null);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -911,6 +913,29 @@ export default function GameDetails() {
     }
   };
 
+  // Opponent Goal handlers
+  const handleAddOpponentGoal = () => {
+    setShowOpponentGoalDialog(true);
+  };
+
+  const handleSaveOpponentGoal = async (opponentGoalData) => {
+    try {
+      // Increment opponent score when opponent goal is recorded
+      const newOpponentScore = finalScore.opponentScore + 1;
+      setFinalScore(prev => ({
+        ...prev,
+        opponentScore: newOpponentScore
+      }));
+      
+      // Optional: Save opponent goal minute to database if you want to track them
+      // For now, we just update the score locally
+      setShowOpponentGoalDialog(false);
+    } catch (error) {
+      console.error('Error saving opponent goal:', error);
+      throw error;
+    }
+  };
+
   // Substitution handlers
   const handleAddSubstitution = () => {
     setSelectedSubstitution(null);
@@ -1208,6 +1233,7 @@ export default function GameDetails() {
         handlePostpone={handlePostpone}
         handleSubmitFinalReport={handleSubmitFinalReport}
         handleEditReport={handleEditReport}
+        onAddOpponentGoal={handleAddOpponentGoal}
         playerReports={localPlayerReports}
       />
 
@@ -1341,6 +1367,14 @@ export default function GameDetails() {
         substitution={selectedSubstitution}
         playersOnPitch={Object.values(formation).filter(player => player && player._id)}
         benchPlayers={benchPlayers}
+        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        isReadOnly={isDone}
+      />
+
+      <OpponentGoalDialog
+        isOpen={showOpponentGoalDialog}
+        onClose={() => setShowOpponentGoalDialog(false)}
+        onSave={handleSaveOpponentGoal}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
       />
