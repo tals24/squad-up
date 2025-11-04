@@ -117,28 +117,19 @@ export default function GameDetailsHeader({
               </div>
             )}
 
-            {/* Score Input (Editable - Played only) */}
+            {/* Score Input (Read-only - calculated from goals) */}
             {isPlayed && !isDone && (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-400">Score:</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="99"
-                    value={finalScore.ourScore}
-                    onChange={(e) => setFinalScore((prev) => ({ ...prev, ourScore: parseInt(e.target.value) || 0 }))}
-                    className="w-16 text-center bg-slate-800 border-slate-700 text-white"
-                  />
+                  <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
+                    {finalScore.ourScore}
+                  </div>
                   <span className="text-slate-400">-</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="99"
-                    value={finalScore.opponentScore}
-                    onChange={(e) => setFinalScore((prev) => ({ ...prev, opponentScore: parseInt(e.target.value) || 0 }))}
-                    className="w-16 text-center bg-slate-800 border-slate-700 text-white"
-                  />
+                  <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
+                    {finalScore.opponentScore}
+                  </div>
+                  <span className="text-xs text-slate-500">(auto-calculated)</span>
                 </div>
                 
                 {/* Extra Time Input */}

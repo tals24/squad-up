@@ -923,6 +923,9 @@ export default function GameDetails() {
   const handleEditGoal = (goal) => {
     setSelectedGoal(goal);
     setShowGoalDialog(true);
+    
+    // If editing an opponent goal, we need to set the active tab in GoalDialog
+    // This will be handled by GoalDialog checking goal.goalCategory or isOpponentGoal
   };
 
   const handleDeleteGoal = async (goalId) => {
@@ -945,6 +948,10 @@ export default function GameDetails() {
         // Update existing goal
         const updatedGoal = await updateGoal(gameId, selectedGoal._id, goalData);
         setGoals(prevGoals => prevGoals.map(g => g._id === updatedGoal._id ? updatedGoal : g));
+        
+        // Recalculate score from goals
+        const updatedGoals = await fetchGoals(gameId);
+        setGoals(updatedGoals);
       } else {
         // Create new goal
         const newGoal = await createGoal(gameId, goalData);

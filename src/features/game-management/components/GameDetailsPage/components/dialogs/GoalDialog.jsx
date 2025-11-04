@@ -73,13 +73,25 @@ export default function GoalDialog({
   // Initialize form data when dialog opens or goal changes
   useEffect(() => {
     if (isOpen) {
-      setActiveTab('team');
-      setOpponentGoalData({
-        minute: null,
-        goalType: 'open-play'
-      });
-      if (goal) {
-        // Editing existing goal
+      // Check if editing an opponent goal
+      const isOpponentGoal = goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal);
+      
+      if (isOpponentGoal) {
+        setActiveTab('opponent');
+        setOpponentGoalData({
+          minute: goal.minute,
+          goalType: goal.goalType || 'open-play'
+        });
+      } else {
+        setActiveTab('team');
+        setOpponentGoalData({
+          minute: null,
+          goalType: 'open-play'
+        });
+      }
+      
+      if (goal && !isOpponentGoal) {
+        // Editing existing team goal
         setGoalData({
           minute: goal.minute,
           scorerId: goal.scorerId?._id || goal.scorerId,
@@ -87,7 +99,7 @@ export default function GoalDialog({
           goalInvolvement: goal.goalInvolvement || [],
           goalType: goal.goalType || 'open-play'
         });
-      } else {
+      } else if (!goal) {
         // Creating new goal
         setGoalData({
           minute: null,
@@ -236,8 +248,8 @@ export default function GoalDialog({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-            <TabsTrigger value="team" disabled={!!goal || isReadOnly}>Team Goal</TabsTrigger>
-            <TabsTrigger value="opponent" disabled={!!goal || isReadOnly}>Opponent Goal</TabsTrigger>
+            <TabsTrigger value="team" disabled={!!goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) || isReadOnly}>Team Goal</TabsTrigger>
+            <TabsTrigger value="opponent" disabled={!!goal && goal.goalCategory !== 'OpponentGoal' && !goal.isOpponentGoal || isReadOnly}>Opponent Goal</TabsTrigger>
           </TabsList>
 
           {/* Team Goal Tab */}

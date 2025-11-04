@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRightLeft, X } from "lucide-react";
+import { ArrowRightLeft, X, ArrowDown, ArrowUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -139,7 +139,10 @@ export default function SubstitutionDialog({
   };
 
   const getPlayerDisplay = (player) => {
-    return `#${player.jerseyNumber} ${player.name}`;
+    if (!player) return 'Unknown';
+    const kitNumber = player.kitNumber || player.jerseyNumber || '?';
+    const name = player.fullName || player.name || 'Unknown';
+    return `#${kitNumber} ${name}`;
   };
 
   return (
@@ -162,7 +165,10 @@ export default function SubstitutionDialog({
         <div className="space-y-4">
           {/* Player Out */}
           <div className="space-y-2">
-            <Label htmlFor="playerOut" className="text-slate-300">Player Leaving Field *</Label>
+            <Label htmlFor="playerOut" className="text-slate-300 flex items-center gap-2">
+              <ArrowDown className="w-4 h-4 text-red-400" />
+              Out *
+            </Label>
             <Select
               value={subData.playerOutId || ''}
               onValueChange={(value) => setSubData(prev => ({ ...prev, playerOutId: value }))}
@@ -174,7 +180,7 @@ export default function SubstitutionDialog({
               <SelectContent className="bg-slate-800 border-slate-700">
                 {playersOnPitch.map(player => (
                   <SelectItem key={player._id} value={player._id} className="text-white">
-                    {getPlayerDisplay(player)} - {player.position || 'Unknown'}
+                    {getPlayerDisplay(player)} {player.position ? `- ${player.position}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -184,7 +190,10 @@ export default function SubstitutionDialog({
 
           {/* Player In */}
           <div className="space-y-2">
-            <Label htmlFor="playerIn" className="text-slate-300">Player Entering Field *</Label>
+            <Label htmlFor="playerIn" className="text-slate-300 flex items-center gap-2">
+              <ArrowUp className="w-4 h-4 text-green-400" />
+              In *
+            </Label>
             <Select
               value={subData.playerInId || ''}
               onValueChange={(value) => {
@@ -202,7 +211,7 @@ export default function SubstitutionDialog({
               <SelectContent className="bg-slate-800 border-slate-700">
                 {benchPlayers.map(player => (
                   <SelectItem key={player._id} value={player._id} className="text-white">
-                    {getPlayerDisplay(player)} - {player.position || 'Unknown'}
+                    {getPlayerDisplay(player)} {player.position ? `- ${player.position}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>

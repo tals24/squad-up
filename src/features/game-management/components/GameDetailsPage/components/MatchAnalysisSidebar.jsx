@@ -51,17 +51,27 @@ export default function MatchAnalysisSidebar({
             {goals.length > 0 ? (
               <div className="space-y-2">
                 {goals
-                  .sort((a, b) => a.goalNumber - b.goalNumber)
+                  .sort((a, b) => (a.minute || 0) - (b.minute || 0))
                   .map((goal) => (
                     <div
                       key={goal._id}
-                      className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-green-500/50 transition-colors"
+                      className={`p-3 rounded-lg border transition-colors ${
+                        goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal
+                          ? 'bg-red-500/10 border-red-500/50 hover:border-red-500'
+                          : 'bg-slate-800/50 border-slate-700 hover:border-green-500/50'
+                      }`}
                     >
                       <div className="flex items-start justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold">
-                            {goal.goalNumber}
-                          </div>
+                          {goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal ? (
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold">
+                              ⚽
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold">
+                              {goal.goalNumber || '?'}
+                            </div>
+                          )}
                           <Clock className="w-3 h-3 text-slate-400" />
                           <span className="text-xs text-slate-400">{goal.minute}'</span>
                         </div>
@@ -88,35 +98,56 @@ export default function MatchAnalysisSidebar({
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1">
-                          <Trophy className="w-3 h-3 text-yellow-400" />
-                          <span className="text-sm text-white font-semibold">
-                            {goal.scorerId?.name || 'Unknown'}
-                          </span>
-                        </div>
-                        
-                        {goal.assistedById && (
-                          <div className="flex items-center gap-1 ml-4">
-                            <Zap className="w-3 h-3 text-blue-400" />
-                            <span className="text-xs text-slate-300">
-                              Assist: {goal.assistedById?.name || 'Unknown'}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2 ml-4 mt-1">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-                            {goal.goalType?.replace('-', ' ')}
-                          </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-                            {goal.matchState}
-                          </span>
-                        </div>
-                        
-                        {goal.goalInvolvement && goal.goalInvolvement.length > 0 && (
-                          <div className="text-xs text-slate-400 ml-4 mt-1">
-                            +{goal.goalInvolvement.length} contributor{goal.goalInvolvement.length > 1 ? 's' : ''}
-                          </div>
+                        {/* Check if opponent goal */}
+                        {goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal ? (
+                          <>
+                            <div className="flex items-center gap-1">
+                              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                              <span className="text-sm text-white font-semibold">Opponent Goal</span>
+                            </div>
+                            {goal.goalType && (
+                              <div className="flex items-center gap-2 ml-4 mt-1">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                                  {goal.goalType.replace('-', ' ')}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-1">
+                              <Trophy className="w-3 h-3 text-yellow-400" />
+                              <span className="text-sm text-white font-semibold">
+                                {goal.scorerId?.fullName || goal.scorerId?.name || (goal.goalType === 'own-goal' ? 'Own Goal' : 'Unknown')}
+                              </span>
+                            </div>
+                            
+                            {goal.assistedById && (
+                              <div className="flex items-center gap-1 ml-4">
+                                <Zap className="w-3 h-3 text-blue-400" />
+                                <span className="text-xs text-slate-300">
+                                  Assist: {goal.assistedById?.fullName || goal.assistedById?.name || 'Unknown'}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center gap-2 ml-4 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                                {goal.goalType?.replace('-', ' ')}
+                              </span>
+                              {goal.matchState && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                                  {goal.matchState}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {goal.goalInvolvement && goal.goalInvolvement.length > 0 && (
+                              <div className="text-xs text-slate-400 ml-4 mt-1">
+                                +{goal.goalInvolvement.length} contributor{goal.goalInvolvement.length > 1 ? 's' : ''}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
