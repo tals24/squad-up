@@ -4,6 +4,7 @@ const { checkTeamAccess } = require('../middleware/auth');
 const Game = require('../models/Game');
 const Team = require('../models/Team');
 const { recalculateGoalAnalytics } = require('../services/goalAnalytics');
+const { recalculateSubstitutionAnalytics } = require('../services/substitutionAnalytics');
 
 const router = express.Router();
 
@@ -226,6 +227,17 @@ router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
       } catch (error) {
         console.error('❌ [Backend PUT /games/:id] Error recalculating goal analytics:', error);
         // Don't fail the entire request if goal analytics recalculation fails
+        // The game update was successful, just log the error
+      }
+
+      // 🎯 SUBSTITUTION ANALYTICS: Recalculate match states for substitutions when game status changes to "Done"
+      console.log('🎯 [Backend PUT /games/:id] Game marked as Done, recalculating substitution analytics...');
+      try {
+        await recalculateSubstitutionAnalytics(game._id, game.ourScore, game.opponentScore);
+        console.log('✅ [Backend PUT /games/:id] Substitution analytics recalculated successfully');
+      } catch (error) {
+        console.error('❌ [Backend PUT /games/:id] Error recalculating substitution analytics:', error);
+        // Don't fail the entire request if substitution analytics recalculation fails
         // The game update was successful, just log the error
       }
     }

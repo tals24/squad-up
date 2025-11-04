@@ -29,12 +29,6 @@ const SUBSTITUTION_REASONS = [
   { value: 'other', label: 'Other' }
 ];
 
-const MATCH_STATES = [
-  { value: 'winning', label: 'Winning' },
-  { value: 'drawing', label: 'Drawing' },
-  { value: 'losing', label: 'Losing' }
-];
-
 const COMMON_SUB_MINUTES = [45, 60, 65, 70, 75, 80, 85, 90];
 
 export default function SubstitutionDialog({
@@ -53,7 +47,6 @@ export default function SubstitutionDialog({
     playerInId: null,
     minute: null,
     reason: 'tactical',
-    matchState: 'drawing',
     tacticalNote: ''
   });
 
@@ -71,7 +64,6 @@ export default function SubstitutionDialog({
           playerInId: substitution.playerInId?._id || substitution.playerInId,
           minute: substitution.minute,
           reason: substitution.reason || 'tactical',
-          matchState: substitution.matchState || 'drawing',
           tacticalNote: substitution.tacticalNote || ''
         });
       } else {
@@ -81,7 +73,6 @@ export default function SubstitutionDialog({
           playerInId: null,
           minute: null,
           reason: 'tactical',
-          matchState: 'drawing',
           tacticalNote: ''
         });
       }
@@ -259,47 +250,25 @@ export default function SubstitutionDialog({
             {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
           </div>
 
-          {/* Reason & Match State */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="reason" className="text-slate-300">Reason</Label>
-              <Select
-                value={subData.reason}
-                onValueChange={(value) => setSubData(prev => ({ ...prev, reason: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {SUBSTITUTION_REASONS.map(reason => (
-                    <SelectItem key={reason.value} value={reason.value} className="text-white">
-                      {reason.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="matchState" className="text-slate-300">Match State</Label>
-              <Select
-                value={subData.matchState}
-                onValueChange={(value) => setSubData(prev => ({ ...prev, matchState: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {MATCH_STATES.map(state => (
-                    <SelectItem key={state.value} value={state.value} className="text-white">
-                      {state.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Reason */}
+          <div className="space-y-2">
+            <Label htmlFor="reason" className="text-slate-300">Reason</Label>
+            <Select
+              value={subData.reason}
+              onValueChange={(value) => setSubData(prev => ({ ...prev, reason: value }))}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                {SUBSTITUTION_REASONS.map(reason => (
+                  <SelectItem key={reason.value} value={reason.value} className="text-white">
+                    {reason.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Tactical Note */}
