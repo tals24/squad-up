@@ -16,6 +16,9 @@ import {
   Clock,
   Target,
   Plus,
+  Trophy,
+  Zap,
+  Star,
 } from "lucide-react";
 
 import MinutesProgressIndicator from "./MinutesProgressIndicator";
@@ -37,6 +40,7 @@ export default function GameDetailsHeader({
   handleSubmitFinalReport,
   handleEditReport,
   playerReports,
+  matchStats,
 }) {
   const navigate = useNavigate();
 
@@ -52,7 +56,7 @@ export default function GameDetailsHeader({
     <div className="border-b border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800 shadow-xl backdrop-blur-sm">
       <div className="max-w-[1800px] mx-auto px-6 py-4">
         {/* Top Row: Title and Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-6">
           {/* Left: Back + Title */}
           <div className="flex items-center gap-4">
             <Button
@@ -84,6 +88,76 @@ export default function GameDetailsHeader({
               </div>
             </div>
           </div>
+
+          {/* Center: Match Stats - Only show for Played/Done */}
+          {(isPlayed || isDone) && matchStats && (matchStats.scorers.length > 0 || matchStats.assists.length > 0 || matchStats.topRated) && (
+            <div className="flex-1 flex items-center justify-center">
+              <style>{`
+                .match-stats-scrollable {
+                  scrollbar-width: thin;
+                  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+                }
+                .match-stats-scrollable::-webkit-scrollbar {
+                  width: 4px;
+                }
+                .match-stats-scrollable::-webkit-scrollbar-track {
+                  background: transparent;
+                }
+                .match-stats-scrollable::-webkit-scrollbar-thumb {
+                  background-color: rgba(148, 163, 184, 0.3);
+                  border-radius: 2px;
+                }
+              `}</style>
+              <div className="flex gap-6 px-4 py-1.5 bg-slate-800/30 border border-slate-700/50 rounded-lg max-h-20">
+                {/* Scorers */}
+                {matchStats.scorers.length > 0 && (
+                  <div className="flex flex-col min-w-0">
+                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                      <Trophy className="w-3 h-3" />
+                      Scorers
+                    </div>
+                    <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
+                      {matchStats.scorers.map((scorer, i) => (
+                        <div key={i} className="whitespace-nowrap">
+                          {scorer.name} ({scorer.count})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Assists */}
+                {matchStats.assists.length > 0 && (
+                  <div className="flex flex-col min-w-0">
+                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                      <Zap className="w-3 h-3" />
+                      Assists
+                    </div>
+                    <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
+                      {matchStats.assists.map((assist, i) => (
+                        <div key={i} className="whitespace-nowrap">
+                          {assist.name} ({assist.count})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* MVP */}
+                {matchStats.topRated && (
+                  <div className="flex flex-col min-w-0">
+                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                      <Star className="w-3 h-3" />
+                      MVP
+                    </div>
+                    <div className="text-xs text-white whitespace-nowrap">
+                      {matchStats.topRated}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Right: Status + Score + Actions */}
           <div className="flex items-center gap-4">

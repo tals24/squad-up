@@ -1302,6 +1302,7 @@ export default function GameDetails() {
         handleSubmitFinalReport={handleSubmitFinalReport}
         handleEditReport={handleEditReport}
         playerReports={localPlayerReports}
+        matchStats={matchStats}
       />
 
       {/* Main Content - 3 Column Layout */}
@@ -1349,7 +1350,6 @@ export default function GameDetails() {
         <MatchAnalysisSidebar
           isPlayed={isPlayed}
           isDone={isDone}
-          matchStats={matchStats}
           teamSummary={teamSummary}
           setTeamSummary={setTeamSummary}
           onTeamSummaryClick={handleTeamSummaryClick}

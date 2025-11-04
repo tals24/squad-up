@@ -13,7 +13,6 @@ import {
 export default function MatchAnalysisSidebar({
   isPlayed,
   isDone,
-  matchStats,
   teamSummary,
   setTeamSummary,
   onTeamSummaryClick,
@@ -339,58 +338,6 @@ export default function MatchAnalysisSidebar({
                 No substitutions recorded yet
               </p>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Match Stats - Only show for Played/Done */}
-      {(isPlayed || isDone) && (
-        <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-400" />
-              Match Stats
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <h4 className="text-xs font-semibold text-slate-400 mb-1 flex items-center gap-1">
-                <Trophy className="w-3 h-3" /> Scorers
-              </h4>
-              {matchStats.scorers.length > 0 ? (
-                <div className="text-sm text-white">
-                  {matchStats.scorers.map((scorer, i) => (
-                    <div key={i}>{scorer.name} ({scorer.count})</div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-slate-500">None</div>
-              )}
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-slate-400 mb-1 flex items-center gap-1">
-                <Zap className="w-3 h-3" /> Assists
-              </h4>
-              {matchStats.assists.length > 0 ? (
-                <div className="text-sm text-white">
-                  {matchStats.assists.map((assist, i) => (
-                    <div key={i}>{assist.name} ({assist.count})</div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-slate-500">None</div>
-              )}
-            </div>
-
-            <div>
-              <h4 className="text-xs font-semibold text-slate-400 mb-1 flex items-center gap-1">
-                <Star className="w-3 h-3" /> Top Rated (MVP)
-              </h4>
-              <div className="text-sm text-white">
-                {matchStats.topRated || "None"}
-              </div>
-            </div>
           </CardContent>
         </Card>
       )}
