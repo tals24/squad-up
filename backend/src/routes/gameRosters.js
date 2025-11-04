@@ -1,6 +1,5 @@
 const express = require('express');
 const { authenticateJWT } = require('../middleware/jwtAuth');
-const { checkTeamAccess } = require('../middleware/auth');
 const GameRoster = require('../models/GameRoster');
 
 const router = express.Router();
