@@ -1308,7 +1308,7 @@ export default function GameDetails() {
   const isDone = game.status === "Done" || isReadOnly;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
       {/* Header */}
       <GameDetailsHeader
         game={game}
@@ -1331,7 +1331,7 @@ export default function GameDetails() {
       />
 
       {/* Main Content - 3 Column Layout */}
-      <div className="flex h-[calc(100vh-120px)]">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Game Day Roster */}
         <GameDayRosterSidebar
           playersOnPitch={playersOnPitch}
