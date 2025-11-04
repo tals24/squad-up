@@ -32,11 +32,20 @@ const goalSchema = new mongoose.Schema({
     max: 120
   },
   
-  // Goal relationships
+  // Goal type: team goal or opponent goal
+  isOpponentGoal: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  
+  // Goal relationships (only for team goals)
   scorerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Player',
-    required: true,
+    required: function() {
+      return !this.isOpponentGoal; // Not required for opponent goals
+    },
     index: true
   },
   assistedById: {
@@ -70,20 +79,20 @@ goalSchema.index({ gameId: 1, goalNumber: 1 });
 // Index for timeline analysis
 goalSchema.index({ gameId: 1, minute: 1 });
 
-// Validation: Scorer and assister cannot be the same
+// Validation: Scorer and assister cannot be the same (only for team goals)
 goalSchema.pre('save', function(next) {
-  if (this.assistedById && this.scorerId.equals(this.assistedById)) {
+  if (!this.isOpponentGoal && this.assistedById && this.scorerId && this.scorerId.equals(this.assistedById)) {
     const error = new Error('Scorer and assister cannot be the same player');
     return next(error);
   }
   next();
 });
 
-// Validation: Goal involvement players cannot include scorer or assister
+// Validation: Goal involvement players cannot include scorer or assister (only for team goals)
 goalSchema.pre('save', function(next) {
-  if (this.goalInvolvement && this.goalInvolvement.length > 0) {
+  if (!this.isOpponentGoal && this.goalInvolvement && this.goalInvolvement.length > 0) {
     for (const involvement of this.goalInvolvement) {
-      if (involvement.playerId.equals(this.scorerId)) {
+      if (this.scorerId && involvement.playerId.equals(this.scorerId)) {
         return next(new Error('Goal involvement cannot include the scorer'));
       }
       if (this.assistedById && involvement.playerId.equals(this.assistedById)) {

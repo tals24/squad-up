@@ -16,13 +16,12 @@ router.post('/:gameId/goals', async (req, res) => {
   try {
     const { gameId } = req.params;
     const {
-      goalNumber,
       minute,
       scorerId,
       assistedById,
       goalInvolvement,
       goalType,
-      matchState
+      isOpponentGoal = false
     } = req.body;
 
     // Validate game exists
@@ -31,28 +30,33 @@ router.post('/:gameId/goals', async (req, res) => {
       return res.status(404).json({ message: 'Game not found' });
     }
 
-    // Validate scorer exists
-    const scorer = await Player.findById(scorerId);
-    if (!scorer) {
-      return res.status(404).json({ message: 'Scorer not found' });
-    }
-
-    // Validate assister if provided
-    if (assistedById) {
-      const assister = await Player.findById(assistedById);
-      if (!assister) {
-        return res.status(404).json({ message: 'Assister not found' });
+    // For team goals, validate scorer exists
+    if (!isOpponentGoal) {
+      if (!scorerId) {
+        return res.status(400).json({ message: 'Scorer is required for team goals' });
       }
-    }
+      const scorer = await Player.findById(scorerId);
+      if (!scorer) {
+        return res.status(404).json({ message: 'Scorer not found' });
+      }
 
-    // Validate goal involvement players if provided
-    if (goalInvolvement && goalInvolvement.length > 0) {
-      for (const involvement of goalInvolvement) {
-        const player = await Player.findById(involvement.playerId);
-        if (!player) {
-          return res.status(404).json({ 
-            message: `Player ${involvement.playerId} not found in goal involvement` 
-          });
+      // Validate assister if provided
+      if (assistedById) {
+        const assister = await Player.findById(assistedById);
+        if (!assister) {
+          return res.status(404).json({ message: 'Assister not found' });
+        }
+      }
+
+      // Validate goal involvement players if provided
+      if (goalInvolvement && goalInvolvement.length > 0) {
+        for (const involvement of goalInvolvement) {
+          const player = await Player.findById(involvement.playerId);
+          if (!player) {
+            return res.status(404).json({ 
+              message: `Player ${involvement.playerId} not found in goal involvement` 
+            });
+          }
         }
       }
     }
@@ -60,23 +64,25 @@ router.post('/:gameId/goals', async (req, res) => {
     // Create goal
     const goal = new Goal({
       gameId,
-      goalNumber,
       minute,
-      scorerId,
-      assistedById: assistedById || null,
-      goalInvolvement: goalInvolvement || [],
-      goalType: goalType || 'open-play',
-      matchState: matchState || 'drawing'
+      isOpponentGoal,
+      scorerId: isOpponentGoal ? null : scorerId,
+      assistedById: isOpponentGoal ? null : (assistedById || null),
+      goalInvolvement: isOpponentGoal ? [] : (goalInvolvement || []),
+      goalType: isOpponentGoal ? 'open-play' : (goalType || 'open-play')
+      // goalNumber and matchState will be calculated when game status = "Done"
     });
 
     await goal.save();
 
-    // Populate references for response
-    await goal.populate([
-      { path: 'scorerId', select: 'name jerseyNumber position' },
-      { path: 'assistedById', select: 'name jerseyNumber position' },
-      { path: 'goalInvolvement.playerId', select: 'name jerseyNumber position' }
-    ]);
+    // Populate references for response (only for team goals)
+    if (!isOpponentGoal) {
+      await goal.populate([
+        { path: 'scorerId', select: 'name jerseyNumber position' },
+        { path: 'assistedById', select: 'name jerseyNumber position' },
+        { path: 'goalInvolvement.playerId', select: 'name jerseyNumber position' }
+      ]);
+    }
 
     res.status(201).json({
       message: 'Goal created successfully',

@@ -919,6 +919,14 @@ export default function GameDetails() {
   // Opponent Goal handler
   const handleSaveOpponentGoal = async (opponentGoalMinute) => {
     try {
+      // Save opponent goal to database
+      const opponentGoalData = {
+        minute: opponentGoalMinute,
+        isOpponentGoal: true
+      };
+      
+      await createGoal(gameId, opponentGoalData);
+      
       // Increment opponent score when opponent goal is recorded
       const newOpponentScore = finalScore.opponentScore + 1;
       setFinalScore(prev => ({
@@ -926,8 +934,9 @@ export default function GameDetails() {
         opponentScore: newOpponentScore
       }));
       
-      // Optional: Save opponent goal minute to database if you want to track them
-      // For now, we just update the score locally
+      // Refresh goals list to include the new opponent goal
+      const updatedGoals = await fetchGoals(gameId);
+      setGoals(updatedGoals);
     } catch (error) {
       console.error('Error saving opponent goal:', error);
       throw error;

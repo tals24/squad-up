@@ -27,13 +27,15 @@ async function recalculateSubstitutionAnalytics(gameId, finalOurScore, finalOppo
       return;
     }
 
-    // Fetch all goals for this game (our goals and opponent goals if tracked)
-    // Note: Currently we only track our team's goals with minutes
-    // For opponent goals, we need to estimate based on final score distribution
-    const ourGoals = await Goal.find({ gameId })
+    // Fetch all goals for this game (team goals and opponent goals)
+    const allGoals = await Goal.find({ gameId })
       .sort({ minute: 1 });
 
-    console.log(`Recalculating analytics for ${substitutions.length} substitutions in game ${gameId}`);
+    // Separate team goals and opponent goals
+    const teamGoals = allGoals.filter(g => !g.isOpponentGoal);
+    const opponentGoals = allGoals.filter(g => g.isOpponentGoal);
+
+    console.log(`Recalculating analytics for ${substitutions.length} substitutions in game ${gameId} (${teamGoals.length} team goals, ${opponentGoals.length} opponent goals)`);
 
     // Calculate match states for each substitution
     const updates = [];
@@ -42,21 +44,16 @@ async function recalculateSubstitutionAnalytics(gameId, finalOurScore, finalOppo
       const substitutionMinute = substitution.minute;
       
       // Count our goals before this substitution minute
-      const ourGoalsBeforeThis = ourGoals.filter(goal => goal.minute <= substitutionMinute).length;
+      const ourGoalsBeforeThis = teamGoals.filter(goal => goal.minute <= substitutionMinute).length;
       
-      // Estimate opponent goals before this substitution
-      // If we track opponent goal minutes in the future, use those instead
-      // For now, estimate based on final score distribution
-      const totalMatchMinutes = 90; // Default, could be calculated from game.matchDuration
-      const estimatedOpponentGoalsBeforeThis = Math.floor(
-        (finalOpponentScore * substitutionMinute) / totalMatchMinutes
-      );
+      // Count opponent goals before this substitution minute (using actual minutes)
+      const opponentGoalsBeforeThis = opponentGoals.filter(goal => goal.minute <= substitutionMinute).length;
       
       // Determine match state at the time of substitution
       let matchState;
-      if (ourGoalsBeforeThis > estimatedOpponentGoalsBeforeThis) {
+      if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
         matchState = 'winning';
-      } else if (ourGoalsBeforeThis < estimatedOpponentGoalsBeforeThis) {
+      } else if (ourGoalsBeforeThis < opponentGoalsBeforeThis) {
         matchState = 'losing';
       } else {
         matchState = 'drawing';
@@ -66,7 +63,7 @@ async function recalculateSubstitutionAnalytics(gameId, finalOurScore, finalOppo
       substitution.matchState = matchState;
       updates.push(substitution.save());
       
-      console.log(`Substitution at ${substitutionMinute}' (${substitution.playerOutId?.name} → ${substitution.playerInId?.name}): ${matchState}`);
+      console.log(`Substitution at ${substitutionMinute}' (${substitution.playerOutId?.name} → ${substitution.playerInId?.name}): ${matchState} (Score: ${ourGoalsBeforeThis}-${opponentGoalsBeforeThis})`);
     }
 
     // Save all updates

@@ -10,42 +10,43 @@ const Goal = require('../models/Goal');
  */
 async function recalculateGoalAnalytics(gameId, finalOurScore, finalOpponentScore) {
   try {
-    // Fetch all goals for this game
-    const goals = await Goal.find({ gameId })
+    // Fetch all goals for this game (team goals and opponent goals)
+    const allGoals = await Goal.find({ gameId })
       .populate('scorerId', 'name')
       .sort({ minute: 1 }); // Sort by minute chronologically
 
-    if (goals.length === 0) {
-      console.log(`No goals to recalculate for game ${gameId}`);
+    // Separate team goals and opponent goals
+    const teamGoals = allGoals.filter(g => !g.isOpponentGoal);
+    const opponentGoals = allGoals.filter(g => g.isOpponentGoal);
+
+    if (teamGoals.length === 0) {
+      console.log(`No team goals to recalculate for game ${gameId}`);
       return;
     }
 
-    console.log(`Recalculating analytics for ${goals.length} goals in game ${gameId}`);
+    console.log(`Recalculating analytics for ${teamGoals.length} team goals and ${opponentGoals.length} opponent goals in game ${gameId}`);
 
-    // Calculate goal numbers and match states
+    // Calculate goal numbers and match states for team goals
     const updates = [];
     
-    for (let i = 0; i < goals.length; i++) {
-      const goal = goals[i];
+    for (let i = 0; i < teamGoals.length; i++) {
+      const goal = teamGoals[i];
       const goalNumber = i + 1; // Chronological order (1, 2, 3, ...)
       
       // Calculate match state at the time of this goal
       // Count our goals BEFORE this one
       const ourGoalsBeforeThis = i; // Goals scored before this one (0-indexed)
       
-      // We don't track opponent goal minutes, so we need to estimate
-      // Assume opponent goals are distributed evenly throughout the match
-      // This is a simplification - in the future, you could track opponent goal minutes
-      const totalMinutes = goal.minute;
-      const estimatedOpponentGoalsBeforeThis = Math.floor(
-        (finalOpponentScore * totalMinutes) / 90 // Assume 90 min match
-      );
+      // Count opponent goals BEFORE this goal's minute
+      const opponentGoalsBeforeThis = opponentGoals.filter(
+        og => og.minute <= goal.minute
+      ).length;
       
       // Determine match state
       let matchState;
-      if (ourGoalsBeforeThis > estimatedOpponentGoalsBeforeThis) {
+      if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
         matchState = 'winning';
-      } else if (ourGoalsBeforeThis < estimatedOpponentGoalsBeforeThis) {
+      } else if (ourGoalsBeforeThis < opponentGoalsBeforeThis) {
         matchState = 'losing';
       } else {
         matchState = 'drawing';
@@ -57,14 +58,14 @@ async function recalculateGoalAnalytics(gameId, finalOurScore, finalOpponentScor
       
       updates.push(goal.save());
       
-      console.log(`Goal ${goalNumber} at ${goal.minute}' by ${goal.scorerId?.name}: ${matchState}`);
+      console.log(`Goal ${goalNumber} at ${goal.minute}' by ${goal.scorerId?.name}: ${matchState} (Opponent: ${opponentGoalsBeforeThis})`);
     }
 
     // Save all updates
     await Promise.all(updates);
     
-    console.log(`✅ Successfully recalculated analytics for ${goals.length} goals`);
-    return { success: true, goalsUpdated: goals.length };
+    console.log(`✅ Successfully recalculated analytics for ${teamGoals.length} team goals`);
+    return { success: true, goalsUpdated: teamGoals.length };
     
   } catch (error) {
     console.error('Error recalculating goal analytics:', error);
