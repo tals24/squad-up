@@ -28,12 +28,13 @@ async function recalculateSubstitutionAnalytics(gameId, finalOurScore, finalOppo
     }
 
     // Fetch all goals for this game (team goals and opponent goals)
+    // Discriminators are stored in same collection, Goal.find() returns both types
     const allGoals = await Goal.find({ gameId })
       .sort({ minute: 1 });
 
-    // Separate team goals and opponent goals
-    const teamGoals = allGoals.filter(g => !g.isOpponentGoal);
-    const opponentGoals = allGoals.filter(g => g.isOpponentGoal);
+    // Separate team goals and opponent goals using discriminator key
+    const teamGoals = allGoals.filter(g => g.goalCategory === 'TeamGoal');
+    const opponentGoals = allGoals.filter(g => g.goalCategory === 'OpponentGoal');
 
     console.log(`Recalculating analytics for ${substitutions.length} substitutions in game ${gameId} (${teamGoals.length} team goals, ${opponentGoals.length} opponent goals)`);
 

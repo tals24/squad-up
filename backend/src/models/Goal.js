@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Goal involvement schema (for team goals only)
 const goalInvolvementSchema = new mongoose.Schema({
   playerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -13,6 +14,7 @@ const goalInvolvementSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+// Base Goal schema - shared fields for all goal types
 const goalSchema = new mongoose.Schema({
   gameId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -20,57 +22,25 @@ const goalSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  goalNumber: {
-    type: Number,
-    required: true,
-    min: 1
-  },
   minute: {
     type: Number,
     required: true,
     min: 1,
     max: 120
   },
-  
-  // Goal type: team goal or opponent goal
-  isOpponentGoal: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  
-  // Goal relationships (only for team goals)
-  scorerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Player',
-    required: function() {
-      return !this.isOpponentGoal; // Not required for opponent goals
-    },
-    index: true
-  },
-  assistedById: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Player',
-    default: null,
-    index: true
-  },
-  
-  // Goal involvement (indirect contributors)
-  goalInvolvement: [goalInvolvementSchema],
-  
-  // Goal context
-  goalType: {
-    type: String,
-    enum: ['open-play', 'set-piece', 'penalty', 'counter-attack', 'own-goal'],
-    default: 'open-play'
+  // Analytics fields (calculated when game status = "Done")
+  goalNumber: {
+    type: Number,
+    min: 1
   },
   matchState: {
     type: String,
-    enum: ['winning', 'drawing', 'losing'],
-    default: 'drawing'
+    enum: ['winning', 'drawing', 'losing']
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  discriminatorKey: 'goalCategory' // Use 'goalCategory' to distinguish between TeamGoal and OpponentGoal
+  // Note: 'goalType' is a separate field for TeamGoal enum (open-play, set-piece, etc.)
 });
 
 // Compound index for efficient game-level queries sorted by goal number
@@ -79,20 +49,45 @@ goalSchema.index({ gameId: 1, goalNumber: 1 });
 // Index for timeline analysis
 goalSchema.index({ gameId: 1, minute: 1 });
 
-// Validation: Scorer and assister cannot be the same (only for team goals)
-goalSchema.pre('save', function(next) {
-  if (!this.isOpponentGoal && this.assistedById && this.scorerId && this.scorerId.equals(this.assistedById)) {
+// Base Goal model
+const Goal = mongoose.model('Goal', goalSchema);
+
+// TeamGoal discriminator - has scorer, assister, etc.
+const teamGoalSchema = new mongoose.Schema({
+  scorerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Player',
+    required: true,
+    index: true
+  },
+  assistedById: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Player',
+    default: null,
+    index: true
+  },
+  goalInvolvement: [goalInvolvementSchema],
+  goalType: {
+    type: String,
+    enum: ['open-play', 'set-piece', 'penalty', 'counter-attack', 'own-goal'],
+    default: 'open-play'
+  }
+});
+
+// Validation: Scorer and assister cannot be the same
+teamGoalSchema.pre('save', function(next) {
+  if (this.assistedById && this.scorerId && this.scorerId.equals(this.assistedById)) {
     const error = new Error('Scorer and assister cannot be the same player');
     return next(error);
   }
   next();
 });
 
-// Validation: Goal involvement players cannot include scorer or assister (only for team goals)
-goalSchema.pre('save', function(next) {
-  if (!this.isOpponentGoal && this.goalInvolvement && this.goalInvolvement.length > 0) {
+// Validation: Goal involvement players cannot include scorer or assister
+teamGoalSchema.pre('save', function(next) {
+  if (this.goalInvolvement && this.goalInvolvement.length > 0) {
     for (const involvement of this.goalInvolvement) {
-      if (this.scorerId && involvement.playerId.equals(this.scorerId)) {
+      if (involvement.playerId.equals(this.scorerId)) {
         return next(new Error('Goal involvement cannot include the scorer'));
       }
       if (this.assistedById && involvement.playerId.equals(this.assistedById)) {
@@ -103,7 +98,16 @@ goalSchema.pre('save', function(next) {
   next();
 });
 
-const Goal = mongoose.model('Goal', goalSchema);
+// OpponentGoal discriminator - only has minute (inherits from base)
+const opponentGoalSchema = new mongoose.Schema({
+  // No additional fields needed - opponent goals only need minute
+  // All shared fields (gameId, minute, goalNumber, matchState) come from base schema
+});
+
+// Create discriminators
+const TeamGoal = Goal.discriminator('TeamGoal', teamGoalSchema);
+const OpponentGoal = Goal.discriminator('OpponentGoal', opponentGoalSchema);
 
 module.exports = Goal;
-
+module.exports.TeamGoal = TeamGoal;
+module.exports.OpponentGoal = OpponentGoal;

@@ -11,13 +11,14 @@ const Goal = require('../models/Goal');
 async function recalculateGoalAnalytics(gameId, finalOurScore, finalOpponentScore) {
   try {
     // Fetch all goals for this game (team goals and opponent goals)
+    // Discriminators are stored in same collection, Goal.find() returns both types
     const allGoals = await Goal.find({ gameId })
       .populate('scorerId', 'name')
       .sort({ minute: 1 }); // Sort by minute chronologically
 
-    // Separate team goals and opponent goals
-    const teamGoals = allGoals.filter(g => !g.isOpponentGoal);
-    const opponentGoals = allGoals.filter(g => g.isOpponentGoal);
+    // Separate team goals and opponent goals using discriminator key
+    const teamGoals = allGoals.filter(g => g.goalCategory === 'TeamGoal');
+    const opponentGoals = allGoals.filter(g => g.goalCategory === 'OpponentGoal');
 
     if (teamGoals.length === 0) {
       console.log(`No team goals to recalculate for game ${gameId}`);

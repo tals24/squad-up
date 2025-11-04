@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Goal = require('../models/Goal');
+const { TeamGoal, OpponentGoal } = require('../models/Goal');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
 const { authenticateToken } = require('../middleware/auth');
@@ -30,11 +31,23 @@ router.post('/:gameId/goals', async (req, res) => {
       return res.status(404).json({ message: 'Game not found' });
     }
 
-    // For team goals, validate scorer exists
-    if (!isOpponentGoal) {
+    let goal;
+
+    // Create appropriate goal type based on isOpponentGoal flag
+    if (isOpponentGoal) {
+      // Create OpponentGoal - only needs minute
+      goal = new OpponentGoal({
+        gameId,
+        minute
+        // goalNumber and matchState will be calculated when game status = "Done"
+      });
+    } else {
+      // Create TeamGoal - requires scorer and other team-specific fields
       if (!scorerId) {
         return res.status(400).json({ message: 'Scorer is required for team goals' });
       }
+
+      // Validate scorer exists
       const scorer = await Player.findById(scorerId);
       if (!scorer) {
         return res.status(404).json({ message: 'Scorer not found' });
@@ -59,19 +72,18 @@ router.post('/:gameId/goals', async (req, res) => {
           }
         }
       }
-    }
 
-    // Create goal
-    const goal = new Goal({
-      gameId,
-      minute,
-      isOpponentGoal,
-      scorerId: isOpponentGoal ? null : scorerId,
-      assistedById: isOpponentGoal ? null : (assistedById || null),
-      goalInvolvement: isOpponentGoal ? [] : (goalInvolvement || []),
-      goalType: isOpponentGoal ? 'open-play' : (goalType || 'open-play')
-      // goalNumber and matchState will be calculated when game status = "Done"
-    });
+      // Create TeamGoal
+      goal = new TeamGoal({
+        gameId,
+        minute,
+        scorerId,
+        assistedById: assistedById || null,
+        goalInvolvement: goalInvolvement || [],
+        goalType: goalType || 'open-play'
+        // goalNumber and matchState will be calculated when game status = "Done"
+      });
+    }
 
     await goal.save();
 
@@ -112,11 +124,15 @@ router.get('/:gameId/goals', async (req, res) => {
     }
 
     // Get all goals for the game, sorted by goal number
+    // Note: Discriminators (TeamGoal/OpponentGoal) are in same collection
     const goals = await Goal.find({ gameId })
       .sort({ goalNumber: 1 })
       .populate('scorerId', 'name jerseyNumber position')
       .populate('assistedById', 'name jerseyNumber position')
       .populate('goalInvolvement.playerId', 'name jerseyNumber position');
+    
+    // Note: populate() will ignore fields that don't exist (e.g., scorerId on OpponentGoal)
+    // This is safe and works correctly with discriminators
 
     res.json({
       gameId,
