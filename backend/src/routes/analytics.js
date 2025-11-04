@@ -5,10 +5,10 @@ const Substitution = require('../models/Substitution');
 const DisciplinaryAction = require('../models/DisciplinaryAction');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateJWT } = require('../middleware/jwtAuth');
 
 // Apply authentication middleware to all routes
-router.use(authenticateToken);
+router.use(authenticateJWT);
 
 /**
  * GET /api/analytics/goal-partnerships
