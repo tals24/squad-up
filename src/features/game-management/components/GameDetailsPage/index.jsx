@@ -461,29 +461,54 @@ export default function GameDetails() {
 
   // Helper: Match stats from reports
   const matchStats = useMemo(() => {
-    const scorers = [];
-    const assists = [];
+    const scorerMap = new Map();
+    const assisterMap = new Map();
     let topRated = null;
     let maxRating = 0;
 
+    // Calculate scorers and assists from goals array (excluding opponent goals)
+    goals.forEach((goal) => {
+      // Skip opponent goals
+      if (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) return;
+
+      // Count scorers
+      if (goal.scorerId && goal.scorerId._id) {
+        const scorerId = goal.scorerId._id;
+        const scorerName = goal.scorerId.fullName || goal.scorerId.name || 'Unknown';
+        scorerMap.set(scorerId, {
+          name: scorerName,
+          count: (scorerMap.get(scorerId)?.count || 0) + 1
+        });
+      }
+
+      // Count assisters
+      if (goal.assistedById && goal.assistedById._id) {
+        const assisterId = goal.assistedById._id;
+        const assisterName = goal.assistedById.fullName || goal.assistedById.name || 'Unknown';
+        assisterMap.set(assisterId, {
+          name: assisterName,
+          count: (assisterMap.get(assisterId)?.count || 0) + 1
+        });
+      }
+    });
+
+    // Calculate top rated player from reports
     Object.entries(localPlayerReports).forEach(([playerId, report]) => {
       const player = gamePlayers.find((p) => p._id === playerId);
       if (!player) return;
 
-      if (report.goals > 0) {
-        scorers.push({ name: player.fullName, count: report.goals });
-      }
-      if (report.assists > 0) {
-        assists.push({ name: player.fullName, count: report.assists });
-      }
       if (report.rating > maxRating) {
         maxRating = report.rating;
         topRated = player.fullName;
       }
     });
 
-    return { scorers, assists, topRated };
-  }, [localPlayerReports, gamePlayers]);
+    return { 
+      scorers: Array.from(scorerMap.values()),
+      assists: Array.from(assisterMap.values()),
+      topRated 
+    };
+  }, [goals, localPlayerReports, gamePlayers]);
 
   // Handlers
   // Validation handlers
