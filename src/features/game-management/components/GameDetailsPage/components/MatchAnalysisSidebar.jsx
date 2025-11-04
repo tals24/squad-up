@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";
+import { Input } from "@/shared/ui/primitives/input";
 import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock, ArrowRightLeft, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Tooltip,
@@ -24,6 +25,8 @@ export default function MatchAnalysisSidebar({
   onAddSubstitution,
   onEditSubstitution,
   onDeleteSubstitution,
+  matchDuration,
+  setMatchDuration,
 }) {
   return (
     <div 
@@ -33,6 +36,50 @@ export default function MatchAnalysisSidebar({
         scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
       }}
     >
+      {/* Extra Time Section - First component, one line */}
+      {(isPlayed || isDone) && matchDuration && setMatchDuration && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-lg">
+          <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
+          <span className="text-xs text-slate-400 shrink-0">Extra Time:</span>
+          <Input
+            type="number"
+            min="0"
+            max="15"
+            placeholder="1st"
+            title="First Half Extra Time"
+            value={matchDuration.firstHalfExtraTime || ''}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 0;
+              setMatchDuration({ 
+                ...matchDuration, 
+                firstHalfExtraTime: value 
+              });
+            }}
+            disabled={isDone}
+            className="w-12 h-7 text-center bg-slate-700 border-slate-600 text-white text-xs p-0"
+          />
+          <span className="text-xs text-slate-500">+</span>
+          <Input
+            type="number"
+            min="0"
+            max="15"
+            placeholder="2nd"
+            title="Second Half Extra Time"
+            value={matchDuration.secondHalfExtraTime || ''}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 0;
+              setMatchDuration({ 
+                ...matchDuration, 
+                secondHalfExtraTime: value 
+              });
+            }}
+            disabled={isDone}
+            className="w-12 h-7 text-center bg-slate-700 border-slate-600 text-white text-xs p-0"
+          />
+          <span className="text-xs text-slate-500">min</span>
+        </div>
+      )}
+
       {/* Goals Section - Only show for Played/Done */}
       {(isPlayed || isDone) && (
         <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">

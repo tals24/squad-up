@@ -119,72 +119,16 @@ export default function GameDetailsHeader({
 
             {/* Score Input (Read-only - calculated from goals) */}
             {isPlayed && !isDone && (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-400">Score:</span>
-                  <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
-                    {finalScore.ourScore}
-                  </div>
-                  <span className="text-slate-400">-</span>
-                  <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
-                    {finalScore.opponentScore}
-                  </div>
-                  <span className="text-xs text-slate-500">(auto-calculated)</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-400">Score:</span>
+                <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
+                  {finalScore.ourScore}
                 </div>
-                
-                {/* Extra Time Input */}
-                <div className="flex items-center gap-2 pl-4 border-l border-slate-700">
-                  <Clock className="w-4 h-4 text-cyan-400" />
-                  <span className="text-sm text-slate-400">Extra Time:</span>
-                  <div className="flex items-center gap-1">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="15"
-                      placeholder="1st"
-                      title="First Half Extra Time"
-                      value={matchDuration.firstHalfExtraTime || ''}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0;
-                        const newMatchDuration = { 
-                          ...matchDuration, 
-                          firstHalfExtraTime: value 
-                        };
-                        console.log('🔍 [GameDetailsHeader] Updating firstHalfExtraTime:', {
-                          oldValue: matchDuration.firstHalfExtraTime,
-                          newValue: value,
-                          newMatchDuration
-                        });
-                        setMatchDuration(newMatchDuration);
-                      }}
-                      className="w-14 text-center bg-slate-800 border-slate-700 text-white text-xs"
-                    />
-                    <span className="text-slate-600">+</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="15"
-                      placeholder="2nd"
-                      title="Second Half Extra Time"
-                      value={matchDuration.secondHalfExtraTime || ''}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0;
-                        const newMatchDuration = { 
-                          ...matchDuration, 
-                          secondHalfExtraTime: value 
-                        };
-                        console.log('🔍 [GameDetailsHeader] Updating secondHalfExtraTime:', {
-                          oldValue: matchDuration.secondHalfExtraTime,
-                          newValue: value,
-                          newMatchDuration
-                        });
-                        setMatchDuration(newMatchDuration);
-                      }}
-                      className="w-14 text-center bg-slate-800 border-slate-700 text-white text-xs"
-                    />
-                    <span className="text-xs text-slate-500">min</span>
-                  </div>
+                <span className="text-slate-400">-</span>
+                <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
+                  {finalScore.opponentScore}
                 </div>
+                <span className="text-xs text-slate-500">(auto-calculated)</span>
               </div>
             )}
 

@@ -1361,6 +1361,8 @@ export default function GameDetails() {
           onAddSubstitution={handleAddSubstitution}
           onEditSubstitution={handleEditSubstitution}
           onDeleteSubstitution={handleDeleteSubstitution}
+          matchDuration={matchDuration}
+          setMatchDuration={setMatchDuration}
         />
       </div>
 
