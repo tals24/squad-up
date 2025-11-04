@@ -35,6 +35,26 @@ export default function MatchAnalysisSidebar({
         scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
       }}
     >
+      {/* AI Summary - Only for Done */}
+      {isDone && (
+        <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Zap className="w-5 h-5 text-cyan-400" />
+              AI Match Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-400">
+              The AI will analyze all player reports and team summaries to generate a concise, three-sentence summary of the match.
+            </p>
+            <p className="text-xs text-slate-500 mt-2 italic">
+              (This component will be implemented in a future step, integrating with an LLM)
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Extra Time Section - First component, one line */}
       {(isPlayed || isDone) && matchDuration && setMatchDuration && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-lg">
@@ -341,24 +361,6 @@ export default function MatchAnalysisSidebar({
           </CardContent>
         </Card>
       )}
-
-      {/* AI Summary */}
-      <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-400" />
-            AI Match Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-400">
-            The AI will analyze all player reports and team summaries to generate a concise, three-sentence summary of the match.
-          </p>
-          <p className="text-xs text-slate-500 mt-2 italic">
-            (This component will be implemented in a future step, integrating with an LLM)
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Team Summaries - Only for Played/Done */}
       {(isPlayed || isDone) && (
