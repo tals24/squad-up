@@ -98,9 +98,13 @@ teamGoalSchema.pre('save', function(next) {
   next();
 });
 
-// OpponentGoal discriminator - only has minute (inherits from base)
+// OpponentGoal discriminator - has minute and goalType (inherits from base)
 const opponentGoalSchema = new mongoose.Schema({
-  // No additional fields needed - opponent goals only need minute
+  goalType: {
+    type: String,
+    enum: ['open-play', 'set-piece', 'penalty', 'counter-attack', 'own-goal'],
+    default: 'open-play'
+  }
   // All shared fields (gameId, minute, goalNumber, matchState) come from base schema
 });
 

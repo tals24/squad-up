@@ -35,10 +35,11 @@ router.post('/:gameId/goals', async (req, res) => {
 
     // Create appropriate goal type based on isOpponentGoal flag
     if (isOpponentGoal) {
-      // Create OpponentGoal - only needs minute
+      // Create OpponentGoal - needs minute and goalType
       goal = new OpponentGoal({
         gameId,
-        minute
+        minute,
+        goalType: goalType || 'open-play'
         // goalNumber and matchState will be calculated when game status = "Done"
       });
     } else {

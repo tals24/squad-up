@@ -917,15 +917,16 @@ export default function GameDetails() {
   };
 
   // Opponent Goal handler
-  const handleSaveOpponentGoal = async (opponentGoalMinute) => {
+  const handleSaveOpponentGoal = async (opponentGoalData) => {
     try {
       // Save opponent goal to database
-      const opponentGoalData = {
-        minute: opponentGoalMinute,
+      const goalData = {
+        minute: opponentGoalData.minute,
+        goalType: opponentGoalData.goalType || 'open-play',
         isOpponentGoal: true
       };
       
-      await createGoal(gameId, opponentGoalData);
+      await createGoal(gameId, goalData);
       
       // Increment opponent score when opponent goal is recorded
       const newOpponentScore = finalScore.opponentScore + 1;

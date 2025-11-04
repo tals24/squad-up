@@ -62,7 +62,10 @@ export default function GoalDialog({
     goalInvolvement: [],
     goalType: 'open-play'
   });
-  const [opponentGoalMinute, setOpponentGoalMinute] = useState(null);
+  const [opponentGoalData, setOpponentGoalData] = useState({
+    minute: null,
+    goalType: 'open-play'
+  });
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -71,7 +74,10 @@ export default function GoalDialog({
   useEffect(() => {
     if (isOpen) {
       setActiveTab('team');
-      setOpponentGoalMinute(null);
+      setOpponentGoalData({
+        minute: null,
+        goalType: 'open-play'
+      });
       if (goal) {
         // Editing existing goal
         setGoalData({
@@ -132,9 +138,9 @@ export default function GoalDialog({
   const validateOpponentGoal = () => {
     const newErrors = {};
 
-    if (!opponentGoalMinute || opponentGoalMinute < 1) {
+    if (!opponentGoalData.minute || opponentGoalData.minute < 1) {
       newErrors.opponentMinute = 'Minute is required';
-    } else if (opponentGoalMinute > matchDuration) {
+    } else if (opponentGoalData.minute > matchDuration) {
       newErrors.opponentMinute = `Minute cannot exceed match duration (${matchDuration} minutes)`;
     }
 
@@ -166,7 +172,7 @@ export default function GoalDialog({
 
     setIsSaving(true);
     try {
-      await onSaveOpponentGoal(opponentGoalMinute);
+      await onSaveOpponentGoal(opponentGoalData);
       onClose();
     } catch (error) {
       console.error('Error saving opponent goal:', error);
@@ -417,12 +423,33 @@ export default function GoalDialog({
                 type="number"
                 min="1"
                 max={matchDuration}
-                value={opponentGoalMinute || ''}
-                onChange={(e) => setOpponentGoalMinute(parseInt(e.target.value))}
+                value={opponentGoalData.minute || ''}
+                onChange={(e) => setOpponentGoalData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
                 className="bg-slate-800 border-slate-700 text-white"
                 placeholder={`1-${matchDuration}`}
               />
               {errors.opponentMinute && <p className="text-red-400 text-sm">{errors.opponentMinute}</p>}
+            </div>
+
+            {/* Goal Type */}
+            <div className="space-y-2">
+              <Label htmlFor="opponentGoalType" className="text-slate-300">Goal Type</Label>
+              <Select
+                value={opponentGoalData.goalType}
+                onValueChange={(value) => setOpponentGoalData(prev => ({ ...prev, goalType: value }))}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  {GOAL_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value} className="text-white">
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {errors.submit && (
