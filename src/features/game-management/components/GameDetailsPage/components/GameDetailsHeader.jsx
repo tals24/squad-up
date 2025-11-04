@@ -37,7 +37,6 @@ export default function GameDetailsHeader({
   handleSubmitFinalReport,
   handleEditReport,
   playerReports,
-  onAddOpponentGoal,
 }) {
   const navigate = useNavigate();
 
@@ -132,25 +131,14 @@ export default function GameDetailsHeader({
                     className="w-16 text-center bg-slate-800 border-slate-700 text-white"
                   />
                   <span className="text-slate-400">-</span>
-                  <div className="flex items-center gap-1">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="99"
-                      value={finalScore.opponentScore}
-                      onChange={(e) => setFinalScore((prev) => ({ ...prev, opponentScore: parseInt(e.target.value) || 0 }))}
-                      className="w-16 text-center bg-slate-800 border-slate-700 text-white"
-                    />
-                    <Button
-                      onClick={onAddOpponentGoal}
-                      size="sm"
-                      variant="outline"
-                      className="h-7 w-7 p-0 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                      title="Add opponent goal"
-                    >
-                      <Target className="w-3 h-3" />
-                    </Button>
-                  </div>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="99"
+                    value={finalScore.opponentScore}
+                    onChange={(e) => setFinalScore((prev) => ({ ...prev, opponentScore: parseInt(e.target.value) || 0 }))}
+                    className="w-16 text-center bg-slate-800 border-slate-700 text-white"
+                  />
                 </div>
                 
                 {/* Extra Time Input */}
