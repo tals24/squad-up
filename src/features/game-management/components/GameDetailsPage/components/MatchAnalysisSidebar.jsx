@@ -27,7 +27,7 @@ export default function MatchAnalysisSidebar({
 }) {
   return (
     <div 
-      className="w-[280px] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 space-y-4 overflow-y-auto p-4"
+      className="w-[336px] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 space-y-4 overflow-y-auto p-4"
       style={{
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
@@ -55,7 +55,10 @@ export default function MatchAnalysisSidebar({
           </CardHeader>
           <CardContent>
             {goals.length > 0 ? (
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+              }}>
                 <TooltipProvider>
                   {goals
                     .sort((a, b) => (a.minute || 0) - (b.minute || 0))
@@ -100,11 +103,7 @@ export default function MatchAnalysisSidebar({
                                 relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0
                                 ${isOpponentGoal ? 'bg-red-500' : 'bg-green-500'}
                               `}>
-                                {isOpponentGoal ? (
-                                  <Clock className="w-4 h-4" />
-                                ) : (
-                                  goal.goalNumber || goal.minute || '?'
-                                )}
+                                {goal.goalNumber || goal.minute || '?'}
                               </div>
 
                               {/* Goal Info */}
@@ -118,13 +117,10 @@ export default function MatchAnalysisSidebar({
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  <Clock className="w-3 h-3 text-slate-400" />
-                                  <span className="text-[10px] text-slate-400">{goal.minute}'</span>
                                   {goal.goalType && (
-                                    <>
-                                      <span className="text-[10px] text-slate-500">•</span>
-                                      <span className="text-[10px] text-slate-400">{goal.goalType.replace('-', ' ')}</span>
-                                    </>
+                                    <span className="text-xs text-slate-400 px-2 py-0.5 rounded-full bg-slate-700/50">
+                                      {goal.goalType.replace('-', ' ')}
+                                    </span>
                                   )}
                                 </div>
                               </div>
