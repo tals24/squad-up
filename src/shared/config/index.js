@@ -1,3 +1,3 @@
 // Shared Config - Barrel Export
-export { default as firebase } from './firebase';
+// Firebase removed - using JWT authentication instead
 

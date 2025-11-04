@@ -8,10 +8,7 @@
     "dev": "nodemon src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-mock-data": "node scripts/generateMockData.js",
-    "seed": "node scripts/generateMockData.js",
-    "create-firebase-users": "node scripts/createFirebaseUsers.js",
-    "link-firebase-users": "node scripts/linkFirebaseUsers.js",
-    "setup-complete": "npm run seed && npm run create-firebase-users && npm run link-firebase-users"
+    "seed": "node scripts/generateMockData.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +18,6 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "firebase-admin": "^13.5.0",
     "helmet": "^8.1.0",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
