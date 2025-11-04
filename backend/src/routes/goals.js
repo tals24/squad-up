@@ -93,9 +93,9 @@ router.post('/:gameId/goals', async (req, res) => {
     // Populate references for response (only for team goals)
     if (!isOpponentGoal) {
       await goal.populate([
-        { path: 'scorerId', select: 'name jerseyNumber position' },
-        { path: 'assistedById', select: 'name jerseyNumber position' },
-        { path: 'goalInvolvement.playerId', select: 'name jerseyNumber position' }
+        { path: 'scorerId', select: 'fullName kitNumber position' },
+        { path: 'assistedById', select: 'fullName kitNumber position' },
+        { path: 'goalInvolvement.playerId', select: 'fullName kitNumber position' }
       ]);
     }
 
@@ -130,9 +130,9 @@ router.get('/:gameId/goals', async (req, res) => {
     // Note: Discriminators (TeamGoal/OpponentGoal) are in same collection
     const goals = await Goal.find({ gameId })
       .sort({ goalNumber: 1 })
-      .populate('scorerId', 'name jerseyNumber position')
-      .populate('assistedById', 'name jerseyNumber position')
-      .populate('goalInvolvement.playerId', 'name jerseyNumber position');
+      .populate('scorerId', 'fullName kitNumber position')
+      .populate('assistedById', 'fullName kitNumber position')
+      .populate('goalInvolvement.playerId', 'fullName kitNumber position');
     
     // Note: populate() will ignore fields that don't exist (e.g., scorerId on OpponentGoal)
     // This is safe and works correctly with discriminators
@@ -207,9 +207,9 @@ router.put('/:gameId/goals/:goalId', async (req, res) => {
 
     // Populate references for response
     await goal.populate([
-      { path: 'scorerId', select: 'name jerseyNumber position' },
-      { path: 'assistedById', select: 'name jerseyNumber position' },
-      { path: 'goalInvolvement.playerId', select: 'name jerseyNumber position' }
+      { path: 'scorerId', select: 'fullName kitNumber position' },
+      { path: 'assistedById', select: 'fullName kitNumber position' },
+      { path: 'goalInvolvement.playerId', select: 'fullName kitNumber position' }
     ]);
 
     res.json({
