@@ -147,10 +147,17 @@ export default function GameDetails() {
       });
       setIsReadOnly(foundGame.status === "Done");
       
-      if (foundGame.ourScore !== null) {
+      // Initialize score from game data if available, otherwise will be calculated from goals
+      if (foundGame.ourScore !== null && foundGame.ourScore !== undefined) {
         setFinalScore({
           ourScore: foundGame.ourScore || 0,
           opponentScore: foundGame.opponentScore || 0,
+        });
+      } else {
+        // If no score stored, initialize to 0-0 (will be calculated from goals)
+        setFinalScore({
+          ourScore: 0,
+          opponentScore: 0,
         });
       }
       
@@ -235,6 +242,41 @@ export default function GameDetails() {
     loadGoals();
     loadSubstitutions();
   }, [gameId, game]);
+
+  // Calculate score from goals when goals are loaded or changed
+  useEffect(() => {
+    if (!goals || goals.length === 0) {
+      // If no goals, keep the score from game data or default to 0-0
+      return;
+    }
+
+    // Calculate score from goals array
+    let teamGoalsCount = 0;
+    let opponentGoalsCount = 0;
+
+    goals.forEach(goal => {
+      // Check if it's an opponent goal by checking goalCategory discriminator
+      if (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) {
+        opponentGoalsCount++;
+      } else {
+        // It's a team goal
+        teamGoalsCount++;
+      }
+    });
+
+    // Update score state
+    setFinalScore(prev => {
+      // Only update if the calculated score is different from current
+      // This prevents unnecessary re-renders
+      if (prev.ourScore !== teamGoalsCount || prev.opponentScore !== opponentGoalsCount) {
+        return {
+          ourScore: teamGoalsCount,
+          opponentScore: opponentGoalsCount
+        };
+      }
+      return prev;
+    });
+  }, [goals]);
 
   // Load existing game reports
   useEffect(() => {
@@ -907,7 +949,18 @@ export default function GameDetails() {
         // Create new goal
         const newGoal = await createGoal(gameId, goalData);
         setGoals(prevGoals => [...prevGoals, newGoal]);
+        
+        // Increment team score when team goal is recorded
+        setFinalScore(prev => ({
+          ...prev,
+          ourScore: prev.ourScore + 1
+        }));
       }
+      
+      // Refresh goals list to ensure consistency
+      const updatedGoals = await fetchGoals(gameId);
+      setGoals(updatedGoals);
+      
       setShowGoalDialog(false);
       setSelectedGoal(null);
     } catch (error) {

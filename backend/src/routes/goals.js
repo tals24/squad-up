@@ -43,15 +43,17 @@ router.post('/:gameId/goals', async (req, res) => {
         // goalNumber and matchState will be calculated when game status = "Done"
       });
     } else {
-      // Create TeamGoal - requires scorer and other team-specific fields
-      if (!scorerId) {
+      // Create TeamGoal - requires scorer UNLESS it's an own goal
+      if (!scorerId && goalType !== 'own-goal') {
         return res.status(400).json({ message: 'Scorer is required for team goals' });
       }
 
-      // Validate scorer exists
-      const scorer = await Player.findById(scorerId);
-      if (!scorer) {
-        return res.status(404).json({ message: 'Scorer not found' });
+      // Validate scorer exists (only if provided)
+      if (scorerId) {
+        const scorer = await Player.findById(scorerId);
+        if (!scorer) {
+          return res.status(404).json({ message: 'Scorer not found' });
+        }
       }
 
       // Validate assister if provided
@@ -78,7 +80,7 @@ router.post('/:gameId/goals', async (req, res) => {
       goal = new TeamGoal({
         gameId,
         minute,
-        scorerId,
+        scorerId: scorerId || null, // Allow null for own goals
         assistedById: assistedById || null,
         goalInvolvement: goalInvolvement || [],
         goalType: goalType || 'open-play'

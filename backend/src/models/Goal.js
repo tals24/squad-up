@@ -57,7 +57,7 @@ const teamGoalSchema = new mongoose.Schema({
   scorerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Player',
-    required: true,
+    required: false, // Optional for own goals
     index: true
   },
   assistedById: {
@@ -76,6 +76,11 @@ const teamGoalSchema = new mongoose.Schema({
 
 // Validation: Scorer and assister cannot be the same
 teamGoalSchema.pre('save', function(next) {
+  // Skip validation if scorerId is null (own goal)
+  if (!this.scorerId) {
+    return next();
+  }
+  
   if (this.assistedById && this.scorerId && this.scorerId.equals(this.assistedById)) {
     const error = new Error('Scorer and assister cannot be the same player');
     return next(error);
@@ -85,6 +90,11 @@ teamGoalSchema.pre('save', function(next) {
 
 // Validation: Goal involvement players cannot include scorer or assister
 teamGoalSchema.pre('save', function(next) {
+  // Skip validation if scorerId is null (own goal)
+  if (!this.scorerId) {
+    return next();
+  }
+  
   if (this.goalInvolvement && this.goalInvolvement.length > 0) {
     for (const involvement of this.goalInvolvement) {
       if (involvement.playerId.equals(this.scorerId)) {
