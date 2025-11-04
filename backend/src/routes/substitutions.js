@@ -56,8 +56,8 @@ router.post('/:gameId/substitutions', async (req, res) => {
 
     // Populate references for response
     await substitution.populate([
-      { path: 'playerOutId', select: 'name jerseyNumber position' },
-      { path: 'playerInId', select: 'name jerseyNumber position' }
+      { path: 'playerOutId', select: 'fullName kitNumber position' },
+      { path: 'playerInId', select: 'fullName kitNumber position' }
     ]);
 
     res.status(201).json({
@@ -90,8 +90,8 @@ router.get('/:gameId/substitutions', async (req, res) => {
     // Get all substitutions for the game, sorted by minute
     const substitutions = await Substitution.find({ gameId })
       .sort({ minute: 1 })
-      .populate('playerOutId', 'name jerseyNumber position')
-      .populate('playerInId', 'name jerseyNumber position');
+      .populate('playerOutId', 'fullName kitNumber position')
+      .populate('playerInId', 'fullName kitNumber position');
 
     res.json({
       gameId,
@@ -156,8 +156,8 @@ router.put('/:gameId/substitutions/:subId', async (req, res) => {
 
     // Populate references for response
     await substitution.populate([
-      { path: 'playerOutId', select: 'name jerseyNumber position' },
-      { path: 'playerInId', select: 'name jerseyNumber position' }
+      { path: 'playerOutId', select: 'fullName kitNumber position' },
+      { path: 'playerInId', select: 'fullName kitNumber position' }
     ]);
 
     res.json({

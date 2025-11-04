@@ -187,81 +187,105 @@ export default function MatchAnalysisSidebar({
           </CardHeader>
           <CardContent>
             {substitutions.length > 0 ? (
-              <div className="space-y-2">
-                {substitutions
-                  .sort((a, b) => a.minute - b.minute)
-                  .map((sub) => (
-                    <div
-                      key={sub._id}
-                      className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-orange-500/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          <span className="text-xs text-slate-400">{sub.minute}'</span>
-                        </div>
-                        {!isDone && onEditSubstitution && onDeleteSubstitution && (
-                          <div className="flex gap-1">
-                            <Button
-                              onClick={() => onEditSubstitution(sub)}
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-cyan-400 hover:text-cyan-300"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              onClick={() => onDeleteSubstitution(sub._id)}
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+              }}>
+                <TooltipProvider>
+                  {substitutions
+                    .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+                    .map((sub) => {
+                      const playerOutName = sub.playerOutId?.fullName || sub.playerOutId?.name || 'Unknown';
+                      const playerOutKit = sub.playerOutId?.kitNumber || sub.playerOutId?.jerseyNumber || '?';
+                      const playerInName = sub.playerInId?.fullName || sub.playerInId?.name || 'Unknown';
+                      const playerInKit = sub.playerInId?.kitNumber || sub.playerInId?.jerseyNumber || '?';
                       
-                      <div className="space-y-1">
-                        {/* Player Out */}
-                        <div className="flex items-center gap-1">
-                          <ArrowDown className="w-3 h-3 text-red-400" />
-                          <span className="text-sm text-white">
-                            #{sub.playerOutId?.jerseyNumber || '?'} {sub.playerOutId?.name || 'Unknown'}
-                          </span>
-                        </div>
-                        
-                        {/* Player In */}
-                        <div className="flex items-center gap-1">
-                          <ArrowUp className="w-3 h-3 text-green-400" />
-                          <span className="text-sm text-white">
-                            #{sub.playerInId?.jerseyNumber || '?'} {sub.playerInId?.name || 'Unknown'}
-                          </span>
-                        </div>
-                        
-                        {/* Reason & Match State */}
-                        <div className="flex items-center gap-2 ml-4 mt-1">
+                      // Build tooltip content
+                      const tooltipContent = (
+                        <div className="space-y-1 text-xs">
+                          <div className="font-semibold">{sub.minute}' minute</div>
+                          <div className="text-slate-300">
+                            <ArrowDown className="w-3 h-3 inline mr-1 text-red-400" />
+                            Out: #{playerOutKit} {playerOutName}
+                          </div>
+                          <div className="text-slate-300">
+                            <ArrowUp className="w-3 h-3 inline mr-1 text-green-400" />
+                            In: #{playerInKit} {playerInName}
+                          </div>
                           {sub.reason && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-                              {sub.reason.replace('-', ' ')}
-                            </span>
+                            <div className="text-slate-400">Reason: {sub.reason.replace('-', ' ')}</div>
                           )}
                           {sub.matchState && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-                              {sub.matchState}
-                            </span>
+                            <div className="text-slate-400">Match State: {sub.matchState}</div>
+                          )}
+                          {sub.tacticalNote && sub.tacticalNote.trim() && (
+                            <div className="text-slate-400 italic">"{sub.tacticalNote}"</div>
                           )}
                         </div>
-                        
-                        {/* Tactical Note */}
-                        {sub.tacticalNote && sub.tacticalNote.trim() && (
-                          <div className="text-xs text-slate-400 ml-4 mt-1 italic">
-                            "{sub.tacticalNote}"
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      );
+                      
+                      return (
+                        <Tooltip key={sub._id}>
+                          <TooltipTrigger asChild>
+                            <div className="relative flex items-center gap-2 p-1.5 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-orange-500/50 transition-all">
+                              {/* Minute Circle */}
+                              <div className="relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 bg-orange-500">
+                                {sub.minute || '?'}
+                              </div>
+
+                              {/* Substitution Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <ArrowDown className="w-3 h-3 text-red-400 shrink-0" />
+                                  <span className="text-xs text-white font-medium truncate">
+                                    #{playerOutKit} {playerOutName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <ArrowUp className="w-3 h-3 text-green-400 shrink-0" />
+                                  <span className="text-xs text-white font-medium truncate">
+                                    #{playerInKit} {playerInName}
+                                  </span>
+                                </div>
+                                {sub.reason && (
+                                  <div className="mt-0.5">
+                                    <span className="text-xs text-slate-400 px-2 py-0.5 rounded-full bg-slate-700/50">
+                                      {sub.reason.replace('-', ' ')}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              {!isDone && onEditSubstitution && onDeleteSubstitution && (
+                                <div className="flex gap-0.5 shrink-0">
+                                  <Button
+                                    onClick={() => onEditSubstitution(sub)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-cyan-400 hover:text-cyan-300"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    onClick={() => onDeleteSubstitution(sub._id)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white max-w-xs">
+                            {tooltipContent}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                </TooltipProvider>
               </div>
             ) : (
               <p className="text-sm text-slate-500 text-center py-4">
