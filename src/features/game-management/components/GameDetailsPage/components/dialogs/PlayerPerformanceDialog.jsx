@@ -38,6 +38,9 @@ export default function PlayerPerformanceDialog({
   isStarting = false,
   game,
   matchDuration,
+  substitutions = [],
+  playerReports = {},
+  onAddSubstitution,
 }) {
   if (!player) return null;
 
@@ -136,6 +139,21 @@ export default function PlayerPerformanceDialog({
       setErrorMessage(`Player cannot play more than ${maxMinutes} minutes (match duration + extra time).`);
       return;
     }
+
+    // Validate bench players: must have substitution record before assigning minutes
+    if (!isStarting && minutesPlayed > 0) {
+      const hasSubstitution = substitutions.some(
+        sub => (sub.playerInId === player._id) || (sub.playerInId?._id === player._id)
+      );
+      
+      if (!hasSubstitution) {
+        setErrorMessage(
+          "This player must be substituted in before assigning minutes. " +
+          "Please create a substitution record first."
+        );
+        return;
+      }
+    }
     
     setErrorMessage("");
     onSave();
@@ -203,7 +221,20 @@ export default function PlayerPerformanceDialog({
               className="bg-slate-800 border-slate-700 text-white"
             />
             {errorMessage && (
-              <div className="mt-1 text-xs text-red-400">{errorMessage}</div>
+              <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
+                {errorMessage.includes("substituted in") && onAddSubstitution && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onAddSubstitution}
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                  >
+                    Create Substitution
+                  </Button>
+                )}
+              </div>
             )}
           </div>
 

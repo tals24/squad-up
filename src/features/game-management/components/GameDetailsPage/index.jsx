@@ -72,7 +72,7 @@ export default function GameDetails() {
   // Substitutions state
   const [substitutions, setSubstitutions] = useState([]);
   const [showSubstitutionDialog, setShowSubstitutionDialog] = useState(false);
-  const [selectedSubstitution] = useState(null);
+  const [selectedSubstitution, setSelectedSubstitution] = useState(null);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -1315,6 +1315,12 @@ export default function GameDetails() {
         isStarting={!!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id))}
         game={game}
         matchDuration={matchDuration}
+        substitutions={substitutions}
+        playerReports={localPlayerReports}
+        onAddSubstitution={() => {
+          setShowPlayerPerfDialog(false);
+          setShowSubstitutionDialog(true);
+        }}
       />
 
       <PlayerSelectionDialog
@@ -1366,6 +1372,7 @@ export default function GameDetails() {
         benchPlayers={benchPlayers}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
+        playerReports={localPlayerReports}
       />
 
       {/* Confirmation Modal for Validations */}
