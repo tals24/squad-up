@@ -630,21 +630,11 @@ export default function GameDetails() {
     await executeGameWasPlayed();
   };
 
-  // Execute the actual game was played logic
+  // Execute the actual game was played logic (atomic operation)
   const executeGameWasPlayed = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({ status: "Played" }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update game status");
-
+      // ✅ Single atomic call: Start game with lineup
       const rosterUpdates = gamePlayers.map((player) => ({
         playerId: player._id,
         playerName: player.fullName || player.name || 'Unknown Player',
@@ -653,41 +643,45 @@ export default function GameDetails() {
         status: getPlayerStatus(player._id),
       }));
 
-      console.log('🔍 Game object structure:', game);
-      console.log('🔍 Game properties:', Object.keys(game));
-      console.log('🔍 Game title fallback:', game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game');
-      console.log('🔍 Sample player data:', gamePlayers[0]);
-      console.log('🔍 Player name fallback:', gamePlayers[0]?.fullName || gamePlayers[0]?.name || 'Unknown Player');
-      console.log('🔍 Roster updates being sent:', rosterUpdates);
-      console.log('🔍 First roster item details:', JSON.stringify(rosterUpdates[0], null, 2));
+      console.log('🔍 Starting game with roster:', {
+        gameId,
+        rosterCount: rosterUpdates.length,
+        startingLineupCount: rosterUpdates.filter(r => r.status === 'Starting Lineup').length,
+        benchCount: rosterUpdates.filter(r => r.status === 'Bench').length
+      });
 
-      const rosterResponse = await fetch(`http://localhost:3001/api/game-rosters/batch`, {
+      const response = await fetch(`http://localhost:3001/api/games/${gameId}/start-game`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({ gameId, rosters: rosterUpdates }),
+        body: JSON.stringify({ rosters: rosterUpdates }),
       });
 
-      if (!rosterResponse.ok) {
-        const errorText = await rosterResponse.text();
-        console.error('🔍 Backend roster error response:', errorText);
-        throw new Error(`Failed to update rosters: ${rosterResponse.status} - ${errorText}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to start game: ${response.status}`);
       }
 
+      const result = await response.json();
+      console.log('✅ Game started successfully:', result);
+
+      // Refresh data to get updated game state
       await refreshData();
+      
+      // Update local game state
       setGame((prev) => ({ ...prev, status: "Played" }));
     } catch (error) {
-      console.error("Error updating game:", error);
+      console.error("Error starting game:", error);
       showConfirmation({
         title: "Error",
-        message: "Failed to update game status",
+        message: error.message || "Failed to start game. Please try again.",
         confirmText: "OK",
         cancelText: null,
         onConfirm: () => setShowConfirmationModal(false),
         onCancel: null,
-        type: "warning"
+        type: "error"
       });
     } finally {
       setIsSaving(false);
