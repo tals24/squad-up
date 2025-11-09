@@ -667,11 +667,56 @@ export default function GameDetails() {
       const result = await response.json();
       console.log('✅ Game started successfully:', result);
 
-      // Refresh data to get updated game state
-      await refreshData();
-      
-      // Update local game state
-      setGame((prev) => ({ ...prev, status: "Played" }));
+      // ✅ Step 1: Update game state from response (merge with existing to preserve all fields)
+      if (result.data?.game) {
+        setGame((prev) => ({
+          ...prev,
+          ...result.data.game, // Merge: status, gameTitle, etc.
+          status: result.data.game.status, // Explicitly set status to "Played"
+        }));
+      } else {
+        // Fallback: If response missing game data, just update status
+        console.warn('⚠️ Response missing game data, updating status only');
+        setGame((prev) => ({ ...prev, status: "Played" }));
+      }
+
+      // ✅ Step 2: Update localRosterStatuses directly from response rosters
+      if (result.data?.rosters && Array.isArray(result.data.rosters)) {
+        const statuses = {};
+        
+        // Extract statuses from response rosters
+        result.data.rosters.forEach((roster) => {
+          const playerId = typeof roster.player === "object" 
+            ? roster.player._id 
+            : roster.player;
+          statuses[playerId] = roster.status;
+        });
+        
+        // Ensure all gamePlayers have a status (default to "Not in Squad" if missing)
+        gamePlayers.forEach((player) => {
+          if (!statuses[player._id]) {
+            statuses[player._id] = "Not in Squad";
+          }
+        });
+        
+        console.log('✅ Updated roster statuses from response:', {
+          rosterCount: result.data.rosters.length,
+          statusesCount: Object.keys(statuses).length,
+          statuses
+        });
+        
+        setLocalRosterStatuses(statuses);
+      } else {
+        // Fallback: If response missing rosters, initialize all to "Not in Squad"
+        console.warn('⚠️ Response missing rosters data, initializing all to "Not in Squad"');
+        const initialStatuses = {};
+        gamePlayers.forEach((player) => {
+          initialStatuses[player._id] = "Not in Squad";
+        });
+        setLocalRosterStatuses(initialStatuses);
+      }
+
+      // ❌ REMOVED: await refreshData(); - This was causing the race condition!
     } catch (error) {
       console.error("Error starting game:", error);
       showConfirmation({
