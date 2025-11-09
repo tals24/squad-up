@@ -4,7 +4,7 @@ const Goal = require('../models/Goal');
 const { TeamGoal, OpponentGoal } = require('../models/Goal');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
-const { authenticateJWT } = require('../middleware/jwtAuth');
+const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
@@ -13,7 +13,7 @@ router.use(authenticateJWT);
  * POST /api/games/:gameId/goals
  * Create a new goal for a game
  */
-router.post('/:gameId/goals', async (req, res) => {
+router.post('/:gameId/goals', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
     const {
@@ -25,11 +25,8 @@ router.post('/:gameId/goals', async (req, res) => {
       isOpponentGoal = false
     } = req.body;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     let goal;
 
@@ -116,15 +113,12 @@ router.post('/:gameId/goals', async (req, res) => {
  * GET /api/games/:gameId/goals
  * Get all goals for a game
  */
-router.get('/:gameId/goals', async (req, res) => {
+router.get('/:gameId/goals', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Get all goals for the game, sorted by goal number
     // Note: Discriminators (TeamGoal/OpponentGoal) are in same collection
@@ -155,7 +149,7 @@ router.get('/:gameId/goals', async (req, res) => {
  * PUT /api/games/:gameId/goals/:goalId
  * Update an existing goal
  */
-router.put('/:gameId/goals/:goalId', async (req, res) => {
+router.put('/:gameId/goals/:goalId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, goalId } = req.params;
     const {
@@ -229,7 +223,7 @@ router.put('/:gameId/goals/:goalId', async (req, res) => {
  * DELETE /api/games/:gameId/goals/:goalId
  * Delete a goal
  */
-router.delete('/:gameId/goals/:goalId', async (req, res) => {
+router.delete('/:gameId/goals/:goalId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, goalId } = req.params;
 

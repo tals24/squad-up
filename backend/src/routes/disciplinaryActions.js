@@ -3,7 +3,7 @@ const router = express.Router();
 const DisciplinaryAction = require('../models/DisciplinaryAction');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
-const { authenticateJWT } = require('../middleware/jwtAuth');
+const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
@@ -13,7 +13,7 @@ router.use(authenticateJWT);
  * POST /api/games/:gameId/disciplinary-actions
  * Create a new disciplinary action for a game
  */
-router.post('/:gameId/disciplinary-actions', async (req, res) => {
+router.post('/:gameId/disciplinary-actions', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
     const {
@@ -25,11 +25,8 @@ router.post('/:gameId/disciplinary-actions', async (req, res) => {
       reason
     } = req.body;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Validate player exists
     const player = await Player.findById(playerId);
@@ -81,15 +78,12 @@ router.post('/:gameId/disciplinary-actions', async (req, res) => {
  * GET /api/games/:gameId/disciplinary-actions
  * Get all disciplinary actions for a game
  */
-router.get('/:gameId/disciplinary-actions', async (req, res) => {
+router.get('/:gameId/disciplinary-actions', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Get all disciplinary actions for the game, sorted by minute
     const disciplinaryActions = await DisciplinaryAction.find({ gameId })
@@ -114,7 +108,7 @@ router.get('/:gameId/disciplinary-actions', async (req, res) => {
  * GET /api/games/:gameId/disciplinary-actions/player/:playerId
  * Get disciplinary actions for a specific player in a game
  */
-router.get('/:gameId/disciplinary-actions/player/:playerId', async (req, res) => {
+router.get('/:gameId/disciplinary-actions/player/:playerId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, playerId } = req.params;
 
@@ -142,7 +136,7 @@ router.get('/:gameId/disciplinary-actions/player/:playerId', async (req, res) =>
  * PUT /api/games/:gameId/disciplinary-actions/:actionId
  * Update an existing disciplinary action
  */
-router.put('/:gameId/disciplinary-actions/:actionId', async (req, res) => {
+router.put('/:gameId/disciplinary-actions/:actionId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, actionId } = req.params;
     const {
@@ -199,7 +193,7 @@ router.put('/:gameId/disciplinary-actions/:actionId', async (req, res) => {
  * DELETE /api/games/:gameId/disciplinary-actions/:actionId
  * Delete a disciplinary action
  */
-router.delete('/:gameId/disciplinary-actions/:actionId', async (req, res) => {
+router.delete('/:gameId/disciplinary-actions/:actionId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, actionId } = req.params;
 

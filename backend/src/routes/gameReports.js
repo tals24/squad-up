@@ -1,9 +1,38 @@
 const express = require('express');
-const { authenticateJWT } = require('../middleware/jwtAuth');
+const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 const GameReport = require('../models/GameReport');
 const Game = require('../models/Game');
 const { calculatePlayerMinutes } = require('../services/minutesCalculation');
 const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
+
+/**
+ * Special middleware for routes that have gameId in request body instead of params
+ * This temporarily sets gameId in params so checkGameAccess can be reused
+ */
+const checkGameAccessFromBody = async (req, res, next) => {
+  try {
+    const { gameId } = req.body;
+    
+    if (!gameId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Game ID is required in request body'
+      });
+    }
+    
+    // Temporarily set gameId in params for checkGameAccess
+    req.params.gameId = gameId;
+    
+    // Call the main checkGameAccess middleware
+    return checkGameAccess(req, res, next);
+  } catch (error) {
+    console.error('Game access check from body error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during access check'
+    });
+  }
+};
 
 const router = express.Router();
 
@@ -27,7 +56,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 });
 
 // Get game reports by game ID
-router.get('/game/:gameId', authenticateJWT, async (req, res) => {
+router.get('/game/:gameId', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
     const gameReports = await GameReport.find({ game: req.params.gameId })
       .populate('player', 'fullName kitNumber position')
@@ -178,9 +207,11 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
 });
 
 // Batch create/update game reports (for final submission)
-router.post('/batch', authenticateJWT, async (req, res) => {
+router.post('/batch', authenticateJWT, checkGameAccessFromBody, async (req, res) => {
   try {
     const { gameId, reports } = req.body;
+    // Game access already validated by checkGameAccessFromBody middleware
+    const game = req.game;
     // reports should be array of { playerId, rating_physical, rating_technical, rating_tactical, rating_mental, notes }
     // Server-calculated fields (minutesPlayed, goals, assists) are FORBIDDEN in request
 
@@ -188,11 +219,7 @@ router.post('/batch', authenticateJWT, async (req, res) => {
       return res.status(400).json({ error: 'Invalid request format. Expected { gameId, reports: [{ playerId, ... }] }' });
     }
 
-    // Get the game
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
-    }
+    // Game is already validated and attached by checkGameAccessFromBody middleware
 
     // Strict validation: Reject any calculated fields from client
     const forbiddenFields = ['minutesPlayed', 'goals', 'assists'];
@@ -319,15 +346,12 @@ router.post('/batch', authenticateJWT, async (req, res) => {
  * GET /api/game-reports/calculate-minutes/:gameId
  * Calculate player minutes for a game based on events
  */
-router.get('/calculate-minutes/:gameId', authenticateJWT, async (req, res) => {
+router.get('/calculate-minutes/:gameId', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Calculate minutes from events
     const calculatedMinutes = await calculatePlayerMinutes(gameId);
@@ -350,15 +374,12 @@ router.get('/calculate-minutes/:gameId', authenticateJWT, async (req, res) => {
  * GET /api/game-reports/calculate-goals-assists/:gameId
  * Calculate player goals and assists for a game from Goals collection
  */
-router.get('/calculate-goals-assists/:gameId', authenticateJWT, async (req, res) => {
+router.get('/calculate-goals-assists/:gameId', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Calculate goals/assists from Goals collection
     const calculatedStats = await calculatePlayerGoalsAssists(gameId);

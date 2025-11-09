@@ -3,7 +3,7 @@ const router = express.Router();
 const Substitution = require('../models/Substitution');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
-const { authenticateJWT } = require('../middleware/jwtAuth');
+const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
@@ -13,7 +13,7 @@ router.use(authenticateJWT);
  * POST /api/games/:gameId/substitutions
  * Create a new substitution for a game
  */
-router.post('/:gameId/substitutions', async (req, res) => {
+router.post('/:gameId/substitutions', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
     const {
@@ -25,11 +25,8 @@ router.post('/:gameId/substitutions', async (req, res) => {
       tacticalNote
     } = req.body;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Validate players exist
     const playerOut = await Player.findById(playerOutId);
@@ -87,15 +84,12 @@ router.post('/:gameId/substitutions', async (req, res) => {
  * GET /api/games/:gameId/substitutions
  * Get all substitutions for a game
  */
-router.get('/:gameId/substitutions', async (req, res) => {
+router.get('/:gameId/substitutions', checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
 
-    // Validate game exists
-    const game = await Game.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
+    // Game access already validated by checkGameAccess middleware
+    const game = req.game;
 
     // Get all substitutions for the game, sorted by minute
     const substitutions = await Substitution.find({ gameId })
@@ -121,7 +115,7 @@ router.get('/:gameId/substitutions', async (req, res) => {
  * PUT /api/games/:gameId/substitutions/:subId
  * Update an existing substitution
  */
-router.put('/:gameId/substitutions/:subId', async (req, res) => {
+router.put('/:gameId/substitutions/:subId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, subId } = req.params;
     const {
@@ -196,7 +190,7 @@ router.put('/:gameId/substitutions/:subId', async (req, res) => {
  * DELETE /api/games/:gameId/substitutions/:subId
  * Delete a substitution
  */
-router.delete('/:gameId/substitutions/:subId', async (req, res) => {
+router.delete('/:gameId/substitutions/:subId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, subId } = req.params;
 
