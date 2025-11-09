@@ -3,8 +3,8 @@ const router = express.Router();
 const Substitution = require('../models/Substitution');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
+const Job = require('../models/Job');
 const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
-const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
@@ -52,13 +52,18 @@ router.post('/:gameId/substitutions', checkGameAccess, async (req, res) => {
 
     await substitution.save();
 
-    // Recalculate player minutes for this game
+    // ✅ Create job for minutes recalculation (non-blocking)
     try {
-      await recalculatePlayerMinutes(gameId, false);
-      console.log(`✅ Recalculated player minutes after substitution creation for game ${gameId}`);
+      await Job.create({
+        jobType: 'recalc-minutes',
+        payload: { gameId: gameId },
+        status: 'pending',
+        runAt: new Date() // Process immediately
+      });
+      console.log(`📋 Created recalc-minutes job for game ${gameId} after substitution creation`);
     } catch (error) {
-      console.error(`❌ Error recalculating minutes after substitution:`, error);
-      // Don't fail the request if recalculation fails
+      // Log but don't fail the request if job creation fails
+      console.error(`❌ Error creating recalc-minutes job:`, error);
     }
 
     // Populate references for response
@@ -158,13 +163,17 @@ router.put('/:gameId/substitutions/:subId', checkGameAccess, async (req, res) =>
 
     await substitution.save();
 
-    // Recalculate player minutes for this game
+    // ✅ Create job for minutes recalculation
     try {
-      await recalculatePlayerMinutes(gameId, false);
-      console.log(`✅ Recalculated player minutes after substitution update for game ${gameId}`);
+      await Job.create({
+        jobType: 'recalc-minutes',
+        payload: { gameId: gameId },
+        status: 'pending',
+        runAt: new Date()
+      });
+      console.log(`📋 Created recalc-minutes job for game ${gameId} after substitution update`);
     } catch (error) {
-      console.error(`❌ Error recalculating minutes after substitution update:`, error);
-      // Don't fail the request if recalculation fails
+      console.error(`❌ Error creating recalc-minutes job:`, error);
     }
 
     // Populate references for response
@@ -200,13 +209,17 @@ router.delete('/:gameId/substitutions/:subId', checkGameAccess, async (req, res)
       return res.status(404).json({ message: 'Substitution not found' });
     }
 
-    // Recalculate player minutes for this game
+    // ✅ Create job for minutes recalculation
     try {
-      await recalculatePlayerMinutes(gameId, false);
-      console.log(`✅ Recalculated player minutes after substitution deletion for game ${gameId}`);
+      await Job.create({
+        jobType: 'recalc-minutes',
+        payload: { gameId: gameId },
+        status: 'pending',
+        runAt: new Date()
+      });
+      console.log(`📋 Created recalc-minutes job for game ${gameId} after substitution deletion`);
     } catch (error) {
-      console.error(`❌ Error recalculating minutes after substitution deletion:`, error);
-      // Don't fail the request if recalculation fails
+      console.error(`❌ Error creating recalc-minutes job:`, error);
     }
 
     res.json({

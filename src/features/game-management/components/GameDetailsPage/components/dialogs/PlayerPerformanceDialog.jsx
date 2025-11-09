@@ -95,9 +95,9 @@ export default function PlayerPerformanceDialog({
         : (data?.minutesPlayed !== undefined ? data.minutesPlayed : minutesPlayed));
 
   // Determine if we should use calculated goals/assists
-  // For "Played" games: Use calculated values from hooks
+  // For "Played" games: Use calculated values from hooks (always read-only)
   // For "Done" games: Use saved values from GameReport (in data prop)
-  const useCalculatedGA = game?.status === 'Played' && calculatedStats[player?._id] !== undefined;
+  const useCalculatedGA = game?.status === 'Played';
   const displayGoals = useCalculatedGA 
     ? (calculatedStats[player?._id]?.goals || 0) 
     : (isDoneGame && data?.goals !== undefined 
@@ -266,12 +266,6 @@ export default function PlayerPerformanceDialog({
                 (useCalculated || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             />
-            {useCalculated && (
-              <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
-                <Info className="w-3 h-3" />
-                <span>Automatically calculated from game events</span>
-              </div>
-            )}
             {isLoadingMinutes && (
               <p className="mt-1 text-xs text-slate-500">Calculating minutes...</p>
             )}
@@ -314,12 +308,6 @@ export default function PlayerPerformanceDialog({
                   (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
               />
-              {useCalculatedGA && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
-                  <Info className="w-3 h-3" />
-                  <span>Automatically calculated from Goals collection</span>
-                </div>
-              )}
               {isLoadingGoalsAssists && (
                 <p className="mt-1 text-xs text-slate-500">Calculating goals...</p>
               )}
@@ -343,12 +331,6 @@ export default function PlayerPerformanceDialog({
                   (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
               />
-              {useCalculatedGA && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
-                  <Info className="w-3 h-3" />
-                  <span>Automatically calculated from Goals collection</span>
-                </div>
-              )}
               {isLoadingGoalsAssists && (
                 <p className="mt-1 text-xs text-slate-500">Calculating assists...</p>
               )}

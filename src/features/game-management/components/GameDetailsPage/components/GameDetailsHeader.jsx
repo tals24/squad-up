@@ -200,7 +200,6 @@ export default function GameDetailsHeader({
                 <div className="w-16 text-center bg-slate-800 border border-slate-700 text-white px-2 py-1 rounded">
                   {finalScore.opponentScore}
                 </div>
-                <span className="text-xs text-slate-500">(auto-calculated)</span>
               </div>
             )}
 

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "worker": "node src/worker.js",
+    "worker:dev": "nodemon src/worker.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-mock-data": "node scripts/generateMockData.js",
     "seed": "node scripts/generateMockData.js"

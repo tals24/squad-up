@@ -3,8 +3,8 @@ const router = express.Router();
 const DisciplinaryAction = require('../models/DisciplinaryAction');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
+const Job = require('../models/Job');
 const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
-const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
@@ -47,14 +47,18 @@ router.post('/:gameId/disciplinary-actions', checkGameAccess, async (req, res) =
 
     await disciplinaryAction.save();
 
-    // Recalculate player minutes if red card (only red cards affect minutes)
+    // ✅ Create job for minutes recalculation if red card (only red cards affect minutes)
     if (cardType === 'red' || cardType === 'second-yellow') {
       try {
-        await recalculatePlayerMinutes(gameId, false);
-        console.log(`✅ Recalculated player minutes after red card for game ${gameId}`);
+        await Job.create({
+          jobType: 'recalc-minutes',
+          payload: { gameId: gameId },
+          status: 'pending',
+          runAt: new Date()
+        });
+        console.log(`📋 Created recalc-minutes job for game ${gameId} after red card`);
       } catch (error) {
-        console.error(`❌ Error recalculating minutes after red card:`, error);
-        // Don't fail the request if recalculation fails
+        console.error(`❌ Error creating recalc-minutes job:`, error);
       }
     }
 
@@ -162,14 +166,18 @@ router.put('/:gameId/disciplinary-actions/:actionId', checkGameAccess, async (re
 
     await action.save();
 
-    // Recalculate player minutes if red card (only red cards affect minutes)
+    // ✅ Create job for minutes recalculation if red card
     if (action.cardType === 'red' || action.cardType === 'second-yellow') {
       try {
-        await recalculatePlayerMinutes(gameId, false);
-        console.log(`✅ Recalculated player minutes after red card update for game ${gameId}`);
+        await Job.create({
+          jobType: 'recalc-minutes',
+          payload: { gameId: gameId },
+          status: 'pending',
+          runAt: new Date()
+        });
+        console.log(`📋 Created recalc-minutes job for game ${gameId} after red card update`);
       } catch (error) {
-        console.error(`❌ Error recalculating minutes after red card update:`, error);
-        // Don't fail the request if recalculation fails
+        console.error(`❌ Error creating recalc-minutes job:`, error);
       }
     }
 
@@ -203,14 +211,18 @@ router.delete('/:gameId/disciplinary-actions/:actionId', checkGameAccess, async 
       return res.status(404).json({ message: 'Disciplinary action not found' });
     }
 
-    // Recalculate player minutes if red card was deleted (only red cards affect minutes)
+    // ✅ Create job for minutes recalculation if red card was deleted
     if (action.cardType === 'red' || action.cardType === 'second-yellow') {
       try {
-        await recalculatePlayerMinutes(gameId, false);
-        console.log(`✅ Recalculated player minutes after red card deletion for game ${gameId}`);
+        await Job.create({
+          jobType: 'recalc-minutes',
+          payload: { gameId: gameId },
+          status: 'pending',
+          runAt: new Date()
+        });
+        console.log(`📋 Created recalc-minutes job for game ${gameId} after red card deletion`);
       } catch (error) {
-        console.error(`❌ Error recalculating minutes after red card deletion:`, error);
-        // Don't fail the request if recalculation fails
+        console.error(`❌ Error creating recalc-minutes job:`, error);
       }
     }
 
