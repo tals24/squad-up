@@ -10,7 +10,8 @@
     "worker:dev": "nodemon src/worker.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate-mock-data": "node scripts/generateMockData.js",
-    "seed": "node scripts/generateMockData.js"
+    "seed": "node scripts/generateMockData.js",
+    "migrate:remove-denormalized-fields": "node scripts/migrate-remove-denormalized-fields.js"
   },
   "keywords": [],
   "author": "",

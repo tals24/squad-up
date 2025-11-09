@@ -184,6 +184,15 @@ export default function GameDetails() {
     setGamePlayers(teamPlayers);
   }, [game, players]);
 
+  // Create efficient lookup map for player data
+  const playerMap = useMemo(() => {
+    const map = new Map();
+    gamePlayers.forEach(player => {
+      map.set(player._id, player);
+    });
+    return map;
+  }, [gamePlayers]);
+
   // Load existing roster statuses
   useEffect(() => {
     if (!gameId || !gameRosters || gameRosters.length === 0 || gamePlayers.length === 0) return;
@@ -433,10 +442,8 @@ export default function GameDetails() {
           gameId,
           rosters: [{
             playerId,
-            playerName: gamePlayers.find(p => p._id === playerId)?.fullName || gamePlayers.find(p => p._id === playerId)?.name || 'Unknown Player',
-            gameTitle: game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game',
-            rosterEntry: newStatus,
             status: newStatus
+            // ✅ Removed: playerName, gameTitle, rosterEntry (denormalized fields)
           }],
         }),
       });
@@ -637,10 +644,8 @@ export default function GameDetails() {
       // ✅ Single atomic call: Start game with lineup
       const rosterUpdates = gamePlayers.map((player) => ({
         playerId: player._id,
-        playerName: player.fullName || player.name || 'Unknown Player',
-        gameTitle: game.gameTitle || game.GameTitle || game.title || game.teamName || 'Unknown Game',
-        rosterEntry: getPlayerStatus(player._id),
-        status: getPlayerStatus(player._id),
+        status: getPlayerStatus(player._id)
+        // ✅ Removed: playerName, gameTitle, rosterEntry (denormalized fields)
       }));
 
       console.log('🔍 Starting game with roster:', {

@@ -479,15 +479,13 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
 
     // Step 5: Prepare roster entries for upsert
     const rosterEntries = [];
-    const gameTitle = game.gameTitle || `${game.teamName} vs ${game.opponent}`;
 
     for (const rosterData of rosters) {
-      const { playerId, status, playerName, gameTitle: providedGameTitle, rosterEntry } = rosterData;
+      const { playerId, status } = rosterData;
 
-      // Populate player if needed
-      let player = null;
+      // Validate player exists (for better error messages)
       if (playerId) {
-        player = await Player.findById(playerId).session(session);
+        const player = await Player.findById(playerId).session(session);
         if (!player) {
           await session.abortTransaction();
           return res.status(400).json({
@@ -497,18 +495,11 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
         }
       }
 
-      // Build roster entry
-      const finalPlayerName = playerName || player?.fullName || 'Unknown Player';
-      const finalGameTitle = providedGameTitle || gameTitle;
-      const finalRosterEntry = rosterEntry || `${finalGameTitle} - ${finalPlayerName}`;
-
       rosterEntries.push({
         game: gameId,
         player: playerId,
-        status: status || 'Not in Squad',
-        playerName: finalPlayerName,
-        gameTitle: finalGameTitle,
-        rosterEntry: finalRosterEntry
+        status: status || 'Not in Squad'
+        // ✅ Removed: playerName, gameTitle, rosterEntry (denormalized fields)
       });
     }
 
@@ -519,10 +510,8 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
       const gameRoster = await GameRoster.findOneAndUpdate(
         { game: rosterData.game, player: rosterData.player },
         {
-          status: rosterData.status,
-          playerName: rosterData.playerName,
-          gameTitle: rosterData.gameTitle,
-          rosterEntry: rosterData.rosterEntry
+          status: rosterData.status
+          // ✅ Only save: game, player, status (denormalized fields removed)
         },
         {
           new: true,

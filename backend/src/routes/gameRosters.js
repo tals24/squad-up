@@ -39,7 +39,7 @@ router.get('/', authenticateJWT, async (req, res) => {
     const gameRosters = await GameRoster.find()
       .populate('game', 'gameTitle team')
       .populate('player', 'fullName kitNumber position')
-      .sort({ gameTitle: 1, playerName: 1 });
+      .sort({ 'game.gameTitle': 1, 'player.fullName': 1 });
 
     res.json({
       success: true,
@@ -57,7 +57,7 @@ router.get('/game/:gameId', authenticateJWT, checkGameAccess, async (req, res) =
     const gameRosters = await GameRoster.find({ game: req.params.gameId })
       .populate('game', 'gameTitle team')
       .populate('player', 'fullName kitNumber position team age')
-      .sort({ status: 1, playerName: 1 });
+      .sort({ status: 1, 'player.fullName': 1 });
 
     res.json({
       success: true,
@@ -176,33 +176,21 @@ router.post('/batch', authenticateJWT, checkGameAccessFromBody, async (req, res)
     const results = [];
     
     for (const rosterData of rosters) {
-      const { playerId, status, playerName, gameTitle, rosterEntry } = rosterData;
+      const { playerId, status } = rosterData;
       
-      // Find existing roster entry or create new
-      let gameRoster = await GameRoster.findOne({ 
-        game: gameId, 
-        player: playerId 
-      });
-
-      if (gameRoster) {
-        // Update existing
-        gameRoster.status = status;
-        if (playerName) gameRoster.playerName = playerName;
-        if (gameTitle) gameRoster.gameTitle = gameTitle;
-        if (rosterEntry) gameRoster.rosterEntry = rosterEntry;
-        await gameRoster.save();
-      } else {
-        // Create new
-        gameRoster = new GameRoster({
-          game: gameId,
-          player: playerId,
-          status: status || 'Not in Squad',
-          playerName: playerName || '',
-          gameTitle: gameTitle || '',
-          rosterEntry: rosterEntry || ''
-        });
-        await gameRoster.save();
-      }
+      // Use findOneAndUpdate with upsert for atomic operation
+      const gameRoster = await GameRoster.findOneAndUpdate(
+        { game: gameId, player: playerId },
+        {
+          status: status || 'Not in Squad'
+          // ✅ Only save: game, player, status (denormalized fields removed)
+        },
+        {
+          new: true,
+          upsert: true,
+          setDefaultsOnInsert: true
+        }
+      );
       
       await gameRoster.populate('game player');
       results.push(gameRoster);

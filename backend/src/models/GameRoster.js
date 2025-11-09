@@ -26,24 +26,10 @@ const gameRosterSchema = new mongoose.Schema({
     required: true,
     enum: ['Starting Lineup', 'Bench', 'Unavailable', 'Not in Squad'],
     default: 'Not in Squad'
-  },
-  
-  // Lookup fields (equivalent to GameTitle and PlayerName lookups in Airtable)
-  gameTitle: {
-    type: String,
-    required: true
-  },
-  
-  playerName: {
-    type: String,
-    required: true
-  },
-  
-  // Formula field (equivalent to RosterEntry formula in Airtable)
-  rosterEntry: {
-    type: String,
-    required: true
   }
+  
+  // ✅ Removed denormalized fields: gameTitle, playerName, rosterEntry
+  // Frontend now performs lookups from gamePlayers and game state
 }, {
   timestamps: true
 });
@@ -57,26 +43,7 @@ gameRosterSchema.index({ status: 1 });
 // Compound index to ensure unique player per game
 gameRosterSchema.index({ game: 1, player: 1 }, { unique: true });
 
-// Pre-save middleware to generate lookup fields and formula
-gameRosterSchema.pre('save', async function(next) {
-  if (this.isNew || this.isModified('game') || this.isModified('player')) {
-    // Populate the game and player to get their names
-    await this.populate('game player');
-    
-    if (this.game) {
-      this.gameTitle = this.game.gameTitle;
-    }
-    
-    if (this.player) {
-      this.playerName = this.player.fullName;
-    }
-    
-    // Generate roster entry
-    this.rosterEntry = `${this.gameTitle} - ${this.playerName}`;
-  }
-  
-  next();
-});
+// ✅ Removed pre-save hook - no longer needed without denormalized fields
 
 module.exports = mongoose.model('GameRoster', gameRosterSchema);
 
