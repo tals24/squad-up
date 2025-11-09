@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
-import { AlertCircle, FileText, ShieldAlert, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, FileText, ShieldAlert, Plus, Trash2, Info } from "lucide-react";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
 import {
@@ -26,6 +26,8 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "../../../../api/disciplinaryActionsApi";
+import { useCalculatedMinutes } from "../../../../hooks/useCalculatedMinutes";
+import { useCalculatedGoalsAssists } from "../../../../hooks/useCalculatedGoalsAssists";
 
 export default function PlayerPerformanceDialog({ 
   open, 
@@ -41,6 +43,7 @@ export default function PlayerPerformanceDialog({
   substitutions = [],
   playerReports = {},
   onAddSubstitution,
+  goals = [], // Goals array from parent
 }) {
   if (!player) return null;
 
@@ -61,6 +64,69 @@ export default function PlayerPerformanceDialog({
     const duration = matchDuration || game?.matchDuration;
     return calculateTotalMatchDuration(duration);
   }, [matchDuration, game]);
+
+  // Fetch calculated minutes if game is in "Played" status
+  const { calculatedMinutes, isLoading: isLoadingMinutes } = useCalculatedMinutes(
+    game?._id,
+    game,
+    substitutions || [],
+    [] // Disciplinary actions are fetched separately per player
+  );
+
+  // Fetch calculated goals/assists if game is in "Played" status
+  const { calculatedStats, isLoading: isLoadingGoalsAssists } = useCalculatedGoalsAssists(
+    game?._id,
+    game,
+    goals || []
+  );
+
+  // Determine if we should use calculated minutes
+  // For "Played" games: Use calculated values from hooks
+  // For "Done" games: Use saved values from GameReport (in data prop)
+  const useCalculated = game?.status === 'Played' && calculatedMinutes[player?._id] !== undefined;
+  const isDoneGame = game?.status === 'Done';
+  
+  // For "Done" games, prioritize data from prop (saved GameReport)
+  // For "Played" games, use calculated values from hooks
+  const displayMinutes = useCalculated 
+    ? calculatedMinutes[player?._id] 
+    : (isDoneGame && data?.minutesPlayed !== undefined 
+        ? data.minutesPlayed 
+        : (data?.minutesPlayed !== undefined ? data.minutesPlayed : minutesPlayed));
+
+  // Determine if we should use calculated goals/assists
+  // For "Played" games: Use calculated values from hooks
+  // For "Done" games: Use saved values from GameReport (in data prop)
+  const useCalculatedGA = game?.status === 'Played' && calculatedStats[player?._id] !== undefined;
+  const displayGoals = useCalculatedGA 
+    ? (calculatedStats[player?._id]?.goals || 0) 
+    : (isDoneGame && data?.goals !== undefined 
+        ? data.goals 
+        : (data?.goals !== undefined ? data.goals : 0));
+  const displayAssists = useCalculatedGA 
+    ? (calculatedStats[player?._id]?.assists || 0) 
+    : (isDoneGame && data?.assists !== undefined 
+        ? data.assists 
+        : (data?.assists !== undefined ? data.assists : 0));
+  
+  // Debug logging for "Done" games
+  useEffect(() => {
+    if (isDoneGame && open && player) {
+      console.log('🔍 [PlayerPerformanceDialog] Done game - data check:', {
+        playerId: player._id,
+        playerName: player.fullName,
+        dataMinutesPlayed: data?.minutesPlayed,
+        dataGoals: data?.goals,
+        dataAssists: data?.assists,
+        displayMinutes,
+        displayGoals,
+        displayAssists,
+        fullData: data
+      });
+    }
+  }, [isDoneGame, open, player, data, displayMinutes, displayGoals, displayAssists]);
+  
+  const showCalculatedIndicator = useCalculated || useCalculatedGA || isDoneGame;
 
   // Fetch disciplinary actions when dialog opens
   useEffect(() => {
@@ -128,33 +194,8 @@ export default function PlayerPerformanceDialog({
   };
 
   const handleSaveClick = () => {
-    // Validate starting lineup player must have minutes > 0
-    if (isStarting && minutesPlayed <= 0) {
-      setErrorMessage("Starting lineup players must have minutes played (greater than 0).");
-      return;
-    }
-    
-    // Validate player cannot exceed match duration
-    if (minutesPlayed > maxMinutes) {
-      setErrorMessage(`Player cannot play more than ${maxMinutes} minutes (match duration + extra time).`);
-      return;
-    }
-
-    // Validate bench players: must have substitution record before assigning minutes
-    if (!isStarting && minutesPlayed > 0) {
-      const hasSubstitution = substitutions.some(
-        sub => (sub.playerInId === player._id) || (sub.playerInId?._id === player._id)
-      );
-      
-      if (!hasSubstitution) {
-        setErrorMessage(
-          "This player must be substituted in before assigning minutes. " +
-          "Please create a substitution record first."
-        );
-        return;
-      }
-    }
-    
+    // Minutes are automatically calculated from game events (substitutions, red cards)
+    // No validation needed - calculation ensures correctness
     setErrorMessage("");
     onSave();
   };
@@ -212,14 +253,28 @@ export default function PlayerPerformanceDialog({
               type="number"
               min="0"
               max={maxMinutes}
-              value={data.minutesPlayed}
+              value={displayMinutes ?? 0}
               onChange={(e) => {
-                onDataChange({ ...data, minutesPlayed: parseInt(e.target.value) || 0 });
-                setErrorMessage(""); // Clear error when user types
+                if (!useCalculated && !isDoneGame) {
+                  onDataChange({ ...data, minutesPlayed: parseInt(e.target.value) || 0 });
+                  setErrorMessage(""); // Clear error when user types
+                }
               }}
-              disabled={isReadOnly}
-              className="bg-slate-800 border-slate-700 text-white"
+              disabled={isReadOnly || useCalculated || isDoneGame}
+              readOnly={useCalculated || isDoneGame}
+              className={`bg-slate-800 border-slate-700 text-white ${
+                (useCalculated || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
             />
+            {useCalculated && (
+              <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
+                <Info className="w-3 h-3" />
+                <span>Automatically calculated from game events</span>
+              </div>
+            )}
+            {isLoadingMinutes && (
+              <p className="mt-1 text-xs text-slate-500">Calculating minutes...</p>
+            )}
             {errorMessage && (
               <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
@@ -238,26 +293,172 @@ export default function PlayerPerformanceDialog({
             )}
           </div>
 
-          {/* Note: Goals and Assists are now tracked via the Goal Dialog in the sidebar */}
+          {/* Goals and Assists - Calculated from Goals collection */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-1 block">
+                Goals
+              </label>
+              <Input
+                type="number"
+                min="0"
+                value={displayGoals ?? 0}
+                onChange={(e) => {
+                  if (!useCalculatedGA && !isDoneGame) {
+                    onDataChange({ ...data, goals: parseInt(e.target.value) || 0 });
+                  }
+                }}
+                disabled={isReadOnly || useCalculatedGA || isDoneGame}
+                readOnly={useCalculatedGA || isDoneGame}
+                className={`bg-slate-800 border-slate-700 text-white ${
+                  (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+              />
+              {useCalculatedGA && (
+                <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
+                  <Info className="w-3 h-3" />
+                  <span>Automatically calculated from Goals collection</span>
+                </div>
+              )}
+              {isLoadingGoalsAssists && (
+                <p className="mt-1 text-xs text-slate-500">Calculating goals...</p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-1 block">
+                Assists
+              </label>
+              <Input
+                type="number"
+                min="0"
+                value={displayAssists ?? 0}
+                onChange={(e) => {
+                  if (!useCalculatedGA && !isDoneGame) {
+                    onDataChange({ ...data, assists: parseInt(e.target.value) || 0 });
+                  }
+                }}
+                disabled={isReadOnly || useCalculatedGA || isDoneGame}
+                readOnly={useCalculatedGA || isDoneGame}
+                className={`bg-slate-800 border-slate-700 text-white ${
+                  (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+              />
+              {useCalculatedGA && (
+                <div className="mt-1 flex items-center gap-1 text-xs text-cyan-400">
+                  <Info className="w-3 h-3" />
+                  <span>Automatically calculated from Goals collection</span>
+                </div>
+              )}
+              {isLoadingGoalsAssists && (
+                <p className="mt-1 text-xs text-slate-500">Calculating assists...</p>
+              )}
+            </div>
+          </div>
 
-          {/* Rating */}
-          <div>
-            <label className="text-sm font-semibold text-slate-400 mb-1 block">General Rating</label>
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => !isReadOnly && onDataChange({ ...data, rating: star })}
-                  disabled={isReadOnly}
-                  className={`
-                    text-2xl transition-all
-                    ${data.rating >= star ? "text-yellow-400" : "text-slate-600"}
-                    ${!isReadOnly ? "hover:text-yellow-400 hover:scale-110" : ""}
-                  `}
-                >
-                  ★
-                </button>
-              ))}
+          {/* Individual Rating Dimensions */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-2 block">
+                Physical Rating
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => !isReadOnly && onDataChange({ ...data, rating_physical: star })}
+                    disabled={isReadOnly}
+                    className={`
+                      text-2xl transition-all
+                      ${(data.rating_physical || 3) >= star ? "text-yellow-400" : "text-slate-600"}
+                      ${!isReadOnly ? "hover:text-yellow-400 hover:scale-110 cursor-pointer" : "cursor-not-allowed"}
+                    `}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-slate-400">
+                  {data.rating_physical || 3}/5
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-2 block">
+                Technical Rating
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => !isReadOnly && onDataChange({ ...data, rating_technical: star })}
+                    disabled={isReadOnly}
+                    className={`
+                      text-2xl transition-all
+                      ${(data.rating_technical || 3) >= star ? "text-yellow-400" : "text-slate-600"}
+                      ${!isReadOnly ? "hover:text-yellow-400 hover:scale-110 cursor-pointer" : "cursor-not-allowed"}
+                    `}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-slate-400">
+                  {data.rating_technical || 3}/5
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-2 block">
+                Tactical Rating
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => !isReadOnly && onDataChange({ ...data, rating_tactical: star })}
+                    disabled={isReadOnly}
+                    className={`
+                      text-2xl transition-all
+                      ${(data.rating_tactical || 3) >= star ? "text-yellow-400" : "text-slate-600"}
+                      ${!isReadOnly ? "hover:text-yellow-400 hover:scale-110 cursor-pointer" : "cursor-not-allowed"}
+                    `}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-slate-400">
+                  {data.rating_tactical || 3}/5
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-2 block">
+                Mental Rating
+              </label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => !isReadOnly && onDataChange({ ...data, rating_mental: star })}
+                    disabled={isReadOnly}
+                    className={`
+                      text-2xl transition-all
+                      ${(data.rating_mental || 3) >= star ? "text-yellow-400" : "text-slate-600"}
+                      ${!isReadOnly ? "hover:text-yellow-400 hover:scale-110 cursor-pointer" : "cursor-not-allowed"}
+                    `}
+                  >
+                    ★
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-slate-400">
+                  {data.rating_mental || 3}/5
+                </span>
+              </div>
             </div>
           </div>
 

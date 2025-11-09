@@ -2,6 +2,8 @@ const express = require('express');
 const { authenticateJWT } = require('../middleware/jwtAuth');
 const GameReport = require('../models/GameReport');
 const Game = require('../models/Game');
+const { calculatePlayerMinutes } = require('../services/minutesCalculation');
+const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
 
 const router = express.Router();
 
@@ -179,69 +181,122 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
 router.post('/batch', authenticateJWT, async (req, res) => {
   try {
     const { gameId, reports } = req.body;
-    // reports should be array of { playerId, minutesPlayed, goals, assists, rating_physical, rating_technical, rating_tactical, rating_mental, notes }
+    // reports should be array of { playerId, rating_physical, rating_technical, rating_tactical, rating_mental, notes }
+    // Server-calculated fields (minutesPlayed, goals, assists) are FORBIDDEN in request
 
     if (!gameId || !Array.isArray(reports)) {
       return res.status(400).json({ error: 'Invalid request format. Expected { gameId, reports: [{ playerId, ... }] }' });
     }
 
-    // Get the game to check team score
+    // Get the game
     const game = await Game.findById(gameId);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    // Validate: Total assists cannot exceed team goals
-    // Every assist must have a goal (team scored), but not every goal must have an assist
-    const totalAssists = reports.reduce((sum, report) => sum + (report.assists || 0), 0);
-    const teamGoals = game.ourScore || 0;
+    // Strict validation: Reject any calculated fields from client
+    const forbiddenFields = ['minutesPlayed', 'goals', 'assists'];
+    const invalidFields = [];
 
-    if (totalAssists > teamGoals) {
+    for (const reportData of reports) {
+      for (const field of forbiddenFields) {
+        if (reportData[field] !== undefined) {
+          invalidFields.push(`${field} in report for playerId: ${reportData.playerId || 'unknown'}`);
+        }
+      }
+    }
+
+    if (invalidFields.length > 0) {
       return res.status(400).json({ 
-        error: `Total assists (${totalAssists}) cannot exceed team goals (${teamGoals}). Every assist must correspond to a goal scored by the team.` 
+        error: 'Invalid request: Server-calculated fields cannot be provided by client.',
+        details: invalidFields,
+        message: 'The following fields are server-calculated and must not be sent: minutesPlayed, goals, assists'
+      });
+    }
+
+    // Always calculate minutes (server is authoritative)
+    let calculatedMinutesMap = {};
+    try {
+      calculatedMinutesMap = await calculatePlayerMinutes(gameId);
+      console.log(`✅ Calculated minutes for game ${gameId}`);
+    } catch (error) {
+      console.error(`❌ Error calculating minutes:`, error);
+      return res.status(500).json({ 
+        error: 'Failed to calculate player minutes',
+        message: 'Please ensure game events (substitutions, red cards) are properly recorded.'
+      });
+    }
+
+    // Always calculate goals/assists (server is authoritative)
+    let calculatedGoalsAssistsMap = {};
+    try {
+      calculatedGoalsAssistsMap = await calculatePlayerGoalsAssists(gameId);
+      console.log(`✅ Calculated goals/assists for game ${gameId}`);
+    } catch (error) {
+      console.error(`❌ Error calculating goals/assists:`, error);
+      return res.status(500).json({ 
+        error: 'Failed to calculate goals/assists',
+        message: 'Please ensure goals are properly recorded in the Goals collection.'
       });
     }
 
     const results = [];
-    
-    for (const reportData of reports) {
-      const { playerId, minutesPlayed, goals, assists, rating_physical, rating_technical, rating_tactical, rating_mental, notes } = reportData;
-      
-      // Find existing report or create new
-      let gameReport = await GameReport.findOne({ 
-        game: gameId, 
-        player: playerId 
-      });
 
-      if (gameReport) {
-        // Update existing
-        gameReport.minutesPlayed = minutesPlayed !== undefined ? minutesPlayed : gameReport.minutesPlayed;
-        gameReport.goals = goals !== undefined ? goals : gameReport.goals;
-        gameReport.assists = assists !== undefined ? assists : gameReport.assists;
-        gameReport.rating_physical = rating_physical !== undefined ? rating_physical : gameReport.rating_physical;
-        gameReport.rating_technical = rating_technical !== undefined ? rating_technical : gameReport.rating_technical;
-        gameReport.rating_tactical = rating_tactical !== undefined ? rating_tactical : gameReport.rating_tactical;
-        gameReport.rating_mental = rating_mental !== undefined ? rating_mental : gameReport.rating_mental;
-        gameReport.notes = notes !== undefined ? notes : gameReport.notes;
-        gameReport.author = req.user._id;
-        await gameReport.save();
-      } else {
-        // Create new
-        gameReport = new GameReport({
-          game: gameId,
-          player: playerId,
-          author: req.user._id,
-          minutesPlayed: minutesPlayed || 0,
-          goals: goals || 0,
-          assists: assists || 0,
-          rating_physical: rating_physical || 3,
-          rating_technical: rating_technical || 3,
-          rating_tactical: rating_tactical || 3,
-          rating_mental: rating_mental || 3,
-          notes
-        });
-        await gameReport.save();
+    for (const reportData of reports) {
+      // Extract ONLY allowed fields from client
+      const { 
+        playerId, 
+        notes, 
+        rating_physical, 
+        rating_technical, 
+        rating_tactical, 
+        rating_mental 
+      } = reportData;
+      
+      // Validate required fields
+      if (!playerId) {
+        return res.status(400).json({ error: 'Missing required field: playerId' });
       }
+      
+      // Get calculated values from server (authoritative)
+      const calculatedMinutes = calculatedMinutesMap[playerId] || 0;
+      const calculatedGoals = calculatedGoalsAssistsMap[playerId]?.goals || 0;
+      const calculatedAssists = calculatedGoalsAssistsMap[playerId]?.assists || 0;
+      
+      // Determine calculation method for minutes
+      const minutesCalculationMethod = calculatedMinutesMap[playerId] !== undefined 
+        ? 'calculated' 
+        : 'manual';
+      
+      // Use findOneAndUpdate with upsert for atomic operation
+      const gameReport = await GameReport.findOneAndUpdate(
+        { 
+          game: gameId, 
+          player: playerId 
+        },
+        {
+          // Server-calculated fields (always from calculation services)
+          minutesPlayed: calculatedMinutes,
+          minutesCalculationMethod: minutesCalculationMethod,
+          goals: calculatedGoals,
+          assists: calculatedAssists,
+          
+          // Client-provided fields (user-editable)
+          rating_physical: rating_physical !== undefined ? rating_physical : 3,
+          rating_technical: rating_technical !== undefined ? rating_technical : 3,
+          rating_tactical: rating_tactical !== undefined ? rating_tactical : 3,
+          rating_mental: rating_mental !== undefined ? rating_mental : 3,
+          notes: notes !== undefined ? notes : null,
+          
+          // Metadata
+          author: req.user._id,
+        },
+        {
+          new: true, // Return updated document
+          upsert: true, // Create if doesn't exist
+          setDefaultsOnInsert: true // Apply schema defaults on insert
+        }
+      );
       
       await gameReport.populate('player game author');
       results.push(gameReport);
@@ -257,6 +312,68 @@ router.post('/batch', authenticateJWT, async (req, res) => {
     // Return the actual error message from validation or other errors
     const errorMessage = error.message || 'Internal server error';
     res.status(500).json({ error: errorMessage });
+  }
+});
+
+/**
+ * GET /api/game-reports/calculate-minutes/:gameId
+ * Calculate player minutes for a game based on events
+ */
+router.get('/calculate-minutes/:gameId', authenticateJWT, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    // Validate game exists
+    const game = await Game.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Calculate minutes from events
+    const calculatedMinutes = await calculatePlayerMinutes(gameId);
+    
+    res.json({ 
+      success: true, 
+      gameId, 
+      calculatedMinutes 
+    });
+  } catch (error) {
+    console.error('Error calculating minutes:', error);
+    res.status(500).json({ 
+      error: 'Failed to calculate minutes', 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * GET /api/game-reports/calculate-goals-assists/:gameId
+ * Calculate player goals and assists for a game from Goals collection
+ */
+router.get('/calculate-goals-assists/:gameId', authenticateJWT, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    // Validate game exists
+    const game = await Game.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Calculate goals/assists from Goals collection
+    const calculatedStats = await calculatePlayerGoalsAssists(gameId);
+    
+    res.json({ 
+      success: true, 
+      gameId, 
+      calculatedStats 
+    });
+  } catch (error) {
+    console.error('Error calculating goals/assists:', error);
+    res.status(500).json({ 
+      error: 'Failed to calculate goals/assists', 
+      message: error.message 
+    });
   }
 });
 

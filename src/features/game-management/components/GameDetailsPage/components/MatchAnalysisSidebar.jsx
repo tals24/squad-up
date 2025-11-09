@@ -11,6 +11,7 @@ import {
 } from "@/shared/ui/primitives/tooltip";
 
 export default function MatchAnalysisSidebar({
+  isScheduled,
   isPlayed,
   isDone,
   teamSummary,
@@ -35,22 +36,35 @@ export default function MatchAnalysisSidebar({
         scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
       }}
     >
-      {/* AI Summary - Only for Done */}
-      {isDone && (
+      {/* AI Summary - For Scheduled (future: prepare to game data) and Done (match summary) */}
+      {(isScheduled || isDone) && (
         <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
               <Zap className="w-5 h-5 text-cyan-400" />
-              AI Match Summary
+              {isScheduled ? 'AI Match Preview' : 'AI Match Summary'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-400">
-              The AI will analyze all player reports and team summaries to generate a concise, three-sentence summary of the match.
-            </p>
-            <p className="text-xs text-slate-500 mt-2 italic">
-              (This component will be implemented in a future step, integrating with an LLM)
-            </p>
+            {isScheduled ? (
+              <>
+                <p className="text-sm text-slate-400">
+                  The AI will provide preparation data and insights for the upcoming match.
+                </p>
+                <p className="text-xs text-slate-500 mt-2 italic">
+                  (This component will be implemented in a future step, showing prepare to game data)
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-400">
+                  The AI will analyze all player reports and team summaries to generate a concise, three-sentence summary of the match.
+                </p>
+                <p className="text-xs text-slate-500 mt-2 italic">
+                  (This component will be implemented in a future step, integrating with an LLM)
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       )}

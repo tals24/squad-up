@@ -103,18 +103,7 @@ export default function SubstitutionDialog({
       newErrors.minute = `Minute cannot exceed match duration (${matchDuration} minutes)`;
     }
 
-    // Validate: Player coming in (bench player) must have minutes > 0
-    if (subData.playerInId) {
-      const playerInReport = playerReports[subData.playerInId];
-      const playerInMinutes = playerInReport?.minutesPlayed || 0;
-      
-      // Check if player is a bench player (not in starting lineup)
-      const isBenchPlayer = benchPlayers.some(p => p._id === subData.playerInId);
-      
-      if (isBenchPlayer && playerInMinutes <= 0) {
-        newWarnings.playerInId = 'This bench player must have minutes played > 0. Please set their minutes in the player report before finalizing the game.';
-      }
-    }
+    // Removed: Bench player minutes validation (minutes are now automatically calculated)
 
     setErrors(newErrors);
     setWarnings(newWarnings);
@@ -171,7 +160,13 @@ export default function SubstitutionDialog({
             </Label>
             <Select
               value={subData.playerOutId || ''}
-              onValueChange={(value) => setSubData(prev => ({ ...prev, playerOutId: value }))}
+              onValueChange={(value) => {
+                setSubData(prev => ({ ...prev, playerOutId: value }));
+                // Clear error when user selects a value
+                if (errors.playerOutId) {
+                  setErrors(prev => ({ ...prev, playerOutId: undefined }));
+                }
+              }}
               disabled={isReadOnly}
             >
               <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
@@ -198,10 +193,10 @@ export default function SubstitutionDialog({
               value={subData.playerInId || ''}
               onValueChange={(value) => {
                 setSubData(prev => ({ ...prev, playerInId: value }));
-                // Trigger validation after state update
-                setTimeout(() => {
-                  validateForm();
-                }, 0);
+                // Clear error when user selects a value
+                if (errors.playerInId) {
+                  setErrors(prev => ({ ...prev, playerInId: undefined }));
+                }
               }}
               disabled={isReadOnly}
             >
@@ -217,11 +212,6 @@ export default function SubstitutionDialog({
               </SelectContent>
             </Select>
             {errors.playerInId && <p className="text-red-400 text-sm">{errors.playerInId}</p>}
-            {warnings.playerInId && (
-              <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <p className="text-yellow-400 text-sm">{warnings.playerInId}</p>
-              </div>
-            )}
           </div>
 
           {/* Minute */}
@@ -234,7 +224,13 @@ export default function SubstitutionDialog({
                 min="1"
                 max={matchDuration}
                 value={subData.minute || ''}
-                onChange={(e) => setSubData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
+                onChange={(e) => {
+                  setSubData(prev => ({ ...prev, minute: parseInt(e.target.value) }));
+                  // Clear error when user types
+                  if (errors.minute) {
+                    setErrors(prev => ({ ...prev, minute: undefined }));
+                  }
+                }}
                 disabled={isReadOnly}
                 className="bg-slate-800 border-slate-700 text-white flex-1"
                 placeholder={`1-${matchDuration}`}

@@ -41,6 +41,13 @@ const gameReportSchema = new mongoose.Schema({
     max: 120,
     default: 0
   },
+
+  // Metadata: How minutes were calculated
+  minutesCalculationMethod: {
+    type: String,
+    enum: ['manual', 'calculated'],
+    default: 'manual'
+  },
   
   goals: {
     type: Number,

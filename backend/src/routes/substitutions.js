@@ -4,6 +4,7 @@ const Substitution = require('../models/Substitution');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
 const { authenticateJWT } = require('../middleware/jwtAuth');
+const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
@@ -53,6 +54,15 @@ router.post('/:gameId/substitutions', async (req, res) => {
     });
 
     await substitution.save();
+
+    // Recalculate player minutes for this game
+    try {
+      await recalculatePlayerMinutes(gameId, false);
+      console.log(`✅ Recalculated player minutes after substitution creation for game ${gameId}`);
+    } catch (error) {
+      console.error(`❌ Error recalculating minutes after substitution:`, error);
+      // Don't fail the request if recalculation fails
+    }
 
     // Populate references for response
     await substitution.populate([
@@ -154,6 +164,15 @@ router.put('/:gameId/substitutions/:subId', async (req, res) => {
 
     await substitution.save();
 
+    // Recalculate player minutes for this game
+    try {
+      await recalculatePlayerMinutes(gameId, false);
+      console.log(`✅ Recalculated player minutes after substitution update for game ${gameId}`);
+    } catch (error) {
+      console.error(`❌ Error recalculating minutes after substitution update:`, error);
+      // Don't fail the request if recalculation fails
+    }
+
     // Populate references for response
     await substitution.populate([
       { path: 'playerOutId', select: 'fullName kitNumber position' },
@@ -185,6 +204,15 @@ router.delete('/:gameId/substitutions/:subId', async (req, res) => {
     const substitution = await Substitution.findOneAndDelete({ _id: subId, gameId });
     if (!substitution) {
       return res.status(404).json({ message: 'Substitution not found' });
+    }
+
+    // Recalculate player minutes for this game
+    try {
+      await recalculatePlayerMinutes(gameId, false);
+      console.log(`✅ Recalculated player minutes after substitution deletion for game ${gameId}`);
+    } catch (error) {
+      console.error(`❌ Error recalculating minutes after substitution deletion:`, error);
+      // Don't fail the request if recalculation fails
     }
 
     res.json({

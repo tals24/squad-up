@@ -4,6 +4,7 @@ const DisciplinaryAction = require('../models/DisciplinaryAction');
 const Game = require('../models/Game');
 const Player = require('../models/Player');
 const { authenticateJWT } = require('../middleware/jwtAuth');
+const { recalculatePlayerMinutes } = require('../services/minutesCalculation');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
@@ -48,6 +49,17 @@ router.post('/:gameId/disciplinary-actions', async (req, res) => {
     });
 
     await disciplinaryAction.save();
+
+    // Recalculate player minutes if red card (only red cards affect minutes)
+    if (cardType === 'red' || cardType === 'second-yellow') {
+      try {
+        await recalculatePlayerMinutes(gameId, false);
+        console.log(`✅ Recalculated player minutes after red card for game ${gameId}`);
+      } catch (error) {
+        console.error(`❌ Error recalculating minutes after red card:`, error);
+        // Don't fail the request if recalculation fails
+      }
+    }
 
     // Populate references for response
     await disciplinaryAction.populate('playerId', 'name jerseyNumber position');
@@ -156,6 +168,17 @@ router.put('/:gameId/disciplinary-actions/:actionId', async (req, res) => {
 
     await action.save();
 
+    // Recalculate player minutes if red card (only red cards affect minutes)
+    if (action.cardType === 'red' || action.cardType === 'second-yellow') {
+      try {
+        await recalculatePlayerMinutes(gameId, false);
+        console.log(`✅ Recalculated player minutes after red card update for game ${gameId}`);
+      } catch (error) {
+        console.error(`❌ Error recalculating minutes after red card update:`, error);
+        // Don't fail the request if recalculation fails
+      }
+    }
+
     // Populate references for response
     await action.populate('playerId', 'name jerseyNumber position');
 
@@ -184,6 +207,17 @@ router.delete('/:gameId/disciplinary-actions/:actionId', async (req, res) => {
     const action = await DisciplinaryAction.findOneAndDelete({ _id: actionId, gameId });
     if (!action) {
       return res.status(404).json({ message: 'Disciplinary action not found' });
+    }
+
+    // Recalculate player minutes if red card was deleted (only red cards affect minutes)
+    if (action.cardType === 'red' || action.cardType === 'second-yellow') {
+      try {
+        await recalculatePlayerMinutes(gameId, false);
+        console.log(`✅ Recalculated player minutes after red card deletion for game ${gameId}`);
+      } catch (error) {
+        console.error(`❌ Error recalculating minutes after red card deletion:`, error);
+        // Don't fail the request if recalculation fails
+      }
     }
 
     res.json({

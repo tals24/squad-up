@@ -21,8 +21,6 @@ import {
   Star,
 } from "lucide-react";
 
-import MinutesProgressIndicator from "./MinutesProgressIndicator";
-
 export default function GameDetailsHeader({
   game,
   finalScore,
@@ -265,17 +263,6 @@ export default function GameDetailsHeader({
             )}
           </div>
         </div>
-        
-        {/* Bottom Row: Minutes Progress Indicator (Only for Played/Done status) */}
-        {(isPlayed || isDone) && playerReports && (
-          <div className="mt-3 pt-3 border-t border-slate-700/50 flex justify-end">
-            <MinutesProgressIndicator 
-              playerReports={playerReports}
-              game={game}
-              matchDuration={matchDuration}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

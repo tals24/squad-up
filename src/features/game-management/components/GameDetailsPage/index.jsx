@@ -9,16 +9,10 @@ import { formations } from "./formations";
 import { 
   validateSquad, 
   validatePlayerPosition, 
-  validateMinutesPlayed, 
-  validateGoalsScored, 
   validateReportCompleteness,
   validateStartingLineup,
   validateGoalkeeper
 } from "../../utils/squadValidation";
-import {
-  validateMinutesForSubmission,
-  getMinutesSummary
-} from "../../utils/minutesValidation";
 
 // Import shared components
 import { ConfirmationModal } from "@/shared/components";
@@ -326,19 +320,31 @@ export default function GameDetails() {
       reportsForGame.forEach((report) => {
         const playerId = typeof report.player === "object" ? report.player._id : report.player;
         reports[playerId] = {
-          minutesPlayed: report.minutesPlayed || 0,
-          goals: report.goals || 0,
-          assists: report.assists || 0,
-          rating: Math.round((report.rating_physical + report.rating_technical + report.rating_tactical + report.rating_mental) / 4),
-          notes: report.notes || "",
+          // User-editable fields
+          rating_physical: report.rating_physical !== undefined ? report.rating_physical : (report.rating || 3),
+          rating_technical: report.rating_technical !== undefined ? report.rating_technical : (report.rating || 3),
+          rating_tactical: report.rating_tactical !== undefined ? report.rating_tactical : (report.rating || 3),
+          rating_mental: report.rating_mental !== undefined ? report.rating_mental : (report.rating || 3),
+          notes: report.notes !== undefined ? report.notes : "",
+          // Server-calculated fields (for display only, not sent to server)
+          // Use !== undefined to preserve 0 values
+          minutesPlayed: report.minutesPlayed !== undefined ? report.minutesPlayed : 0,
+          goals: report.goals !== undefined ? report.goals : 0,
+          assists: report.assists !== undefined ? report.assists : 0,
         };
       });
       
       // 🔍 DEBUG: Log loaded reports
+      const sampleReport = Object.values(reports)[0];
       console.log('🔍 [GameDetails] Setting localPlayerReports:', {
         reportCount: Object.keys(reports).length,
         playerIds: Object.keys(reports),
-        sampleReport: Object.values(reports)[0]
+        sampleReport,
+        sampleReportKeys: sampleReport ? Object.keys(sampleReport) : [],
+        sampleReportMinutesPlayed: sampleReport?.minutesPlayed,
+        sampleReportGoals: sampleReport?.goals,
+        sampleReportAssists: sampleReport?.assists,
+        rawReportData: reportsForGame[0] // Show raw data from database
       });
       
       setLocalPlayerReports(reports);
@@ -349,31 +355,63 @@ export default function GameDetails() {
 
   // Auto-build formation from roster (only when NOT in manual mode)
   useEffect(() => {
-    if (!gamePlayers || gamePlayers.length === 0) return;
-    if (manualFormationMode) {
-      console.log('⚠️ Manual formation mode - skipping auto-build');
+    console.log('🔍 [Formation Rebuild] Effect triggered:', {
+      hasGamePlayers: !!gamePlayers,
+      gamePlayersCount: gamePlayers?.length || 0,
+      hasRosterStatuses: !!localRosterStatuses,
+      rosterStatusesCount: localRosterStatuses ? Object.keys(localRosterStatuses).length : 0,
+      manualFormationMode,
+      currentFormationCount: Object.values(formation).filter(p => p !== null).length
+    });
+
+    if (!gamePlayers || gamePlayers.length === 0) {
+      console.log('⚠️ [Formation Rebuild] Skipping - no game players');
+      return;
+    }
+    if (!localRosterStatuses || Object.keys(localRosterStatuses).length === 0) {
+      console.log('⚠️ [Formation Rebuild] Skipping - no roster statuses');
+      return;
+    }
+    
+    // Only skip auto-build if we already have a formation with players AND we're in manual mode
+    const hasFormationWithPlayers = Object.values(formation).some(p => p !== null);
+    if (manualFormationMode && hasFormationWithPlayers) {
+      console.log('⚠️ [Formation Rebuild] Manual formation mode with existing formation - skipping auto-build');
       return;
     }
 
-    console.log('🤖 Auto-building formation from roster...');
+    console.log('🤖 [Formation Rebuild] Auto-building formation from roster...');
     const newFormation = {};
+    const startingPlayers = gamePlayers.filter(player => localRosterStatuses[player._id] === "Starting Lineup");
+    
+    console.log('🔍 [Formation Rebuild] Starting players:', {
+      count: startingPlayers.length,
+      players: startingPlayers.map(p => ({ name: p.fullName, position: p.position, id: p._id }))
+    });
+    
     Object.entries(positions).forEach(([posId, posData]) => {
-      const matchingPlayer = gamePlayers.find((player) => {
-        const isStarting = localRosterStatuses[player._id] === "Starting Lineup";
+      const matchingPlayer = startingPlayers.find((player) => {
         const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
         const positionMatch = player.position === posData.type || player.position === posData.label;
-        return isStarting && notYetPlaced && positionMatch;
+        return notYetPlaced && positionMatch;
       });
 
       if (matchingPlayer) {
         newFormation[posId] = matchingPlayer;
+        console.log(`✅ [Formation Rebuild] Assigned ${matchingPlayer.fullName} to ${posId} (${posData.label})`);
       } else {
         newFormation[posId] = null;
       }
     });
 
+    const assignedCount = Object.values(newFormation).filter(p => p !== null).length;
+    console.log(`✅ [Formation Rebuild] Complete - ${assignedCount} players assigned to positions`);
     setFormation(newFormation);
-  }, [positions, gamePlayers, localRosterStatuses, manualFormationMode]);
+    // Reset manual mode after rebuilding so it can rebuild again if needed
+    if (hasFormationWithPlayers) {
+      setManualFormationMode(false);
+    }
+  }, [positions, gamePlayers, localRosterStatuses]);
 
   // Helper: Get player status
   const getPlayerStatus = (playerId) => {
@@ -441,7 +479,7 @@ export default function GameDetails() {
 
   // Helper: Check if player has report
   const hasReport = (playerId) => {
-    return localPlayerReports[playerId] !== undefined && localPlayerReports[playerId].minutesPlayed !== undefined;
+    return localPlayerReports[playerId] !== undefined && localPlayerReports[playerId].rating_physical !== undefined;
   };
 
   // Helper: Check if player needs report
@@ -492,13 +530,14 @@ export default function GameDetails() {
       }
     });
 
-    // Calculate top rated player from reports
+    // Calculate top rated player from reports (using average of four ratings)
     Object.entries(localPlayerReports).forEach(([playerId, report]) => {
       const player = gamePlayers.find((p) => p._id === playerId);
       if (!player) return;
 
-      if (report.rating > maxRating) {
-        maxRating = report.rating;
+      const avgRating = (report.rating_physical + report.rating_technical + report.rating_tactical + report.rating_mental) / 4;
+      if (avgRating > maxRating) {
+        maxRating = avgRating;
         topRated = player.fullName;
       }
     });
@@ -692,13 +731,42 @@ export default function GameDetails() {
   const handleOpenPerformanceDialog = (player) => {
     setSelectedPlayer(player);
     const existingReport = localPlayerReports[player._id] || {};
-    setPlayerPerfData({
-      minutesPlayed: existingReport.minutesPlayed || 0,
-      goals: existingReport.goals || 0,
-      assists: existingReport.assists || 0,
-      rating: existingReport.rating || 3,
+    
+    // Debug logging for "Done" games
+    if (game?.status === 'Done') {
+      console.log('🔍 [GameDetails] Opening dialog for Done game:', {
+        playerId: player._id,
+        playerName: player.fullName,
+        existingReport,
+        existingReportKeys: Object.keys(existingReport),
+        minutesPlayedValue: existingReport.minutesPlayed,
+        goalsValue: existingReport.goals,
+        assistsValue: existingReport.assists,
+        hasMinutesPlayed: existingReport.minutesPlayed !== undefined,
+        hasGoals: existingReport.goals !== undefined,
+        hasAssists: existingReport.assists !== undefined,
+        localPlayerReportsKeys: Object.keys(localPlayerReports),
+        sampleLocalReport: localPlayerReports[Object.keys(localPlayerReports)[0]],
+        sampleLocalReportKeys: localPlayerReports[Object.keys(localPlayerReports)[0]] ? Object.keys(localPlayerReports[Object.keys(localPlayerReports)[0]]) : []
+      });
+    }
+    
+    const playerPerfDataToSet = {
+      // User-editable fields
+      rating_physical: existingReport.rating_physical || 3,
+      rating_technical: existingReport.rating_technical || 3,
+      rating_tactical: existingReport.rating_tactical || 3,
+      rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
-    });
+      // Server-calculated fields (for display only in "Done" games)
+      minutesPlayed: existingReport.minutesPlayed !== undefined ? existingReport.minutesPlayed : 0,
+      goals: existingReport.goals !== undefined ? existingReport.goals : 0,
+      assists: existingReport.assists !== undefined ? existingReport.assists : 0,
+    };
+    
+    console.log('🔍 [GameDetails] Setting playerPerfData:', playerPerfDataToSet);
+    
+    setPlayerPerfData(playerPerfDataToSet);
     setShowPlayerPerfDialog(true);
   };
 
@@ -711,6 +779,18 @@ export default function GameDetails() {
     }));
 
     try {
+      // Build payload: ONLY user-editable fields
+      const reportPayload = {
+        playerId: selectedPlayer._id,
+        rating_physical: playerPerfData.rating_physical,
+        rating_technical: playerPerfData.rating_technical,
+        rating_tactical: playerPerfData.rating_tactical,
+        rating_mental: playerPerfData.rating_mental,
+        notes: playerPerfData.notes || null,
+      };
+      
+      // DO NOT send: minutesPlayed, goals, assists (server calculates)
+
       const response = await fetch(`http://localhost:3001/api/game-reports/batch`, {
         method: "POST",
         headers: {
@@ -719,25 +799,16 @@ export default function GameDetails() {
         },
         body: JSON.stringify({
           gameId,
-          reports: [{
-            playerId: selectedPlayer._id,
-            minutesPlayed: playerPerfData.minutesPlayed,
-            goals: playerPerfData.goals,
-            assists: playerPerfData.assists,
-            rating_physical: playerPerfData.rating,
-            rating_technical: playerPerfData.rating,
-            rating_tactical: playerPerfData.rating,
-            rating_mental: playerPerfData.rating,
-            notes: playerPerfData.notes,
-          }],
+          reports: [reportPayload],
         }),
       });
 
       if (!response.ok) {
-        console.error("Failed to auto-save performance report");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to save performance report:", errorData.error || "Unknown error");
       }
     } catch (error) {
-      console.error("Error auto-saving performance report:", error);
+      console.error("Error saving performance report:", error);
     }
 
     setShowPlayerPerfDialog(false);
@@ -836,16 +907,15 @@ export default function GameDetails() {
         throw new Error(errorMessage);
       }
 
+      // Build report updates: ONLY user-editable fields
       const reportUpdates = Object.entries(localPlayerReports).map(([playerId, report]) => ({
         playerId,
-        minutesPlayed: report.minutesPlayed,
-        goals: report.goals,
-        assists: report.assists,
-        rating_physical: report.rating,
-        rating_technical: report.rating,
-        rating_tactical: report.rating,
-        rating_mental: report.rating,
-        notes: report.notes,
+        rating_physical: report.rating_physical || 3,
+        rating_technical: report.rating_technical || 3,
+        rating_tactical: report.rating_tactical || 3,
+        rating_mental: report.rating_mental || 3,
+        notes: report.notes || null,
+        // DO NOT send: minutesPlayed, goals, assists (server calculates)
       }));
 
       const reportsResponse = await fetch(`http://localhost:3001/api/game-reports/batch`, {
@@ -1094,39 +1164,10 @@ export default function GameDetails() {
       validations.push(goalkeeperValidation.message);
     }
 
-    // 2. Goals scored validation
-    const goalsValidation = validateGoalsScored(finalScore, localPlayerReports);
-    if (!goalsValidation.isValid) {
-      hasErrors = true;
-      validations.push(goalsValidation.message);
-    }
-    if (goalsValidation.needsConfirmation) {
-      needsConfirmation = true;
-      confirmationMessage = goalsValidation.confirmationMessage;
-    }
+    // 2. Goals are calculated from Goals collection, not from player reports
+    // No validation needed - goals are tracked in Goals collection with scorerId, assistedById, etc.
 
-    // 3. Team minutes validation
-    // Pass all players (starting lineup + bench) for proper name lookup
-    // Create a temporary game object with current matchDuration for validation
-    const gameWithMatchDuration = {
-      ...game,
-      matchDuration: matchDuration
-    };
-    const allPlayers = [...playersOnPitch, ...benchPlayers];
-    const minutesValidation = validateMinutesForSubmission(
-      localPlayerReports, 
-      gameWithMatchDuration, 
-      allPlayers
-    );
-    if (!minutesValidation.isValid) {
-      hasErrors = true;
-      validations.push(...minutesValidation.errors);
-    }
-    if (minutesValidation.warnings.length > 0) {
-      validations.push(...minutesValidation.warnings.map(w => `⚠️ ${w}`));
-    }
-
-    // 4. Team summaries validation
+    // 3. Team summaries validation
     if (!areAllTeamSummariesFilled()) {
       hasErrors = true;
       validations.push("All team summary reports must be completed");
@@ -1373,6 +1414,7 @@ export default function GameDetails() {
 
         {/* Right Sidebar - Match Analysis */}
         <MatchAnalysisSidebar
+          isScheduled={isScheduled}
           isPlayed={isPlayed}
           isDone={isDone}
           teamSummary={teamSummary}
@@ -1414,6 +1456,7 @@ export default function GameDetails() {
         matchDuration={matchDuration}
         substitutions={substitutions}
         playerReports={localPlayerReports}
+        goals={goals}
         onAddSubstitution={() => {
           setShowPlayerPerfDialog(false);
           setShowSubstitutionDialog(true);
