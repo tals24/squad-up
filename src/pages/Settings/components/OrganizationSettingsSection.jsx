@@ -12,18 +12,28 @@ import { Switch } from "@/shared/ui/primitives/switch";
 import { Label } from "@/shared/ui/primitives/label";
 import { useData } from "@/app/providers/DataProvider";
 import { useUserRole } from "@/shared/hooks/useUserRole";
+import { User } from "@/api/entities";
 
 const AGE_GROUPS = ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'];
 
 export default function OrganizationSettingsSection() {
-  const { organizationConfig, isLoadingConfig, refreshConfig } = useData();
-  const { userRole } = useUserRole();
+  const { organizationConfig, isLoadingConfig, refreshConfig, users, teams } = useData();
+  const [currentUser, setCurrentUser] = useState(null);
   const [localConfig, setLocalConfig] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
 
-  // Check if user is admin
-  const isAdmin = userRole === 'Admin' || userRole === 'admin';
+  // Fetch current user from Firebase
+  useEffect(() => {
+    User.me().then(setCurrentUser).catch(console.error);
+  }, []);
+
+  // Get user role
+  const { isAdmin } = useUserRole({
+    currentUser,
+    users,
+    teams
+  });
 
   // Initialize local config from fetched config
   useEffect(() => {

@@ -13,7 +13,8 @@
     "test:coverage": "jest --coverage",
     "generate-mock-data": "node scripts/generateMockData.js",
     "seed": "node scripts/generateMockData.js",
-    "migrate:remove-denormalized-fields": "node scripts/migrate-remove-denormalized-fields.js"
+    "migrate:remove-denormalized-fields": "node scripts/migrate-remove-denormalized-fields.js",
+    "reset-admin-password": "node scripts/resetAdminPassword.js"
   },
   "keywords": [],
   "author": "",
