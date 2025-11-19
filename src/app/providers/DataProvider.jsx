@@ -27,6 +27,8 @@ export const DataProvider = ({ children }) => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [organizationConfig, setOrganizationConfig] = useState(null);
+    const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
     const fetchData = async () => {
         console.log('📊 DataContext: Starting data fetch...');
@@ -117,9 +119,63 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const fetchOrganizationConfig = async () => {
+        try {
+            setIsLoadingConfig(true);
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                console.warn('⚠️ No auth token found, skipping config fetch');
+                setOrganizationConfig({
+                    features: {
+                        shotTrackingEnabled: false,
+                        positionSpecificMetricsEnabled: false,
+                        detailedDisciplinaryEnabled: true,
+                        goalInvolvementEnabled: true
+                    },
+                    ageGroupOverrides: []
+                });
+                setIsLoadingConfig(false);
+                return;
+            }
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/organizations/default/config`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch organization config');
+            }
+            
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                setOrganizationConfig(result.data);
+                console.log('✅ Organization config loaded:', result.data.isDefault ? '(default)' : '(saved)');
+            }
+        } catch (error) {
+            console.error('❌ Failed to fetch organization config:', error);
+            // Set default config on error
+            setOrganizationConfig({
+                features: {
+                    shotTrackingEnabled: false,
+                    positionSpecificMetricsEnabled: false,
+                    detailedDisciplinaryEnabled: true,
+                    goalInvolvementEnabled: true
+                },
+                ageGroupOverrides: []
+            });
+        } finally {
+            setIsLoadingConfig(false);
+        }
+    };
+
     useEffect(() => {
         console.log('📊 DataContext: Component mounted, starting initial data fetch...');
         fetchData();
+        fetchOrganizationConfig();
     }, []);
 
     /**
@@ -209,7 +265,10 @@ export const DataProvider = ({ children }) => {
         error, 
         refreshData: fetchData,
         updateGameInCache,
-        updateGameRostersInCache
+        updateGameRostersInCache,
+        organizationConfig,
+        isLoadingConfig,
+        refreshConfig: fetchOrganizationConfig
     };
 
     return (

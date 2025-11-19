@@ -27,6 +27,7 @@ const goalRoutes = require('./routes/goals');
 const analyticsRoutes = require('./routes/analytics');
 const substitutionRoutes = require('./routes/substitutions');
 const disciplinaryActionRoutes = require('./routes/disciplinaryActions');
+const organizationConfigRoutes = require('./routes/organizationConfigs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -76,6 +77,7 @@ app.use('/api/formations', formationRoutes);
 app.use('/api/training-sessions', trainingSessionRoutes);
 app.use('/api/session-drills', sessionDrillRoutes);
 app.use('/api/data', dataRoutes);
+app.use('/api/organizations', organizationConfigRoutes);
 
 // 404 handler
 app.use((req, res) => {
