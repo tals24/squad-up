@@ -70,7 +70,7 @@ export default function MatchAnalysisSidebar({
       )}
 
       {/* Extra Time Section - First component, one line */}
-      {(isPlayed || isDone) && matchDuration && setMatchDuration && (
+      {isPlayed && !isDone && matchDuration && setMatchDuration && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-lg">
           <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
           <span className="text-xs text-slate-400 shrink-0">Extra Time:</span>

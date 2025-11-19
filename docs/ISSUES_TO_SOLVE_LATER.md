@@ -1,0 +1,283 @@
+# Issues to Solve Later
+
+## Test Failures in `validation.integration.test.jsx`
+
+**Status**: 7 tests failing, 6 tests passing (out of 13 total)
+
+**Last Updated**: 2024-12-19
+
+---
+
+## Failing Tests Summary
+
+### 1. `should block "Game Was Played" with incomplete formation`
+**Test Location**: `Starting Lineup Validation` suite
+
+**What it tests**: Validates that the system blocks marking a game as played when only 5 players are assigned to the starting lineup (instead of 11).
+
+**Expected Result**: Error modal appears with message matching `/Cannot mark game as played.*Only \d+ players in starting lineup/` OR `/Cannot mark game as played.*No players assigned to starting lineup/`
+
+**Why it's failing**: 
+- **Root Cause**: The component's formation auto-build logic isn't working correctly in the test environment
+- **Issue**: `gamePlayers` array is empty (`gamePlayersCount: 0`) because team filtering isn't working properly
+- **Details**: The component filters players by team ID, but the async nature of game loading → team filtering → formation building isn't completing before the test assertions run
+- **Console logs show**: `⚠️ [Formation Rebuild] Skipping - no game players`
+
+**Potential Solutions**:
+1. Wait longer for the component to fully initialize (game fetch → team filtering → formation build)
+2. Mock the `gamePlayers` state directly instead of relying on team filtering
+3. Ensure the game fetch mock includes proper team data and completes before rendering
+4. Use `act()` wrapper or better async handling for React state updates
+
+---
+
+### 2. `should allow "Game Was Played" with complete formation`
+**Test Location**: `Starting Lineup Validation` suite
+
+**What it tests**: Validates that the system allows marking a game as played when 11 players are assigned to the starting lineup.
+
+**Expected Result**: API call to `/api/games/game1/start-game` with POST method
+
+**Why it's failing**:
+- **Root Cause**: Same as Test #1 - formation isn't being built, so validation fails before API call
+- **Issue**: Component shows "Invalid Starting Lineup" error instead of proceeding to API call
+- **Details**: The test expects the API call to happen, but validation is blocking it because formation is empty
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+### 3. `should show confirmation modal for small bench`
+**Test Location**: `Bench Size Validation` suite
+
+**What it tests**: Validates that a confirmation modal appears when trying to mark a game as played with fewer than 7 bench players.
+
+**Expected Result**: Modal with title "Bench Size Warning" and message matching `/You have.*bench.*Are you sure/`
+
+**Why it's failing**:
+- **Root Cause**: Same formation building issue - validation fails before bench size check
+- **Issue**: Component shows "Invalid Starting Lineup" error instead of bench warning modal
+- **Details**: The test sets up 11 Starting Lineup + 3 Bench players, but formation isn't built, so starting lineup validation fails first
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+### 4. `should proceed when user confirms small bench`
+**Test Location**: `Bench Size Validation` suite
+
+**What it tests**: Validates that clicking "Continue" on the bench warning modal proceeds with marking the game as played.
+
+**Expected Result**: API call to `/start-game` endpoint after clicking "Continue"
+
+**Why it's failing**:
+- **Root Cause**: Same as Test #3 - bench warning modal never appears because formation validation fails first
+- **Issue**: Test can't find the confirmation modal because validation blocks before bench check
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+### 5. `should cancel when user cancels small bench confirmation`
+**Test Location**: `Bench Size Validation` suite
+
+**What it tests**: Validates that clicking "Go Back" on the bench warning modal cancels the action and doesn't call the API.
+
+**Expected Result**: Modal closes, no API call to `/start-game`
+
+**Why it's failing**:
+- **Root Cause**: Same as Test #3 - bench warning modal never appears
+- **Issue**: Test can't find the confirmation modal
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+### 6. `should block "Game Was Played" without goalkeeper`
+**Test Location**: `Goalkeeper Validation` suite
+
+**What it tests**: Validates that the system blocks marking a game as played when 11 players are assigned but none are goalkeepers.
+
+**Expected Result**: Error modal with either:
+- Frontend: "Missing Goalkeeper" title + "No goalkeeper assigned to the team" message
+- OR Backend: "Error" title + "Starting lineup must include at least one goalkeeper" message
+
+**Why it's failing**:
+- **Root Cause**: Same formation building issue
+- **Issue**: Component shows "Invalid Starting Lineup" error instead of goalkeeper validation error
+- **Details**: Test sets up 11 players (players[1-11], skipping player[0] which is goalkeeper), but formation isn't built, so starting lineup validation fails first
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+### 7. `should provide clear error messages`
+**Test Location**: `User Experience` suite
+
+**What it tests**: Validates that clear, specific error messages are shown when validation fails (e.g., "Only 3 players in starting lineup").
+
+**Expected Result**: Error message matching `/Cannot mark game as played.*Only \d+ players in starting lineup/` OR `/Cannot mark game as played.*No players assigned to starting lineup/`
+
+**Why it's failing**:
+- **Root Cause**: Same formation building issue
+- **Issue**: Test sets up 3 players in Starting Lineup, but formation isn't built, so the error message might not match expected format
+- **Details**: The component might show "No players assigned" instead of "Only 3 players" because formation auto-build didn't complete
+
+**Potential Solutions**: Same as Test #1
+
+---
+
+## Common Root Cause Analysis
+
+### Primary Issue: Formation Auto-Build Not Working in Tests
+
+**The Problem**:
+The component has a complex async initialization flow:
+1. Component mounts → fetches game via `fetch()`
+2. Game loads → triggers team filtering (`useEffect` depends on `game` and `players`)
+3. Team filtering → sets `gamePlayers` state
+4. `gamePlayers` + `gameRosters` → triggers formation auto-build (`useEffect` depends on `gamePlayers` and `localRosterStatuses`)
+5. Formation auto-build → sets `formation` state
+6. Validation checks `formation` → shows errors or proceeds
+
+**Why Tests Fail**:
+- Tests are asserting before step 4-5 complete
+- `gamePlayers` is empty because team filtering (step 2-3) isn't completing
+- Formation auto-build (step 4-5) requires `gamePlayers` to be populated
+- Without formation, validation always fails with "No players assigned" or "Invalid Starting Lineup"
+
+**Evidence from Console Logs**:
+```
+🔍 [Formation Rebuild] Effect triggered: {
+  hasGamePlayers: true,
+  gamePlayersCount: 0,  // ← EMPTY!
+  hasRosterStatuses: true,
+  rosterStatusesCount: 0,  // ← EMPTY!
+  ...
+}
+⚠️ [Formation Rebuild] Skipping - no game players
+```
+
+---
+
+## Technical Details
+
+### Component Dependencies Chain
+```
+Game Fetch (async) 
+  → game state set
+    → Team Filtering (useEffect)
+      → gamePlayers state set
+        → Roster Loading (useEffect)
+          → localRosterStatuses state set
+            → Formation Auto-Build (useEffect)
+              → formation state set
+                → Validation checks formation
+```
+
+### Mock Setup Issues
+1. **Game Fetch Mock**: Returns game data, but team filtering might not trigger immediately
+2. **DataProvider Mock**: Returns `gameRosters`, but component loads them asynchronously
+3. **Team Filtering**: Requires `game.team` to match `player.team`, but timing might be off
+4. **Formation Building**: Requires both `gamePlayers` AND `localRosterStatuses` to be populated
+
+### Current Test Setup
+- ✅ Mock data structure is correct (team IDs match, positions match formation types)
+- ✅ `gameRosters` structure is correct (`game: { _id: 'game1' }`, `player: { _id: ... }`)
+- ✅ Game fetch mock returns correct format
+- ❌ Timing: Tests don't wait long enough for async chain to complete
+- ❌ State synchronization: React state updates aren't synchronized properly
+
+---
+
+## Recommended Solutions (Priority Order)
+
+### Solution 1: Increase Wait Times and Add Proper Async Handling ⭐⭐⭐
+**Effort**: Low | **Likelihood of Success**: Medium
+
+- Add longer timeouts (5000ms instead of 3000ms)
+- Use `waitFor` with custom matchers that check for `gamePlayers.length > 0`
+- Add explicit waits between async operations
+- Use `act()` wrapper for state updates
+
+### Solution 2: Mock Component State Directly ⭐⭐⭐
+**Effort**: Medium | **Likelihood of Success**: High
+
+- Instead of relying on async chain, mock `gamePlayers` state directly
+- Use `jest.spyOn` to intercept `useState` for `gamePlayers`
+- Set `localRosterStatuses` directly via state mock
+- Bypass team filtering and formation building for tests
+
+### Solution 3: Refactor Component for Testability ⭐
+**Effort**: High | **Likelihood of Success**: High
+
+- Extract formation building logic into a separate hook
+- Make team filtering a separate hook
+- Add dependency injection for async operations
+- This is a larger refactor but would make testing much easier
+
+### Solution 4: Use Integration Test Helpers ⭐⭐
+**Effort**: Medium | **Likelihood of Success**: Medium
+
+- Create test helper functions that wait for specific states
+- Create `waitForGamePlayers()` helper
+- Create `waitForFormation()` helper
+- Use these helpers in all tests
+
+---
+
+## Notes
+
+- **Production Code Works**: These are test setup issues, not production bugs
+- **All Critical Scenarios Verified**: Production verification confirmed all scenarios work correctly
+- **Test Coverage**: The validation logic itself is tested in unit tests (`squadValidation.test.js`)
+- **Priority**: Low - These tests are integration tests for UI flow, not critical path validation
+
+---
+
+## Related Files
+
+- `src/features/game-management/components/GameDetailsPage/__tests__/validation.integration.test.jsx` - Test file
+- `src/features/game-management/components/GameDetailsPage/index.jsx` - Component implementation
+- `src/features/game-management/utils/squadValidation.js` - Validation logic (unit tested)
+- `docs/PRODUCTION_VERIFICATION_GUIDE.md` - Production verification results (all scenarios pass)
+
+---
+
+## Next Steps (When Ready to Fix)
+
+1. **Investigate timing**: Add more detailed console logs to understand exact timing of state updates
+2. **Try Solution 1 first**: Increase timeouts and add proper async handling
+3. **If Solution 1 fails**: Try Solution 2 (direct state mocking)
+4. **Consider**: Whether these integration tests add value beyond unit tests + E2E tests
+
+---
+
+## Backend Test Setup Issue
+
+**Status**: Test script configured, but tests require MongoDB to be running
+
+**Issue**: Backend tests fail with `MongooseServerSelectionError: connect ECONNREFUSED ::1:27017`
+
+**Root Cause**: MongoDB server is not running on localhost:27017
+
+**Solution**: 
+1. Start MongoDB server before running tests
+2. Or configure tests to use a different MongoDB instance (e.g., MongoDB Atlas test cluster)
+3. Or use an in-memory MongoDB for tests (e.g., `mongodb-memory-server`)
+
+**Files Fixed**:
+- ✅ `backend/package.json` - Updated test script from placeholder to `jest`
+- ✅ `backend/jest.config.js` - Created Jest configuration
+- ✅ `backend/src/app.js` - Updated to prevent server start during tests
+- ✅ `backend/src/routes/__tests__/games.draft.test.js` - Added error handling and timeout
+
+**To Run Backend Tests**:
+```bash
+# Make sure MongoDB is running first
+cd backend
+npm test
+```
+
+**Note**: Backend tests are configured correctly. They just need MongoDB to be running.
+

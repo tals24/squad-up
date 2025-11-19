@@ -478,14 +478,18 @@ export default function GameDetails() {
     endpoint: `http://localhost:3001/api/games/${gameId}/draft`,
     enabled: game?.status === 'Played' && !isFinalizingGame,
     debounceMs: 2500,
-    shouldSkip: () => {
-      // Skip if no meaningful data to save
-      const hasTeamSummary = Object.values(teamSummary).some(v => v && v.trim());
-      const hasFinalScore = finalScore.ourScore > 0 || finalScore.opponentScore > 0;
-      const hasMatchDuration = matchDuration.regularTime !== 90 || 
-                               matchDuration.firstHalfExtraTime > 0 || 
-                               matchDuration.secondHalfExtraTime > 0;
-      const hasPlayerReports = Object.keys(localPlayerReports).length > 0;
+    shouldSkip: (data) => {
+      // Skip if no meaningful data to save (use the data parameter passed to the hook)
+      if (!data) return true;
+      
+      const hasTeamSummary = data.teamSummary && Object.values(data.teamSummary).some(v => v && v.trim());
+      const hasFinalScore = data.finalScore && (data.finalScore.ourScore > 0 || data.finalScore.opponentScore > 0);
+      const hasMatchDuration = data.matchDuration && (
+        data.matchDuration.regularTime !== 90 || 
+        data.matchDuration.firstHalfExtraTime > 0 || 
+        data.matchDuration.secondHalfExtraTime > 0
+      );
+      const hasPlayerReports = data.playerReports && Object.keys(data.playerReports).length > 0;
       
       return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports;
     }
@@ -819,7 +823,7 @@ export default function GameDetails() {
     let maxRating = 0;
 
     // Calculate scorers and assists from goals array (excluding opponent goals)
-    goals.forEach((goal) => {
+    (goals || []).forEach((goal) => {
       // Skip opponent goals
       if (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) return;
 

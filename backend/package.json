@@ -8,7 +8,9 @@
     "dev": "nodemon src/app.js",
     "worker": "node src/worker.js",
     "worker:dev": "nodemon src/worker.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "generate-mock-data": "node scripts/generateMockData.js",
     "seed": "node scripts/generateMockData.js",
     "migrate:remove-denormalized-fields": "node scripts/migrate-remove-denormalized-fields.js"
@@ -29,6 +31,9 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.0.0",
-    "nodemon": "^3.1.10"
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   }
 }
