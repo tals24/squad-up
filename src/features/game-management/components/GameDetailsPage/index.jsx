@@ -374,7 +374,7 @@ export default function GameDetails() {
     if (gameRosters && gameRosters.length > 0) {
       const rosterForGame = gameRosters.filter(
         (roster) => {
-          const rosterGameId = typeof roster.game === "object" ? roster.game._id : roster.game;
+          const rosterGameId = typeof roster.game === "object" && roster.game !== null ? roster.game._id : roster.game;
           return rosterGameId === gameId;
         }
       );
@@ -382,7 +382,7 @@ export default function GameDetails() {
       if (rosterForGame.length > 0) {
         const statuses = {};
         rosterForGame.forEach((roster) => {
-          const playerId = typeof roster.player === "object" ? roster.player._id : roster.player;
+          const playerId = typeof roster.player === "object" && roster.player !== null ? roster.player._id : roster.player;
           statuses[playerId] = roster.status;
         });
         setLocalRosterStatuses(statuses);
