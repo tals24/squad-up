@@ -7,6 +7,8 @@ const GameRoster = require('../models/GameRoster');
 const Player = require('../models/Player');
 const { recalculateGoalAnalytics } = require('../services/goalAnalytics');
 const { recalculateSubstitutionAnalytics } = require('../services/substitutionAnalytics');
+const { calculatePlayerMinutes } = require('../services/minutesCalculation');
+const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
 
 const router = express.Router();
 
@@ -816,6 +818,70 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
       success: false,
       error: 'Failed to start game after retries',
       message: lastError.message
+    });
+  }
+});
+
+/**
+ * GET /api/games/:gameId/player-stats
+ * Get consolidated player statistics (minutes, goals, assists) for all players
+ * Optimized for pre-fetching - returns all stats in one request
+ */
+router.get('/:gameId/player-stats', authenticateJWT, checkGameAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const game = req.game; // From checkGameAccess middleware
+
+    // Only allow for Played games (not Scheduled or Done)
+    if (game.status !== 'Played') {
+      return res.status(400).json({
+        success: false,
+        error: 'Player stats calculation is only available for games in "Played" status'
+      });
+    }
+
+    // Run both calculations in parallel for efficiency
+    const [calculatedMinutes, calculatedGoalsAssists] = await Promise.all([
+      calculatePlayerMinutes(gameId),
+      calculatePlayerGoalsAssists(gameId)
+    ]);
+
+    // Consolidate into single response object
+    // Format: { playerId: { minutes: number, goals: number, assists: number } }
+    const playerStats = {};
+
+    // Get all unique player IDs from both results
+    const allPlayerIds = new Set([
+      ...Object.keys(calculatedMinutes),
+      ...Object.keys(calculatedGoalsAssists)
+    ]);
+
+    // Merge data for each player
+    allPlayerIds.forEach(playerId => {
+      playerStats[playerId] = {
+        minutes: calculatedMinutes[playerId] || 0,
+        goals: calculatedGoalsAssists[playerId]?.goals || 0,
+        assists: calculatedGoalsAssists[playerId]?.assists || 0
+      };
+    });
+
+    res.json({
+      success: true,
+      gameId,
+      playerStats,
+      // Include metadata for debugging
+      metadata: {
+        totalPlayers: Object.keys(playerStats).length,
+        playersWithMinutes: Object.keys(calculatedMinutes).length,
+        playersWithGoalsAssists: Object.keys(calculatedGoalsAssists).length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching player stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to calculate player stats',
+      message: error.message
     });
   }
 });

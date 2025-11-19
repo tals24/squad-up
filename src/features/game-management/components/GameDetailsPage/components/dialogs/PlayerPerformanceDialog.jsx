@@ -26,9 +26,6 @@ import {
   createDisciplinaryAction,
   deleteDisciplinaryAction,
 } from "../../../../api/disciplinaryActionsApi";
-import { useCalculatedMinutes } from "../../../../hooks/useCalculatedMinutes";
-import { useCalculatedGoalsAssists } from "../../../../hooks/useCalculatedGoalsAssists";
-
 export default function PlayerPerformanceDialog({ 
   open, 
   onOpenChange, 
@@ -44,9 +41,13 @@ export default function PlayerPerformanceDialog({
   playerReports = {},
   onAddSubstitution,
   goals = [], // Goals array from parent
+  // NEW: Pre-fetched stats (optional, for instant display)
+  initialMinutes,
+  initialGoals,
+  initialAssists,
+  // NEW: Loading state for stat fields
+  isLoadingStats = false,
 }) {
-  if (!player) return null;
-
   const [errorMessage, setErrorMessage] = useState("");
   const [disciplinaryActions, setDisciplinaryActions] = useState([]);
   const [isLoadingActions, setIsLoadingActions] = useState(false);
@@ -58,6 +59,13 @@ export default function PlayerPerformanceDialog({
     foulsReceived: ''
   });
 
+  // Close dialog if it opens without a player (prevents React reconciliation errors)
+  useEffect(() => {
+    if (open && !player) {
+      onOpenChange?.(false);
+    }
+  }, [open, player, onOpenChange]);
+
   const minutesPlayed = useMemo(() => Number(data?.minutesPlayed || 0), [data]);
   // Use matchDuration prop if available (real-time from header), otherwise fallback to game.matchDuration
   const maxMinutes = useMemo(() => {
@@ -65,46 +73,35 @@ export default function PlayerPerformanceDialog({
     return calculateTotalMatchDuration(duration);
   }, [matchDuration, game]);
 
-  // Fetch calculated minutes if game is in "Played" status
-  const { calculatedMinutes, isLoading: isLoadingMinutes } = useCalculatedMinutes(
-    game?._id,
-    game,
-    substitutions || [],
-    [] // Disciplinary actions are fetched separately per player
-  );
-
-  // Fetch calculated goals/assists if game is in "Played" status
-  const { calculatedStats, isLoading: isLoadingGoalsAssists } = useCalculatedGoalsAssists(
-    game?._id,
-    game,
-    goals || []
-  );
-
-  // Determine if we should use calculated minutes
-  // For "Played" games: Use calculated values from hooks
-  // For "Done" games: Use saved values from GameReport (in data prop)
-  const useCalculated = game?.status === 'Played' && calculatedMinutes[player?._id] !== undefined;
+  // Determine game status
+  const isPlayedGame = game?.status === 'Played';
   const isDoneGame = game?.status === 'Done';
   
-  // For "Done" games, prioritize data from prop (saved GameReport)
-  // For "Played" games, use calculated values from hooks
+  // For "Played" games: Use pre-fetched stats (from props) or fallback to data prop
+  // For "Done" games: Use saved values from GameReport (in data prop)
+  // These fields are read-only for Played games (calculated by server)
+  const useCalculated = isPlayedGame && initialMinutes !== undefined;
+  const useCalculatedGA = isPlayedGame && (initialGoals !== undefined || initialAssists !== undefined);
+  
+  // Show loading indicator only if stats are being pre-fetched (not yet available)
+  const showStatsLoading = isLoadingStats && isPlayedGame && initialMinutes === undefined;
+  
+  // Display logic: Pre-fetched stats > data prop > default (0)
   const displayMinutes = useCalculated 
-    ? calculatedMinutes[player?._id] 
+    ? initialMinutes 
     : (isDoneGame && data?.minutesPlayed !== undefined 
         ? data.minutesPlayed 
         : (data?.minutesPlayed !== undefined ? data.minutesPlayed : minutesPlayed));
 
-  // Determine if we should use calculated goals/assists
-  // For "Played" games: Use calculated values from hooks (always read-only)
-  // For "Done" games: Use saved values from GameReport (in data prop)
-  const useCalculatedGA = game?.status === 'Played';
+  // Display logic: Pre-fetched stats > data prop > default (0)
   const displayGoals = useCalculatedGA 
-    ? (calculatedStats[player?._id]?.goals || 0) 
+    ? (initialGoals ?? 0)
     : (isDoneGame && data?.goals !== undefined 
         ? data.goals 
         : (data?.goals !== undefined ? data.goals : 0));
+  
   const displayAssists = useCalculatedGA 
-    ? (calculatedStats[player?._id]?.assists || 0) 
+    ? (initialAssists ?? 0)
     : (isDoneGame && data?.assists !== undefined 
         ? data.assists 
         : (data?.assists !== undefined ? data.assists : 0));
@@ -209,8 +206,11 @@ export default function PlayerPerformanceDialog({
     }
   };
 
+  // Ensure player exists before rendering Dialog
+  if (!player) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!player} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -265,9 +265,13 @@ export default function PlayerPerformanceDialog({
               className={`bg-slate-800 border-slate-700 text-white ${
                 (useCalculated || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
               }`}
+              placeholder={showStatsLoading ? "Loading..." : undefined}
             />
-            {isLoadingMinutes && (
-              <p className="mt-1 text-xs text-slate-500">Calculating minutes...</p>
+            {showStatsLoading && (
+              <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                <span className="animate-spin">⏳</span>
+                Calculating minutes...
+              </p>
             )}
             {errorMessage && (
               <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
@@ -307,9 +311,13 @@ export default function PlayerPerformanceDialog({
                 className={`bg-slate-800 border-slate-700 text-white ${
                   (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
+                placeholder={showStatsLoading ? "Loading..." : undefined}
               />
-              {isLoadingGoalsAssists && (
-                <p className="mt-1 text-xs text-slate-500">Calculating goals...</p>
+              {showStatsLoading && (
+                <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                  <span className="animate-spin">⏳</span>
+                  Calculating goals...
+                </p>
               )}
             </div>
             <div>
@@ -330,9 +338,13 @@ export default function PlayerPerformanceDialog({
                 className={`bg-slate-800 border-slate-700 text-white ${
                   (useCalculatedGA || isDoneGame) ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
+                placeholder={showStatsLoading ? "Loading..." : undefined}
               />
-              {isLoadingGoalsAssists && (
-                <p className="mt-1 text-xs text-slate-500">Calculating assists...</p>
+              {showStatsLoading && (
+                <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
+                  <span className="animate-spin">⏳</span>
+                  Calculating assists...
+                </p>
               )}
             </div>
           </div>

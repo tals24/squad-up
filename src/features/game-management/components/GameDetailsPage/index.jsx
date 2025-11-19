@@ -34,6 +34,7 @@ import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
 import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from "../../api/substitutionsApi";
+import { fetchPlayerStats } from "../../api/playerStatsApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -48,6 +49,10 @@ export default function GameDetails() {
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
+  
+  // Player stats pre-fetched for Played games (for instant dialog display)
+  const [teamStats, setTeamStats] = useState({});
+  const [isLoadingTeamStats, setIsLoadingTeamStats] = useState(false);
   const [matchDuration, setMatchDuration] = useState({
     regularTime: 90,
     firstHalfExtraTime: 0,
@@ -520,6 +525,48 @@ export default function GameDetails() {
     loadGoals();
     loadSubstitutions();
   }, [gameId, game]);
+
+  // Helper function to refresh team stats (used after goal/substitution changes)
+  const refreshTeamStats = async () => {
+    if (!gameId || !game || game.status !== 'Played') {
+      return; // Only refresh for Played games
+    }
+
+    try {
+      const stats = await fetchPlayerStats(gameId);
+      setTeamStats(stats);
+      console.log('✅ Refreshed team stats for', Object.keys(stats).length, 'players');
+    } catch (error) {
+      console.error('Error refreshing team stats:', error);
+      // Don't set error state - dialog will fallback to existing stats
+    }
+  };
+
+  // Pre-fetch player stats for Played games (for instant dialog display)
+  useEffect(() => {
+    if (!gameId || !game || game.status !== 'Played') {
+      // Clear stats if game is not Played
+      setTeamStats({});
+      return;
+    }
+
+    const loadTeamStats = async () => {
+      setIsLoadingTeamStats(true);
+      try {
+        const stats = await fetchPlayerStats(gameId);
+        setTeamStats(stats);
+        console.log('✅ Pre-fetched team stats for', Object.keys(stats).length, 'players');
+      } catch (error) {
+        console.error('Error pre-fetching team stats:', error);
+        // Don't set error state - dialog will fallback to 0/0/0
+        setTeamStats({});
+      } finally {
+        setIsLoadingTeamStats(false);
+      }
+    };
+
+    loadTeamStats();
+  }, [gameId, game?.status]); // Re-fetch if game status changes
 
   // Calculate score from goals when goals are loaded or changed
   useEffect(() => {
@@ -1152,6 +1199,9 @@ export default function GameDetails() {
     setSelectedPlayer(player);
     const existingReport = localPlayerReports[player._id] || {};
     
+    // Get pre-fetched stats for this player (if available)
+    const playerStats = teamStats[player._id] || {};
+    
     // Debug logging for "Done" games
     if (game?.status === 'Done') {
       console.log('🔍 [GameDetails] Opening dialog for Done game:', {
@@ -1178,13 +1228,24 @@ export default function GameDetails() {
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
-      // Server-calculated fields (for display only in "Done" games)
-      minutesPlayed: existingReport.minutesPlayed !== undefined ? existingReport.minutesPlayed : 0,
-      goals: existingReport.goals !== undefined ? existingReport.goals : 0,
-      assists: existingReport.assists !== undefined ? existingReport.assists : 0,
+      // Server-calculated fields (from pre-fetched stats or existing report)
+      minutesPlayed: playerStats.minutes !== undefined 
+        ? playerStats.minutes 
+        : (existingReport.minutesPlayed !== undefined ? existingReport.minutesPlayed : 0),
+      goals: playerStats.goals !== undefined 
+        ? playerStats.goals 
+        : (existingReport.goals !== undefined ? existingReport.goals : 0),
+      assists: playerStats.assists !== undefined 
+        ? playerStats.assists 
+        : (existingReport.assists !== undefined ? existingReport.assists : 0),
     };
     
-    console.log('🔍 [GameDetails] Setting playerPerfData:', playerPerfDataToSet);
+    console.log('🔍 [GameDetails] Opening dialog with pre-fetched stats:', {
+      playerId: player._id,
+      playerName: player.fullName,
+      playerStats,
+      playerPerfData: playerPerfDataToSet
+    });
     
     setPlayerPerfData(playerPerfDataToSet);
     setShowPlayerPerfDialog(true);
@@ -1451,6 +1512,8 @@ export default function GameDetails() {
     try {
       await deleteGoal(gameId, goalId);
       setGoals(prevGoals => prevGoals.filter(g => g._id !== goalId));
+      // Refresh team stats after goal deletion (affects goals/assists)
+      refreshTeamStats();
     } catch (error) {
       console.error('Error deleting goal:', error);
       alert('Failed to delete goal: ' + error.message);
@@ -1483,6 +1546,9 @@ export default function GameDetails() {
       const updatedGoals = await fetchGoals(gameId);
       setGoals(updatedGoals);
       
+      // Refresh team stats after goal save (affects goals/assists)
+      refreshTeamStats();
+      
       setShowGoalDialog(false);
       setSelectedGoal(null);
     } catch (error) {
@@ -1513,6 +1579,9 @@ export default function GameDetails() {
       // Refresh goals list to include the new opponent goal
       const updatedGoals = await fetchGoals(gameId);
       setGoals(updatedGoals);
+      
+      // Refresh team stats after opponent goal save (no player stats change, but keep consistency)
+      refreshTeamStats();
     } catch (error) {
       console.error('Error saving opponent goal:', error);
       throw error;
@@ -1538,6 +1607,8 @@ export default function GameDetails() {
     try {
       await deleteSubstitution(gameId, subId);
       setSubstitutions(prevSubs => prevSubs.filter(s => s._id !== subId));
+      // Refresh team stats after substitution deletion (affects minutes)
+      refreshTeamStats();
     } catch (error) {
       console.error('Error deleting substitution:', error);
       alert('Failed to delete substitution: ' + error.message);
@@ -1555,6 +1626,10 @@ export default function GameDetails() {
         const newSub = await createSubstitution(gameId, subData);
         setSubstitutions(prevSubs => [...prevSubs, newSub]);
       }
+      
+      // Refresh team stats after substitution save (affects minutes)
+      refreshTeamStats();
+      
       setShowSubstitutionDialog(false);
       setSelectedSubstitution(null);
     } catch (error) {
@@ -1903,6 +1978,12 @@ export default function GameDetails() {
         substitutions={substitutions}
         playerReports={localPlayerReports}
         goals={goals}
+        // NEW: Pass pre-fetched stats (for display only, read-only)
+        initialMinutes={teamStats[selectedPlayer?._id]?.minutes}
+        initialGoals={teamStats[selectedPlayer?._id]?.goals}
+        initialAssists={teamStats[selectedPlayer?._id]?.assists}
+        // NEW: Pass loading state for stat fields
+        isLoadingStats={isLoadingTeamStats}
         onAddSubstitution={() => {
           setShowPlayerPerfDialog(false);
           setShowSubstitutionDialog(true);
