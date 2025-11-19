@@ -45,6 +45,14 @@ const organizationConfigSchema = new mongoose.Schema({
     positionSpecificMetricsEnabled: {
       type: Boolean,
       default: null // null = use global default
+    },
+    detailedDisciplinaryEnabled: {
+      type: Boolean,
+      default: null // null = use global default
+    },
+    goalInvolvementEnabled: {
+      type: Boolean,
+      default: null // null = use global default
     }
   }]
 }, {

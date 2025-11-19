@@ -1068,6 +1068,201 @@ Authorization: Bearer <your-jwt-token>
 
 ---
 
+### ⚙️ Organization Configuration Routes (`/api/organizations`)
+
+#### **GET** `/api/organizations/:orgId/config`
+**Purpose**: Fetch organization feature configuration (global settings + age group overrides)  
+**Authentication**: Required  
+**Access**: All authenticated users  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+
+**Response** (Existing Config):
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674123abc456def789012345",
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": false,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [
+      {
+        "ageGroup": "U16+",
+        "shotTrackingEnabled": true,
+        "positionSpecificMetricsEnabled": true,
+        "detailedDisciplinaryEnabled": true,
+        "goalInvolvementEnabled": true
+      },
+      {
+        "ageGroup": "U6-U8",
+        "shotTrackingEnabled": false,
+        "positionSpecificMetricsEnabled": false,
+        "detailedDisciplinaryEnabled": false,
+        "goalInvolvementEnabled": false
+      }
+    ],
+    "createdAt": "2024-11-19T16:30:00.000Z",
+    "updatedAt": "2024-11-19T18:45:00.000Z"
+  }
+}
+```
+
+**Response** (No Config - Returns Defaults):
+```json
+{
+  "success": true,
+  "data": {
+    "_id": null,
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": false,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [],
+    "isDefault": true,
+    "createdAt": null,
+    "updatedAt": null
+  }
+}
+```
+
+**Notes**:
+- This endpoint **does not** auto-create a config if none exists (REST-compliant GET)
+- Returns default values with `isDefault: true` flag when no config is found
+- Age group overrides can include: `U6-U8`, `U8-U10`, `U10-U12`, `U12-U14`, `U14-U16`, `U16+`
+
+---
+
+#### **PUT** `/api/organizations/:orgId/config`
+**Purpose**: Create or update organization feature configuration  
+**Authentication**: Required  
+**Access**: **Admin only**  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+
+**Request Body**:
+```json
+{
+  "features": {
+    "shotTrackingEnabled": true,
+    "positionSpecificMetricsEnabled": false,
+    "detailedDisciplinaryEnabled": true,
+    "goalInvolvementEnabled": true
+  },
+  "ageGroupOverrides": [
+    {
+      "ageGroup": "U16+",
+      "shotTrackingEnabled": true,
+      "positionSpecificMetricsEnabled": true,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    {
+      "ageGroup": "U6-U8",
+      "shotTrackingEnabled": null,
+      "positionSpecificMetricsEnabled": null,
+      "detailedDisciplinaryEnabled": false,
+      "goalInvolvementEnabled": false
+    }
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674123abc456def789012345",
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": true,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [
+      {
+        "ageGroup": "U16+",
+        "shotTrackingEnabled": true,
+        "positionSpecificMetricsEnabled": true,
+        "detailedDisciplinaryEnabled": true,
+        "goalInvolvementEnabled": true
+      },
+      {
+        "ageGroup": "U6-U8",
+        "shotTrackingEnabled": null,
+        "positionSpecificMetricsEnabled": null,
+        "detailedDisciplinaryEnabled": false,
+        "goalInvolvementEnabled": false
+      }
+    ],
+    "createdAt": "2024-11-19T16:30:00.000Z",
+    "updatedAt": "2024-11-19T19:00:00.000Z"
+  },
+  "message": "Organization configuration updated successfully"
+}
+```
+
+**Notes**:
+- If no config exists, this endpoint creates one
+- If a config exists, this endpoint updates it (partial updates supported)
+- `null` values in age group overrides mean "use global default"
+- Duplicate age groups within `ageGroupOverrides` are rejected with an error
+- All 4 features can now be overridden per age group for maximum flexibility
+
+---
+
+#### **GET** `/api/organizations/:orgId/config/feature/:featureName`
+**Purpose**: Check if a specific feature is enabled (with optional team-specific age group override resolution)  
+**Authentication**: Required  
+**Access**: All authenticated users  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+- `featureName`: One of: `shotTrackingEnabled`, `positionSpecificMetricsEnabled`, `detailedDisciplinaryEnabled`, `goalInvolvementEnabled`
+
+**Query Parameters**:
+- `teamId` (optional): Team ID to check for age group overrides
+
+**Response** (Global Setting):
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": true
+  }
+}
+```
+
+**Response** (With Age Group Override):
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": false
+  }
+}
+```
+
+**Priority Logic**:
+1. If `teamId` is provided, infer the age group from the team name (e.g., "U14 Team A" → "U12-U14")
+2. Check if an age group override exists for that age group
+3. If override exists and the feature is not `null`, return the override value
+4. Otherwise, return the global feature value
+
+**Example Use Cases**:
+- `GET /api/organizations/default/config/feature/shotTrackingEnabled` → Global setting
+- `GET /api/organizations/default/config/feature/shotTrackingEnabled?teamId=60f7b3b...` → Checks age group override for that team
+
+---
+
 ## 🔐 Role-Based Access Control
 
 ### User Roles:

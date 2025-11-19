@@ -47,11 +47,12 @@ squadup (database)
 │   ├── scout_reports
 │   └── timeline_events
 │
-└── System Domain (1 collection)
-    └── jobs
+└── System Domain (2 collections)
+    ├── jobs
+    └── organization_configs
 ```
 
-**Total Collections:** 16
+**Total Collections:** 17
 
 ---
 
@@ -258,6 +259,58 @@ squadup (database)
 - TTL index automatically deletes completed jobs after 30 days
 - Retry logic with exponential backoff for failed jobs
 - Atomic job locking via `findAndLock()` static method
+
+---
+
+#### `organization_configs`
+**Purpose:** Organization-level feature configuration management  
+**Collection Name:** `organization_configs` (explicit)  
+**Relationships:** References `organizations` (optional, for multi-org support)  
+**Size:** Tiny (typically 1-10 documents, one per organization)  
+**Growth:** None (static configuration)
+
+**Configuration Structure:**
+```javascript
+{
+  organizationId: ObjectId | null,  // null for single-org deployments
+  features: {
+    shotTrackingEnabled: Boolean,             // Default: false
+    positionSpecificMetricsEnabled: Boolean,  // Default: false
+    detailedDisciplinaryEnabled: Boolean,     // Default: true
+    goalInvolvementEnabled: Boolean           // Default: true
+  },
+  ageGroupOverrides: [{
+    ageGroup: String,  // Enum: 'U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'
+    shotTrackingEnabled: Boolean | null,            // null = use global default
+    positionSpecificMetricsEnabled: Boolean | null,
+    detailedDisciplinaryEnabled: Boolean | null,
+    goalInvolvementEnabled: Boolean | null
+  }],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Feature Priority Logic:**
+1. Check age group override for specific team (if `teamId` provided)
+2. If override exists and not `null`, use override value
+3. Otherwise, use global `features` setting
+
+**Indexes:**
+- `{ organizationId: 1 }` - Unique, sparse (single config per org)
+
+**Pre-Save Validation:**
+- Prevents duplicate `ageGroup` entries in `ageGroupOverrides` array
+
+**Use Cases:**
+- Enable shot tracking only for U16+ teams
+- Disable detailed disciplinary for U6-U8 teams (too young)
+- Customize feature availability per age group for maximum flexibility
+
+**API Access:**
+- `GET /api/organizations/:orgId/config` - Fetch configuration
+- `PUT /api/organizations/:orgId/config` - Update configuration (Admin only)
+- `GET /api/organizations/:orgId/config/feature/:featureName?teamId=X` - Check feature status with age group resolution
 
 ---
 
@@ -697,10 +750,12 @@ squadup_system (database)
 **Next Review:** When collection count reaches 25+
 
 **Recent Updates:**
+- Added `organization_configs` collection documentation (System Domain)
+- Added all 4 features to age group overrides for maximum flexibility
 - Added `jobs` collection documentation (System Domain)
 - Added `lineupDraft` and `reportDraft` fields to Game model
 - Added `matchDuration`, `totalMatchDuration`, and `matchType` fields to Game model
-- Updated collection count from 15 to 16
+- Updated collection count from 16 to 17
 - Corrected collection names (game_reports, scout_reports, timeline_events use explicit names)
 
 ---
@@ -727,6 +782,7 @@ players ──→ timeline_events
 players ──→ scout_reports
 
 jobs (standalone - background processing)
+organization_configs (standalone - feature configuration)
 ```
 
 **Legend:**

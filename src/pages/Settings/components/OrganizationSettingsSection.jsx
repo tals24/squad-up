@@ -335,6 +335,62 @@ export default function OrganizationSettingsSection() {
                       />
                     </div>
                   </div>
+                  
+                  {/* Detailed Disciplinary Override */}
+                  <div className="flex items-center justify-between">
+                    <Label>Detailed Disciplinary</Label>
+                    <div className="flex items-center gap-2">
+                      {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') !== null && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleResetOverride(ageGroup, 'detailedDisciplinaryEnabled')}
+                          className="text-xs h-6 px-2"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                        {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') === null 
+                          ? `Global (${localConfig.features.detailedDisciplinaryEnabled ? 'On' : 'Off'})` 
+                          : getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') 
+                            ? 'Override: On' 
+                            : 'Override: Off'}
+                      </span>
+                      <Switch
+                        checked={getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') ?? localConfig.features.detailedDisciplinaryEnabled}
+                        onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'detailedDisciplinaryEnabled', checked)}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Goal Involvement Override */}
+                  <div className="flex items-center justify-between">
+                    <Label>Goal Involvement</Label>
+                    <div className="flex items-center gap-2">
+                      {getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') !== null && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleResetOverride(ageGroup, 'goalInvolvementEnabled')}
+                          className="text-xs h-6 px-2"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                        {getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') === null 
+                          ? `Global (${localConfig.features.goalInvolvementEnabled ? 'On' : 'Off'})` 
+                          : getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') 
+                            ? 'Override: On' 
+                            : 'Override: Off'}
+                      </span>
+                      <Switch
+                        checked={getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') ?? localConfig.features.goalInvolvementEnabled}
+                        onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'goalInvolvementEnabled', checked)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
