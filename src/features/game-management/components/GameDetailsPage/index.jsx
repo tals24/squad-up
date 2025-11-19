@@ -635,7 +635,7 @@ export default function GameDetails() {
     }
 
     const reportsForGame = gameReports.filter((report) => {
-      const reportGameId = typeof report.game === "object" ? report.game._id : report.game;
+      const reportGameId = typeof report.game === "object" && report.game !== null ? report.game._id : report.game;
       return reportGameId === gameId;
     });
 
@@ -649,7 +649,7 @@ export default function GameDetails() {
     if (reportsForGame.length > 0) {
       const reports = {};
       reportsForGame.forEach((report) => {
-        const playerId = typeof report.player === "object" ? report.player._id : report.player;
+        const playerId = typeof report.player === "object" && report.player !== null ? report.player._id : report.player;
         reports[playerId] = {
           // User-editable fields
           rating_physical: report.rating_physical !== undefined ? report.rating_physical : (report.rating || 3),

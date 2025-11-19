@@ -238,7 +238,7 @@ export const DataProvider = ({ children }) => {
         setData((prev) => {
             // Remove old rosters for this game
             const filteredRosters = prev.gameRosters.filter(roster => {
-                const rosterGameId = typeof roster.game === "object" ? roster.game._id : roster.game;
+                const rosterGameId = typeof roster.game === "object" && roster.game !== null ? roster.game._id : roster.game;
                 return rosterGameId !== gameId;
             });
 
