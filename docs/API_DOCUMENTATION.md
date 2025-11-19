@@ -6,6 +6,8 @@ This document provides comprehensive documentation for all available APIs in the
 
 **Base URL**: `http://localhost:3001/api`
 
+**Health Check**: `GET http://localhost:3001/health` (No authentication required)
+
 ---
 
 ## 🔐 Authentication
@@ -340,6 +342,387 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Delete game  
 **Authentication**: Required + team access check  
 
+#### **PUT** `/api/games/:gameId/draft`
+**Purpose**: Save draft data (autosave) - polymorphic endpoint  
+**Authentication**: Required + game access check  
+**Behavior**:
+- **Scheduled games**: Saves to `lineupDraft` (rosters, formation, formationType)
+- **Played games**: Saves to `reportDraft` (teamSummary, finalScore, matchDuration, playerReports)
+- **Other statuses**: Rejected with error
+
+**Body (Scheduled game)**:
+```json
+{
+  "rosters": { "playerId1": "Starting Lineup", "playerId2": "Bench" },
+  "formation": { "gk": { "_id": "playerId1" }, "cb1": { "_id": "playerId2" } },
+  "formationType": "1-4-4-2"
+}
+```
+
+**Body (Played game)**:
+```json
+{
+  "teamSummary": {
+    "defenseSummary": "Solid defense",
+    "midfieldSummary": "Controlled midfield",
+    "attackSummary": "Clinical finishing",
+    "generalSummary": "Great performance"
+  },
+  "finalScore": { "ourScore": 2, "opponentScore": 1 },
+  "matchDuration": {
+    "regularTime": 90,
+    "firstHalfExtraTime": 0,
+    "secondHalfExtraTime": 0
+  },
+  "playerReports": { "playerId": { "rating": 4, "notes": "..." } }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Draft saved successfully",
+  "data": {
+    "gameId": "...",
+    "draftSaved": true
+  }
+}
+```
+
+#### **POST** `/api/games/:gameId/start-game`
+**Purpose**: Start a game (transition from Scheduled to Played) with lineup validation  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "rosters": [
+    { "playerId": "...", "status": "Starting Lineup", "position": "gk" },
+    { "playerId": "...", "status": "Starting Lineup", "position": "cb1" }
+  ]
+}
+```
+**Validation**: 
+- Requires exactly 11 players in Starting Lineup
+- Requires at least 1 goalkeeper
+- Warns if bench has fewer than 7 players
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "game": { /* updated game object */ },
+    "rosters": [ /* created roster objects */ ]
+  }
+}
+```
+
+---
+
+### ⚽ Game Events (`/api/games/:gameId/...`)
+
+#### **Goals** (`/api/games/:gameId/goals`)
+
+##### **GET** `/api/games/:gameId/goals`
+**Purpose**: Get all goals for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalGoals": 3,
+  "goals": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "minute": 23,
+      "scorerId": { "fullName": "Player Name", "kitNumber": 10 },
+      "assistedById": { "fullName": "Assister Name", "kitNumber": 7 },
+      "goalType": "open-play",
+      "goalNumber": 1,
+      "matchState": "drawing"
+    }
+  ]
+}
+```
+
+##### **POST** `/api/games/:gameId/goals`
+**Purpose**: Create a new goal  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "minute": 23,
+  "scorerId": "playerId",
+  "assistedById": "playerId", // optional
+  "goalType": "open-play", // open-play, penalty, free-kick, corner, own-goal
+  "isOpponentGoal": false, // true for opponent goals
+  "goalInvolvement": [ // optional
+    { "playerId": "...", "role": "key-pass" }
+  ]
+}
+```
+
+##### **PUT** `/api/games/:gameId/goals/:goalId`
+**Purpose**: Update an existing goal  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/goals/:goalId`
+**Purpose**: Delete a goal  
+**Authentication**: Required + game access check  
+
+#### **Substitutions** (`/api/games/:gameId/substitutions`)
+
+##### **GET** `/api/games/:gameId/substitutions`
+**Purpose**: Get all substitutions for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalSubstitutions": 3,
+  "substitutions": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "playerOutId": { "fullName": "Player Out", "kitNumber": 10 },
+      "playerInId": { "fullName": "Player In", "kitNumber": 7 },
+      "minute": 65,
+      "reason": "tactical", // tactical, injury, fatigue, tactical-injury
+      "matchState": "winning", // winning, drawing, losing
+      "tacticalNote": "Bringing fresh legs"
+    }
+  ]
+}
+```
+
+##### **POST** `/api/games/:gameId/substitutions`
+**Purpose**: Create a new substitution  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "playerOutId": "playerId",
+  "playerInId": "playerId",
+  "minute": 65,
+  "reason": "tactical",
+  "matchState": "winning",
+  "tacticalNote": "Bringing fresh legs"
+}
+```
+
+##### **PUT** `/api/games/:gameId/substitutions/:subId`
+**Purpose**: Update an existing substitution  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/substitutions/:subId`
+**Purpose**: Delete a substitution  
+**Authentication**: Required + game access check  
+
+#### **Disciplinary Actions** (`/api/games/:gameId/disciplinary-actions`)
+
+##### **GET** `/api/games/:gameId/disciplinary-actions`
+**Purpose**: Get all disciplinary actions for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalActions": 2,
+  "disciplinaryActions": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "playerId": { "name": "Player Name", "jerseyNumber": 5 },
+      "cardType": "yellow", // yellow, red, second-yellow
+      "minute": 45,
+      "foulsCommitted": 3,
+      "foulsReceived": 1,
+      "reason": "Unsporting behavior"
+    }
+  ]
+}
+```
+
+##### **GET** `/api/games/:gameId/disciplinary-actions/player/:playerId`
+**Purpose**: Get disciplinary actions for a specific player in a game  
+**Authentication**: Required + game access check  
+
+##### **POST** `/api/games/:gameId/disciplinary-actions`
+**Purpose**: Create a new disciplinary action  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "playerId": "playerId",
+  "cardType": "yellow",
+  "minute": 45,
+  "foulsCommitted": 3,
+  "foulsReceived": 1,
+  "reason": "Unsporting behavior"
+}
+```
+
+##### **PUT** `/api/games/:gameId/disciplinary-actions/:actionId`
+**Purpose**: Update an existing disciplinary action  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/disciplinary-actions/:actionId`
+**Purpose**: Delete a disciplinary action  
+**Authentication**: Required + game access check  
+
+#### **Minutes Validation** (`/api/games/:gameId/...`)
+
+##### **POST** `/api/games/:gameId/validate-minutes`
+**Purpose**: Validate minutes for a match before final submission  
+**Authentication**: Required  
+**Body**:
+```json
+{
+  "playerReports": [
+    { "playerId": "...", "playerName": "Player Name", "minutesPlayed": 90 }
+  ]
+}
+```
+**Response**:
+```json
+{
+  "isValid": true,
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "totalPlayerMinutes": 990,
+    "minimumRequired": 990,
+    "deficit": 0,
+    "excess": 0
+  },
+  "suggestions": null
+}
+```
+
+##### **PUT** `/api/games/:gameId/match-duration`
+**Purpose**: Update match duration (regular time + extra time)  
+**Authentication**: Required  
+**Body**:
+```json
+{
+  "regularTime": 90,
+  "firstHalfExtraTime": 3,
+  "secondHalfExtraTime": 5
+}
+```
+
+##### **GET** `/api/games/:gameId/minutes-summary`
+**Purpose**: Get current minutes summary for a match  
+**Authentication**: Required  
+**Response**:
+```json
+{
+  "matchDuration": 98,
+  "minimumRequired": 1078,
+  "totalRecorded": 1078,
+  "deficit": 0,
+  "excess": 0,
+  "playersReported": 12,
+  "playersWithMinutes": 12,
+  "isValid": true
+}
+```
+
+---
+
+### 📊 Game Reports (`/api/game-reports`)
+
+#### **GET** `/api/game-reports`
+**Purpose**: Get all game reports  
+**Authentication**: Required  
+
+#### **GET** `/api/game-reports/game/:gameId`
+**Purpose**: Get all game reports for a specific game  
+**Authentication**: Required + game access check  
+
+#### **GET** `/api/game-reports/:id`
+**Purpose**: Get game report by ID  
+**Authentication**: Required  
+
+#### **POST** `/api/game-reports`
+**Purpose**: Create new game report  
+**Authentication**: Required  
+**Body**:
+```json
+{
+  "player": "playerId",
+  "game": "gameId",
+  "minutesPlayed": 90,
+  "goals": 2,
+  "assists": 1,
+  "rating_physical": 4,
+  "rating_technical": 5,
+  "rating_tactical": 4,
+  "rating_mental": 4,
+  "notes": "Excellent performance"
+}
+```
+
+#### **PUT** `/api/game-reports/:id`
+**Purpose**: Update game report  
+**Authentication**: Required  
+
+#### **DELETE** `/api/game-reports/:id`
+**Purpose**: Delete game report  
+**Authentication**: Required  
+
+#### **POST** `/api/game-reports/batch`
+**Purpose**: Batch create/update game reports (for final submission)  
+**Authentication**: Required + game access check  
+**Note**: Server automatically calculates `minutesPlayed`, `goals`, and `assists` from game events. These fields are **forbidden** in the request body.  
+**Body**:
+```json
+{
+  "gameId": "gameId",
+  "reports": [
+    {
+      "playerId": "playerId",
+      "rating_physical": 4,
+      "rating_technical": 5,
+      "rating_tactical": 4,
+      "rating_mental": 4,
+      "notes": "Great game"
+    }
+  ]
+}
+```
+
+#### **GET** `/api/game-reports/calculate-minutes/:gameId`
+**Purpose**: Calculate player minutes for a game based on events (substitutions, red cards)  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "success": true,
+  "gameId": "...",
+  "calculatedMinutes": {
+    "playerId1": 90,
+    "playerId2": 65
+  }
+}
+```
+
+#### **GET** `/api/game-reports/calculate-goals-assists/:gameId`
+**Purpose**: Calculate player goals and assists for a game from Goals collection  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "success": true,
+  "gameId": "...",
+  "calculatedStats": {
+    "playerId1": { "goals": 2, "assists": 1 },
+    "playerId2": { "goals": 0, "assists": 1 }
+  }
+}
+```
+
 ---
 
 ### 📊 Timeline Events/Reports (`/api/timeline-events`)
@@ -524,6 +907,14 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Get all game roster entries  
 **Authentication**: Required  
 
+#### **GET** `/api/game-rosters/game/:gameId`
+**Purpose**: Get all rosters for a specific game  
+**Authentication**: Required + game access check  
+
+#### **GET** `/api/game-rosters/:id`
+**Purpose**: Get roster entry by ID  
+**Authentication**: Required  
+
 #### **POST** `/api/game-rosters`
 **Purpose**: Add player to game roster  
 **Authentication**: Required  
@@ -532,7 +923,29 @@ Authorization: Bearer <your-jwt-token>
 {
   "game": "60f7b3b3b3b3b3b3b3b3b3b3",
   "player": "60f7b3b3b3b3b3b3b3b3b3b4",
-  "status": "Starting XI"
+  "status": "Starting Lineup" // Starting Lineup, Bench, Not Selected
+}
+```
+
+#### **PUT** `/api/game-rosters/:id`
+**Purpose**: Update roster entry  
+**Authentication**: Required  
+
+#### **DELETE** `/api/game-rosters/:id`
+**Purpose**: Delete roster entry  
+**Authentication**: Required  
+
+#### **POST** `/api/game-rosters/batch`
+**Purpose**: Batch create/update roster entries  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "gameId": "60f7b3b3b3b3b3b3b3b3b3b3",
+  "rosters": [
+    { "playerId": "...", "status": "Starting Lineup", "position": "gk" },
+    { "playerId": "...", "status": "Bench" }
+  ]
 }
 ```
 
@@ -590,10 +1003,116 @@ Authorization: Bearer <your-jwt-token>
 **Body**:
 ```json
 {
-  "action": "fetch|create|update|delete",
+  "action": "fetch|fetchSingle|create|update|delete",
   "tableName": "Users|Teams|Players|Games|etc",
   "recordId": "optional-for-single-record-ops",
   "data": { /* record data for create/update */ }
+}
+```
+
+---
+
+### 📈 Analytics (`/api/analytics`)
+
+#### **GET** `/api/analytics/goal-partnerships`
+**Purpose**: Get goal partnerships (scorer-assister combinations)  
+**Authentication**: Required  
+**Query Parameters**:
+- `teamId` (required): Team ID
+- `season` (optional): Season filter (e.g., "2024")
+
+**Response**:
+```json
+{
+  "teamId": "...",
+  "season": "2024",
+  "totalPartnerships": 5,
+  "partnerships": [
+    {
+      "scorer": { "id": "...", "name": "Player A", "position": "Forward" },
+      "assister": { "id": "...", "name": "Player B", "position": "Midfielder" },
+      "goals": 3,
+      "gameCount": 2,
+      "avgMinute": 45
+    }
+  ]
+}
+```
+
+#### **GET** `/api/analytics/player-goals`
+**Purpose**: Get goal statistics for a specific player  
+**Authentication**: Required  
+**Query Parameters**:
+- `playerId` (required): Player ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "playerId": "...",
+  "season": "2024",
+  "goalsScored": 15,
+  "assists": 8,
+  "goalContributions": 23,
+  "goalsByType": { "open-play": 10, "penalty": 5 },
+  "goalsByMatchState": { "winning": 5, "drawing": 7, "losing": 3 },
+  "averageGoalMinute": 52
+}
+```
+
+#### **GET** `/api/analytics/player-substitutions`
+**Purpose**: Get substitution patterns for a specific player  
+**Authentication**: Required  
+**Query Parameters**:
+- `playerId` (required): Player ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "playerId": "...",
+  "season": "2024",
+  "totalSubstitutions": 10,
+  "timesSubbedOff": 6,
+  "timesComingOn": 4,
+  "avgSubOffMinute": 70,
+  "avgSubOnMinute": 65,
+  "substitutionReasons": { "tactical": 4, "fatigue": 2 },
+  "impactAsSubstitute": {
+    "appearances": 4,
+    "avgMinutesPlayed": 25
+  }
+}
+```
+
+#### **GET** `/api/analytics/team-discipline`
+**Purpose**: Get team discipline statistics  
+**Authentication**: Required  
+**Query Parameters**:
+- `teamId` (required): Team ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "teamId": "...",
+  "season": "2024",
+  "totalYellowCards": 25,
+  "totalRedCards": 2,
+  "totalSecondYellows": 1,
+  "mostCardedPlayers": [
+    {
+      "player": { "id": "...", "name": "Player Name", "position": "Defender" },
+      "yellowCards": 5,
+      "redCards": 1,
+      "totalCards": 6
+    }
+  ],
+  "cardsByMinute": {
+    "0-15": 2,
+    "15-30": 5,
+    "30-45": 8
+  }
 }
 ```
 
@@ -718,14 +1237,55 @@ FRONTEND_URL=http://localhost:5173
 
 ---
 
+## 🏥 Health Check
+
+#### **GET** `/health`
+**Purpose**: Health check endpoint (no authentication required)  
+**Response**:
+```json
+{
+  "status": "OK",
+  "timestamp": "2024-12-19T10:30:00.000Z",
+  "environment": "development"
+}
+```
+
+---
+
 ## 📚 Additional Notes
 
-1. **Authentication**: All endpoints require JWT token except `/api/auth/login` and `/api/auth/register`
+1. **Authentication**: All endpoints require JWT token except:
+   - `/api/auth/login`
+   - `/api/auth/register`
+   - `/health`
+
 2. **Role Filtering**: Data is automatically filtered based on user role and team assignments
+
 3. **Population**: Most endpoints automatically populate related data (team info, user info, etc.)
+
 4. **Validation**: Server validates required fields and data types
+
 5. **CORS**: Configured to allow frontend origins (`localhost:5173`, `localhost:5174`)
+
 6. **Security**: Passwords are hashed with bcrypt, sensitive data excluded from responses
+
+7. **Draft Autosave**: The `/api/games/:gameId/draft` endpoint is polymorphic:
+   - For **Scheduled** games: Saves lineup draft (rosters, formation)
+   - For **Played** games: Saves report draft (teamSummary, finalScore, matchDuration, playerReports)
+   - Drafts are automatically cleared when game status changes
+
+8. **Server-Calculated Fields**: The following fields are **always calculated by the server** and cannot be provided by the client:
+   - `minutesPlayed` (calculated from substitutions and red cards)
+   - `goals` (calculated from Goals collection)
+   - `assists` (calculated from Goals collection)
+   - `goalNumber` and `matchState` (calculated when game status = "Done")
+
+9. **Minutes Calculation**: Player minutes are automatically recalculated when:
+   - Substitutions are created/updated/deleted
+   - Red cards are issued/removed
+   - Match duration changes
+
+10. **Goal Analytics**: Goal numbers and match states are recalculated when a game status changes to "Done"
 
 ---
 

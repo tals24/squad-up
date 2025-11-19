@@ -250,34 +250,3 @@ Game Fetch (async)
 2. **Try Solution 1 first**: Increase timeouts and add proper async handling
 3. **If Solution 1 fails**: Try Solution 2 (direct state mocking)
 4. **Consider**: Whether these integration tests add value beyond unit tests + E2E tests
-
----
-
-## Backend Test Setup Issue
-
-**Status**: Test script configured, but tests require MongoDB to be running
-
-**Issue**: Backend tests fail with `MongooseServerSelectionError: connect ECONNREFUSED ::1:27017`
-
-**Root Cause**: MongoDB server is not running on localhost:27017
-
-**Solution**: 
-1. Start MongoDB server before running tests
-2. Or configure tests to use a different MongoDB instance (e.g., MongoDB Atlas test cluster)
-3. Or use an in-memory MongoDB for tests (e.g., `mongodb-memory-server`)
-
-**Files Fixed**:
-- ✅ `backend/package.json` - Updated test script from placeholder to `jest`
-- ✅ `backend/jest.config.js` - Created Jest configuration
-- ✅ `backend/src/app.js` - Updated to prevent server start during tests
-- ✅ `backend/src/routes/__tests__/games.draft.test.js` - Added error handling and timeout
-
-**To Run Backend Tests**:
-```bash
-# Make sure MongoDB is running first
-cd backend
-npm test
-```
-
-**Note**: Backend tests are configured correctly. They just need MongoDB to be running.
-

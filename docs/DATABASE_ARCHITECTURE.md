@@ -1,8 +1,8 @@
 # Database Architecture Documentation
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Date:** December 2024  
-**Status:** Reference Document (No changes required at this time)
+**Status:** Reference Document - Updated December 2024
 
 ---
 
@@ -10,7 +10,7 @@
 
 This document outlines the current database architecture for the SquadUp application, provides recommendations for organization and scalability, and defines when to consider architectural changes.
 
-**Current State:** Single MongoDB database with 15 collections  
+**Current State:** Single MongoDB database with 16 collections  
 **Recommendation:** Keep current structure, add naming conventions for clarity  
 **Future Consideration:** Re-evaluate at 30+ collections or when hitting specific scale thresholds
 
@@ -34,7 +34,7 @@ squadup (database)
 │   └── disciplinaryactions
 │
 ├── Match Data Domain (3 collections)
-│   ├── gamereports
+│   ├── game_reports
 │   ├── gamerosters
 │   └── formations
 │
@@ -43,12 +43,15 @@ squadup (database)
 │   ├── sessiondrills
 │   └── trainingsessions
 │
-└── Analysis Domain (2 collections)
-    ├── scoutreports
-    └── timelineevents
+├── Analysis Domain (2 collections)
+│   ├── scout_reports
+│   └── timeline_events
+│
+└── System Domain (1 collection)
+    └── jobs
 ```
 
-**Total Collections:** 15
+**Total Collections:** 16
 
 ---
 
@@ -79,6 +82,25 @@ squadup (database)
 **Relationships:** Referenced by all event collections  
 **Size:** Medium (typically 100-1000 documents)  
 **Growth:** Moderate (adds games per season)
+
+**Key Fields:**
+- `status`: Enum ['Scheduled', 'Played', 'Done', 'Postponed']
+- `matchType`: Enum ['league', 'cup', 'friendly'] - Match type for validation rules
+- `matchDuration`: Object with `regularTime`, `firstHalfExtraTime`, `secondHalfExtraTime`
+- `totalMatchDuration`: Calculated total match duration
+- `lineupDraft`: Draft lineup for Scheduled games (temporary storage before game starts)
+  - Format: `{ rosters: { playerId: status }, formation: {...}, formationType: string }`
+- `reportDraft`: Draft reports for Played games (temporary storage before final submission)
+  - Format: `{ teamSummary: {...}, finalScore: {...}, matchDuration: {...}, playerReports: {...} }`
+
+**Indexes:**
+- `{ gameID: 1 }` - Unique game identifier
+- `{ team: 1 }` - Team filtering
+- `{ date: 1 }` - Chronological queries
+- `{ status: 1 }` - Status filtering
+- `{ season: 1 }` - Season filtering
+- `{ status: 1, lineupDraft: 1 }` - Draft queries for Scheduled games
+- `{ status: 1, reportDraft: 1 }` - Draft queries for Played games
 
 ---
 
@@ -138,11 +160,23 @@ squadup (database)
 
 ### Match Data Domain
 
-#### `gamereports`
+#### `game_reports`
 **Purpose:** Post-match reports and summaries  
-**Relationships:** References `games` (gameId), `players` (player reports)  
+**Collection Name:** `game_reports` (explicit)  
+**Relationships:** References `games` (game), `players` (player), `users` (author)  
 **Size:** Medium (typically 100-1000 documents)  
 **Growth:** Moderate (one per game)
+
+**Key Fields:**
+- `minutesPlayed`: Server-calculated from substitutions and red cards
+- `goals`: Server-calculated from Goals collection
+- `assists`: Server-calculated from Goals collection
+- `rating_physical`, `rating_technical`, `rating_tactical`, `rating_mental`: User-provided ratings
+- `minutesCalculationMethod`: 'calculated' or 'manual'
+
+**Special Features:**
+- Server-calculated fields (`minutesPlayed`, `goals`, `assists`) are automatically computed
+- Cannot be manually set by client (enforced by API validation)
 
 #### `gamerosters`
 **Purpose:** Player availability and roster status per game  
@@ -182,17 +216,48 @@ squadup (database)
 
 ### Analysis Domain
 
-#### `scoutreports`
+#### `scout_reports`
 **Purpose:** Scouting data and analysis  
+**Collection Name:** `scout_reports` (explicit)  
 **Relationships:** References `players`, `games`  
 **Size:** Small (typically < 1000 documents)  
 **Growth:** Slow (adds reports as needed)
 
-#### `timelineevents`
+#### `timeline_events`
 **Purpose:** Player timeline/history events  
-**Relationships:** References `players` (playerId)  
+**Collection Name:** `timeline_events` (explicit)  
+**Relationships:** References `players` (player), `games` (game), `users` (author)  
 **Size:** Medium (typically 500-5000 documents)  
 **Growth:** Moderate (adds events per player)
+
+---
+
+### System Domain
+
+#### `jobs`
+**Purpose:** Background job queue for asynchronous calculations  
+**Collection Name:** `jobs` (default pluralized)  
+**Relationships:** None (self-contained)  
+**Size:** Small-Medium (typically < 1000 documents, auto-cleaned after 30 days)  
+**Growth:** Fast (creates jobs for recalculations), but auto-expires completed jobs
+
+**Job Types:**
+- `recalc-minutes`: Recalculate player minutes from substitutions/red cards
+- `recalc-goals-assists`: Recalculate goals and assists from Goals collection
+- `recalc-analytics`: Recalculate goal analytics (goal numbers, match states)
+
+**Status Flow:**
+- `pending` → `running` → `completed` (or `failed`)
+
+**Indexes:**
+- `{ status: 1, runAt: 1 }` - Efficient job polling
+- `{ jobType: 1, status: 1 }` - Job type queries
+- `{ completedAt: 1 }` - TTL index (auto-delete completed jobs after 30 days)
+
+**Special Features:**
+- TTL index automatically deletes completed jobs after 30 days
+- Retry logic with exponential backoff for failed jobs
+- Atomic job locking via `findAndLock()` static method
 
 ---
 
@@ -278,14 +343,15 @@ games → match_games
 goals → event_goals
 substitutions → event_substitutions
 disciplinaryactions → event_disciplinaryactions
-gamereports → match_reports
+game_reports → match_reports
 gamerosters → match_rosters
 formations → match_formations
 drills → training_drills
 sessiondrills → training_sessiondrills
 trainingsessions → training_sessions
-scoutreports → analysis_scoutreports
-timelineevents → analysis_timelineevents
+scout_reports → analysis_scoutreports
+timeline_events → analysis_timelineevents
+jobs → system_jobs
 ```
 
 **Benefits:**
@@ -343,7 +409,14 @@ DisciplinaryActions.index({ playerId: 1, cardType: 1 }) // Card stats
 // Games
 Games.index({ status: 1 })                     // Status filtering
 Games.index({ date: 1 })                       // Chronological queries
-Games.index({ team: 1 })                      // Team filtering
+Games.index({ team: 1 })                       // Team filtering
+Games.index({ status: 1, lineupDraft: 1 })     // Draft queries for Scheduled games
+Games.index({ status: 1, reportDraft: 1 })     // Draft queries for Played games
+
+// Jobs
+Jobs.index({ status: 1, runAt: 1 })            // Efficient job polling
+Jobs.index({ jobType: 1, status: 1 })          // Job type queries
+Jobs.index({ completedAt: 1 })                 // TTL index (auto-cleanup)
 ```
 
 ### Index Performance Monitoring
@@ -370,7 +443,8 @@ Games.index({ team: 1 })                      // Team filtering
 | goals | 100-250 | High (4-5 per game) |
 | substitutions | 90-150 | High (3-5 per game) |
 | disciplinaryactions | 30-90 | Moderate (1-3 per game) |
-| gamereports | 30-50 | Low (1 per game) |
+| game_reports | 30-50 | Low (1 per game) |
+| jobs | 100-200 | Moderate (auto-expires after 30 days) |
 | gamerosters | 330-900 | High (11-18 per game) |
 | players | 20-30 | Low (adds players) |
 | drills | 10-20 | Low (adds drills) |
@@ -381,7 +455,7 @@ Games.index({ team: 1 })                      // Team filtering
 
 **Current capacity:** Well within MongoDB's limits  
 **MongoDB limits:**
-- Collections per database: 10,000+ (we have 15)
+- Collections per database: 10,000+ (we have 16)
 - Documents per collection: Billions (we have thousands)
 - Database size: TBs (we have MBs)
 
@@ -438,13 +512,16 @@ squadup_core (database)
   - users, teams, players
 
 squadup_matches (database)
-  - games, goals, substitutions, disciplinaryactions, gamereports, gamerosters, formations
+  - games, goals, substitutions, disciplinaryactions, game_reports, gamerosters, formations
 
 squadup_training (database)
   - drills, sessiondrills, trainingsessions
 
 squadup_analysis (database)
-  - scoutreports, timelineevents
+  - scout_reports, timeline_events
+
+squadup_system (database)
+  - jobs
 ```
 
 **When to implement:** Only if:
@@ -538,7 +615,7 @@ squadup_analysis (database)
 
 | Scenario | Recommended Approach | When |
 |----------|---------------------|------|
-| 15 collections (current) | ✅ Single database | Now |
+| 16 collections (current) | ✅ Single database | Now |
 | 30+ collections | ✅ Single database + naming conventions | Future |
 | 50+ collections | ⚠️ Consider documenting logical groups | Future |
 | 100+ collections | ⚠️ Re-evaluate splitting | Future |
@@ -595,7 +672,7 @@ squadup_analysis (database)
 
 ### Current State ✅
 - **Architecture:** Single MongoDB database
-- **Collections:** 15 (well within limits)
+- **Collections:** 16 (well within limits)
 - **Performance:** Good (no issues identified)
 - **Recommendation:** Keep as-is
 
@@ -606,16 +683,25 @@ squadup_analysis (database)
 
 ### Key Takeaways
 1. ✅ **Current structure is correct** - MongoDB best practice
-2. ✅ **No changes needed** - 15 collections is perfectly manageable
+2. ✅ **No changes needed** - 16 collections is perfectly manageable
 3. ✅ **Focus on optimization** - Indexes and queries, not architecture
 4. ✅ **Document logical groupings** - This document serves that purpose
 5. ⚠️ **Don't split prematurely** - Complexity without benefits
+6. ✅ **Draft system implemented** - `lineupDraft` and `reportDraft` fields in Game model
+7. ✅ **Job queue system** - Background processing for calculations via `jobs` collection
 
 ---
 
-**Document Status:** Reference - No changes required  
+**Document Status:** Reference - Updated December 2024  
 **Last Reviewed:** December 2024  
 **Next Review:** When collection count reaches 25+
+
+**Recent Updates:**
+- Added `jobs` collection documentation (System Domain)
+- Added `lineupDraft` and `reportDraft` fields to Game model
+- Added `matchDuration`, `totalMatchDuration`, and `matchType` fields to Game model
+- Updated collection count from 15 to 16
+- Corrected collection names (game_reports, scout_reports, timeline_events use explicit names)
 
 ---
 
@@ -628,14 +714,19 @@ users ──┐
 games ──┼──→ goals (TeamGoal, OpponentGoal)
         ├──→ substitutions
         ├──→ disciplinaryactions
-        ├──→ gamereports
+        ├──→ game_reports
         ├──→ gamerosters
         └──→ formations
+        │
+        ├──→ lineupDraft (embedded in games - Scheduled games)
+        └──→ reportDraft (embedded in games - Played games)
 
 drills ──→ sessiondrills ──→ trainingsessions
 
-players ──→ timelineevents
-players ──→ scoutreports
+players ──→ timeline_events
+players ──→ scout_reports
+
+jobs (standalone - background processing)
 ```
 
 **Legend:**
