@@ -16,6 +16,7 @@ import {
 
 // Import shared components
 import { ConfirmationModal } from "@/shared/components";
+import PageLoader from "@/components/PageLoader";
 
 // Import modular components
 import GameDetailsHeader from "./components/GameDetailsHeader";
@@ -36,7 +37,7 @@ import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubst
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
   const gameId = searchParams.get("id");
-  const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error } = useData();
+  const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
 
   // Main state
   const [game, setGame] = useState(null);
@@ -100,70 +101,165 @@ export default function GameDetails() {
   const [pendingAction, setPendingAction] = useState(null);
   const [pendingPlayerPosition, setPendingPlayerPosition] = useState(null);
 
+  // Autosave state
+  const [isAutosaving, setIsAutosaving] = useState(false);
+  const [autosaveError, setAutosaveError] = useState(null);
+
+  // Local loading state for game fetch
+  const [isFetchingGame, setIsFetchingGame] = useState(true);
+
+  // Finalizing game state (for blocking modal)
+  const [isFinalizingGame, setIsFinalizingGame] = useState(false);
+
   // Get current formation positions
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
 
-  // Load game data
+  // Load game data (with direct fetch to ensure latest draft data)
   useEffect(() => {
-    if (!gameId || !games || games.length === 0) return;
-
-    const foundGame = games.find((g) => g._id === gameId);
-    if (foundGame) {
-      // 🔍 DEBUG: Log backend game data
-      console.log('🔍 [GameDetails] Backend game data:', {
-        gameId: foundGame._id,
-        status: foundGame.status,
-        matchDuration: foundGame.matchDuration,
-        hasMatchDuration: !!foundGame.matchDuration,
-        matchDurationType: typeof foundGame.matchDuration,
-        matchDurationKeys: foundGame.matchDuration ? Object.keys(foundGame.matchDuration) : null
-      });
-      
-      // Initialize match duration from game data FIRST (before setting game)
-      // This ensures we have the correct matchDuration before game object is set
-      const gameMatchDuration = foundGame.matchDuration || {};
-      const loadedMatchDuration = {
-        regularTime: gameMatchDuration.regularTime || 90,
-        firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
-        secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
-      };
-      
-      // 🔍 DEBUG: Log loaded matchDuration
-      console.log('🔍 [GameDetails] Loaded matchDuration state:', loadedMatchDuration);
-      console.log('🔍 [GameDetails] Calculated total:', loadedMatchDuration.regularTime + loadedMatchDuration.firstHalfExtraTime + loadedMatchDuration.secondHalfExtraTime);
-      
-      setMatchDuration(loadedMatchDuration);
-      
-      // Set game object, ensuring matchDuration is included
-      setGame({
-        ...foundGame,
-        matchDuration: loadedMatchDuration
-      });
-      setIsReadOnly(foundGame.status === "Done");
-      
-      // Initialize score from game data if available, otherwise will be calculated from goals
-      if (foundGame.ourScore !== null && foundGame.ourScore !== undefined) {
-        setFinalScore({
-          ourScore: foundGame.ourScore || 0,
-          opponentScore: foundGame.opponentScore || 0,
-        });
-      } else {
-        // If no score stored, initialize to 0-0 (will be calculated from goals)
-        setFinalScore({
-          ourScore: 0,
-          opponentScore: 0,
-        });
-      }
-      
-      if (foundGame.defenseSummary || foundGame.midfieldSummary || foundGame.attackSummary || foundGame.generalSummary) {
-        setTeamSummary({
-          defenseSummary: foundGame.defenseSummary || "",
-          midfieldSummary: foundGame.midfieldSummary || "",
-          attackSummary: foundGame.attackSummary || "",
-          generalSummary: foundGame.generalSummary || "",
-        });
-      }
+    if (!gameId) {
+      setIsFetchingGame(false);
+      return;
     }
+
+    // Fetch game directly to ensure we have latest data including lineupDraft
+    const fetchGameDirectly = async () => {
+      setIsFetchingGame(true); // Set loading state at the start
+      try {
+        const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const fetchedGame = result.data;
+          
+          if (fetchedGame) {
+            console.log('🔍 [GameDetails] Fetched game directly:', {
+              gameId: fetchedGame._id,
+              status: fetchedGame.status,
+              hasLineupDraft: !!fetchedGame.lineupDraft,
+              lineupDraft: fetchedGame.lineupDraft
+            });
+
+            // Initialize match duration from game data FIRST (before setting game)
+            const gameMatchDuration = fetchedGame.matchDuration || {};
+            const loadedMatchDuration = {
+              regularTime: gameMatchDuration.regularTime || 90,
+              firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
+              secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
+            };
+            
+            setMatchDuration(loadedMatchDuration);
+            
+            // Set game object, ensuring matchDuration is included
+            setGame({
+              ...fetchedGame,
+              matchDuration: loadedMatchDuration
+            });
+            setIsReadOnly(fetchedGame.status === "Done");
+            
+            // Initialize score from game data if available
+            if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
+              setFinalScore({
+                ourScore: fetchedGame.ourScore || 0,
+                opponentScore: fetchedGame.opponentScore || 0,
+              });
+            } else {
+              setFinalScore({
+                ourScore: 0,
+                opponentScore: 0,
+              });
+            }
+            
+            if (fetchedGame.defenseSummary || fetchedGame.midfieldSummary || fetchedGame.attackSummary || fetchedGame.generalSummary) {
+              setTeamSummary({
+                defenseSummary: fetchedGame.defenseSummary || "",
+                midfieldSummary: fetchedGame.midfieldSummary || "",
+                attackSummary: fetchedGame.attackSummary || "",
+                generalSummary: fetchedGame.generalSummary || "",
+              });
+            }
+            
+            return; // Successfully loaded from direct fetch
+          }
+        }
+
+        // Fallback: Use games array from DataProvider if direct fetch fails
+        if (!games || games.length === 0) {
+          return;
+        }
+
+        const foundGame = games.find((g) => g._id === gameId);
+        if (foundGame) {
+          // 🔍 DEBUG: Log backend game data
+          console.log('🔍 [GameDetails] Backend game data:', {
+            gameId: foundGame._id,
+            status: foundGame.status,
+            matchDuration: foundGame.matchDuration,
+            hasMatchDuration: !!foundGame.matchDuration,
+            matchDurationType: typeof foundGame.matchDuration,
+            matchDurationKeys: foundGame.matchDuration ? Object.keys(foundGame.matchDuration) : null,
+            hasLineupDraft: !!foundGame.lineupDraft,
+            lineupDraft: foundGame.lineupDraft,
+            lineupDraftType: typeof foundGame.lineupDraft
+          });
+          
+          // Initialize match duration from game data FIRST (before setting game)
+          // This ensures we have the correct matchDuration before game object is set
+          const gameMatchDuration = foundGame.matchDuration || {};
+          const loadedMatchDuration = {
+            regularTime: gameMatchDuration.regularTime || 90,
+            firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
+            secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
+          };
+          
+          // 🔍 DEBUG: Log loaded matchDuration
+          console.log('🔍 [GameDetails] Loaded matchDuration state:', loadedMatchDuration);
+          console.log('🔍 [GameDetails] Calculated total:', loadedMatchDuration.regularTime + loadedMatchDuration.firstHalfExtraTime + loadedMatchDuration.secondHalfExtraTime);
+          
+          setMatchDuration(loadedMatchDuration);
+          
+          // Set game object, ensuring matchDuration is included
+          setGame({
+            ...foundGame,
+            matchDuration: loadedMatchDuration
+          });
+          setIsReadOnly(foundGame.status === "Done");
+          
+          // Initialize score from game data if available, otherwise will be calculated from goals
+          if (foundGame.ourScore !== null && foundGame.ourScore !== undefined) {
+            setFinalScore({
+              ourScore: foundGame.ourScore || 0,
+              opponentScore: foundGame.opponentScore || 0,
+            });
+          } else {
+            // If no score stored, initialize to 0-0 (will be calculated from goals)
+            setFinalScore({
+              ourScore: 0,
+              opponentScore: 0,
+            });
+          }
+          
+          if (foundGame.defenseSummary || foundGame.midfieldSummary || foundGame.attackSummary || foundGame.generalSummary) {
+            setTeamSummary({
+              defenseSummary: foundGame.defenseSummary || "",
+              midfieldSummary: foundGame.midfieldSummary || "",
+              attackSummary: foundGame.attackSummary || "",
+              generalSummary: foundGame.generalSummary || "",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching game directly:', error);
+      } finally {
+        // Always set loading to false after fetch completes (success or failure)
+        setIsFetchingGame(false);
+      }
+    };
+
+    fetchGameDirectly();
   }, [gameId, games]);
 
   // Load team players
@@ -193,32 +289,176 @@ export default function GameDetails() {
     return map;
   }, [gamePlayers]);
 
-  // Load existing roster statuses
+  // Load existing roster statuses (with draft priority)
   useEffect(() => {
-    if (!gameId || !gameRosters || gameRosters.length === 0 || gamePlayers.length === 0) return;
+    if (!gameId || !game || gamePlayers.length === 0) return;
 
-    const rosterForGame = gameRosters.filter(
-      (roster) => {
-        const rosterGameId = typeof roster.game === "object" ? roster.game._id : roster.game;
-        return rosterGameId === gameId;
-      }
-    );
+    // 🔍 DEBUG: Log draft loading check
+    console.log('🔍 [Draft Loading] Checking for draft:', {
+      gameId,
+      gameStatus: game.status,
+      hasLineupDraft: !!game.lineupDraft,
+      lineupDraft: game.lineupDraft,
+      lineupDraftType: typeof game.lineupDraft,
+      isScheduled: game.status === 'Scheduled',
+      hasGamePlayers: gamePlayers.length > 0
+    });
 
-    if (rosterForGame.length > 0) {
-      const statuses = {};
-      rosterForGame.forEach((roster) => {
-        const playerId = typeof roster.player === "object" ? roster.player._id : roster.player;
-        statuses[playerId] = roster.status;
-      });
-      setLocalRosterStatuses(statuses);
-    } else {
-      const initialStatuses = {};
+    // Priority 1: Check for draft (only for Scheduled games)
+    if (game.status === 'Scheduled' && game.lineupDraft && typeof game.lineupDraft === 'object') {
+      console.log('📋 Loading draft lineup:', game.lineupDraft);
+      
+      // Extract rosters and formation from draft
+      const draftRosters = game.lineupDraft.rosters || game.lineupDraft; // Support both old and new format
+      const draftFormation = game.lineupDraft.formation || {};
+      const draftFormationType = game.lineupDraft.formationType || formationType;
+      
+      // Merge draft rosters with all players (ensure all players have a status)
+      const draftStatuses = { ...draftRosters };
       gamePlayers.forEach((player) => {
-        initialStatuses[player._id] = "Not in Squad";
+        if (!draftStatuses[player._id]) {
+          draftStatuses[player._id] = 'Not in Squad';
+        }
       });
-      setLocalRosterStatuses(initialStatuses);
+      
+      // Restore formation from draft
+      if (Object.keys(draftFormation).length > 0) {
+        // Set manual mode FIRST to prevent auto-rebuild from interfering
+        setManualFormationMode(true);
+        
+        // Rebuild formation object with full player objects from gamePlayers
+        const restoredFormation = {};
+        Object.keys(draftFormation).forEach((posId) => {
+          const draftPlayer = draftFormation[posId];
+          if (draftPlayer && draftPlayer._id) {
+            // Find full player object from gamePlayers
+            const fullPlayer = gamePlayers.find(p => p._id === draftPlayer._id);
+            if (fullPlayer) {
+              restoredFormation[posId] = fullPlayer;
+            } else {
+              console.warn(`⚠️ [Draft Loading] Player not found for position ${posId}:`, draftPlayer._id);
+            }
+          }
+        });
+        
+        console.log('✅ Draft loaded, restoring formation:', {
+          restoredFormation,
+          positionCount: Object.keys(restoredFormation).length,
+          playerIds: Object.values(restoredFormation).map(p => p._id)
+        });
+        setFormation(restoredFormation);
+        setFormationType(draftFormationType);
+      }
+      
+      console.log('✅ Draft loaded, setting roster statuses:', draftStatuses);
+      setLocalRosterStatuses(draftStatuses);
+      return; // Draft loaded, skip gameRosters
     }
-  }, [gameId, gameRosters, gamePlayers]);
+
+    // 🔍 DEBUG: Log why draft wasn't loaded
+    if (game.status === 'Scheduled') {
+      console.log('⚠️ [Draft Loading] Scheduled game but no draft found:', {
+        hasLineupDraft: !!game.lineupDraft,
+        lineupDraft: game.lineupDraft,
+        fallingBackTo: 'gameRosters or default'
+      });
+    }
+
+    // Priority 2: Load from gameRosters (for Played/Done games, or if no draft)
+    if (gameRosters && gameRosters.length > 0) {
+      const rosterForGame = gameRosters.filter(
+        (roster) => {
+          const rosterGameId = typeof roster.game === "object" ? roster.game._id : roster.game;
+          return rosterGameId === gameId;
+        }
+      );
+
+      if (rosterForGame.length > 0) {
+        const statuses = {};
+        rosterForGame.forEach((roster) => {
+          const playerId = typeof roster.player === "object" ? roster.player._id : roster.player;
+          statuses[playerId] = roster.status;
+        });
+        setLocalRosterStatuses(statuses);
+        return; // gameRosters loaded
+      }
+    }
+
+    // Priority 3: Initialize all to "Not in Squad" (fallback)
+    const initialStatuses = {};
+    gamePlayers.forEach((player) => {
+      initialStatuses[player._id] = "Not in Squad";
+    });
+    setLocalRosterStatuses(initialStatuses);
+  }, [gameId, game, gameRosters, gamePlayers]);
+
+  // Debounced autosave for roster statuses and formation
+  useEffect(() => {
+    // CRITICAL: Don't autosave if game is being finalized (prevents write conflicts)
+    if (isFinalizingGame) {
+      console.log('⏸️ [Autosave] Skipping - game is being finalized');
+      return;
+    }
+    
+    // Only autosave for Scheduled games
+    if (!game || game.status !== 'Scheduled') return;
+    
+    // Don't autosave on initial load (wait for user changes)
+    if (Object.keys(localRosterStatuses).length === 0) return;
+    
+    // Set autosaving state
+    setIsAutosaving(true);
+    setAutosaveError(null);
+    
+    // Debounce: Wait 2.5 seconds after last change
+    const autosaveTimer = setTimeout(async () => {
+      try {
+        // Prepare formation data for draft (only include player IDs and basic info)
+        const formationForDraft = {};
+        Object.keys(formation).forEach((posId) => {
+          const player = formation[posId];
+          if (player && player._id) {
+            formationForDraft[posId] = {
+              _id: player._id,
+              fullName: player.fullName,
+              kitNumber: player.kitNumber
+            };
+          }
+        });
+
+        const response = await fetch(`http://localhost:3001/api/games/${gameId}/draft`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: JSON.stringify({
+            rosters: localRosterStatuses,
+            formation: formationForDraft,
+            formationType: formationType
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `Failed to save draft: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Draft autosaved successfully:', result);
+        setIsAutosaving(false);
+      } catch (error) {
+        console.error('❌ Error autosaving draft:', error);
+        setAutosaveError(error.message);
+        setIsAutosaving(false);
+      }
+    }, 2500); // 2.5 second debounce
+
+    // Cleanup: Cancel timer if localRosterStatuses, formation, or finalization status changes
+    return () => {
+      clearTimeout(autosaveTimer);
+    };
+  }, [localRosterStatuses, formation, formationType, gameId, game, isFinalizingGame]);
 
   // Load goals for the game
   useEffect(() => {
@@ -383,9 +623,14 @@ export default function GameDetails() {
     }
     
     // Only skip auto-build if we already have a formation with players AND we're in manual mode
+    // OR if we're in manual mode (which means we're restoring from draft or user manually set it)
     const hasFormationWithPlayers = Object.values(formation).some(p => p !== null);
-    if (manualFormationMode && hasFormationWithPlayers) {
-      console.log('⚠️ [Formation Rebuild] Manual formation mode with existing formation - skipping auto-build');
+    if (manualFormationMode) {
+      if (hasFormationWithPlayers) {
+        console.log('⚠️ [Formation Rebuild] Manual formation mode with existing formation - skipping auto-build');
+      } else {
+        console.log('⚠️ [Formation Rebuild] Manual formation mode active (likely restoring from draft) - skipping auto-build');
+      }
       return;
     }
 
@@ -427,35 +672,11 @@ export default function GameDetails() {
     return localRosterStatuses[playerId] || "Not in Squad";
   };
 
-  // Helper: Update player status
-  const updatePlayerStatus = async (playerId, newStatus) => {
+  // Helper: Update player status (local state only - autosave handled by useEffect)
+  const updatePlayerStatus = (playerId, newStatus) => {
+    // ✅ Only update local state - no API call
+    // Autosave will be triggered by useEffect watching localRosterStatuses
     setLocalRosterStatuses((prev) => ({ ...prev, [playerId]: newStatus }));
-    
-    try {
-      const response = await fetch(`http://localhost:3001/api/game-rosters/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({
-          gameId,
-          rosters: [{
-            playerId,
-            status: newStatus
-            // ✅ Removed: playerName, gameTitle, rosterEntry (denormalized fields)
-          }],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔍 Backend auto-save error response:', errorText);
-        console.error("Failed to auto-save roster status");
-      }
-    } catch (error) {
-      console.error("Error auto-saving roster status:", error);
-    }
   };
 
   // Helper: Players grouped by status
@@ -639,6 +860,7 @@ export default function GameDetails() {
 
   // Execute the actual game was played logic (atomic operation)
   const executeGameWasPlayed = async () => {
+    setIsFinalizingGame(true); // Show blocking modal
     setIsSaving(true);
     try {
       // ✅ Single atomic call: Start game with lineup
@@ -672,17 +894,78 @@ export default function GameDetails() {
       const result = await response.json();
       console.log('✅ Game started successfully:', result);
 
-      // ✅ Step 1: Update game state from response (merge with existing to preserve all fields)
+      // ✅ Step 1: Update game state from response (DEFENSIVE MERGE - preserve all existing fields)
+      // The backend only returns minimal game data (_id, status, gameTitle, lineupDraft)
+      // We must preserve other fields like reports, teamSummary, finalScore, matchDuration, etc.
       if (result.data?.game) {
-        setGame((prev) => ({
-          ...prev,
-          ...result.data.game, // Merge: status, gameTitle, etc.
+        // Prepare the updated game object for both local and global state
+        const updatedGameData = {
+          _id: result.data.game._id,
           status: result.data.game.status, // Explicitly set status to "Played"
-        }));
+          lineupDraft: result.data.game.lineupDraft ?? null, // Clear draft
+        };
+        
+        // Only include gameTitle if provided
+        if (result.data.game.gameTitle) {
+          updatedGameData.gameTitle = result.data.game.gameTitle;
+        }
+
+        // Update local state (defensive merge)
+        setGame((prev) => {
+          if (!prev) {
+            console.warn('⚠️ [State Update] No previous game state, using response data only');
+            return updatedGameData;
+          }
+
+          const updated = {
+            ...prev, // Preserve all existing fields (reports, teamSummary, etc.)
+            ...updatedGameData, // Override with new data
+          };
+          
+          console.log('✅ [State Update] Local game state updated (defensive merge):', {
+            status: updated.status,
+            lineupDraft: updated.lineupDraft,
+            preservedFields: {
+              hasReports: !!prev.reports,
+              hasTeamSummary: !!prev.teamSummary,
+              hasFinalScore: !!prev.finalScore,
+              hasMatchDuration: !!prev.matchDuration,
+            }
+          });
+          
+          return updated;
+        });
+
+        // ✅ NEW: Update global DataProvider cache immediately (without full refresh)
+        const existingGameInCache = games.find(g => g._id === result.data.game._id);
+        updateGameInCache({
+          ...(existingGameInCache || {}), // Preserve existing fields from cache if available
+          ...updatedGameData, // Override with new data
+        });
+        console.log('✅ [State Update] Global cache updated via updateGameInCache');
       } else {
-        // Fallback: If response missing game data, just update status
-        console.warn('⚠️ Response missing game data, updating status only');
-        setGame((prev) => ({ ...prev, status: "Played" }));
+        // Fallback: If response missing game data, just update status and clear draft
+        console.warn('⚠️ Response missing game data, updating status and draft only');
+        setGame((prev) => {
+          const fallbackUpdate = { 
+            ...prev, 
+            status: "Played",
+            lineupDraft: null // Clear draft
+          };
+          
+          // Also update global cache
+          if (prev?._id) {
+            const existingGameInCache = games.find(g => g._id === prev._id);
+            updateGameInCache({
+              ...(existingGameInCache || {}), // Preserve existing fields from cache if available
+              _id: prev._id,
+              status: "Played",
+              lineupDraft: null,
+            });
+          }
+          
+          return fallbackUpdate;
+        });
       }
 
       // ✅ Step 2: Update localRosterStatuses directly from response rosters
@@ -711,6 +994,10 @@ export default function GameDetails() {
         });
         
         setLocalRosterStatuses(statuses);
+
+        // ✅ NEW: Update global gameRosters cache immediately
+        updateGameRostersInCache(result.data.rosters, gameId);
+        console.log('✅ [State Update] Global gameRosters cache updated');
       } else {
         // Fallback: If response missing rosters, initialize all to "Not in Squad"
         console.warn('⚠️ Response missing rosters data, initializing all to "Not in Squad"');
@@ -720,8 +1007,6 @@ export default function GameDetails() {
         });
         setLocalRosterStatuses(initialStatuses);
       }
-
-      // ❌ REMOVED: await refreshData(); - This was causing the race condition!
     } catch (error) {
       console.error("Error starting game:", error);
       showConfirmation({
@@ -735,6 +1020,7 @@ export default function GameDetails() {
       });
     } finally {
       setIsSaving(false);
+      setIsFinalizingGame(false); // Hide blocking modal
     }
   };
 
@@ -1369,15 +1655,26 @@ export default function GameDetails() {
     setSelectedPositionData(null);
   };
 
+  // Prevent navigation during game finalization (MUST be before any early returns)
+  useEffect(() => {
+    if (isFinalizingGame) {
+      const handleBeforeUnload = (e) => {
+        e.preventDefault();
+        e.returnValue = 'Game finalization in progress. Are you sure you want to leave?';
+        return e.returnValue;
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [isFinalizingGame]);
+
   // Render loading/error states
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="text-cyan-400 text-lg">Loading game details...</div>
-      </div>
-    );
+  // Show loading if DataProvider is loading OR if we're fetching the game directly
+  if (isLoading || isFetchingGame) {
+    return <PageLoader message="Loading game details..." />;
   }
 
+  // This check now runs *after* we are sure we are not loading
   if (error || !game) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -1388,12 +1685,27 @@ export default function GameDetails() {
     );
   }
 
-  const isScheduled = game.status === "Scheduled";
-  const isPlayed = game.status === "Played";
-  const isDone = game.status === "Done" || isReadOnly;
+  const isScheduled = game?.status === "Scheduled";
+  const isPlayed = game?.status === "Played";
+  const isDone = game?.status === "Done" || isReadOnly;
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+      {/* Blocking Modal for Game Finalization */}
+      {isFinalizingGame && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-4 text-center border border-cyan-500/30 shadow-2xl">
+            <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-2xl font-bold text-white mb-2">Finalizing Game</h2>
+            <p className="text-slate-300 mb-4">
+              Please do not navigate away. This may take a few moments...
+            </p>
+            <div className="text-sm text-slate-400">
+              Saving lineup, updating game status, and clearing draft...
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <GameDetailsHeader
         game={game}

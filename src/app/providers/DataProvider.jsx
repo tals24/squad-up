@@ -122,7 +122,95 @@ export const DataProvider = ({ children }) => {
         fetchData();
     }, []);
 
-    const value = { ...data, isLoading, error, refreshData: fetchData };
+    /**
+     * Update a single game in the global cache
+     * Used to sync local state changes with global state without full refresh
+     * @param {Object} updatedGame - The updated game object (must have _id)
+     */
+    const updateGameInCache = (updatedGame) => {
+        if (!updatedGame || !updatedGame._id) {
+            console.warn('⚠️ [DataProvider] updateGameInCache called without valid game _id');
+            return;
+        }
+
+        setData((prev) => {
+            const gameIndex = prev.games.findIndex(g => g._id === updatedGame._id);
+            
+            if (gameIndex === -1) {
+                console.warn(`⚠️ [DataProvider] Game ${updatedGame._id} not found in cache, cannot update`);
+                return prev;
+            }
+
+            // Deep merge: preserve existing game fields, update with new ones
+            const existingGame = prev.games[gameIndex];
+            const mergedGame = {
+                ...existingGame,
+                ...updatedGame,
+                // Ensure nested objects are merged correctly
+                matchDuration: updatedGame.matchDuration || existingGame.matchDuration,
+            };
+
+            const updatedGames = [...prev.games];
+            updatedGames[gameIndex] = mergedGame;
+
+            console.log('✅ [DataProvider] Game cache updated:', {
+                gameId: updatedGame._id,
+                oldStatus: existingGame.status,
+                newStatus: updatedGame.status,
+                hasLineupDraft: !!updatedGame.lineupDraft
+            });
+
+            return {
+                ...prev,
+                games: updatedGames
+            };
+        });
+    };
+
+    /**
+     * Update game rosters in the global cache
+     * Used when rosters are saved/updated without full refresh
+     * @param {Array} newRosters - Array of roster objects (must have game field)
+     * @param {String} gameId - The game ID these rosters belong to
+     */
+    const updateGameRostersInCache = (newRosters, gameId) => {
+        if (!newRosters || !Array.isArray(newRosters) || !gameId) {
+            console.warn('⚠️ [DataProvider] updateGameRostersInCache called with invalid parameters');
+            return;
+        }
+
+        setData((prev) => {
+            // Remove old rosters for this game
+            const filteredRosters = prev.gameRosters.filter(roster => {
+                const rosterGameId = typeof roster.game === "object" ? roster.game._id : roster.game;
+                return rosterGameId !== gameId;
+            });
+
+            // Add new rosters
+            const updatedRosters = [...filteredRosters, ...newRosters];
+
+            console.log('✅ [DataProvider] Game rosters cache updated:', {
+                gameId,
+                removedCount: prev.gameRosters.length - filteredRosters.length,
+                addedCount: newRosters.length,
+                totalRosters: updatedRosters.length
+            });
+
+            return {
+                ...prev,
+                gameRosters: updatedRosters
+            };
+        });
+    };
+
+    const value = { 
+        ...data, 
+        isLoading, 
+        error, 
+        refreshData: fetchData,
+        updateGameInCache,
+        updateGameRostersInCache
+    };
 
     return (
         <DataContext.Provider value={value}>

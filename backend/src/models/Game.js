@@ -119,6 +119,13 @@ const gameSchema = new mongoose.Schema({
     type: String,
     enum: ['league', 'cup', 'friendly'],
     default: 'league'
+  },
+
+  // Draft lineup for Scheduled games (temporary storage before game starts)
+  // Format: { playerId: status, ... } e.g., { "68ce9c940d0528dbba21e570": "Starting Lineup", ... }
+  lineupDraft: {
+    type: mongoose.Schema.Types.Mixed, // JSON object: { playerId: status, ... }
+    default: null
   }
 }, {
   timestamps: true
@@ -130,6 +137,7 @@ gameSchema.index({ team: 1 });
 gameSchema.index({ date: 1 });
 gameSchema.index({ status: 1 });
 gameSchema.index({ season: 1 });
+gameSchema.index({ status: 1, lineupDraft: 1 }); // For efficient draft queries
 
 // Virtual field for gameTitle (calculated dynamically)
 gameSchema.virtual('gameTitle').get(function() {

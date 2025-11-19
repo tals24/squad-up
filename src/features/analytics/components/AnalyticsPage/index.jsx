@@ -15,8 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives
 import { Badge } from "@/shared/ui/primitives/badge";
 import { Progress } from "@/shared/ui/primitives/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { PageLayout, PageHeader, DataCard, LoadingState, EmptyState } from "@/shared/ui/primitives/design-system-components";
+import { PageLayout, PageHeader, DataCard, EmptyState } from "@/shared/ui/primitives/design-system-components";
 import { useData } from "@/app/providers/DataProvider";
+import PageLoader from "@/components/PageLoader";
 
 export default function Analytics() {
   const { users, teams, players, reports, isLoading: isDataLoading } = useData();
@@ -136,7 +137,7 @@ export default function Analytics() {
   const { filteredTeams } = getFilteredData();
 
   if (isLoading) {
-    return <LoadingState message="Loading analytics data..." />;
+    return <PageLoader message="Loading analytics data..." />;
   }
 
   return (

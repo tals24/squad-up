@@ -23,8 +23,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
 import { Badge } from "@/shared/ui/primitives/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { PageLayout, PageHeader, SearchFilter, DataCard, LoadingState, EmptyState } from "@/shared/ui/primitives/design-system-components";
+import { PageLayout, PageHeader, SearchFilter, DataCard, EmptyState } from "@/shared/ui/primitives/design-system-components";
 import { useData } from "@/app/providers/DataProvider";
+import PageLoader from "@/components/PageLoader";
 
 // --- Game Stats Rotator Component ---
 const GameStatsRotator = ({ gameId, reports, players }) => {
@@ -455,7 +456,7 @@ export default function GamesSchedule() {
   const displayedGames = getFilteredGames();
 
   if (isDataLoading) {
-    return <LoadingState message="Loading Mission Data..." />;
+    return <PageLoader message="Loading Mission Data..." />;
   }
 
   if (error) {

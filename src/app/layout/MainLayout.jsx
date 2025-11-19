@@ -41,6 +41,7 @@ import { User as UserEntity } from "@/api/entities";
 import { Button } from "@/shared/ui/primitives/design-system-components";
 // Removed airtableSync - now using MongoDB backend
 import { DataProvider } from "@/app/providers/DataProvider";
+import PageLoader from "@/components/PageLoader";
 // Removed LoginModal - now using dedicated Login page
 
 // Note: ThemeProvider is now imported from ThemeContext
@@ -160,16 +161,7 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4 animate-pulse shadow-lg shadow-cyan-500/25">
-            <Trophy className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-slate-300 font-medium">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading..." />;
   }
 
   if (!isAuthorized) {

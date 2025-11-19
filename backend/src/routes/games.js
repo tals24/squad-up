@@ -75,13 +75,14 @@ router.get('/', authenticateJWT, async (req, res) => {
 });
 
 // Get game by ID
-router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
+router.get('/:id', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
-    const game = await Game.findById(req.params.id)
-      .populate('team', 'teamName season division');
-
-    if (!game) {
-      return res.status(404).json({ error: 'Game not found' });
+    // Game is already fetched and validated by checkGameAccess middleware
+    const game = req.game;
+    
+    // Populate team if not already populated
+    if (!game.team || typeof game.team === 'string') {
+      await game.populate('team', 'teamName season division');
     }
 
     res.json({
@@ -90,7 +91,7 @@ router.get('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
     });
   } catch (error) {
     console.error('Get game error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
 
@@ -274,6 +275,72 @@ router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
 });
 
 /**
+ * PUT /api/games/:gameId/draft
+ * Save draft lineup for Scheduled games (autosave)
+ * 
+ * This endpoint:
+ * 1. Validates user has access to the game (via checkGameAccess middleware)
+ * 2. Validates game is in Scheduled status
+ * 3. Saves draft lineup to game.lineupDraft field
+ * 
+ * Request Body:
+ * {
+ *   rosters: { playerId: status, ... } // e.g., { "68ce9c940d0528dbba21e570": "Starting Lineup", ... }
+ * }
+ */
+router.put('/:gameId/draft', authenticateJWT, checkGameAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { rosters, formation, formationType } = req.body;
+    const game = req.game; // From checkGameAccess middleware
+
+    // Validation: Only allow draft for Scheduled games
+    if (game.status !== 'Scheduled') {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot save draft for game with status: ${game.status}. Drafts are only allowed for Scheduled games.`
+      });
+    }
+
+    // Validate request body - support both old format (just rosters) and new format (rosters + formation)
+    if (!rosters || typeof rosters !== 'object') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request format. Expected { rosters: { playerId: status, ... }, formation?: {...}, formationType?: string }'
+      });
+    }
+
+    // Build draft object with rosters, formation, and formationType
+    const draftData = {
+      rosters: rosters,
+      ...(formation && typeof formation === 'object' ? { formation: formation } : {}),
+      ...(formationType ? { formationType: formationType } : {})
+    };
+
+    // Update game with draft
+    game.lineupDraft = draftData;
+    await game.save();
+
+    res.json({
+      success: true,
+      message: 'Draft saved successfully',
+      data: {
+        gameId: game._id,
+        draftSaved: true,
+        hasFormation: !!formation
+      }
+    });
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save draft',
+      message: error.message
+    });
+  }
+});
+
+/**
  * Validate lineup before starting game
  * @param {Array} rosters - Array of roster entries
  * @param {String} gameId - Game ID
@@ -412,15 +479,39 @@ async function validateLineup(rosters, gameId, session) {
  * }
  */
 router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 1000; // 1 second delay between retries
+  
+  let attempt = 0;
+  let lastError = null;
 
-  try {
-    const { gameId } = req.params;
-    const { rosters } = req.body;
+  while (attempt < MAX_RETRIES) {
+    attempt++;
+    console.time(`Full start-game transaction (attempt ${attempt})`);
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Get game from middleware (already validated and attached)
-    const game = req.game;
+    try {
+      const { gameId } = req.params;
+      const { rosters } = req.body;
+
+      console.log(`🚀 [start-game] Starting transaction (attempt ${attempt}/${MAX_RETRIES}):`, {
+        gameId,
+        rosterCount: rosters?.length || 0,
+        gameStatus: req.game?.status,
+        timestamp: new Date().toISOString()
+      });
+
+      // Get game from middleware (already validated and attached)
+      // Need to re-fetch game in transaction to get latest version
+      const game = await Game.findById(gameId).session(session);
+      if (!game) {
+        await session.abortTransaction();
+        return res.status(404).json({
+          success: false,
+          error: 'Game not found'
+        });
+      }
 
     // Step 1: Validate request body
     if (!rosters || !Array.isArray(rosters)) {
@@ -467,7 +558,10 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
     }
 
     // Step 4: Backend validation of lineup
+    console.time('Lineup validation');
     const validationResult = await validateLineup(rosters, gameId, session);
+    console.timeEnd('Lineup validation');
+    
     if (!validationResult.isValid) {
       await session.abortTransaction();
       return res.status(400).json({
@@ -504,6 +598,7 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
     }
 
     // Step 6: Upsert all roster entries (within transaction)
+    console.time('Roster save loop');
     const rosterResults = [];
     for (const rosterData of rosterEntries) {
       // Use findOneAndUpdate with upsert for atomic operation
@@ -523,48 +618,120 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
 
       rosterResults.push(gameRoster);
     }
+    console.timeEnd('Roster save loop');
+    console.log(`✅ [start-game] Saved ${rosterResults.length} roster entries`);
 
-    // Step 7: Update game status to 'Played' (within transaction)
+    // Step 7: Update game status to 'Played' AND clear draft (within transaction)
+    console.time('Game status save');
     game.status = 'Played';
+    game.lineupDraft = null; // ✅ Clear draft when game is finalized
     await game.save({ session });
+    console.timeEnd('Game status save');
+    console.log('✅ [start-game] Game status updated to Played, draft cleared');
 
     // Step 8: Commit transaction
+    console.time('Transaction commit');
     await session.commitTransaction();
+    console.timeEnd('Transaction commit');
+    console.log('✅ [start-game] Transaction committed successfully');
 
     // Step 9: Populate references for response (after transaction)
+    console.time('Populate references');
     await Promise.all(
       rosterResults.map(roster => 
         roster.populate('game player')
       )
     );
+    console.timeEnd('Populate references');
 
-    res.status(200).json({
+    const responseData = {
       success: true,
       message: 'Game started successfully',
       data: {
         game: {
           _id: game._id,
           status: game.status,
-          gameTitle: game.gameTitle || `${game.teamName} vs ${game.opponent}`
+          gameTitle: game.gameTitle || `${game.teamName} vs ${game.opponent}`,
+          lineupDraft: null // Explicitly set to null
         },
         rosters: rosterResults,
         rosterCount: rosterResults.length
       }
+    };
+
+    console.timeEnd(`Full start-game transaction (attempt ${attempt})`);
+    console.log('✅ [start-game] Request completed successfully:', {
+      gameId: game._id,
+      status: game.status,
+      rosterCount: rosterResults.length,
+      attempt,
+      totalTime: 'See console.time output above'
     });
 
-  } catch (error) {
-    // Abort transaction on any error
-    await session.abortTransaction();
-    
-    console.error('Error starting game:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to start game',
-      message: error.message
-    });
-  } finally {
-    // Always end the session
+    // Success! End session and return response
     session.endSession();
+    return res.status(200).json(responseData);
+
+    } catch (error) {
+      // Abort transaction on any error
+      await session.abortTransaction();
+      
+      console.timeEnd(`Full start-game transaction (attempt ${attempt})`);
+      
+      // Check if this is a write conflict error that can be retried
+      const isWriteConflict = error.message && (
+        error.message.includes('Write conflict') ||
+        error.message.includes('writeConflict') ||
+        error.code === 112 // MongoDB WriteConflict error code
+      );
+      
+      if (isWriteConflict && attempt < MAX_RETRIES) {
+        lastError = error;
+        console.warn(`⚠️ [start-game] Write conflict detected (attempt ${attempt}/${MAX_RETRIES}), retrying...`, {
+          error: error.message,
+          gameId: req.params.gameId,
+          willRetry: true,
+          retryDelay: RETRY_DELAY_MS
+        });
+        
+        // Clean up session before retry
+        session.endSession();
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+        continue; // Retry the transaction
+      }
+      
+      // Non-retryable error or max retries reached
+      console.error(`❌ [start-game] Error starting game (attempt ${attempt}/${MAX_RETRIES}):`, {
+        error: error.message,
+        stack: error.stack,
+        gameId: req.params.gameId,
+        timestamp: new Date().toISOString(),
+        isWriteConflict,
+        willRetry: false
+      });
+      
+      session.endSession();
+      
+      // Return error response
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to start game',
+        message: attempt >= MAX_RETRIES 
+          ? `Failed after ${MAX_RETRIES} attempts. ${error.message}` 
+          : error.message
+      });
+    }
+  }
+  
+  // If we get here, all retries failed
+  if (lastError) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to start game after retries',
+      message: lastError.message
+    });
   }
 });
 

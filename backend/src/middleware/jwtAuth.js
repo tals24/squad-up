@@ -127,8 +127,8 @@ const checkTeamAccess = async (req, res, next) => {
  */
 const checkGameAccess = async (req, res, next) => {
   try {
-    // Step 1: Get gameId from params
-    const { gameId } = req.params;
+    // Step 1: Get gameId from params (support both :id and :gameId)
+    const gameId = req.params.gameId || req.params.id;
     
     // Step 2: Validate gameId exists and is valid format
     if (!gameId) {
