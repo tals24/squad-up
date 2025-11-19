@@ -139,7 +139,7 @@ export const DataProvider = ({ children }) => {
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/organizations/default/config`, {
+            const response = await fetch('http://localhost:3001/api/organizations/default/config', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
