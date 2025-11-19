@@ -122,7 +122,7 @@ export const DataProvider = ({ children }) => {
     const fetchOrganizationConfig = async () => {
         try {
             setIsLoadingConfig(true);
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             
             if (!token) {
                 console.warn('⚠️ No auth token found, skipping config fetch');
