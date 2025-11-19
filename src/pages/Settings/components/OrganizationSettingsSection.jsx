@@ -3,16 +3,22 @@ import {
   Settings,
   Save,
   Loader2,
-  Users
+  Users,
+  Target,
+  BarChart3,
+  Shield,
+  Zap,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Alert, AlertDescription } from "@/shared/ui/primitives/alert";
-import { Button } from "@/shared/ui/primitives/button";
+import { Badge } from "@/shared/ui/primitives/badge";
 import { Switch } from "@/shared/ui/primitives/switch";
 import { Label } from "@/shared/ui/primitives/label";
 import { useData } from "@/app/providers/DataProvider";
 import { useUserRole } from "@/shared/hooks/useUserRole";
 import { User } from "@/api/entities";
+import { DataCard, StandardButton } from "@/shared/ui/primitives/design-system-components";
 
 const AGE_GROUPS = ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'];
 
@@ -105,7 +111,6 @@ export default function OrganizationSettingsSection() {
         const remainingFeatures = Object.keys(overrides[existingIndex]).filter(
           key => key !== 'ageGroup' && overrides[existingIndex][key] !== null
         );
-        
         if (remainingFeatures.length === 0) {
           overrides.splice(existingIndex, 1);
         }
@@ -173,128 +178,235 @@ export default function OrganizationSettingsSection() {
 
   if (!isAdmin) {
     return (
-      <Alert>
-        <AlertDescription>
-          Only administrators can modify organization settings.
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center justify-center p-8 rounded-xl bg-bg-secondary/70 border border-border-custom">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-6 h-6 text-red-400" />
+          <p className="text-text-primary font-semibold">
+            Only administrators can modify organization settings.
+          </p>
+        </div>
+      </div>
     );
   }
 
   if (isLoadingConfig || !localConfig) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-        <span className="ml-2">Loading configuration...</span>
+        <Loader2 className="w-6 h-6 animate-spin text-accent-primary" />
+        <span className="ml-2 text-text-primary">Loading configuration...</span>
       </div>
     );
   }
 
+  const getFeatureIcon = (featureName) => {
+    const icons = {
+      shotTrackingEnabled: Target,
+      positionSpecificMetricsEnabled: BarChart3,
+      detailedDisciplinaryEnabled: Shield,
+      goalInvolvementEnabled: Zap
+    };
+    return icons[featureName] || Settings;
+  };
+
+  const getFeatureColor = (featureName) => {
+    const colors = {
+      shotTrackingEnabled: 'from-orange-500 to-red-500',
+      positionSpecificMetricsEnabled: 'from-blue-500 to-cyan-500',
+      detailedDisciplinaryEnabled: 'from-purple-500 to-pink-500',
+      goalInvolvementEnabled: 'from-green-500 to-emerald-500'
+    };
+    return colors[featureName] || 'from-slate-500 to-slate-600';
+  };
+
   return (
     <div className="space-y-6">
+      {/* Status Message */}
       {saveMessage && (
-        <Alert className={saveMessage.type === 'success' ? 'bg-green-500/10 border-green-500' : saveMessage.type === 'info' ? 'bg-blue-500/10 border-blue-500' : 'bg-red-500/10 border-red-500'}>
-          <AlertDescription>{saveMessage.text}</AlertDescription>
-        </Alert>
+        <div className={`flex items-center gap-3 p-4 rounded-xl border ${
+          saveMessage.type === 'success' 
+            ? 'bg-success/10 border-green-500/30 text-success' 
+            : saveMessage.type === 'info'
+            ? 'bg-accent-primary/10 border-blue-500/30 text-accent-primary'
+            : 'bg-error/10 border-red-500/30 text-error'
+        }`}>
+          {saveMessage.type === 'success' ? (
+            <CheckCircle className="w-5 h-5" />
+          ) : saveMessage.type === 'error' ? (
+            <AlertCircle className="w-5 h-5" />
+          ) : (
+            <Settings className="w-5 h-5" />
+          )}
+          <p className="font-semibold">{saveMessage.text}</p>
+        </div>
       )}
 
       {/* Global Features Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Global Feature Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <Label className="font-semibold">Shot Tracking</Label>
-              <p className="text-sm text-muted-foreground">
-                Enable shot tracking for all teams (can be overridden per age group)
-              </p>
+      <DataCard
+        title="Global Feature Settings"
+        titleIcon={<Settings className="w-6 h-6 text-accent-primary" />}
+        headerClassName="flex items-center justify-between"
+      >
+        <div className="space-y-4">
+          {/* Shot Tracking */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-4 flex-1">
+              <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('shotTrackingEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <Target className="w-6 h-6 text-text-primary" />
+              </div>
+              <div className="flex-1">
+                <Label className="font-bold text-lg text-text-primary">Shot Tracking</Label>
+                <p className="text-sm text-text-secondary mt-1">
+                  Enable shot tracking for all teams (can be overridden per age group)
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={localConfig.features.shotTrackingEnabled}
-              onCheckedChange={(checked) => handleGlobalFeatureToggle('shotTrackingEnabled', checked)}
-            />
+            <div className="flex items-center gap-3">
+              <Badge 
+                variant="outline" 
+                className={`${
+                  localConfig.features.shotTrackingEnabled 
+                    ? 'bg-success/10 text-success border-green-500/30' 
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                }`}
+              >
+                {localConfig.features.shotTrackingEnabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={localConfig.features.shotTrackingEnabled}
+                onCheckedChange={(checked) => handleGlobalFeatureToggle('shotTrackingEnabled', checked)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <Label className="font-semibold">Position-Specific Metrics</Label>
-              <p className="text-sm text-muted-foreground">
-                Enable position-specific metrics for all teams (can be overridden per age group)
-              </p>
+          {/* Position-Specific Metrics */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-4 flex-1">
+              <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('positionSpecificMetricsEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <BarChart3 className="w-6 h-6 text-text-primary" />
+              </div>
+              <div className="flex-1">
+                <Label className="font-bold text-lg text-text-primary">Position-Specific Metrics</Label>
+                <p className="text-sm text-text-secondary mt-1">
+                  Enable position-specific metrics for all teams (can be overridden per age group)
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={localConfig.features.positionSpecificMetricsEnabled}
-              onCheckedChange={(checked) => handleGlobalFeatureToggle('positionSpecificMetricsEnabled', checked)}
-            />
+            <div className="flex items-center gap-3">
+              <Badge 
+                variant="outline" 
+                className={`${
+                  localConfig.features.positionSpecificMetricsEnabled 
+                    ? 'bg-success/10 text-success border-green-500/30' 
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                }`}
+              >
+                {localConfig.features.positionSpecificMetricsEnabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={localConfig.features.positionSpecificMetricsEnabled}
+                onCheckedChange={(checked) => handleGlobalFeatureToggle('positionSpecificMetricsEnabled', checked)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <Label className="font-semibold">Detailed Disciplinary Tracking</Label>
-              <p className="text-sm text-muted-foreground">
-                Track fouls committed/received in addition to cards
-              </p>
+          {/* Detailed Disciplinary Tracking */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-4 flex-1">
+              <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('detailedDisciplinaryEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <Shield className="w-6 h-6 text-text-primary" />
+              </div>
+              <div className="flex-1">
+                <Label className="font-bold text-lg text-text-primary">Detailed Disciplinary Tracking</Label>
+                <p className="text-sm text-text-secondary mt-1">
+                  Track fouls committed/received in addition to cards
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={localConfig.features.detailedDisciplinaryEnabled}
-              onCheckedChange={(checked) => handleGlobalFeatureToggle('detailedDisciplinaryEnabled', checked)}
-            />
+            <div className="flex items-center gap-3">
+              <Badge 
+                variant="outline" 
+                className={`${
+                  localConfig.features.detailedDisciplinaryEnabled 
+                    ? 'bg-success/10 text-success border-green-500/30' 
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                }`}
+              >
+                {localConfig.features.detailedDisciplinaryEnabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={localConfig.features.detailedDisciplinaryEnabled}
+                onCheckedChange={(checked) => handleGlobalFeatureToggle('detailedDisciplinaryEnabled', checked)}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <Label className="font-semibold">Goal Involvement Tracking</Label>
-              <p className="text-sm text-muted-foreground">
-                Track indirect goal contributors (pre-assists, etc.)
-              </p>
+          {/* Goal Involvement Tracking */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+            <div className="flex items-center gap-4 flex-1">
+              <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('goalInvolvementEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <Zap className="w-6 h-6 text-text-primary" />
+              </div>
+              <div className="flex-1">
+                <Label className="font-bold text-lg text-text-primary">Goal Involvement Tracking</Label>
+                <p className="text-sm text-text-secondary mt-1">
+                  Track indirect goal contributors (pre-assists, etc.)
+                </p>
+              </div>
             </div>
-            <Switch
-              checked={localConfig.features.goalInvolvementEnabled}
-              onCheckedChange={(checked) => handleGlobalFeatureToggle('goalInvolvementEnabled', checked)}
-            />
+            <div className="flex items-center gap-3">
+              <Badge 
+                variant="outline" 
+                className={`${
+                  localConfig.features.goalInvolvementEnabled 
+                    ? 'bg-success/10 text-success border-green-500/30' 
+                    : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                }`}
+              >
+                {localConfig.features.goalInvolvementEnabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={localConfig.features.goalInvolvementEnabled}
+                onCheckedChange={(checked) => handleGlobalFeatureToggle('goalInvolvementEnabled', checked)}
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </DataCard>
 
       {/* Age Group Overrides Section */}
-      <Card>
+      <Card className="bg-bg-secondary/70 border-border-custom shadow-xl backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
+          <CardTitle className="text-xl font-bold text-text-primary flex items-center gap-3">
+            <Users className="w-6 h-6 text-accent-primary" />
             Age Group Overrides
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-text-secondary mb-6">
             Override global settings for specific age groups. Click "Reset" to use the global setting for that age group.
           </p>
           
           <div className="space-y-4">
             {AGE_GROUPS.map(ageGroup => (
-              <div key={ageGroup} className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-3">{ageGroup}</h4>
+              <div key={ageGroup} className="p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200">
+                <h4 className="font-bold text-lg text-text-primary mb-4">{ageGroup}</h4>
                 
                 <div className="space-y-3">
                   {/* Shot Tracking Override */}
-                  <div className="flex items-center justify-between">
-                    <Label>Shot Tracking</Label>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    <Label className="text-text-primary font-semibold">Shot Tracking</Label>
                     <div className="flex items-center gap-2">
                       {getAgeGroupOverride(ageGroup, 'shotTrackingEnabled') !== null && (
-                        <Button 
-                          variant="ghost" 
+                        <StandardButton 
+                          variant="outline"
                           size="sm"
                           onClick={() => handleResetOverride(ageGroup, 'shotTrackingEnabled')}
-                          className="text-xs h-6 px-2"
+                          className="text-xs h-7 px-2"
                         >
                           Reset
-                        </Button>
+                        </StandardButton>
                       )}
-                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                      <span className="text-xs text-text-secondary min-w-[100px] text-right">
                         {getAgeGroupOverride(ageGroup, 'shotTrackingEnabled') === null 
                           ? `Global (${localConfig.features.shotTrackingEnabled ? 'On' : 'Off'})` 
                           : getAgeGroupOverride(ageGroup, 'shotTrackingEnabled') 
@@ -309,20 +421,20 @@ export default function OrganizationSettingsSection() {
                   </div>
                   
                   {/* Position Metrics Override */}
-                  <div className="flex items-center justify-between">
-                    <Label>Position Metrics</Label>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    <Label className="text-text-primary font-semibold">Position Metrics</Label>
                     <div className="flex items-center gap-2">
                       {getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') !== null && (
-                        <Button 
-                          variant="ghost" 
+                        <StandardButton 
+                          variant="outline"
                           size="sm"
                           onClick={() => handleResetOverride(ageGroup, 'positionSpecificMetricsEnabled')}
-                          className="text-xs h-6 px-2"
+                          className="text-xs h-7 px-2"
                         >
                           Reset
-                        </Button>
+                        </StandardButton>
                       )}
-                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                      <span className="text-xs text-text-secondary min-w-[100px] text-right">
                         {getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') === null 
                           ? `Global (${localConfig.features.positionSpecificMetricsEnabled ? 'On' : 'Off'})` 
                           : getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') 
@@ -337,20 +449,20 @@ export default function OrganizationSettingsSection() {
                   </div>
                   
                   {/* Detailed Disciplinary Override */}
-                  <div className="flex items-center justify-between">
-                    <Label>Detailed Disciplinary</Label>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    <Label className="text-text-primary font-semibold">Detailed Disciplinary</Label>
                     <div className="flex items-center gap-2">
                       {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') !== null && (
-                        <Button 
-                          variant="ghost" 
+                        <StandardButton 
+                          variant="outline"
                           size="sm"
                           onClick={() => handleResetOverride(ageGroup, 'detailedDisciplinaryEnabled')}
-                          className="text-xs h-6 px-2"
+                          className="text-xs h-7 px-2"
                         >
                           Reset
-                        </Button>
+                        </StandardButton>
                       )}
-                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                      <span className="text-xs text-text-secondary min-w-[100px] text-right">
                         {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') === null 
                           ? `Global (${localConfig.features.detailedDisciplinaryEnabled ? 'On' : 'Off'})` 
                           : getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') 
@@ -365,20 +477,20 @@ export default function OrganizationSettingsSection() {
                   </div>
                   
                   {/* Goal Involvement Override */}
-                  <div className="flex items-center justify-between">
-                    <Label>Goal Involvement</Label>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    <Label className="text-text-primary font-semibold">Goal Involvement</Label>
                     <div className="flex items-center gap-2">
                       {getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') !== null && (
-                        <Button 
-                          variant="ghost" 
+                        <StandardButton 
+                          variant="outline"
                           size="sm"
                           onClick={() => handleResetOverride(ageGroup, 'goalInvolvementEnabled')}
-                          className="text-xs h-6 px-2"
+                          className="text-xs h-7 px-2"
                         >
                           Reset
-                        </Button>
+                        </StandardButton>
                       )}
-                      <span className="text-xs text-muted-foreground min-w-[80px]">
+                      <span className="text-xs text-text-secondary min-w-[100px] text-right">
                         {getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') === null 
                           ? `Global (${localConfig.features.goalInvolvementEnabled ? 'On' : 'Off'})` 
                           : getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') 
@@ -400,21 +512,14 @@ export default function OrganizationSettingsSection() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Configuration
-            </>
-          )}
-        </Button>
+        <StandardButton 
+          onClick={handleSave} 
+          disabled={isSaving}
+          icon={isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        >
+          {isSaving ? 'Saving...' : 'Save Configuration'}
+        </StandardButton>
       </div>
     </div>
   );
 }
-
