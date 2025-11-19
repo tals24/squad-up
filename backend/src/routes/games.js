@@ -174,6 +174,11 @@ router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
       generalSummary
     };
 
+    // Clear reportDraft when game transitions to "Done"
+    if (status === 'Done') {
+      updateData.reportDraft = null;
+    }
+
     // If matchDuration is provided, update it
     if (matchDuration) {
       // 🔍 DEBUG: Log matchDuration being saved
@@ -291,45 +296,125 @@ router.delete('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
 router.put('/:gameId/draft', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
     const { gameId } = req.params;
-    const { rosters, formation, formationType } = req.body;
     const game = req.game; // From checkGameAccess middleware
 
-    // Validation: Only allow draft for Scheduled games
-    if (game.status !== 'Scheduled') {
-      return res.status(400).json({
-        success: false,
-        error: `Cannot save draft for game with status: ${game.status}. Drafts are only allowed for Scheduled games.`
-      });
-    }
+    // Route based on game status
+    if (game.status === 'Scheduled') {
+      // === EXISTING LINEUP DRAFT LOGIC ===
+      const { rosters, formation, formationType } = req.body;
 
-    // Validate request body - support both old format (just rosters) and new format (rosters + formation)
-    if (!rosters || typeof rosters !== 'object') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request format. Expected { rosters: { playerId: status, ... }, formation?: {...}, formationType?: string }'
-      });
-    }
-
-    // Build draft object with rosters, formation, and formationType
-    const draftData = {
-      rosters: rosters,
-      ...(formation && typeof formation === 'object' ? { formation: formation } : {}),
-      ...(formationType ? { formationType: formationType } : {})
-    };
-
-    // Update game with draft
-    game.lineupDraft = draftData;
-    await game.save();
-
-    res.json({
-      success: true,
-      message: 'Draft saved successfully',
-      data: {
-        gameId: game._id,
-        draftSaved: true,
-        hasFormation: !!formation
+      // Validate request body - support both old format (just rosters) and new format (rosters + formation)
+      if (!rosters || typeof rosters !== 'object') {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request format. Expected { rosters: { playerId: status, ... }, formation?: {...}, formationType?: string }'
+        });
       }
-    });
+
+      // Build draft object with rosters, formation, and formationType
+      const draftData = {
+        rosters: rosters,
+        ...(formation && typeof formation === 'object' ? { formation: formation } : {}),
+        ...(formationType ? { formationType: formationType } : {})
+      };
+
+      // Update game with draft
+      game.lineupDraft = draftData;
+      await game.save();
+
+      return res.json({
+        success: true,
+        message: 'Lineup draft saved successfully',
+        data: {
+          gameId: game._id,
+          draftSaved: true,
+          hasFormation: !!formation
+        }
+      });
+
+    } else if (game.status === 'Played') {
+      // === NEW REPORT DRAFT LOGIC ===
+      const { teamSummary, finalScore, matchDuration, playerReports } = req.body;
+
+      // Validate at least one field is provided
+      const hasData = teamSummary || finalScore || matchDuration || playerReports;
+      if (!hasData) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid request format. Expected at least one of: { teamSummary?, finalScore?, matchDuration?, playerReports? }'
+        });
+      }
+
+      // Build draft object (only include provided fields)
+      const draftData = {};
+      if (teamSummary && typeof teamSummary === 'object') {
+        draftData.teamSummary = {
+          ...(teamSummary.defenseSummary !== undefined ? { defenseSummary: teamSummary.defenseSummary } : {}),
+          ...(teamSummary.midfieldSummary !== undefined ? { midfieldSummary: teamSummary.midfieldSummary } : {}),
+          ...(teamSummary.attackSummary !== undefined ? { attackSummary: teamSummary.attackSummary } : {}),
+          ...(teamSummary.generalSummary !== undefined ? { generalSummary: teamSummary.generalSummary } : {})
+        };
+        // Remove empty teamSummary if no fields
+        if (Object.keys(draftData.teamSummary).length === 0) {
+          delete draftData.teamSummary;
+        }
+      }
+
+      if (finalScore && typeof finalScore === 'object') {
+        draftData.finalScore = {
+          ...(finalScore.ourScore !== undefined ? { ourScore: finalScore.ourScore } : {}),
+          ...(finalScore.opponentScore !== undefined ? { opponentScore: finalScore.opponentScore } : {})
+        };
+        if (Object.keys(draftData.finalScore).length === 0) {
+          delete draftData.finalScore;
+        }
+      }
+
+      if (matchDuration && typeof matchDuration === 'object') {
+        draftData.matchDuration = {
+          ...(matchDuration.regularTime !== undefined ? { regularTime: matchDuration.regularTime } : {}),
+          ...(matchDuration.firstHalfExtraTime !== undefined ? { firstHalfExtraTime: matchDuration.firstHalfExtraTime } : {}),
+          ...(matchDuration.secondHalfExtraTime !== undefined ? { secondHalfExtraTime: matchDuration.secondHalfExtraTime } : {})
+        };
+        if (Object.keys(draftData.matchDuration).length === 0) {
+          delete draftData.matchDuration;
+        }
+      }
+
+      if (playerReports && typeof playerReports === 'object') {
+        draftData.playerReports = playerReports;
+      }
+
+      // Merge with existing draft (preserve fields not in this request)
+      const existingDraft = game.reportDraft || {};
+      game.reportDraft = {
+        ...existingDraft,
+        ...draftData
+      };
+
+      await game.save();
+
+      return res.json({
+        success: true,
+        message: 'Report draft saved successfully',
+        data: {
+          gameId: game._id,
+          draftSaved: true,
+          hasTeamSummary: !!draftData.teamSummary,
+          hasFinalScore: !!draftData.finalScore,
+          hasMatchDuration: !!draftData.matchDuration,
+          playerReportsCount: draftData.playerReports ? Object.keys(draftData.playerReports).length : 0
+        }
+      });
+
+    } else {
+      // Invalid status for drafts
+      return res.status(400).json({
+        success: false,
+        error: `Cannot save draft for game with status: ${game.status}. Drafts are only allowed for Scheduled or Played games.`
+      });
+    }
+
   } catch (error) {
     console.error('Error saving draft:', error);
     res.status(500).json({

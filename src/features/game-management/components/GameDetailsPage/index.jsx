@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
+import { useAutosave } from "@/hooks/useAutosave";
 
 // Import formation configurations
 import { formations } from "./formations";
@@ -460,6 +461,36 @@ export default function GameDetails() {
     };
   }, [localRosterStatuses, formation, formationType, gameId, game, isFinalizingGame]);
 
+  // Memoize report data for autosave to prevent unnecessary re-renders
+  const reportDataForAutosave = useMemo(() => ({
+    teamSummary,
+    finalScore,
+    matchDuration,
+    playerReports: localPlayerReports
+  }), [teamSummary, finalScore, matchDuration, localPlayerReports]);
+
+  // NEW: Autosave for Played games (report draft)
+  const { 
+    isAutosaving: isAutosavingReport, 
+    autosaveError: reportAutosaveError 
+  } = useAutosave({
+    data: reportDataForAutosave,
+    endpoint: `http://localhost:3001/api/games/${gameId}/draft`,
+    enabled: game?.status === 'Played' && !isFinalizingGame,
+    debounceMs: 2500,
+    shouldSkip: () => {
+      // Skip if no meaningful data to save
+      const hasTeamSummary = Object.values(teamSummary).some(v => v && v.trim());
+      const hasFinalScore = finalScore.ourScore > 0 || finalScore.opponentScore > 0;
+      const hasMatchDuration = matchDuration.regularTime !== 90 || 
+                               matchDuration.firstHalfExtraTime > 0 || 
+                               matchDuration.secondHalfExtraTime > 0;
+      const hasPlayerReports = Object.keys(localPlayerReports).length > 0;
+      
+      return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports;
+    }
+  });
+
   // Load goals for the game
   useEffect(() => {
     if (!gameId || !game) return;
@@ -601,6 +632,61 @@ export default function GameDetails() {
       console.log('🔍 [GameDetails] No reports found for this game');
     }
   }, [gameId, gameReports, isLoading]);
+
+  // Load report draft for Played games (similar to lineup draft loading)
+  useEffect(() => {
+    if (!gameId || !game || game.status !== 'Played') return;
+
+    console.log('🔍 [Report Draft Loading] Checking for draft:', {
+      gameId,
+      gameStatus: game.status,
+      hasReportDraft: !!game.reportDraft,
+      reportDraft: game.reportDraft,
+      reportDraftType: typeof game.reportDraft
+    });
+
+    // Priority 1: Check for draft
+    if (game.reportDraft && typeof game.reportDraft === 'object') {
+      const draft = game.reportDraft;
+      console.log('📋 Loading report draft:', draft);
+
+      // Merge draft with existing state (draft overrides saved)
+      if (draft.teamSummary) {
+        setTeamSummary(prev => ({
+          ...prev,
+          ...draft.teamSummary // Draft fields override saved fields
+        }));
+      }
+
+      if (draft.finalScore) {
+        setFinalScore(prev => ({
+          ...prev,
+          ...draft.finalScore // Draft fields override saved fields
+        }));
+      }
+
+      if (draft.matchDuration) {
+        setMatchDuration(prev => ({
+          ...prev,
+          ...draft.matchDuration // Draft fields override saved fields
+        }));
+      }
+
+      if (draft.playerReports) {
+        setLocalPlayerReports(prev => ({
+          ...prev,
+          ...draft.playerReports // Draft reports override saved reports
+        }));
+      }
+
+      console.log('✅ Report draft loaded and merged with saved data');
+      return; // Draft loaded
+    }
+
+    // Priority 2: Load from saved data (if no draft exists)
+    // This happens automatically via existing useEffects that load from game/gameReports
+    console.log('⚠️ [Report Draft Loading] No draft found, using saved data from DB');
+  }, [gameId, game]);
 
   // Auto-build formation from roster (only when NOT in manual mode)
   useEffect(() => {
