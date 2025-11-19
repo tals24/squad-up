@@ -12,7 +12,6 @@ import {
   validateGoalkeeper,
   validateSquad,
   validateMinutesPlayed,
-  validateGoalsScored,
   validateReportCompleteness
 } from '../squadValidation';
 
@@ -539,111 +538,10 @@ describe('Squad Validation Utilities', () => {
     });
   });
 
-  describe('validateGoalsScored', () => {
-    const mockPlayerReports = {
-      '1': { goals: 2, assists: 1 },
-      '2': { goals: 1, assists: 0 },
-      '3': { goals: 0, assists: 1 }
-    };
-
-    it('should validate perfect match between team goals and player goals', () => {
-      const teamScore = { ourScore: 3, opponentScore: 1 };
-      const result = validateGoalsScored(teamScore, mockPlayerReports);
-
-      expect(result.isValid).toBe(true);
-      expect(result.message).toBe('Goals scored match team score');
-      expect(result.needsConfirmation).toBe(false);
-    });
-
-    it('should return error when player goals exceed team score', () => {
-      const teamScore = { ourScore: 2, opponentScore: 1 };
-      const result = validateGoalsScored(teamScore, mockPlayerReports);
-
-      expect(result.isValid).toBe(false);
-      expect(result.message).toContain('Player goals (3) exceed team score (2)');
-      expect(result.needsConfirmation).toBe(false);
-    });
-
-    it('should return warning when team score exceeds player goals (own goals)', () => {
-      const teamScore = { ourScore: 5, opponentScore: 1 };
-      const result = validateGoalsScored(teamScore, mockPlayerReports);
-
-      expect(result.isValid).toBe(true);
-      expect(result.needsConfirmation).toBe(true);
-      expect(result.confirmationMessage).toContain('This suggests 2 own goals');
-    });
-
-    it('should return error when assists exceed team goals', () => {
-      const teamScore = { ourScore: 1, opponentScore: 0 };
-      const reportsWithManyAssists = {
-        '1': { goals: 1, assists: 3 }
-      };
-      const result = validateGoalsScored(teamScore, reportsWithManyAssists);
-
-      expect(result.isValid).toBe(false);
-      expect(result.message).toContain('Total assists (3) cannot exceed team goals (1)');
-      expect(result.needsConfirmation).toBe(false);
-    });
-
-    it('should validate when assists match team goals exactly', () => {
-      const teamScore = { ourScore: 3, opponentScore: 1 };
-      const reportsWithAssists = {
-        '1': { goals: 2, assists: 1 },
-        '2': { goals: 1, assists: 2 }
-      };
-      const result = validateGoalsScored(teamScore, reportsWithAssists);
-
-      expect(result.isValid).toBe(true);
-      expect(result.needsConfirmation).toBe(false);
-    });
-
-    it('should handle missing team score', () => {
-      const result = validateGoalsScored(null, mockPlayerReports);
-
-      expect(result.isValid).toBe(false);
-      expect(result.message).toBe('Team score must be entered');
-      expect(result.needsConfirmation).toBe(false);
-    });
-
-    it('should handle undefined team score', () => {
-      const teamScore = { ourScore: null, opponentScore: 1 };
-      const result = validateGoalsScored(teamScore, mockPlayerReports);
-
-      expect(result.isValid).toBe(false);
-      expect(result.message).toBe('Team score must be entered');
-    });
-
-    it('should handle empty player reports', () => {
-      const teamScore = { ourScore: 3, opponentScore: 1 };
-      const result = validateGoalsScored(teamScore, {});
-
-      expect(result.isValid).toBe(false);
-      expect(result.message).toBe('Player reports not found');
-    });
-
-    it('should support both goals and goalsScored field names', () => {
-      const teamScore = { ourScore: 3, opponentScore: 1 };
-      const reportsWithGoalsScored = {
-        '1': { goalsScored: 2, assists: 1 },
-        '2': { goalsScored: 1, assists: 0 }
-      };
-      const result = validateGoalsScored(teamScore, reportsWithGoalsScored);
-
-      expect(result.isValid).toBe(true);
-      expect(result.message).toBe('Goals scored match team score');
-    });
-
-    it('should handle zero goals scenario', () => {
-      const teamScore = { ourScore: 0, opponentScore: 2 };
-      const reportsNoGoals = {
-        '1': { goals: 0, assists: 0 },
-        '2': { goals: 0, assists: 0 }
-      };
-      const result = validateGoalsScored(teamScore, reportsNoGoals);
-
-      expect(result.isValid).toBe(true);
-      expect(result.message).toBe('Goals scored match team score');
-    });
+  // NOTE: validateGoalsScored tests removed - function is deprecated
+  // Goals and assists are now server-calculated from Goals collection, so manual validation is no longer needed
+  describe.skip('validateGoalsScored (DEPRECATED)', () => {
+    // Tests removed - function deprecated since goals/assists are server-calculated
   });
 
   describe('validateReportCompleteness', () => {

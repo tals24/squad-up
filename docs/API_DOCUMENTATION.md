@@ -417,6 +417,29 @@ Authorization: Bearer <your-jwt-token>
 }
 ```
 
+#### **GET** `/api/games/:gameId/player-stats`
+**Purpose**: Get consolidated player statistics (minutes, goals, assists) for all players in a game  
+**Authentication**: Required + game access check  
+**Note**: Only available for games with status "Played". Optimized for pre-fetching - returns all stats in one request.  
+**Response**:
+```json
+{
+  "success": true,
+  "gameId": "...",
+  "playerStats": {
+    "playerId1": { "minutes": 90, "goals": 2, "assists": 1 },
+    "playerId2": { "minutes": 65, "goals": 0, "assists": 1 },
+    "playerId3": { "minutes": 25, "goals": 0, "assists": 0 }
+  },
+  "metadata": {
+    "totalPlayers": 3,
+    "playersWithMinutes": 3,
+    "playersWithGoalsAssists": 2
+  }
+}
+```
+**Note**: Minutes are calculated from substitutions and red cards. Goals and assists are calculated from the Goals collection. This endpoint runs both calculations in parallel for efficiency.
+
 ---
 
 ### ⚽ Game Events (`/api/games/:gameId/...`)
@@ -571,34 +594,7 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Delete a disciplinary action  
 **Authentication**: Required + game access check  
 
-#### **Minutes Validation** (`/api/games/:gameId/...`)
-
-##### **POST** `/api/games/:gameId/validate-minutes`
-**Purpose**: Validate minutes for a match before final submission  
-**Authentication**: Required  
-**Body**:
-```json
-{
-  "playerReports": [
-    { "playerId": "...", "playerName": "Player Name", "minutesPlayed": 90 }
-  ]
-}
-```
-**Response**:
-```json
-{
-  "isValid": true,
-  "errors": [],
-  "warnings": [],
-  "summary": {
-    "totalPlayerMinutes": 990,
-    "minimumRequired": 990,
-    "deficit": 0,
-    "excess": 0
-  },
-  "suggestions": null
-}
-```
+#### **Match Duration** (`/api/games/:gameId/...`)
 
 ##### **PUT** `/api/games/:gameId/match-duration`
 **Purpose**: Update match duration (regular time + extra time)  
@@ -611,23 +607,19 @@ Authorization: Bearer <your-jwt-token>
   "secondHalfExtraTime": 5
 }
 ```
-
-##### **GET** `/api/games/:gameId/minutes-summary`
-**Purpose**: Get current minutes summary for a match  
-**Authentication**: Required  
 **Response**:
 ```json
 {
-  "matchDuration": 98,
-  "minimumRequired": 1078,
-  "totalRecorded": 1078,
-  "deficit": 0,
-  "excess": 0,
-  "playersReported": 12,
-  "playersWithMinutes": 12,
-  "isValid": true
+  "message": "Match duration updated successfully",
+  "matchDuration": {
+    "regularTime": 90,
+    "firstHalfExtraTime": 3,
+    "secondHalfExtraTime": 5
+  },
+  "totalMatchDuration": 98
 }
 ```
+**Note**: Extra time values are validated (must be 0-15 minutes, non-negative). The `totalMatchDuration` field is automatically calculated and stored.
 
 ---
 
@@ -690,36 +682,6 @@ Authorization: Bearer <your-jwt-token>
       "notes": "Great game"
     }
   ]
-}
-```
-
-#### **GET** `/api/game-reports/calculate-minutes/:gameId`
-**Purpose**: Calculate player minutes for a game based on events (substitutions, red cards)  
-**Authentication**: Required + game access check  
-**Response**:
-```json
-{
-  "success": true,
-  "gameId": "...",
-  "calculatedMinutes": {
-    "playerId1": 90,
-    "playerId2": 65
-  }
-}
-```
-
-#### **GET** `/api/game-reports/calculate-goals-assists/:gameId`
-**Purpose**: Calculate player goals and assists for a game from Goals collection  
-**Authentication**: Required + game access check  
-**Response**:
-```json
-{
-  "success": true,
-  "gameId": "...",
-  "calculatedStats": {
-    "playerId1": { "goals": 2, "assists": 1 },
-    "playerId2": { "goals": 0, "assists": 1 }
-  }
 }
 ```
 
@@ -935,19 +897,7 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Delete roster entry  
 **Authentication**: Required  
 
-#### **POST** `/api/game-rosters/batch`
-**Purpose**: Batch create/update roster entries  
-**Authentication**: Required + game access check  
-**Body**:
-```json
-{
-  "gameId": "60f7b3b3b3b3b3b3b3b3b3b3",
-  "rosters": [
-    { "playerId": "...", "status": "Starting Lineup", "position": "gk" },
-    { "playerId": "...", "status": "Bench" }
-  ]
-}
-```
+**Note**: For batch roster operations (e.g., starting a game with a full lineup), use `POST /api/games/:gameId/start-game` instead, which creates rosters atomically as part of the game start transaction.
 
 ---
 

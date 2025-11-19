@@ -2,35 +2,6 @@ const express = require('express');
 const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 const GameRoster = require('../models/GameRoster');
 
-/**
- * Special middleware for routes that have gameId in request body instead of params
- * This temporarily sets gameId in params so checkGameAccess can be reused
- */
-const checkGameAccessFromBody = async (req, res, next) => {
-  try {
-    const { gameId } = req.body;
-    
-    if (!gameId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Game ID is required in request body'
-      });
-    }
-    
-    // Temporarily set gameId in params for checkGameAccess
-    req.params.gameId = gameId;
-    
-    // Call the main checkGameAccess middleware
-    return checkGameAccess(req, res, next);
-  } catch (error) {
-    console.error('Game access check from body error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error during access check'
-    });
-  }
-};
-
 const router = express.Router();
 
 // Get all game rosters
@@ -157,52 +128,6 @@ router.delete('/:id', authenticateJWT, async (req, res) => {
     });
   } catch (error) {
     console.error('Delete game roster error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Batch update game rosters (for initializing/updating all players for a game)
-router.post('/batch', authenticateJWT, checkGameAccessFromBody, async (req, res) => {
-  try {
-    const { gameId, rosters } = req.body;
-    // Game access already validated by checkGameAccessFromBody middleware
-    const game = req.game;
-    // rosters should be array of { playerId, status }
-
-    if (!gameId || !Array.isArray(rosters)) {
-      return res.status(400).json({ error: 'Invalid request format. Expected { gameId, rosters: [{ playerId, status }] }' });
-    }
-
-    const results = [];
-    
-    for (const rosterData of rosters) {
-      const { playerId, status } = rosterData;
-      
-      // Use findOneAndUpdate with upsert for atomic operation
-      const gameRoster = await GameRoster.findOneAndUpdate(
-        { game: gameId, player: playerId },
-        {
-          status: status || 'Not in Squad'
-          // ✅ Only save: game, player, status (denormalized fields removed)
-        },
-        {
-          new: true,
-          upsert: true,
-          setDefaultsOnInsert: true
-        }
-      );
-      
-      await gameRoster.populate('game player');
-      results.push(gameRoster);
-    }
-
-    res.json({
-      success: true,
-      data: results,
-      message: `Updated ${results.length} roster entries`
-    });
-  } catch (error) {
-    console.error('Batch update game rosters error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
