@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
+import { FeatureGuard } from "@/components/FeatureGuard";
+import { GoalInvolvementSection } from "../features/GoalInvolvementSection";
 
 const GOAL_TYPES = [
   { value: 'open-play', label: 'Open Play' },
@@ -34,15 +36,6 @@ const MATCH_STATES = [
   { value: 'losing', label: 'Losing' }
 ];
 
-const CONTRIBUTION_TYPES = [
-  { value: 'pre-assist', label: 'Pre-Assist' },
-  { value: 'space-creation', label: 'Space Creation' },
-  { value: 'defensive-action', label: 'Defensive Action' },
-  { value: 'set-piece-delivery', label: 'Set Piece Delivery' },
-  { value: 'pressing-action', label: 'Pressing Action' },
-  { value: 'other', label: 'Other' }
-];
-
 export default function GoalDialog({
   isOpen,
   onClose,
@@ -52,7 +45,8 @@ export default function GoalDialog({
   gamePlayers = [], // Only players in lineup + bench (filtered in parent)
   existingGoals = [],
   matchDuration = 90,
-  isReadOnly = false
+  isReadOnly = false,
+  game = null // Game object to extract teamId for feature flags
 }) {
   const [activeTab, setActiveTab] = useState('team');
   const [goalData, setGoalData] = useState({
@@ -194,38 +188,16 @@ export default function GoalDialog({
     }
   };
 
-  const handleAddInvolvement = () => {
-    setGoalData(prev => ({
-      ...prev,
-      goalInvolvement: [
-        ...prev.goalInvolvement,
-        { playerId: null, contributionType: 'pre-assist' }
-      ]
-    }));
+
+  // Extract teamId from game object for feature flags
+  const getTeamId = () => {
+    if (!game) return null;
+    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    return typeof teamObj === "object" ? teamObj._id : teamObj;
   };
 
-  const handleRemoveInvolvement = (index) => {
-    setGoalData(prev => ({
-      ...prev,
-      goalInvolvement: prev.goalInvolvement.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleInvolvementChange = (index, field, value) => {
-    setGoalData(prev => ({
-      ...prev,
-      goalInvolvement: prev.goalInvolvement.map((involvement, i) =>
-        i === index ? { ...involvement, [field]: value } : involvement
-      )
-    }));
-  };
-
-  // Filter out scorer and assister from available players for involvement
-  const getAvailablePlayersForInvolvement = () => {
-    return gamePlayers.filter(
-      p => p._id !== goalData.scorerId && p._id !== goalData.assistedById
-    );
-  };
+  const teamId = getTeamId();
+  const excludedPlayerIds = [goalData.scorerId, goalData.assistedById].filter(Boolean);
 
   const isOwnGoal = goalData.goalType === 'own-goal';
 
@@ -322,73 +294,20 @@ export default function GoalDialog({
             </div>
           )}
 
-          {/* Goal Involvement */}
-          {!isReadOnly && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-300">Other Contributors (Optional)</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddInvolvement}
-                  className="border-slate-700 text-cyan-400"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add
-                </Button>
-              </div>
-              
-              {goalData.goalInvolvement.map((involvement, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1 grid grid-cols-2 gap-2">
-                    <Select
-                      value={involvement.playerId || ''}
-                      onValueChange={(value) => handleInvolvementChange(index, 'playerId', value)}
-                    >
-                      <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                        <SelectValue placeholder="Select player..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        {getAvailablePlayersForInvolvement().map(player => (
-                          <SelectItem key={player._id} value={player._id} className="text-white">
-                            #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={involvement.contributionType}
-                      onValueChange={(value) => handleInvolvementChange(index, 'contributionType', value)}
-                    >
-                      <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        {CONTRIBUTION_TYPES.map(type => (
-                          <SelectItem key={type.value} value={type.value} className="text-white">
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveInvolvement(index)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              {goalData.goalInvolvement.length === 0 && (
-                <p className="text-sm text-slate-500">No contributors added</p>
-              )}
-            </div>
+          {/* Goal Involvement - Feature Flag Protected */}
+          {!isOwnGoal && (
+            <FeatureGuard 
+              feature="goalInvolvementEnabled" 
+              teamId={teamId}
+            >
+              <GoalInvolvementSection 
+                involvements={goalData.goalInvolvement}
+                onUpdate={(newInvolvements) => setGoalData(prev => ({ ...prev, goalInvolvement: newInvolvements }))}
+                players={gamePlayers}
+                excludedPlayerIds={excludedPlayerIds}
+                isReadOnly={isReadOnly}
+              />
+            </FeatureGuard>
           )}
 
           {/* Goal Type */}

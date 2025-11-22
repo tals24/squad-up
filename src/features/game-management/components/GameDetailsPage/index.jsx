@@ -2025,6 +2025,7 @@ export default function GameDetails() {
         existingGoals={goals}
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
+        game={game}
       />
 
       <SubstitutionDialog

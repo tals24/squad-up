@@ -19,6 +19,8 @@ import {
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
 import { AlertCircle, FileText, ShieldAlert, Plus, Trash2, Info } from "lucide-react";
+import { FeatureGuard } from "@/components/FeatureGuard";
+import { DetailedDisciplinarySection } from "../features/DetailedDisciplinarySection";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
 import {
@@ -205,6 +207,15 @@ export default function PlayerPerformanceDialog({
       default: return 'bg-slate-500 text-white';
     }
   };
+
+  // Extract teamId from game object (handles different property names)
+  const getTeamId = () => {
+    if (!game) return null;
+    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    return typeof teamObj === "object" ? teamObj._id : teamObj;
+  };
+
+  const teamId = getTeamId();
 
   // Ensure player exists before rendering Dialog
   if (!player) return null;
@@ -502,11 +513,13 @@ export default function PlayerPerformanceDialog({
                         {action.reason && (
                           <div className="text-xs text-slate-400">{action.reason}</div>
                         )}
-                        {(action.foulsCommitted !== '0' || action.foulsReceived !== '0') && (
-                          <div className="text-xs text-slate-500">
-                            Fouls: {action.foulsCommitted} committed, {action.foulsReceived} received
-                          </div>
-                        )}
+                        <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
+                          {(action.foulsCommitted !== '0' || action.foulsReceived !== '0') && (
+                            <div className="text-xs text-slate-500">
+                              Fouls: {action.foulsCommitted} committed, {action.foulsReceived} received
+                            </div>
+                          )}
+                        </FeatureGuard>
                       </div>
                     </div>
                     {!isReadOnly && (
@@ -563,42 +576,15 @@ export default function PlayerPerformanceDialog({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Fouls Committed</label>
-                      <Select
-                        value={newAction.foulsCommitted}
-                        onValueChange={(value) => setNewAction(prev => ({ ...prev, foulsCommitted: value }))}
-                      >
-                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue placeholder="Select range" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="0" className="text-white">0</SelectItem>
-                          <SelectItem value="1-2" className="text-white">1-2</SelectItem>
-                          <SelectItem value="3-4" className="text-white">3-4</SelectItem>
-                          <SelectItem value="5+" className="text-white">5+</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Fouls Received</label>
-                      <Select
-                        value={newAction.foulsReceived}
-                        onValueChange={(value) => setNewAction(prev => ({ ...prev, foulsReceived: value }))}
-                      >
-                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue placeholder="Select range" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="0" className="text-white">0</SelectItem>
-                          <SelectItem value="1-2" className="text-white">1-2</SelectItem>
-                          <SelectItem value="3-4" className="text-white">3-4</SelectItem>
-                          <SelectItem value="5+" className="text-white">5+</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
+                    <DetailedDisciplinarySection
+                      foulsCommitted={newAction.foulsCommitted}
+                      foulsReceived={newAction.foulsReceived}
+                      onFoulsCommittedChange={(value) => setNewAction(prev => ({ ...prev, foulsCommitted: value }))}
+                      onFoulsReceivedChange={(value) => setNewAction(prev => ({ ...prev, foulsReceived: value }))}
+                      isReadOnly={isReadOnly}
+                    />
+                  </FeatureGuard>
 
                   <div>
                     <label className="text-xs text-slate-400 mb-1 block">Reason (Optional)</label>

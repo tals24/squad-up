@@ -44,9 +44,27 @@ router.get('/:orgId/config', authenticateJWT, async (req, res) => {
       });
     }
 
+    // Convert to plain object and ensure all fields (including false) are preserved
+    const configData = config.toObject ? config.toObject() : JSON.parse(JSON.stringify(config));
+    
+    // Ensure ageGroupOverrides preserve all fields including false values
+    if (configData.ageGroupOverrides) {
+      configData.ageGroupOverrides = configData.ageGroupOverrides.map(override => {
+        const cleaned = { ageGroup: override.ageGroup };
+        // Explicitly include all feature fields that exist (including false)
+        // Use 'in' operator to check if property exists, even if value is false
+        ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled'].forEach(feature => {
+          if (feature in override) {
+            cleaned[feature] = override[feature];
+          }
+        });
+        return cleaned;
+      });
+    }
+    
     res.json({
       success: true,
-      data: config
+      data: configData
     });
   } catch (error) {
     console.error('Get organization config error:', error);
@@ -99,14 +117,31 @@ router.put('/:orgId/config', authenticateJWT, requireRole(['Admin']), async (req
         config.features = { ...config.features, ...features };
       }
       if (ageGroupOverrides) {
-        config.ageGroupOverrides = ageGroupOverrides;
+        // Ensure false values are preserved by explicitly setting them
+        config.ageGroupOverrides = ageGroupOverrides.map(override => {
+          const overrideObj = { ageGroup: override.ageGroup };
+          // Explicitly set all feature fields, preserving false values
+          ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled'].forEach(feature => {
+            if (override.hasOwnProperty(feature) && override[feature] !== null && override[feature] !== undefined) {
+              overrideObj[feature] = override[feature];
+            } else {
+              // Explicitly set to null if not provided
+              overrideObj[feature] = null;
+            }
+          });
+          return overrideObj;
+        });
+        // Mark the array as modified to ensure Mongoose saves all changes
+        config.markModified('ageGroupOverrides');
       }
       await config.save();
     }
 
+    // Use toObject() to ensure all fields (including false) are included in response
+    const configData = config.toObject ? config.toObject() : config;
     res.json({
       success: true,
-      data: config,
+      data: configData,
       message: 'Organization configuration updated successfully'
     });
   } catch (error) {
