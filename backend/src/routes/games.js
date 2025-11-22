@@ -9,6 +9,7 @@ const { recalculateGoalAnalytics } = require('../services/goalAnalytics');
 const { recalculateSubstitutionAnalytics } = require('../services/substitutionAnalytics');
 const { calculatePlayerMinutes } = require('../services/minutesCalculation');
 const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
+const { getMatchTimeline } = require('../services/timelineService');
 
 const router = express.Router();
 
@@ -882,6 +883,30 @@ router.get('/:gameId/player-stats', authenticateJWT, checkGameAccess, async (req
       success: false,
       error: 'Failed to calculate player stats',
       message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/games/:gameId/timeline
+ * Get unified chronological timeline for a match
+ */
+router.get('/:gameId/timeline', authenticateJWT, checkGameAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    
+    const timeline = await getMatchTimeline(gameId);
+    
+    res.json({
+      gameId,
+      totalEvents: timeline.length,
+      timeline
+    });
+  } catch (error) {
+    console.error('Error fetching match timeline:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch match timeline', 
+      error: error.message 
     });
   }
 });

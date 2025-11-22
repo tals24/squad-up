@@ -250,3 +250,189 @@ Game Fetch (async)
 2. **Try Solution 1 first**: Increase timeouts and add proper async handling
 3. **If Solution 1 fails**: Try Solution 2 (direct state mocking)
 4. **Consider**: Whether these integration tests add value beyond unit tests + E2E tests
+
+---
+
+## Fouls Not Draftable - Data Loss Risk
+
+**Status**: Identified but not implemented
+
+**Last Updated**: 2024-12-19
+
+**Priority**: Medium
+
+---
+
+### The Problem
+
+After the disciplinary architecture refactor, **fouls committed/received** are stored in the `PlayerMatchStat` collection (separate from player reports). However, unlike other data edited in `PlayerPerformanceDialog` (ratings, notes), fouls are **not included in the `reportDraft`** system.
+
+**Current Behavior**:
+- ✅ **Ratings/Notes**: Saved to `reportDraft` → Survive page refresh → Loaded from draft on game load
+- ❌ **Fouls**: Saved directly to `PlayerMatchStat` → **Lost on page refresh** → Not restored from draft
+
+**User Impact**:
+- User edits fouls in `PlayerPerformanceDialog` → `DetailedDisciplinarySection`
+- Page refreshes (browser crash, network issue, accidental navigation)
+- **Fouls data is lost** (not saved to draft)
+- User must re-enter fouls manually
+
+---
+
+### Technical Details
+
+**Current Architecture**:
+- `reportDraft` structure (in `Game` model):
+  ```javascript
+  {
+    teamSummary: { ... },
+    finalScore: { ... },
+    matchDuration: { ... },
+    playerReports: { playerId: { ratings, notes } }  // ✅ Draftable
+  }
+  ```
+
+- `PlayerMatchStat` structure (separate collection):
+  ```javascript
+  {
+    gameId: ObjectId,
+    playerId: ObjectId,
+    disciplinary: {
+      foulsCommitted: Number,  // ❌ NOT draftable
+      foulsReceived: Number    // ❌ NOT draftable
+    }
+  }
+  ```
+
+**Why This Happened**:
+- During refactor, fouls were moved from `DisciplinaryAction` to `PlayerMatchStat`
+- `PlayerMatchStat` is a separate collection (not part of `Game` model)
+- Draft system only handles data stored in `Game.reportDraft` field
+- Fouls are saved immediately via `upsertPlayerMatchStats` API (no draft step)
+
+---
+
+### Potential Solutions
+
+#### Solution 1: Include PlayerMatchStats in reportDraft ⭐⭐⭐
+**Effort**: Medium | **Likelihood of Success**: High | **Recommended**
+
+**Implementation**:
+1. Extend `reportDraft` structure to include `playerMatchStats`:
+   ```javascript
+   {
+     teamSummary: { ... },
+     finalScore: { ... },
+     matchDuration: { ... },
+     playerReports: { ... },
+     playerMatchStats: {  // ✅ NEW
+       playerId: {
+         disciplinary: { foulsCommitted, foulsReceived },
+         shooting: { ... },
+         passing: { ... }
+       }
+     }
+   }
+   ```
+
+2. Update `PUT /api/games/:gameId/draft` endpoint:
+   - Accept `playerMatchStats` in request body
+   - Save to `game.reportDraft.playerMatchStats`
+   - Merge with existing draft (preserve other fields)
+
+3. Update `PlayerPerformanceDialog` autosave:
+   - Include `playerMatchStats` in `reportDataForAutosave` memo
+   - Save fouls to draft when edited (via `useAutosave` hook)
+
+4. Update draft loading logic:
+   - Load `playerMatchStats` from `reportDraft` on game load
+   - Restore fouls to `PlayerPerformanceDialog` state
+
+5. On final submission (when game marked as "Done"):
+   - Save `playerMatchStats` from draft to `PlayerMatchStat` collection
+   - Clear `reportDraft` after successful save
+
+**Pros**:
+- Consistent with other draftable data
+- Prevents data loss
+- Simple to implement (extends existing draft system)
+
+**Cons**:
+- Adds complexity to draft structure
+- Requires migration for existing drafts (if any)
+
+---
+
+#### Solution 2: Save Fouls Immediately + Add Draft Backup ⭐⭐
+**Effort**: Low | **Likelihood of Success**: Medium
+
+**Implementation**:
+1. Keep immediate save to `PlayerMatchStat` (current behavior)
+2. Also save fouls to `reportDraft` as backup
+3. On page load, check both:
+   - If `PlayerMatchStat` exists → use it (source of truth)
+   - If `PlayerMatchStat` missing but draft exists → restore from draft
+
+**Pros**:
+- Dual-layer protection
+- Minimal changes to existing code
+
+**Cons**:
+- Potential inconsistency between draft and saved data
+- More complex loading logic
+
+---
+
+#### Solution 3: Document as Expected Behavior ⭐
+**Effort**: Low | **Likelihood of Success**: Low
+
+**Implementation**:
+- Document that fouls are not draftable
+- Add UI warning: "Fouls are saved immediately. Changes will be lost if page refreshes before saving."
+- Accept data loss risk
+
+**Pros**:
+- No code changes needed
+- Clear user expectations
+
+**Cons**:
+- Poor user experience
+- Data loss risk remains
+- Inconsistent with other dialog fields
+
+---
+
+### Recommended Approach
+
+**Solution 1** is recommended because:
+1. **Consistency**: Fouls are edited in the same dialog as ratings/notes
+2. **User Expectation**: Users expect all dialog data to be draftable
+3. **Data Integrity**: Prevents accidental data loss
+4. **Future-Proof**: Extensible for other `PlayerMatchStat` fields (shooting, passing)
+
+---
+
+### Related Files
+
+- `backend/src/models/Game.js` - `reportDraft` schema definition
+- `backend/src/routes/games.js` - `PUT /:gameId/draft` endpoint
+- `src/features/game-management/components/GameDetailsPage/index.jsx` - Draft loading/saving logic
+- `src/features/game-management/components/GameDetailsPage/components/dialogs/PlayerPerformanceDialog.jsx` - Fouls editing UI
+- `src/features/game-management/components/GameDetailsPage/components/features/DetailedDisciplinarySection.jsx` - Fouls input component
+- `src/hooks/useAutosave.js` - Autosave hook for report draft
+- `backend/src/models/PlayerMatchStat.js` - Fouls storage model
+- `backend/src/routes/playerMatchStats.js` - Fouls API endpoints
+
+---
+
+### Implementation Checklist (When Ready)
+
+- [ ] Update `Game` model schema documentation (add `playerMatchStats` to `reportDraft`)
+- [ ] Update `PUT /api/games/:gameId/draft` endpoint to accept `playerMatchStats`
+- [ ] Update `PlayerPerformanceDialog` to include fouls in autosave data
+- [ ] Update draft loading logic to restore fouls from draft
+- [ ] Update final submission logic to save `playerMatchStats` from draft
+- [ ] Add tests for fouls draft persistence
+- [ ] Update API documentation
+- [ ] Test: Edit fouls → Refresh page → Verify fouls restored
+- [ ] Test: Edit fouls → Mark game as Done → Verify fouls saved to `PlayerMatchStat`

@@ -10,7 +10,7 @@
 
 This document outlines the current database architecture for the SquadUp application, provides recommendations for organization and scalability, and defines when to consider architectural changes.
 
-**Current State:** Single MongoDB database with 16 collections  
+**Current State:** Single MongoDB database with 18 collections  
 **Recommendation:** Keep current structure, add naming conventions for clarity  
 **Future Consideration:** Re-evaluate at 30+ collections or when hitting specific scale thresholds
 
@@ -31,12 +31,13 @@ squadup (database)
 ├── Match Events Domain (3 collections)
 │   ├── goals (with discriminators: TeamGoal, OpponentGoal)
 │   ├── substitutions
-│   └── disciplinaryactions
+│   └── cards
 │
-├── Match Data Domain (3 collections)
+├── Match Data Domain (4 collections)
 │   ├── game_reports
 │   ├── gamerosters
-│   └── formations
+│   ├── formations
+│   └── playermatchstats
 │
 ├── Training Domain (3 collections)
 │   ├── drills
@@ -52,7 +53,7 @@ squadup (database)
     └── organization_configs
 ```
 
-**Total Collections:** 17
+**Total Collections:** 18
 
 ---
 
@@ -145,17 +146,29 @@ squadup (database)
 **Special Features:**
 - `matchState` auto-calculated when game status = "Done"
 
-#### `disciplinaryactions`
-**Purpose:** Cards and disciplinary events  
+#### `cards`
+**Purpose:** Card events during matches (Yellow/Red/Second Yellow)  
 **Relationships:**
 - References `games` (gameId)
 - References `players` (playerId)
 
 **Size:** Small-Medium (typically 100-500 documents per season)  
-**Growth:** Moderate (adds 1-3 cards per game)  
+**Growth:** Moderate (adds 1-3 cards per game)
+
+**Key Fields:**
+- `cardType`: Enum ['yellow', 'red', 'second-yellow']
+- `minute`: Number (1-120) - Required, critical for timeline ordering
+- `reason`: String (optional, max 200 characters)
+
 **Indexes:**
-- `{ gameId: 1, playerId: 1 }` - Game-level queries
-- `{ playerId: 1, cardType: 1 }` - Card statistics
+- `{ gameId: 1, minute: 1 }` - Timeline order
+- `{ gameId: 1, playerId: 1 }` - Player cards per game
+- `{ gameId: 1 }` - Game queries
+- `{ playerId: 1 }` - Player queries
+
+**Special Features:**
+- Red cards and second yellows trigger `recalc-minutes` job automatically
+- Minute field is required (critical for timeline ordering and minutes calculation)
 
 ---
 
@@ -190,6 +203,28 @@ squadup (database)
 **Relationships:** References `games` (gameId)  
 **Size:** Small (typically 100-1000 documents)  
 **Growth:** Moderate (one per game)
+
+#### `playermatchstats`
+**Purpose:** Aggregate player statistics per game (Fouls, Shots, Passing, etc.)  
+**Relationships:**
+- References `games` (gameId)
+- References `players` (playerId)
+
+**Size:** Medium (typically 100-1000 documents)  
+**Growth:** Moderate (one per player per game)
+
+**Key Fields:**
+- `disciplinary`: Object with `foulsCommitted`, `foulsReceived`
+- `shooting`: Object with `shotsOnTarget`, `shotsOffTarget`, `blockedShots`, `hitWoodwork`
+- `passing`: Object with `totalPasses`, `completedPasses`, `keyPasses`
+
+**Indexes:**
+- `{ gameId: 1, playerId: 1 }` - Unique constraint (one stat sheet per player per game)
+
+**Special Features:**
+- Uses upsert pattern (efficient updates)
+- Extensible structure (add new stat categories without migration)
+- Feature flags handled at API/UI layer (stats don't trigger recalc-minutes job)
 
 ---
 
@@ -320,21 +355,22 @@ squadup (database)
 
 1. **Game Details Page:**
    ```javascript
-   // Needs: game + goals + substitutions + disciplinary actions
+   // Needs: game + goals + substitutions + cards
    Game.findById(gameId)
    Goal.find({ gameId })
    Substitution.find({ gameId })
-   DisciplinaryAction.find({ gameId })
+   Card.find({ gameId })
    ```
    **Impact:** Cross-collection queries (needs single database)
 
 2. **Player Statistics:**
    ```javascript
-   // Needs: player + goals + disciplinary actions across games
+   // Needs: player + goals + cards + player match stats across games
    Player.findById(playerId)
    Goal.find({ scorerId: playerId })
    Goal.find({ assistedById: playerId })
-   DisciplinaryAction.find({ playerId })
+   Card.find({ playerId })
+   PlayerMatchStat.find({ playerId })
    ```
    **Impact:** Cross-collection aggregation (needs single database)
 
@@ -455,9 +491,13 @@ Substitutions.index({ gameId: 1, minute: 1 })  // Timeline
 Substitutions.index({ playerOutId: 1 })         // Rotation analysis
 Substitutions.index({ playerInId: 1 })         // Substitute impact
 
-// Disciplinary Actions
-DisciplinaryActions.index({ gameId: 1, playerId: 1 })  // Game queries
-DisciplinaryActions.index({ playerId: 1, cardType: 1 }) // Card stats
+// Cards
+Card.index({ gameId: 1, minute: 1 })  // Timeline order
+Card.index({ gameId: 1, playerId: 1 })  // Player cards per game
+Card.index({ playerId: 1, cardType: 1 }) // Card statistics
+
+// Player Match Stats
+PlayerMatchStat.index({ gameId: 1, playerId: 1 }, { unique: true })  // Unique per player per game
 
 // Games
 Games.index({ status: 1 })                     // Status filtering
@@ -495,7 +535,8 @@ Jobs.index({ completedAt: 1 })                 // TTL index (auto-cleanup)
 | games | 30-50 | Low |
 | goals | 100-250 | High (4-5 per game) |
 | substitutions | 90-150 | High (3-5 per game) |
-| disciplinaryactions | 30-90 | Moderate (1-3 per game) |
+| cards | 30-90 | Moderate (1-3 per game) |
+| playermatchstats | 30-90 | Moderate (11-18 per game) |
 | game_reports | 30-50 | Low (1 per game) |
 | jobs | 100-200 | Moderate (auto-expires after 30 days) |
 | gamerosters | 330-900 | High (11-18 per game) |
@@ -565,7 +606,7 @@ squadup_core (database)
   - users, teams, players
 
 squadup_matches (database)
-  - games, goals, substitutions, disciplinaryactions, game_reports, gamerosters, formations
+  - games, goals, substitutions, cards, game_reports, gamerosters, formations, playermatchstats
 
 squadup_training (database)
   - drills, sessiondrills, trainingsessions
@@ -768,7 +809,8 @@ users ──┐
         │
 games ──┼──→ goals (TeamGoal, OpponentGoal)
         ├──→ substitutions
-        ├──→ disciplinaryactions
+        ├──→ cards
+        ├──→ playermatchstats
         ├──→ game_reports
         ├──→ gamerosters
         └──→ formations

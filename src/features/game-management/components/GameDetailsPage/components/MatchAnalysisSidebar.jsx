@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
-import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock, ArrowRightLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock, ArrowRightLeft, ArrowUp, ArrowDown, ShieldAlert } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +25,10 @@ export default function MatchAnalysisSidebar({
   onAddSubstitution,
   onEditSubstitution,
   onDeleteSubstitution,
+  cards = [],
+  onAddCard,
+  onEditCard,
+  onDeleteCard,
   matchDuration,
   setMatchDuration,
 }) {
@@ -370,6 +374,131 @@ export default function MatchAnalysisSidebar({
             ) : (
               <p className="text-sm text-slate-500 text-center py-4">
                 No substitutions recorded yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Cards Section - Only show for Played/Done */}
+      {(isPlayed || isDone) && (
+        <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-yellow-400" />
+                Cards ({cards.length})
+              </CardTitle>
+              {!isDone && onAddCard && (
+                <Button
+                  onClick={onAddCard}
+                  size="sm"
+                  className="h-7 px-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {cards.length > 0 ? (
+              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+              }}>
+                <TooltipProvider>
+                  {cards
+                    .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+                    .map((card) => {
+                      const playerName = card.playerId?.fullName || card.playerId?.name || 'Unknown';
+                      const playerKit = card.playerId?.kitNumber || card.playerId?.jerseyNumber || '?';
+                      const cardTypeLabel = card.cardType === 'yellow' ? 'Yellow' : 
+                                          card.cardType === 'red' ? 'Red' : 'Second Yellow';
+                      const cardEmoji = card.cardType === 'yellow' ? '🟨' : 
+                                       card.cardType === 'red' ? '🟥' : '🟨🟥';
+                      const cardColor = card.cardType === 'yellow' ? 'bg-yellow-500' : 
+                                       card.cardType === 'red' ? 'bg-red-500' : 'bg-orange-500';
+                      
+                      // Build tooltip content
+                      const tooltipContent = (
+                        <div className="space-y-1 text-xs">
+                          <div className="font-semibold">{cardTypeLabel} Card</div>
+                          <div className="text-slate-300">
+                            Player: #{playerKit} {playerName}
+                          </div>
+                          <div className="text-slate-400">
+                            Minute: {card.minute}'
+                          </div>
+                          {card.reason && (
+                            <div className="text-slate-400">Reason: {card.reason}</div>
+                          )}
+                        </div>
+                      );
+                      
+                      return (
+                        <Tooltip key={card._id}>
+                          <TooltipTrigger asChild>
+                            <div className="relative flex items-center gap-2 p-1.5 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-yellow-500/50 transition-all">
+                              {/* Card Indicator Circle */}
+                              <div className={`relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0 ${cardColor}`}>
+                                {cardEmoji}
+                              </div>
+
+                              {/* Card Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs text-white font-medium truncate">
+                                    #{playerKit} {playerName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-xs text-slate-400">
+                                    {cardTypeLabel} • {card.minute}' minute
+                                  </span>
+                                </div>
+                                {card.reason && (
+                                  <div className="mt-0.5">
+                                    <span className="text-xs text-slate-500 truncate block">
+                                      {card.reason}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              {!isDone && onEditCard && onDeleteCard && (
+                                <div className="flex gap-0.5 shrink-0">
+                                  <Button
+                                    onClick={() => onEditCard(card)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-cyan-400 hover:text-cyan-300"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    onClick={() => onDeleteCard(card._id)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white max-w-xs">
+                            {tooltipContent}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                </TooltipProvider>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">
+                No cards recorded yet
               </p>
             )}
           </CardContent>

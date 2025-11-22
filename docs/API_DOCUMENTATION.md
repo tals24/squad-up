@@ -542,57 +542,266 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Delete a substitution  
 **Authentication**: Required + game access check  
 
-#### **Disciplinary Actions** (`/api/games/:gameId/disciplinary-actions`)
+#### **Cards** (`/api/games/:gameId/cards`)
 
-##### **GET** `/api/games/:gameId/disciplinary-actions`
-**Purpose**: Get all disciplinary actions for a game  
+**Purpose**: Manage disciplinary cards (Yellow, Red, Second Yellow) for match timeline events  
+**Note**: Red cards and second yellows trigger automatic `recalc-minutes` job
+
+##### **GET** `/api/games/:gameId/cards`
+**Purpose**: Get all cards for a game  
 **Authentication**: Required + game access check  
 **Response**:
 ```json
 {
   "gameId": "...",
-  "totalActions": 2,
-  "disciplinaryActions": [
+  "totalCards": 3,
+  "cards": [
     {
       "_id": "...",
       "gameId": "...",
-      "playerId": { "name": "Player Name", "jerseyNumber": 5 },
+      "playerId": {
+        "_id": "...",
+        "fullName": "Player Name",
+        "kitNumber": 5,
+        "position": "MF"
+      },
       "cardType": "yellow", // yellow, red, second-yellow
       "minute": 45,
-      "foulsCommitted": 3,
-      "foulsReceived": 1,
-      "reason": "Unsporting behavior"
+      "reason": "Unsporting behavior",
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
     }
   ]
 }
 ```
 
-##### **GET** `/api/games/:gameId/disciplinary-actions/player/:playerId`
-**Purpose**: Get disciplinary actions for a specific player in a game  
+##### **GET** `/api/games/:gameId/cards/player/:playerId`
+**Purpose**: Get cards for a specific player in a game  
 **Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "playerId": "...",
+  "totalCards": 1,
+  "cards": [...]
+}
+```
 
-##### **POST** `/api/games/:gameId/disciplinary-actions`
-**Purpose**: Create a new disciplinary action  
+##### **POST** `/api/games/:gameId/cards`
+**Purpose**: Create a new card  
 **Authentication**: Required + game access check  
 **Body**:
 ```json
 {
   "playerId": "playerId",
-  "cardType": "yellow",
-  "minute": 45,
-  "foulsCommitted": 3,
-  "foulsReceived": 1,
-  "reason": "Unsporting behavior"
+  "cardType": "yellow", // Required: yellow, red, or second-yellow
+  "minute": 45, // Required: 1-120
+  "reason": "Unsporting behavior" // Optional: max 200 characters
+}
+```
+**Response**:
+```json
+{
+  "message": "Card created successfully",
+  "card": {
+    "_id": "...",
+    "gameId": "...",
+    "playerId": {...},
+    "cardType": "yellow",
+    "minute": 45,
+    "reason": "Unsporting behavior"
+  }
+}
+```
+**Note**: If `cardType` is `red` or `second-yellow`, a `recalc-minutes` job is automatically queued.
+
+##### **PUT** `/api/games/:gameId/cards/:cardId`
+**Purpose**: Update an existing card  
+**Authentication**: Required + game access check  
+**Body**: (All fields optional)
+```json
+{
+  "playerId": "playerId",
+  "cardType": "red",
+  "minute": 60,
+  "reason": "Serious foul play"
+}
+```
+**Note**: If card type changes to/from red/second-yellow, `recalc-minutes` job is triggered.
+
+##### **DELETE** `/api/games/:gameId/cards/:cardId`
+**Purpose**: Delete a card  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "message": "Card deleted successfully",
+  "cardId": "..."
+}
+```
+**Note**: If deleted card was red/second-yellow, `recalc-minutes` job is triggered.
+
+---
+
+#### **Player Match Stats** (`/api/games/:gameId/player-match-stats`)
+
+**Purpose**: Manage aggregate player statistics per game (Fouls, Shots, Passing, etc.)  
+**Note**: Stats don't trigger recalc-minutes job. Uses upsert pattern (create or update).
+
+##### **GET** `/api/games/:gameId/player-match-stats`
+**Purpose**: Get all player match stats for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalStats": 11,
+  "stats": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "playerId": {
+        "_id": "...",
+        "fullName": "Player Name",
+        "kitNumber": 5,
+        "position": "MF"
+      },
+      "disciplinary": {
+        "foulsCommitted": 3,
+        "foulsReceived": 1
+      },
+      "shooting": {
+        "shotsOnTarget": 0,
+        "shotsOffTarget": 0,
+        "blockedShots": 0,
+        "hitWoodwork": 0
+      },
+      "passing": {
+        "totalPasses": 0,
+        "completedPasses": 0,
+        "keyPasses": 0
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
 }
 ```
 
-##### **PUT** `/api/games/:gameId/disciplinary-actions/:actionId`
-**Purpose**: Update an existing disciplinary action  
+##### **GET** `/api/games/:gameId/player-match-stats/player/:playerId`
+**Purpose**: Get player match stats for a specific player in a game  
 **Authentication**: Required + game access check  
+**Response**: (Same structure as above, single stat object)
+```json
+{
+  "gameId": "...",
+  "playerId": "...",
+  "stats": {...}
+}
+```
+**Note**: Returns 404 if stats don't exist for this player-game combination.
 
-##### **DELETE** `/api/games/:gameId/disciplinary-actions/:actionId`
-**Purpose**: Delete a disciplinary action  
+##### **PUT** `/api/games/:gameId/player-match-stats/player/:playerId`
+**Purpose**: Create or update player match stats (upsert)  
 **Authentication**: Required + game access check  
+**Body**: (All fields optional, only include what you want to update)
+```json
+{
+  "disciplinary": {
+    "foulsCommitted": 3,
+    "foulsReceived": 1
+  },
+  "shooting": {
+    "shotsOnTarget": 2,
+    "shotsOffTarget": 1,
+    "blockedShots": 0,
+    "hitWoodwork": 0
+  },
+  "passing": {
+    "totalPasses": 45,
+    "completedPasses": 38,
+    "keyPasses": 2
+  }
+}
+```
+**Response**:
+```json
+{
+  "message": "Player match stats updated successfully",
+  "stats": {...}
+}
+```
+**Note**: Creates new document if doesn't exist, updates existing one if it does.
+
+---
+
+#### **Match Timeline** (`/api/games/:gameId/timeline`)
+
+**Purpose**: Get unified chronological timeline of all match events (Cards, Goals, Substitutions)  
+**Note**: This endpoint aggregates data from multiple collections and normalizes it into a single chronological stream.
+
+##### **GET** `/api/games/:gameId/timeline`
+**Purpose**: Get unified chronological timeline for a match  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalEvents": 8,
+  "timeline": [
+    {
+      "id": "...",
+      "type": "goal",
+      "minute": 15,
+      "timestamp": "2024-01-15T10:15:00.000Z",
+      "scorer": {
+        "_id": "...",
+        "fullName": "Player Name",
+        "kitNumber": 9,
+        "position": "ST"
+      },
+      "assister": {...},
+      "goalType": "open-play",
+      "goalNumber": 1,
+      "matchState": "winning",
+      "goalCategory": "TeamGoal"
+    },
+    {
+      "id": "...",
+      "type": "card",
+      "minute": 20,
+      "timestamp": "2024-01-15T10:20:00.000Z",
+      "cardType": "yellow",
+      "player": {
+        "_id": "...",
+        "fullName": "Player Name",
+        "kitNumber": 5,
+        "position": "MF"
+      },
+      "reason": "Unsporting behavior"
+    },
+    {
+      "id": "...",
+      "type": "substitution",
+      "minute": 60,
+      "timestamp": "2024-01-15T10:60:00.000Z",
+      "playerOut": {...},
+      "playerIn": {...},
+      "reason": "tactical",
+      "matchState": "winning",
+      "tacticalNote": "Fresh legs"
+    }
+  ]
+}
+```
+**Event Types**:
+- `card`: Disciplinary card (yellow, red, second-yellow)
+- `goal`: Team goal
+- `opponent-goal`: Opponent goal
+- `substitution`: Player substitution
+
+**Sorting**: Events are sorted by `minute` (ascending), then by `timestamp` (ascending) for events at the same minute.
 
 #### **Match Duration** (`/api/games/:gameId/...`)
 

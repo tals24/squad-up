@@ -1,7 +1,6 @@
 const Game = require('../models/Game');
 const GameRoster = require('../models/GameRoster');
-const Substitution = require('../models/Substitution');
-const DisciplinaryAction = require('../models/DisciplinaryAction');
+const { getMatchTimeline } = require('./timelineService');
 
 /**
  * Calculate player minutes from game events (substitutions and red cards)
@@ -39,18 +38,15 @@ async function calculatePlayerMinutes(gameId) {
       console.warn(`Warning: Starting lineup has ${gameRosters.length} players (expected 11) for game ${gameId}`);
     }
 
-    // Fetch all substitutions and red cards for this game
-    const substitutions = await Substitution.find({ gameId })
-      .populate('playerOutId', '_id fullName')
-      .populate('playerInId', '_id fullName')
-      .sort({ minute: 1 }); // Sort chronologically
-
-    const redCards = await DisciplinaryAction.find({ 
-      gameId,
-      cardType: { $in: ['red', 'second-yellow'] } // Only red cards affect minutes
-    })
-      .populate('playerId', '_id fullName')
-      .sort({ minute: 1 }); // Sort chronologically
+    // Fetch unified timeline from timeline service
+    const timeline = await getMatchTimeline(gameId);
+    
+    // Filter events that affect minutes: substitutions and red cards
+    const substitutions = timeline.filter(event => event.type === 'substitution');
+    const redCards = timeline.filter(event => 
+      event.type === 'card' && 
+      (event.cardType === 'red' || event.cardType === 'second-yellow')
+    );
 
     console.log(`Calculating minutes for game ${gameId}: ${gameRosters.length} starters, ${substitutions.length} substitutions, ${redCards.length} red cards`);
 
@@ -71,26 +67,54 @@ async function calculatePlayerMinutes(gameId) {
     const allEvents = [];
     
     substitutions.forEach(sub => {
+      // Timeline service normalizes playerOut and playerIn (populated objects)
+      // Handle both ObjectId and string formats
+      const playerOutId = sub.playerOut?._id 
+        ? sub.playerOut._id.toString() 
+        : (sub.playerOut?.toString() || null);
+      const playerInId = sub.playerIn?._id 
+        ? sub.playerIn._id.toString() 
+        : (sub.playerIn?.toString() || null);
+      const playerOutName = sub.playerOut?.fullName || 'Unknown Player';
+      const playerInName = sub.playerIn?.fullName || 'Unknown Player';
+      
+      if (!playerOutId || !playerInId) {
+        console.warn(`Warning: Substitution at minute ${sub.minute} missing player IDs`);
+        return;
+      }
+      
       allEvents.push({
         type: 'substitution',
         minute: sub.minute,
-        playerOutId: sub.playerOutId._id.toString(),
-        playerInId: sub.playerInId._id.toString(),
-        playerOutName: sub.playerOutId.fullName,
-        playerInName: sub.playerInId.fullName
+        playerOutId,
+        playerInId,
+        playerOutName,
+        playerInName
       });
     });
 
     redCards.forEach(card => {
+      // Timeline service normalizes player (populated object)
+      // Handle both ObjectId and string formats
+      const playerId = card.player?._id 
+        ? card.player._id.toString() 
+        : (card.player?.toString() || null);
+      const playerName = card.player?.fullName || 'Unknown Player';
+      
+      if (!playerId) {
+        console.warn(`Warning: Red card at minute ${card.minute} missing player ID`);
+        return;
+      }
+      
       allEvents.push({
         type: 'redCard',
         minute: card.minute,
-        playerId: card.playerId._id.toString(),
-        playerName: card.playerId.fullName
+        playerId,
+        playerName
       });
     });
 
-    // Sort events by minute
+    // Timeline is already sorted chronologically, but sort events by minute to be safe
     allEvents.sort((a, b) => a.minute - b.minute);
 
     // Validate events are in valid order (no duplicate minutes for same player)

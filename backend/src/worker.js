@@ -7,7 +7,7 @@ require('./models/Job');
 require('./models/Game');
 require('./models/GameRoster');
 require('./models/Substitution');
-require('./models/DisciplinaryAction');
+require('./models/Card'); // Replaced DisciplinaryAction
 require('./models/Player');
 require('./models/GameReport');
 

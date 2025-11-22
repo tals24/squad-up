@@ -41,6 +41,9 @@ export default function SubstitutionDialog({
   matchDuration = 90,
   isReadOnly = false,
   playerReports = {},
+  timeline = [], // Unified timeline from parent (Cards, Goals, Substitutions)
+  startingLineup = {}, // Map of playerId -> true for starting lineup players
+  squadPlayers = {} // Map of playerId -> status ('Starting Lineup' | 'Bench')
 }) {
   const [subData, setSubData] = useState({
     playerOutId: null,
@@ -120,8 +123,11 @@ export default function SubstitutionDialog({
       await onSave(subData);
       onClose();
     } catch (error) {
-      console.error('Error saving substitution:', error);
-      setErrors({ submit: error.message || 'Failed to save substitution' });
+      // Extract detailed error message from backend
+      const errorMessage = error.message || 'Failed to save substitution';
+      setErrors({ submit: errorMessage });
+      // Log to console for debugging (less verbose)
+      console.warn('Substitution validation failed:', errorMessage);
     } finally {
       setIsSaving(false);
     }

@@ -30,11 +30,14 @@ import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 import GoalDialog from "./components/dialogs/GoalDialog";
 import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
+import CardDialog from "./components/dialogs/CardDialog";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
 import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from "../../api/substitutionsApi";
+import { fetchCards, createCard, updateCard, deleteCard } from "../../api/cardsApi";
 import { fetchPlayerStats } from "../../api/playerStatsApi";
+import { fetchMatchTimeline } from "../../api/timelineApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -74,6 +77,14 @@ export default function GameDetails() {
   const [substitutions, setSubstitutions] = useState([]);
   const [showSubstitutionDialog, setShowSubstitutionDialog] = useState(false);
   const [selectedSubstitution, setSelectedSubstitution] = useState(null);
+  
+  // Cards state
+  const [cards, setCards] = useState([]);
+  const [showCardDialog, setShowCardDialog] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
+  
+  // Timeline state (unified events for state reconstruction)
+  const [timeline, setTimeline] = useState([]);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -522,8 +533,30 @@ export default function GameDetails() {
       }
     };
     
+    const loadCards = async () => {
+      try {
+        const cardsData = await fetchCards(gameId);
+        setCards(cardsData);
+      } catch (error) {
+        console.error('Error fetching cards:', error);
+      }
+    };
+    
+    const loadTimeline = async () => {
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error fetching timeline:', error);
+        // Fallback: Build timeline from individual arrays if API fails
+        setTimeline([]);
+      }
+    };
+    
     loadGoals();
     loadSubstitutions();
+    loadCards();
+    loadTimeline();
   }, [gameId, game]);
 
   // Helper function to refresh team stats (used after goal/substitution changes)
@@ -841,6 +874,30 @@ export default function GameDetails() {
   const activeGamePlayers = useMemo(() => {
     return [...playersOnPitch, ...benchPlayers];
   }, [playersOnPitch, benchPlayers]);
+
+  // Build starting lineup map for game state reconstruction
+  const startingLineupMap = useMemo(() => {
+    const map = {};
+    gamePlayers.forEach(player => {
+      const status = getPlayerStatus(player._id);
+      if (status === 'Starting Lineup') {
+        map[player._id] = true;
+      }
+    });
+    return map;
+  }, [gamePlayers, localRosterStatuses]);
+
+  // Build squad players map for game state reconstruction
+  const squadPlayersMap = useMemo(() => {
+    const map = {};
+    gamePlayers.forEach(player => {
+      const status = getPlayerStatus(player._id);
+      if (status === 'Starting Lineup' || status === 'Bench') {
+        map[player._id] = status;
+      }
+    });
+    return map;
+  }, [gamePlayers, localRosterStatuses]);
 
   // Helper: Check if player has report
   const hasReport = (playerId) => {
@@ -1549,6 +1606,14 @@ export default function GameDetails() {
       // Refresh team stats after goal save (affects goals/assists)
       refreshTeamStats();
       
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+      
       setShowGoalDialog(false);
       setSelectedGoal(null);
     } catch (error) {
@@ -1630,11 +1695,116 @@ export default function GameDetails() {
       // Refresh team stats after substitution save (affects minutes)
       refreshTeamStats();
       
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+      
       setShowSubstitutionDialog(false);
       setSelectedSubstitution(null);
     } catch (error) {
       console.error('Error saving substitution:', error);
       throw error; // Re-throw to let SubstitutionDialog handle it
+    }
+  };
+
+  // Card handlers
+  const handleAddCard = () => {
+    setSelectedCard(null);
+    setShowCardDialog(true);
+  };
+
+  const handleEditCard = (card) => {
+    console.log('🔍 [GameDetailsPage] handleEditCard called:', {
+      card: card ? {
+        _id: card._id,
+        cardType: card.cardType,
+        playerId: card.playerId?._id || card.playerId,
+        minute: card.minute
+      } : null,
+      cardsArrayLength: cards.length,
+      cardInArray: cards.find(c => c._id === card?._id)
+    });
+    setSelectedCard(card);
+    setShowCardDialog(true);
+  };
+
+  const handleDeleteCard = async (cardId) => {
+    if (!window.confirm('Are you sure you want to delete this card?')) {
+      return;
+    }
+
+    try {
+      await deleteCard(gameId, cardId);
+      setCards(prevCards => prevCards.filter(c => c._id !== cardId));
+      // Refresh team stats if red card was deleted (affects minutes)
+      refreshTeamStats();
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Failed to delete card: ' + error.message);
+    }
+  };
+
+  const handleSaveCard = async (cardData) => {
+    try {
+      console.log('🔍 [GameDetailsPage] handleSaveCard called:', {
+        isEditing: !!selectedCard,
+        selectedCardId: selectedCard?._id,
+        cardData
+      });
+      
+      const wasEditing = !!selectedCard;
+      const editingCardId = selectedCard?._id;
+      const cardToUpdate = selectedCard; // Save reference before clearing
+      
+      if (cardToUpdate) {
+        // Update existing card
+        const updatedCard = await updateCard(gameId, cardToUpdate._id, cardData);
+        console.log('🔍 [GameDetailsPage] Card updated:', {
+          oldCardId: cardToUpdate._id,
+          updatedCardId: updatedCard._id,
+          updatedCard
+        });
+        setCards(prevCards => prevCards.map(c => c._id === updatedCard._id ? updatedCard : c));
+      } else {
+        // Create new card
+        const newCard = await createCard(gameId, cardData);
+        setCards(prevCards => [...prevCards, newCard]);
+      }
+      
+      // Close dialog AFTER successful save to prevent re-render issues during card refresh
+      setShowCardDialog(false);
+      setSelectedCard(null);
+      
+      // Refresh cards list (after dialog is closed)
+      const updatedCards = await fetchCards(gameId);
+      console.log('🔍 [GameDetailsPage] Cards refreshed:', {
+        updatedCardsCount: updatedCards.length,
+        wasEditing,
+        editingCardId,
+        updatedCardExists: wasEditing ? updatedCards.find(c => c._id === editingCardId) ? 'YES' : 'NO' : 'N/A'
+      });
+      setCards(updatedCards);
+      
+      // Refresh team stats if red card (affects minutes)
+      if (cardData.cardType === 'red' || cardData.cardType === 'second-yellow') {
+        refreshTeamStats();
+      }
+      
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+    } catch (error) {
+      // On error, keep dialog open so user can see the error
+      console.error('Error saving card:', error);
+      throw error; // Re-throw so CardDialog can handle it
     }
   };
 
@@ -1949,6 +2119,10 @@ export default function GameDetails() {
           onAddSubstitution={handleAddSubstitution}
           onEditSubstitution={handleEditSubstitution}
           onDeleteSubstitution={handleDeleteSubstitution}
+          cards={cards}
+          onAddCard={handleAddCard}
+          onEditCard={handleEditCard}
+          onDeleteCard={handleDeleteCard}
           matchDuration={matchDuration}
           setMatchDuration={setMatchDuration}
         />
@@ -1978,6 +2152,7 @@ export default function GameDetails() {
         substitutions={substitutions}
         playerReports={localPlayerReports}
         goals={goals}
+        cards={cards}
         // NEW: Pass pre-fetched stats (for display only, read-only)
         initialMinutes={teamStats[selectedPlayer?._id]?.minutes}
         initialGoals={teamStats[selectedPlayer?._id]?.goals}
@@ -2026,6 +2201,9 @@ export default function GameDetails() {
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
         game={game}
+        timeline={timeline}
+        startingLineup={startingLineupMap}
+        squadPlayers={squadPlayersMap}
       />
 
       <SubstitutionDialog
@@ -2041,6 +2219,31 @@ export default function GameDetails() {
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
         playerReports={localPlayerReports}
+        timeline={timeline}
+        startingLineup={startingLineupMap}
+        squadPlayers={squadPlayersMap}
+      />
+
+      <CardDialog
+        isOpen={showCardDialog}
+        onClose={() => {
+          console.log('🔍 [GameDetailsPage] Closing CardDialog:', {
+            selectedCard: selectedCard ? {
+              _id: selectedCard._id,
+              cardType: selectedCard.cardType,
+              playerId: selectedCard.playerId?._id || selectedCard.playerId
+            } : null
+          });
+          setShowCardDialog(false);
+          setSelectedCard(null);
+        }}
+        onSave={handleSaveCard}
+        card={selectedCard}
+        gamePlayers={activeGamePlayers}
+        cards={cards}
+        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        isReadOnly={isDone}
+        game={game}
       />
 
       {/* Confirmation Modal for Validations */}
