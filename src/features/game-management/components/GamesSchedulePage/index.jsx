@@ -23,8 +23,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
 import { Badge } from "@/shared/ui/primitives/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { PageLayout, PageHeader, SearchFilter, DataCard, LoadingState, EmptyState } from "@/shared/ui/primitives/design-system-components";
+import { PageLayout, PageHeader, SearchFilter, DataCard, EmptyState } from "@/shared/ui/primitives/design-system-components";
 import { useData } from "@/app/providers/DataProvider";
+import PageLoader from "@/components/PageLoader";
 
 // --- Game Stats Rotator Component ---
 const GameStatsRotator = ({ gameId, reports, players }) => {
@@ -33,7 +34,6 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
   const stats = useMemo(() => {
     // Ensure reports and players are available and are arrays
     if (!reports || !Array.isArray(reports) || !players || !Array.isArray(players)) {
-      // console.log('GameStatsRotator: Missing data', { reportsCount: reports?.length, playersCount: players?.length }); // Debugging removed as per outline
       return [];
     }
 
@@ -43,7 +43,6 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
       return gameField && Array.isArray(gameField) && gameField.includes(gameId);
     });
     
-    // console.log(`GameStatsRotator: Found ${gameReports.length} reports for game ${gameId}`); // Debugging removed as per outline
     
     if (gameReports.length === 0) return [];
 
@@ -112,7 +111,6 @@ const GameStatsRotator = ({ gameId, reports, players }) => {
       availableStats.push({ type: 'assisters', data: assisters });
     }
 
-    // console.log(`GameStatsRotator: Generated ${availableStats.length} stats for game ${gameId}`, availableStats); // Debugging removed as per outline
     return availableStats;
   }, [gameId, reports, players]);
 
@@ -180,43 +178,6 @@ export default function GamesSchedule() {
     User.me().then(setCurrentUser).catch(console.error);
   }, []);
 
-  // Add this for debugging - you can remove it later
-  useEffect(() => {
-    console.log('🔍 GamesSchedule: Data loaded', { 
-      gamesCount: games?.length, 
-      reportsCount: reports?.length, 
-      playersCount: players?.length,
-      usersCount: users?.length,
-      teamsCount: teams?.length
-    });
-    
-    // Log sample games to see their structure
-    if (games && games.length > 0) {
-      console.log('🔍 Sample games:', games.slice(0, 3));
-      console.log('🔍 Game team fields:', games.slice(0, 3).map(g => ({ 
-        id: g._id || g.id, 
-        team: g.team, 
-        Team: g.Team,
-        gameTitle: g.gameTitle || g.GameTitle,
-        teamName: g.teamName,
-        opponent: g.opponent
-      })));
-    }
-    
-    // Log sample teams to see their structure
-    if (teams && teams.length > 0) {
-      console.log('🔍 Sample teams:', teams.slice(0, 3));
-      console.log('🔍 Team coach fields:', teams.slice(0, 3).map(t => ({ 
-        id: t._id || t.id, 
-        coach: t.coach, 
-        Coach: t.Coach,
-        teamName: t.teamName || t.TeamName 
-      })));
-    }
-    
-    // Log current user
-    console.log('🔍 Current user:', currentUser);
-  }, [games, reports, players, users, teams, currentUser]);
 
   const { roleFilteredGames, availableStatuses } = useMemo(() => {
     console.log('🔍 Role filtering - Input data:', {
@@ -455,7 +416,7 @@ export default function GamesSchedule() {
   const displayedGames = getFilteredGames();
 
   if (isDataLoading) {
-    return <LoadingState message="Loading Mission Data..." />;
+    return <PageLoader message="Loading Mission Data..." />;
   }
 
   if (error) {

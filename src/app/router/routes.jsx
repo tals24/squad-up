@@ -46,7 +46,7 @@ import {
 } from '@/features/reporting';
 
 // Page Imports (not migrated - misc pages)
-import SyncStatus from '@/pages/SyncStatus';
+import SettingsPage from '@/pages/Settings';
 
 /**
  * Public routes (no authentication required)
@@ -84,9 +84,9 @@ export const protectedRoutes = [
     name: 'Player',
   },
   {
-    path: '/SyncStatus',
-    element: SyncStatus,
-    name: 'SyncStatus',
+    path: '/Settings',
+    element: SettingsPage,
+    name: 'Settings',
   },
   {
     path: '/Analytics',

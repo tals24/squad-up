@@ -4,9 +4,21 @@
 
 This specification outlines the technical implementation for enhanced match event tracking features, focusing on manual data entry efficiency while maximizing analytical value. The design prioritizes user experience, data integrity, and future analytical capabilities.
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Date:** October 31, 2025  
-**Status:** Approved for Implementation  
+**Status:** In Progress - Phase 0 (Settings Page) Ready for Implementation
+
+**Recent Updates (v1.1):**
+- ✅ Added Enhanced Game Schema (Section 1.6) with match duration tracking
+- ✅ Added Match Duration API endpoints (Section 2.6) for minutes validation
+- ✅ Added Minutes Progress Indicator UI component (Section 3.6)
+- ✅ Enhanced Player Report Entry Flow with comprehensive validation rules (Section 4.2)
+- ✅ Added Settings Page structure plan (Section 5.0) for Configuration Management
+- ✅ Added Phase 0 to Implementation Timeline (Settings Page setup)
+
+**Related Documentation:**
+- `docs/MINUTES_VALIDATION_SPEC.md` - Comprehensive minutes validation system (Implemented)
+- `docs/MINUTES_UI_COMPONENT_SPEC.md` - Minutes Progress Indicator component specification (Implemented)
 
 ---
 
@@ -197,7 +209,59 @@ PositionSpecificMetrics {
 
 ---
 
-### 1.6 Match Context Schema
+### 1.6 Enhanced Game Schema (Match Duration)
+
+**Note:** This extends the existing Game schema with match duration tracking for accurate minutes validation.
+
+```javascript
+Game {
+  // ... existing fields (homeTeam, awayTeam, date, status, etc.) ...
+  
+  // Match duration tracking (implemented in previous PR)
+  matchDuration: {
+    regularTime: { type: Number, default: 90 },
+    firstHalfExtraTime: { type: Number, default: 0 },  // Injury time (1st half)
+    secondHalfExtraTime: { type: Number, default: 0 }  // Injury time (2nd half)
+  },
+  
+  totalMatchDuration: Number,   // Auto-calculated: sum of all duration fields
+  
+  matchType: String,            // enum: ['league', 'cup', 'friendly'], default: 'league'
+  
+  // Score tracking
+  ourScore: Number,
+  opponentScore: Number,
+  
+  // ... other existing fields ...
+}
+```
+
+**Pre-save Middleware:**
+```javascript
+// Automatically calculates totalMatchDuration
+GameSchema.pre('save', function(next) {
+  this.totalMatchDuration = 
+    (this.matchDuration?.regularTime || 90) +
+    (this.matchDuration?.firstHalfExtraTime || 0) +
+    (this.matchDuration?.secondHalfExtraTime || 0);
+  next();
+});
+```
+
+**Indexes:**
+- `status` (for filtering by game status)
+- `date` (for chronological queries)
+
+**Business Rules:**
+- Regular time defaults to 90 minutes
+- Extra time per half: typically 0-15 minutes (injury time) for league matches
+- Cup matches may have 30 minutes extra time (2 × 15 minutes) if match goes to extra time
+- Maximum realistic match duration: 120 minutes (90 regular + 30 extra)
+- Used for minutes validation: ensures no player exceeds `totalMatchDuration` in their report
+
+---
+
+### 1.7 Match Context Schema
 
 ```javascript
 MatchContext {
@@ -229,7 +293,7 @@ MatchContext {
 
 ---
 
-### 1.7 Organization Configuration Schema
+### 1.8 Organization Configuration Schema
 
 ```javascript
 OrganizationConfig {
@@ -408,7 +472,84 @@ GET /api/config/position-metrics-enabled?teamId=xxx
 
 ---
 
-### 2.6 Match Context API
+### 2.6 Match Duration API (Minutes Validation)
+
+**Note:** This API was implemented in the minutes validation feature and is critical for the Enhanced Match Event Tracking system.
+
+```javascript
+// Update match duration (record extra time)
+PUT /api/games/:gameId/match-duration
+{
+  regularTime: 90,
+  firstHalfExtraTime: 3,
+  secondHalfExtraTime: 5
+}
+
+Response: {
+  message: "Match duration updated successfully",
+  matchDuration: {
+    regularTime: 90,
+    firstHalfExtraTime: 3,
+    secondHalfExtraTime: 5
+  },
+  totalMatchDuration: 98
+}
+
+// Get minutes summary (for validation feedback)
+GET /api/games/:gameId/minutes-summary
+
+Response: {
+  matchDuration: 98,
+  minimumRequired: 1078,  // 11 players × 98 minutes
+  maximumAllowed: 1078,   // 11 players × 98 minutes
+  totalRecorded: 1050,
+  deficit: 28,
+  excess: 0,
+  playersReported: 13,
+  playersWithMinutes: 11,
+  percentage: 97,
+  isValid: false,
+  isOverMaximum: false
+}
+
+// Validate minutes before submission
+POST /api/games/:gameId/validate-minutes
+{
+  playerReports: [
+    { playerId: "player123", playerName: "John Doe", minutesPlayed: 98 },
+    // ... more players
+  ]
+}
+
+Response (if valid): {
+  isValid: true,
+  errors: [],
+  warnings: [],
+  summary: { /* ... */ }
+}
+
+Response (if invalid): {
+  isValid: false,
+  errors: [
+    {
+      type: "TEAM_MINUTES_INSUFFICIENT",
+      message: "Total team minutes (1050) is less than required (1078). Missing 28 minutes.",
+      details: { totalPlayerMinutes: 1050, minimumRequired: 1078, deficit: 28 }
+    }
+  ],
+  warnings: [],
+  summary: { /* ... */ }
+}
+```
+
+**Usage Context:**
+- Called when coach enters extra time in GameDetailsHeader
+- Called before final report submission to validate minutes
+- Provides real-time feedback via MinutesProgressIndicator component
+
+---
+
+### 2.7 Match Context API
 
 ```javascript
 // Create/Update match context
@@ -428,7 +569,7 @@ GET /api/games/:gameId/match-context
 
 ---
 
-### 2.7 Organization Configuration API
+### 2.8 Organization Configuration API
 
 ```javascript
 // Get organization config
@@ -628,7 +769,99 @@ const [goalData, setGoalData] = useState({
 
 ---
 
-### 3.6 Match Context Component (One-time entry)
+### 3.6 Match Duration & Minutes Progress Component
+
+**Note:** Implemented in the minutes validation feature.
+
+```jsx
+<GameDetailsHeader>
+  {/* Score inputs */}
+  <Input label="Our Score" type="number" value={ourScore} />
+  <Input label="Opponent Score" type="number" value={opponentScore} />
+  
+  {/* Extra time inputs (shown when status is "Played") */}
+  {status === 'Played' && (
+    <>
+      <Input 
+        label="Extra Time - 1st Half (min)"
+        type="number"
+        min={0}
+        max={15}
+        value={matchDuration.firstHalfExtraTime}
+        onChange={(e) => setMatchDuration({
+          ...matchDuration,
+          firstHalfExtraTime: parseInt(e.target.value) || 0
+        })}
+      />
+      <Input 
+        label="Extra Time - 2nd Half (min)"
+        type="number"
+        min={0}
+        max={15}
+        value={matchDuration.secondHalfExtraTime}
+        onChange={(e) => setMatchDuration({
+          ...matchDuration,
+          secondHalfExtraTime: parseInt(e.target.value) || 0
+        })}
+      />
+    </>
+  )}
+  
+  {/* Minutes progress indicator (real-time feedback) */}
+  {status === 'Played' && playerReports.length > 0 && (
+    <MinutesProgressIndicator 
+      playerReports={playerReports}
+      game={game}
+      matchDuration={matchDuration}
+    />
+  )}
+</GameDetailsHeader>
+
+{/* Minutes Progress Indicator Component */}
+<MinutesProgressIndicator>
+  {/* Displays: "945/990 (95%) ⚠️ Missing 45 min" */}
+  {/* Color-coded: Green (valid), Orange (warning), Red (over maximum) */}
+  {/* Tooltip with detailed breakdown */}
+  
+  <ProgressBar 
+    value={totalRecorded} 
+    max={minimumRequired}
+    color={getProgressColor(percentage, isOverMaximum)}
+  />
+  
+  <Tooltip>
+    <TooltipContent>
+      <p>Match Duration: {matchDuration} min</p>
+      <p>Minimum Required: {minimumRequired} min (11 × {matchDuration})</p>
+      <p>Maximum Allowed: {maximumAllowed} min (11 × {matchDuration})</p>
+      <p>Total Recorded: {totalRecorded} min</p>
+      {deficit > 0 && <p className="text-orange-500">Missing: {deficit} min</p>}
+      {isOverMaximum && <p className="text-red-500">Over Maximum: {excess} min</p>}
+    </TooltipContent>
+  </Tooltip>
+</MinutesProgressIndicator>
+```
+
+**State Management:**
+```javascript
+const [matchDuration, setMatchDuration] = useState({
+  regularTime: 90,
+  firstHalfExtraTime: 0,
+  secondHalfExtraTime: 0
+});
+
+const totalMatchDuration = 
+  matchDuration.regularTime + 
+  matchDuration.firstHalfExtraTime + 
+  matchDuration.secondHalfExtraTime;
+
+// Real-time minutes summary
+const minutesSummary = getMinutesSummary(playerReports, game);
+```
+
+---
+
+### 3.7 Match Context Component (One-time entry)
 
 ```jsx
 <MatchContextForm gameId={gameId}>
@@ -672,14 +905,14 @@ const [goalData, setGoalData] = useState({
 
 ---
 
-### 4.2 Player Report Entry Flow (Enhanced)
+### 4.2 Player Report Entry Flow (Enhanced with Minutes Validation)
 
 ```
 1. Coach clicks on player (from pitch or sidebar)
 2. PlayerPerformanceDialog opens with tabs:
    
    Tab 1: Basic Stats
-   - Minutes played
+   - Minutes played (required, with validation)
    - Goals (read-only, from goal tracking)
    - Assists (read-only, from goal tracking)
    - Overall rating (1-10)
@@ -699,8 +932,42 @@ const [goalData, setGoalData] = useState({
    - Position-specific fields based on player position
    
 3. Click "Save Report"
-4. Validation: Starting lineup must have minutes > 0
-5. Report saved, player indicator updates
+4. Per-Player Validation (client-side):
+   a) Starting lineup: minutes > 0 (BLOCKING ERROR)
+   b) All players: minutes ≤ match duration (BLOCKING ERROR)
+   c) Negative minutes: not allowed (BLOCKING ERROR)
+   
+5. If validation passes:
+   - Report saved locally
+   - Player indicator updates (green check)
+   - MinutesProgressIndicator updates in real-time
+   
+6. Before Final Submission (status change to "Done"):
+   Team-level validation:
+   a) Total minutes ≥ minimum required (11 × match duration) - BLOCKING ERROR
+   b) Total minutes ≤ maximum allowed (11 × match duration) - BLOCKING ERROR
+   c) All starting lineup players have reports - BLOCKING ERROR
+   d) Goals validation: total player goals ≤ team score - BLOCKING ERROR
+   e) Assists validation: total assists ≤ team score - BLOCKING ERROR
+   f) All team summaries filled - BLOCKING ERROR
+```
+
+**Validation Error Examples:**
+
+**Blocking Errors (prevent save/submission):**
+```
+❌ "John Doe is in the starting lineup and must have more than 0 minutes"
+❌ "Jane Smith cannot play more than 98 minutes (match duration)"
+❌ "Total team minutes (1050) is less than required (1078). Missing 28 minutes."
+❌ "Total team minutes (1100) exceeds maximum allowed (1078). Over by 22 minutes."
+❌ "Player goals (5) exceed team score (3). Please verify goal attributions."
+❌ "Total assists (4) exceed team score (3). Please verify assist attributions."
+```
+
+**Warnings (allow save with confirmation):**
+```
+⚠️ "Team scored 3 goals but only 1 is attributed to players. 2 may be own goals."
+⚠️ "Only 5 bench players assigned (recommended: 7+). Continue?"
 ```
 
 **Time estimate:** 60-90 seconds per player (depending on enabled features)
@@ -745,10 +1012,74 @@ const [goalData, setGoalData] = useState({
 
 ## 5. Configuration Management
 
-### 5.1 Organization Admin Panel
+### 5.0 Settings Page Structure
+
+**Page Location:** `/Settings` (renamed from `/SyncStatus`)
+
+The Settings page will serve as the central location for all configuration management. It will be organized into tabs/sections:
 
 ```jsx
-<OrganizationSettingsPage>
+<SettingsPage>
+  {/* Tab Navigation */}
+  <Tabs defaultValue="database">
+    <TabsList>
+      <TabsTrigger value="database">Database & Sync</TabsTrigger>
+      <TabsTrigger value="organization">Organization Settings</TabsTrigger>
+      <TabsTrigger value="user">User Preferences</TabsTrigger>
+      <TabsTrigger value="team">Team Settings</TabsTrigger>
+    </TabsList>
+    
+    {/* Tab 1: Database & Sync Status (Current Functionality) */}
+    <TabsContent value="database">
+      <DatabaseSyncSection>
+        {/* Existing MongoDB connection status */}
+        {/* Available tables */}
+        {/* Connection test functionality */}
+      </DatabaseSyncSection>
+    </TabsContent>
+    
+    {/* Tab 2: Organization Settings (Enhanced Match Event Tracking) */}
+    <TabsContent value="organization">
+      <OrganizationSettingsSection>
+        {/* Feature toggles from 5.1 */}
+        {/* Age group overrides from 5.1 */}
+      </OrganizationSettingsSection>
+    </TabsContent>
+    
+    {/* Tab 3: User Preferences (Future) */}
+    <TabsContent value="user">
+      <UserPreferencesSection>
+        {/* Theme preferences */}
+        {/* Notification settings */}
+        {/* Dashboard layout preferences */}
+      </UserPreferencesSection>
+    </TabsContent>
+    
+    {/* Tab 4: Team Settings (Future) */}
+    <TabsContent value="team">
+      <TeamSettingsSection>
+        {/* Team-specific configurations */}
+      </TeamSettingsSection>
+    </TabsContent>
+  </Tabs>
+</SettingsPage>
+```
+
+**Implementation Notes:**
+- The Settings page replaces the existing "Sync Status" page
+- Route updated: `/SyncStatus` → `/Settings`
+- Sidebar navigation updated: "Sync Status" → "Settings"
+- Existing database/sync functionality preserved as first tab
+- Organization Settings section added as second tab for Enhanced Match Event Tracking configuration
+
+---
+
+### 5.1 Organization Settings Section (Within Settings Page)
+
+**Location:** Settings Page → "Organization Settings" Tab
+
+```jsx
+<OrganizationSettingsSection>
   <Section title="Enhanced Tracking Features">
     
     <Toggle 
@@ -803,7 +1134,7 @@ const [goalData, setGoalData] = useState({
       ))}
     </AgeGroupTable>
   </Section>
-</OrganizationSettingsPage>
+</OrganizationSettingsSection>
 ```
 
 ---
@@ -1066,6 +1397,14 @@ async function migrateGameReport(gameReportId) {
 
 ## 9. Implementation Timeline
 
+### Phase 0 (Pre-requisite): Settings Page Setup
+- ✅ Rename "Sync Status" page to "Settings" (`/SyncStatus` → `/Settings`)
+- ✅ Update route configuration
+- ✅ Update sidebar navigation
+- ✅ Implement tabbed structure (Database & Sync, Organization Settings, User Preferences, Team Settings)
+- ✅ Migrate existing database/sync functionality to first tab
+- ✅ Set up Settings page architecture with tab navigation
+
 ### Phase 1 (Week 1-2): Core Goal Tracking
 - ✅ Goal schema with relationships
 - ✅ Goal API endpoints
@@ -1083,12 +1422,14 @@ async function migrateGameReport(gameReportId) {
 - ✅ Match context entry form
 - ✅ Context-aware analytics
 
-### Phase 4 (Week 5-6): Optional Features
+### Phase 4 (Week 5-6): Optional Features & Configuration
 - ✅ Organization configuration schema
-- ✅ Shot tracking (optional)
-- ✅ Position-specific metrics (optional)
-- ✅ Admin settings panel
+- ✅ Settings page → Organization Settings tab implementation
+- ✅ Feature toggles UI (Shot Tracking, Position-Specific Metrics, etc.)
+- ✅ Age Group Overrides table UI
 - ✅ Feature detection logic
+- ✅ Shot tracking (optional, if enabled)
+- ✅ Position-specific metrics (optional, if enabled)
 
 ### Phase 5 (Week 7-8): Analytics & Polish
 - ✅ Advanced analytics dashboards
@@ -1298,23 +1639,45 @@ This technical specification provides a comprehensive, implementation-ready desi
 - ✅ Optional features adapt to age group needs
 - ✅ Position-specific metrics provide role clarity
 - ✅ Match context enables performance comparison
+- ✅ **Comprehensive minutes validation** with real-time feedback (Implemented)
+- ✅ **Match duration tracking** with extra time support (Implemented)
+- ✅ **Visual progress indicators** for data completeness (Implemented)
 
 **Expected Data Entry Time:** 12-20 minutes per match (depending on enabled features)
 
 **Expected Analytical Value:** High - enables player development tracking, tactical analysis, and team performance optimization
 
+**Prerequisites Implemented:**
+- ✅ Minutes validation system (see `MINUTES_VALIDATION_SPEC.md`)
+- ✅ Match duration with extra time tracking
+- ✅ Real-time validation feedback UI
+- ✅ Squad validation (11 starters, bench size, positioning, goalkeeper)
+- ✅ Goals/assists validation against team score
+- ✅ Team summaries validation
+
 ---
 
 ## Next Steps
 
-1. Review and approve this specification
-2. Create implementation tickets for each phase
-3. Set up development environment
-4. Begin Phase 1: Core Goal Tracking
+1. ✅ ~~Review and approve this specification~~ (Approved)
+2. **Phase 0: Settings Page Setup** (Current - Ready to implement)
+   - Rename "Sync Status" → "Settings"
+   - Implement tabbed structure
+   - Migrate existing database/sync functionality
+   - Prepare for Organization Settings integration
+3. Phase 1: Core Goal Tracking
+4. Phase 2: Substitution & Disciplinary
+5. Phase 3: Match Context
+6. Phase 4: Optional Features & Configuration
+7. Phase 5: Analytics & Polish
 
 ---
 
-**Document Status:** Ready for Implementation  
+**Document Status:** In Progress - Phase 0 Ready  
 **Last Updated:** October 31, 2025  
-**Version:** 1.0
+**Version:** 1.1
+
+**Change Log:**
+- v1.1 (Oct 31, 2025): Added match duration tracking, minutes validation integration, Settings page structure, updated user flows
+- v1.0 (Oct 31, 2025): Initial specification
 

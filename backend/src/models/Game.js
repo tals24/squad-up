@@ -119,6 +119,25 @@ const gameSchema = new mongoose.Schema({
     type: String,
     enum: ['league', 'cup', 'friendly'],
     default: 'league'
+  },
+
+  // Draft lineup for Scheduled games (temporary storage before game starts)
+  // Format: { playerId: status, ... } e.g., { "68ce9c940d0528dbba21e570": "Starting Lineup", ... }
+  lineupDraft: {
+    type: mongoose.Schema.Types.Mixed, // JSON object: { playerId: status, ... }
+    default: null
+  },
+
+  // Draft reports for Played games (temporary storage before final submission)
+  // Format: {
+  //   teamSummary: { defenseSummary, midfieldSummary, attackSummary, generalSummary },
+  //   finalScore: { ourScore, opponentScore },
+  //   matchDuration: { regularTime, firstHalfExtraTime, secondHalfExtraTime },
+  //   playerReports: { playerId: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }, ... }
+  // }
+  reportDraft: {
+    type: mongoose.Schema.Types.Mixed, // JSON object: { teamSummary?, finalScore?, matchDuration?, playerReports? }
+    default: null
   }
 }, {
   timestamps: true
@@ -130,6 +149,8 @@ gameSchema.index({ team: 1 });
 gameSchema.index({ date: 1 });
 gameSchema.index({ status: 1 });
 gameSchema.index({ season: 1 });
+gameSchema.index({ status: 1, lineupDraft: 1 }); // For efficient draft queries
+gameSchema.index({ status: 1, reportDraft: 1 }); // For efficient report draft queries
 
 // Virtual field for gameTitle (calculated dynamically)
 gameSchema.virtual('gameTitle').get(function() {

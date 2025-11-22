@@ -1,6 +1,5 @@
 const express = require('express');
-const { authenticateJWT } = require('../middleware/jwtAuth');
-const { requireRole, checkTeamAccess } = require('../middleware/auth');
+const { authenticateJWT, requireRole, checkTeamAccess } = require('../middleware/jwtAuth');
 const Team = require('../models/Team');
 const User = require('../models/User');
 

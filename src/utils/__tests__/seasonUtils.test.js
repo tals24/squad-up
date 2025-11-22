@@ -2,7 +2,7 @@
  * Tests for season detection logic
  */
 
-import { getSeasonFromDate, getCurrentSeason, isDateInSeason } from '../seasonUtils';
+import { getSeasonFromDate, getCurrentSeason, isDateInSeason } from '@/shared/utils/date/seasonUtils';
 
 describe('Season Detection Logic', () => {
   test('should detect 2024/2025 season for August 2024', () => {

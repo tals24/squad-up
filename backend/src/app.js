@@ -23,6 +23,11 @@ const trainingSessionRoutes = require('./routes/trainingSessions');
 const sessionDrillRoutes = require('./routes/sessionDrills');
 const dataRoutes = require('./routes/data');
 const minutesValidationRoutes = require('./routes/minutesValidation');
+const goalRoutes = require('./routes/goals');
+const analyticsRoutes = require('./routes/analytics');
+const substitutionRoutes = require('./routes/substitutions');
+const disciplinaryActionRoutes = require('./routes/disciplinaryActions');
+const organizationConfigRoutes = require('./routes/organizationConfigs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,7 +64,11 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/games', minutesValidationRoutes); // Minutes validation routes (under /api/games/:gameId/...)
+app.use('/api/games', goalRoutes); // Goal routes (under /api/games/:gameId/goals)
+app.use('/api/games', substitutionRoutes); // Substitution routes (under /api/games/:gameId/substitutions)
+app.use('/api/games', disciplinaryActionRoutes); // Disciplinary routes (under /api/games/:gameId/disciplinary-actions)
 app.use('/api/game-rosters', gameRosterRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/timeline-events', timelineEventRoutes);
 app.use('/api/game-reports', gameReportRoutes);
 app.use('/api/scout-reports', scoutReportRoutes);
@@ -68,6 +77,7 @@ app.use('/api/formations', formationRoutes);
 app.use('/api/training-sessions', trainingSessionRoutes);
 app.use('/api/session-drills', sessionDrillRoutes);
 app.use('/api/data', dataRoutes);
+app.use('/api/organizations', organizationConfigRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -97,11 +107,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5174'}`);
-});
+// Start server (only if not in test environment and not already started)
+if (process.env.NODE_ENV !== 'test' && !module.parent) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5174'}`);
+  });
+}
 
 module.exports = app;

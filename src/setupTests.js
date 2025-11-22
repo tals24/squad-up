@@ -1,5 +1,22 @@
 // Jest setup file for testing environment
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Polyfill TextEncoder/TextDecoder for React Router v7 (required by jsdom)
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Mock import.meta.env for Vite environment variables
+Object.defineProperty(globalThis, 'import', {
+  value: {
+    meta: {
+      env: {
+        VITE_API_URL: 'http://localhost:3001'
+      }
+    }
+  },
+  writable: true
+});
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

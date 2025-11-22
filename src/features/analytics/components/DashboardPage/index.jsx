@@ -38,6 +38,7 @@ import { useData } from "@/app/providers/DataProvider";
 import { useDashboardData, useUserRole, useRecentEvents } from "@/shared/hooks";
 import { DashboardHeader, GameZone, DashboardStats, RecentActivity } from "../shared";
 import { format, formatDistanceToNow, isFuture, isPast, addWeeks, startOfWeek, endOfWeek, getYear, getISOWeek } from 'date-fns';
+import PageLoader from "@/components/PageLoader";
 
 
 
@@ -455,14 +456,7 @@ export default function Dashboard() {
 
 
   if (isDataLoading) {
-    return (
-      <div className="p-6 md:p-8 bg-slate-900 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-            <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-300 font-medium text-lg">Loading Mission Data...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading Mission Data..." />;
   }
 
   if (error) {

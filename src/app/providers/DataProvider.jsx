@@ -27,6 +27,8 @@ export const DataProvider = ({ children }) => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [organizationConfig, setOrganizationConfig] = useState(null);
+    const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
     const fetchData = async () => {
         console.log('📊 DataContext: Starting data fetch...');
@@ -117,12 +119,157 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const fetchOrganizationConfig = async () => {
+        try {
+            setIsLoadingConfig(true);
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                console.warn('⚠️ No auth token found, skipping config fetch');
+                setOrganizationConfig({
+                    features: {
+                        shotTrackingEnabled: false,
+                        positionSpecificMetricsEnabled: false,
+                        detailedDisciplinaryEnabled: true,
+                        goalInvolvementEnabled: true
+                    },
+                    ageGroupOverrides: []
+                });
+                setIsLoadingConfig(false);
+                return;
+            }
+
+            const response = await fetch('http://localhost:3001/api/organizations/default/config', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch organization config');
+            }
+            
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                setOrganizationConfig(result.data);
+                console.log('✅ Organization config loaded:', result.data.isDefault ? '(default)' : '(saved)');
+            }
+        } catch (error) {
+            console.error('❌ Failed to fetch organization config:', error);
+            // Set default config on error
+            setOrganizationConfig({
+                features: {
+                    shotTrackingEnabled: false,
+                    positionSpecificMetricsEnabled: false,
+                    detailedDisciplinaryEnabled: true,
+                    goalInvolvementEnabled: true
+                },
+                ageGroupOverrides: []
+            });
+        } finally {
+            setIsLoadingConfig(false);
+        }
+    };
+
     useEffect(() => {
         console.log('📊 DataContext: Component mounted, starting initial data fetch...');
         fetchData();
+        fetchOrganizationConfig();
     }, []);
 
-    const value = { ...data, isLoading, error, refreshData: fetchData };
+    /**
+     * Update a single game in the global cache
+     * Used to sync local state changes with global state without full refresh
+     * @param {Object} updatedGame - The updated game object (must have _id)
+     */
+    const updateGameInCache = (updatedGame) => {
+        if (!updatedGame || !updatedGame._id) {
+            console.warn('⚠️ [DataProvider] updateGameInCache called without valid game _id');
+            return;
+        }
+
+        setData((prev) => {
+            const gameIndex = prev.games.findIndex(g => g._id === updatedGame._id);
+            
+            if (gameIndex === -1) {
+                console.warn(`⚠️ [DataProvider] Game ${updatedGame._id} not found in cache, cannot update`);
+                return prev;
+            }
+
+            // Deep merge: preserve existing game fields, update with new ones
+            const existingGame = prev.games[gameIndex];
+            const mergedGame = {
+                ...existingGame,
+                ...updatedGame,
+                // Ensure nested objects are merged correctly
+                matchDuration: updatedGame.matchDuration || existingGame.matchDuration,
+            };
+
+            const updatedGames = [...prev.games];
+            updatedGames[gameIndex] = mergedGame;
+
+            console.log('✅ [DataProvider] Game cache updated:', {
+                gameId: updatedGame._id,
+                oldStatus: existingGame.status,
+                newStatus: updatedGame.status,
+                hasLineupDraft: !!updatedGame.lineupDraft
+            });
+
+            return {
+                ...prev,
+                games: updatedGames
+            };
+        });
+    };
+
+    /**
+     * Update game rosters in the global cache
+     * Used when rosters are saved/updated without full refresh
+     * @param {Array} newRosters - Array of roster objects (must have game field)
+     * @param {String} gameId - The game ID these rosters belong to
+     */
+    const updateGameRostersInCache = (newRosters, gameId) => {
+        if (!newRosters || !Array.isArray(newRosters) || !gameId) {
+            console.warn('⚠️ [DataProvider] updateGameRostersInCache called with invalid parameters');
+            return;
+        }
+
+        setData((prev) => {
+            // Remove old rosters for this game
+            const filteredRosters = prev.gameRosters.filter(roster => {
+                const rosterGameId = typeof roster.game === "object" && roster.game !== null ? roster.game._id : roster.game;
+                return rosterGameId !== gameId;
+            });
+
+            // Add new rosters
+            const updatedRosters = [...filteredRosters, ...newRosters];
+
+            console.log('✅ [DataProvider] Game rosters cache updated:', {
+                gameId,
+                removedCount: prev.gameRosters.length - filteredRosters.length,
+                addedCount: newRosters.length,
+                totalRosters: updatedRosters.length
+            });
+
+            return {
+                ...prev,
+                gameRosters: updatedRosters
+            };
+        });
+    };
+
+    const value = { 
+        ...data, 
+        isLoading, 
+        error, 
+        refreshData: fetchData,
+        updateGameInCache,
+        updateGameRostersInCache,
+        organizationConfig,
+        isLoadingConfig,
+        refreshConfig: fetchOrganizationConfig
+    };
 
     return (
         <DataContext.Provider value={value}>

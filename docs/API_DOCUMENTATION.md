@@ -6,6 +6,8 @@ This document provides comprehensive documentation for all available APIs in the
 
 **Base URL**: `http://localhost:3001/api`
 
+**Health Check**: `GET http://localhost:3001/health` (No authentication required)
+
 ---
 
 ## 🔐 Authentication
@@ -340,6 +342,349 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Delete game  
 **Authentication**: Required + team access check  
 
+#### **PUT** `/api/games/:gameId/draft`
+**Purpose**: Save draft data (autosave) - polymorphic endpoint  
+**Authentication**: Required + game access check  
+**Behavior**:
+- **Scheduled games**: Saves to `lineupDraft` (rosters, formation, formationType)
+- **Played games**: Saves to `reportDraft` (teamSummary, finalScore, matchDuration, playerReports)
+- **Other statuses**: Rejected with error
+
+**Body (Scheduled game)**:
+```json
+{
+  "rosters": { "playerId1": "Starting Lineup", "playerId2": "Bench" },
+  "formation": { "gk": { "_id": "playerId1" }, "cb1": { "_id": "playerId2" } },
+  "formationType": "1-4-4-2"
+}
+```
+
+**Body (Played game)**:
+```json
+{
+  "teamSummary": {
+    "defenseSummary": "Solid defense",
+    "midfieldSummary": "Controlled midfield",
+    "attackSummary": "Clinical finishing",
+    "generalSummary": "Great performance"
+  },
+  "finalScore": { "ourScore": 2, "opponentScore": 1 },
+  "matchDuration": {
+    "regularTime": 90,
+    "firstHalfExtraTime": 0,
+    "secondHalfExtraTime": 0
+  },
+  "playerReports": { "playerId": { "rating": 4, "notes": "..." } }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Draft saved successfully",
+  "data": {
+    "gameId": "...",
+    "draftSaved": true
+  }
+}
+```
+
+#### **POST** `/api/games/:gameId/start-game`
+**Purpose**: Start a game (transition from Scheduled to Played) with lineup validation  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "rosters": [
+    { "playerId": "...", "status": "Starting Lineup", "position": "gk" },
+    { "playerId": "...", "status": "Starting Lineup", "position": "cb1" }
+  ]
+}
+```
+**Validation**: 
+- Requires exactly 11 players in Starting Lineup
+- Requires at least 1 goalkeeper
+- Warns if bench has fewer than 7 players
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "game": { /* updated game object */ },
+    "rosters": [ /* created roster objects */ ]
+  }
+}
+```
+
+#### **GET** `/api/games/:gameId/player-stats`
+**Purpose**: Get consolidated player statistics (minutes, goals, assists) for all players in a game  
+**Authentication**: Required + game access check  
+**Note**: Only available for games with status "Played". Optimized for pre-fetching - returns all stats in one request.  
+**Response**:
+```json
+{
+  "success": true,
+  "gameId": "...",
+  "playerStats": {
+    "playerId1": { "minutes": 90, "goals": 2, "assists": 1 },
+    "playerId2": { "minutes": 65, "goals": 0, "assists": 1 },
+    "playerId3": { "minutes": 25, "goals": 0, "assists": 0 }
+  },
+  "metadata": {
+    "totalPlayers": 3,
+    "playersWithMinutes": 3,
+    "playersWithGoalsAssists": 2
+  }
+}
+```
+**Note**: Minutes are calculated from substitutions and red cards. Goals and assists are calculated from the Goals collection. This endpoint runs both calculations in parallel for efficiency.
+
+---
+
+### ⚽ Game Events (`/api/games/:gameId/...`)
+
+#### **Goals** (`/api/games/:gameId/goals`)
+
+##### **GET** `/api/games/:gameId/goals`
+**Purpose**: Get all goals for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalGoals": 3,
+  "goals": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "minute": 23,
+      "scorerId": { "fullName": "Player Name", "kitNumber": 10 },
+      "assistedById": { "fullName": "Assister Name", "kitNumber": 7 },
+      "goalType": "open-play",
+      "goalNumber": 1,
+      "matchState": "drawing"
+    }
+  ]
+}
+```
+
+##### **POST** `/api/games/:gameId/goals`
+**Purpose**: Create a new goal  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "minute": 23,
+  "scorerId": "playerId",
+  "assistedById": "playerId", // optional
+  "goalType": "open-play", // open-play, penalty, free-kick, corner, own-goal
+  "isOpponentGoal": false, // true for opponent goals
+  "goalInvolvement": [ // optional
+    { "playerId": "...", "role": "key-pass" }
+  ]
+}
+```
+
+##### **PUT** `/api/games/:gameId/goals/:goalId`
+**Purpose**: Update an existing goal  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/goals/:goalId`
+**Purpose**: Delete a goal  
+**Authentication**: Required + game access check  
+
+#### **Substitutions** (`/api/games/:gameId/substitutions`)
+
+##### **GET** `/api/games/:gameId/substitutions`
+**Purpose**: Get all substitutions for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalSubstitutions": 3,
+  "substitutions": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "playerOutId": { "fullName": "Player Out", "kitNumber": 10 },
+      "playerInId": { "fullName": "Player In", "kitNumber": 7 },
+      "minute": 65,
+      "reason": "tactical", // tactical, injury, fatigue, tactical-injury
+      "matchState": "winning", // winning, drawing, losing
+      "tacticalNote": "Bringing fresh legs"
+    }
+  ]
+}
+```
+
+##### **POST** `/api/games/:gameId/substitutions`
+**Purpose**: Create a new substitution  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "playerOutId": "playerId",
+  "playerInId": "playerId",
+  "minute": 65,
+  "reason": "tactical",
+  "matchState": "winning",
+  "tacticalNote": "Bringing fresh legs"
+}
+```
+
+##### **PUT** `/api/games/:gameId/substitutions/:subId`
+**Purpose**: Update an existing substitution  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/substitutions/:subId`
+**Purpose**: Delete a substitution  
+**Authentication**: Required + game access check  
+
+#### **Disciplinary Actions** (`/api/games/:gameId/disciplinary-actions`)
+
+##### **GET** `/api/games/:gameId/disciplinary-actions`
+**Purpose**: Get all disciplinary actions for a game  
+**Authentication**: Required + game access check  
+**Response**:
+```json
+{
+  "gameId": "...",
+  "totalActions": 2,
+  "disciplinaryActions": [
+    {
+      "_id": "...",
+      "gameId": "...",
+      "playerId": { "name": "Player Name", "jerseyNumber": 5 },
+      "cardType": "yellow", // yellow, red, second-yellow
+      "minute": 45,
+      "foulsCommitted": 3,
+      "foulsReceived": 1,
+      "reason": "Unsporting behavior"
+    }
+  ]
+}
+```
+
+##### **GET** `/api/games/:gameId/disciplinary-actions/player/:playerId`
+**Purpose**: Get disciplinary actions for a specific player in a game  
+**Authentication**: Required + game access check  
+
+##### **POST** `/api/games/:gameId/disciplinary-actions`
+**Purpose**: Create a new disciplinary action  
+**Authentication**: Required + game access check  
+**Body**:
+```json
+{
+  "playerId": "playerId",
+  "cardType": "yellow",
+  "minute": 45,
+  "foulsCommitted": 3,
+  "foulsReceived": 1,
+  "reason": "Unsporting behavior"
+}
+```
+
+##### **PUT** `/api/games/:gameId/disciplinary-actions/:actionId`
+**Purpose**: Update an existing disciplinary action  
+**Authentication**: Required + game access check  
+
+##### **DELETE** `/api/games/:gameId/disciplinary-actions/:actionId`
+**Purpose**: Delete a disciplinary action  
+**Authentication**: Required + game access check  
+
+#### **Match Duration** (`/api/games/:gameId/...`)
+
+##### **PUT** `/api/games/:gameId/match-duration`
+**Purpose**: Update match duration (regular time + extra time)  
+**Authentication**: Required  
+**Body**:
+```json
+{
+  "regularTime": 90,
+  "firstHalfExtraTime": 3,
+  "secondHalfExtraTime": 5
+}
+```
+**Response**:
+```json
+{
+  "message": "Match duration updated successfully",
+  "matchDuration": {
+    "regularTime": 90,
+    "firstHalfExtraTime": 3,
+    "secondHalfExtraTime": 5
+  },
+  "totalMatchDuration": 98
+}
+```
+**Note**: Extra time values are validated (must be 0-15 minutes, non-negative). The `totalMatchDuration` field is automatically calculated and stored.
+
+---
+
+### 📊 Game Reports (`/api/game-reports`)
+
+#### **GET** `/api/game-reports`
+**Purpose**: Get all game reports  
+**Authentication**: Required  
+
+#### **GET** `/api/game-reports/game/:gameId`
+**Purpose**: Get all game reports for a specific game  
+**Authentication**: Required + game access check  
+
+#### **GET** `/api/game-reports/:id`
+**Purpose**: Get game report by ID  
+**Authentication**: Required  
+
+#### **POST** `/api/game-reports`
+**Purpose**: Create new game report  
+**Authentication**: Required  
+**Body**:
+```json
+{
+  "player": "playerId",
+  "game": "gameId",
+  "minutesPlayed": 90,
+  "goals": 2,
+  "assists": 1,
+  "rating_physical": 4,
+  "rating_technical": 5,
+  "rating_tactical": 4,
+  "rating_mental": 4,
+  "notes": "Excellent performance"
+}
+```
+
+#### **PUT** `/api/game-reports/:id`
+**Purpose**: Update game report  
+**Authentication**: Required  
+
+#### **DELETE** `/api/game-reports/:id`
+**Purpose**: Delete game report  
+**Authentication**: Required  
+
+#### **POST** `/api/game-reports/batch`
+**Purpose**: Batch create/update game reports (for final submission)  
+**Authentication**: Required + game access check  
+**Note**: Server automatically calculates `minutesPlayed`, `goals`, and `assists` from game events. These fields are **forbidden** in the request body.  
+**Body**:
+```json
+{
+  "gameId": "gameId",
+  "reports": [
+    {
+      "playerId": "playerId",
+      "rating_physical": 4,
+      "rating_technical": 5,
+      "rating_tactical": 4,
+      "rating_mental": 4,
+      "notes": "Great game"
+    }
+  ]
+}
+```
+
 ---
 
 ### 📊 Timeline Events/Reports (`/api/timeline-events`)
@@ -524,6 +869,14 @@ Authorization: Bearer <your-jwt-token>
 **Purpose**: Get all game roster entries  
 **Authentication**: Required  
 
+#### **GET** `/api/game-rosters/game/:gameId`
+**Purpose**: Get all rosters for a specific game  
+**Authentication**: Required + game access check  
+
+#### **GET** `/api/game-rosters/:id`
+**Purpose**: Get roster entry by ID  
+**Authentication**: Required  
+
 #### **POST** `/api/game-rosters`
 **Purpose**: Add player to game roster  
 **Authentication**: Required  
@@ -532,9 +885,19 @@ Authorization: Bearer <your-jwt-token>
 {
   "game": "60f7b3b3b3b3b3b3b3b3b3b3",
   "player": "60f7b3b3b3b3b3b3b3b3b3b4",
-  "status": "Starting XI"
+  "status": "Starting Lineup" // Starting Lineup, Bench, Not Selected
 }
 ```
+
+#### **PUT** `/api/game-rosters/:id`
+**Purpose**: Update roster entry  
+**Authentication**: Required  
+
+#### **DELETE** `/api/game-rosters/:id`
+**Purpose**: Delete roster entry  
+**Authentication**: Required  
+
+**Note**: For batch roster operations (e.g., starting a game with a full lineup), use `POST /api/games/:gameId/start-game` instead, which creates rosters atomically as part of the game start transaction.
 
 ---
 
@@ -590,12 +953,313 @@ Authorization: Bearer <your-jwt-token>
 **Body**:
 ```json
 {
-  "action": "fetch|create|update|delete",
+  "action": "fetch|fetchSingle|create|update|delete",
   "tableName": "Users|Teams|Players|Games|etc",
   "recordId": "optional-for-single-record-ops",
   "data": { /* record data for create/update */ }
 }
 ```
+
+---
+
+### 📈 Analytics (`/api/analytics`)
+
+#### **GET** `/api/analytics/goal-partnerships`
+**Purpose**: Get goal partnerships (scorer-assister combinations)  
+**Authentication**: Required  
+**Query Parameters**:
+- `teamId` (required): Team ID
+- `season` (optional): Season filter (e.g., "2024")
+
+**Response**:
+```json
+{
+  "teamId": "...",
+  "season": "2024",
+  "totalPartnerships": 5,
+  "partnerships": [
+    {
+      "scorer": { "id": "...", "name": "Player A", "position": "Forward" },
+      "assister": { "id": "...", "name": "Player B", "position": "Midfielder" },
+      "goals": 3,
+      "gameCount": 2,
+      "avgMinute": 45
+    }
+  ]
+}
+```
+
+#### **GET** `/api/analytics/player-goals`
+**Purpose**: Get goal statistics for a specific player  
+**Authentication**: Required  
+**Query Parameters**:
+- `playerId` (required): Player ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "playerId": "...",
+  "season": "2024",
+  "goalsScored": 15,
+  "assists": 8,
+  "goalContributions": 23,
+  "goalsByType": { "open-play": 10, "penalty": 5 },
+  "goalsByMatchState": { "winning": 5, "drawing": 7, "losing": 3 },
+  "averageGoalMinute": 52
+}
+```
+
+#### **GET** `/api/analytics/player-substitutions`
+**Purpose**: Get substitution patterns for a specific player  
+**Authentication**: Required  
+**Query Parameters**:
+- `playerId` (required): Player ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "playerId": "...",
+  "season": "2024",
+  "totalSubstitutions": 10,
+  "timesSubbedOff": 6,
+  "timesComingOn": 4,
+  "avgSubOffMinute": 70,
+  "avgSubOnMinute": 65,
+  "substitutionReasons": { "tactical": 4, "fatigue": 2 },
+  "impactAsSubstitute": {
+    "appearances": 4,
+    "avgMinutesPlayed": 25
+  }
+}
+```
+
+#### **GET** `/api/analytics/team-discipline`
+**Purpose**: Get team discipline statistics  
+**Authentication**: Required  
+**Query Parameters**:
+- `teamId` (required): Team ID
+- `season` (optional): Season filter
+
+**Response**:
+```json
+{
+  "teamId": "...",
+  "season": "2024",
+  "totalYellowCards": 25,
+  "totalRedCards": 2,
+  "totalSecondYellows": 1,
+  "mostCardedPlayers": [
+    {
+      "player": { "id": "...", "name": "Player Name", "position": "Defender" },
+      "yellowCards": 5,
+      "redCards": 1,
+      "totalCards": 6
+    }
+  ],
+  "cardsByMinute": {
+    "0-15": 2,
+    "15-30": 5,
+    "30-45": 8
+  }
+}
+```
+
+---
+
+### ⚙️ Organization Configuration Routes (`/api/organizations`)
+
+#### **GET** `/api/organizations/:orgId/config`
+**Purpose**: Fetch organization feature configuration (global settings + age group overrides)  
+**Authentication**: Required  
+**Access**: All authenticated users  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+
+**Response** (Existing Config):
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674123abc456def789012345",
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": false,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [
+      {
+        "ageGroup": "U16+",
+        "shotTrackingEnabled": true,
+        "positionSpecificMetricsEnabled": true,
+        "detailedDisciplinaryEnabled": true,
+        "goalInvolvementEnabled": true
+      },
+      {
+        "ageGroup": "U6-U8",
+        "shotTrackingEnabled": false,
+        "positionSpecificMetricsEnabled": false,
+        "detailedDisciplinaryEnabled": false,
+        "goalInvolvementEnabled": false
+      }
+    ],
+    "createdAt": "2024-11-19T16:30:00.000Z",
+    "updatedAt": "2024-11-19T18:45:00.000Z"
+  }
+}
+```
+
+**Response** (No Config - Returns Defaults):
+```json
+{
+  "success": true,
+  "data": {
+    "_id": null,
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": false,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [],
+    "isDefault": true,
+    "createdAt": null,
+    "updatedAt": null
+  }
+}
+```
+
+**Notes**:
+- This endpoint **does not** auto-create a config if none exists (REST-compliant GET)
+- Returns default values with `isDefault: true` flag when no config is found
+- Age group overrides can include: `U6-U8`, `U8-U10`, `U10-U12`, `U12-U14`, `U14-U16`, `U16+`
+
+---
+
+#### **PUT** `/api/organizations/:orgId/config`
+**Purpose**: Create or update organization feature configuration  
+**Authentication**: Required  
+**Access**: **Admin only**  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+
+**Request Body**:
+```json
+{
+  "features": {
+    "shotTrackingEnabled": true,
+    "positionSpecificMetricsEnabled": false,
+    "detailedDisciplinaryEnabled": true,
+    "goalInvolvementEnabled": true
+  },
+  "ageGroupOverrides": [
+    {
+      "ageGroup": "U16+",
+      "shotTrackingEnabled": true,
+      "positionSpecificMetricsEnabled": true,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    {
+      "ageGroup": "U6-U8",
+      "shotTrackingEnabled": null,
+      "positionSpecificMetricsEnabled": null,
+      "detailedDisciplinaryEnabled": false,
+      "goalInvolvementEnabled": false
+    }
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "674123abc456def789012345",
+    "organizationId": null,
+    "features": {
+      "shotTrackingEnabled": true,
+      "positionSpecificMetricsEnabled": false,
+      "detailedDisciplinaryEnabled": true,
+      "goalInvolvementEnabled": true
+    },
+    "ageGroupOverrides": [
+      {
+        "ageGroup": "U16+",
+        "shotTrackingEnabled": true,
+        "positionSpecificMetricsEnabled": true,
+        "detailedDisciplinaryEnabled": true,
+        "goalInvolvementEnabled": true
+      },
+      {
+        "ageGroup": "U6-U8",
+        "shotTrackingEnabled": null,
+        "positionSpecificMetricsEnabled": null,
+        "detailedDisciplinaryEnabled": false,
+        "goalInvolvementEnabled": false
+      }
+    ],
+    "createdAt": "2024-11-19T16:30:00.000Z",
+    "updatedAt": "2024-11-19T19:00:00.000Z"
+  },
+  "message": "Organization configuration updated successfully"
+}
+```
+
+**Notes**:
+- If no config exists, this endpoint creates one
+- If a config exists, this endpoint updates it (partial updates supported)
+- `null` values in age group overrides mean "use global default"
+- Duplicate age groups within `ageGroupOverrides` are rejected with an error
+- All 4 features can now be overridden per age group for maximum flexibility
+
+---
+
+#### **GET** `/api/organizations/:orgId/config/feature/:featureName`
+**Purpose**: Check if a specific feature is enabled (with optional team-specific age group override resolution)  
+**Authentication**: Required  
+**Access**: All authenticated users  
+**URL Parameters**:
+- `orgId`: Organization ID (use `"default"` for single-org deployments)
+- `featureName`: One of: `shotTrackingEnabled`, `positionSpecificMetricsEnabled`, `detailedDisciplinaryEnabled`, `goalInvolvementEnabled`
+
+**Query Parameters**:
+- `teamId` (optional): Team ID to check for age group overrides
+
+**Response** (Global Setting):
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": true
+  }
+}
+```
+
+**Response** (With Age Group Override):
+```json
+{
+  "success": true,
+  "data": {
+    "enabled": false
+  }
+}
+```
+
+**Priority Logic**:
+1. If `teamId` is provided, infer the age group from the team name (e.g., "U14 Team A" → "U12-U14")
+2. Check if an age group override exists for that age group
+3. If override exists and the feature is not `null`, return the override value
+4. Otherwise, return the global feature value
+
+**Example Use Cases**:
+- `GET /api/organizations/default/config/feature/shotTrackingEnabled` → Global setting
+- `GET /api/organizations/default/config/feature/shotTrackingEnabled?teamId=60f7b3b...` → Checks age group override for that team
 
 ---
 
@@ -718,14 +1382,55 @@ FRONTEND_URL=http://localhost:5173
 
 ---
 
+## 🏥 Health Check
+
+#### **GET** `/health`
+**Purpose**: Health check endpoint (no authentication required)  
+**Response**:
+```json
+{
+  "status": "OK",
+  "timestamp": "2024-12-19T10:30:00.000Z",
+  "environment": "development"
+}
+```
+
+---
+
 ## 📚 Additional Notes
 
-1. **Authentication**: All endpoints require JWT token except `/api/auth/login` and `/api/auth/register`
+1. **Authentication**: All endpoints require JWT token except:
+   - `/api/auth/login`
+   - `/api/auth/register`
+   - `/health`
+
 2. **Role Filtering**: Data is automatically filtered based on user role and team assignments
+
 3. **Population**: Most endpoints automatically populate related data (team info, user info, etc.)
+
 4. **Validation**: Server validates required fields and data types
+
 5. **CORS**: Configured to allow frontend origins (`localhost:5173`, `localhost:5174`)
+
 6. **Security**: Passwords are hashed with bcrypt, sensitive data excluded from responses
+
+7. **Draft Autosave**: The `/api/games/:gameId/draft` endpoint is polymorphic:
+   - For **Scheduled** games: Saves lineup draft (rosters, formation)
+   - For **Played** games: Saves report draft (teamSummary, finalScore, matchDuration, playerReports)
+   - Drafts are automatically cleared when game status changes
+
+8. **Server-Calculated Fields**: The following fields are **always calculated by the server** and cannot be provided by the client:
+   - `minutesPlayed` (calculated from substitutions and red cards)
+   - `goals` (calculated from Goals collection)
+   - `assists` (calculated from Goals collection)
+   - `goalNumber` and `matchState` (calculated when game status = "Done")
+
+9. **Minutes Calculation**: Player minutes are automatically recalculated when:
+   - Substitutions are created/updated/deleted
+   - Red cards are issued/removed
+   - Match duration changes
+
+10. **Goal Analytics**: Goal numbers and match states are recalculated when a game status changes to "Done"
 
 ---
 

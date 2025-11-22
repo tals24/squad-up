@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const Game = require('../models/Game');
+const Team = require('../models/Team');
 
 // Middleware to verify JWT token and get user info
 const authenticateJWT = async (req, res, next) => {
@@ -108,8 +111,138 @@ const checkTeamAccess = async (req, res, next) => {
   }
 };
 
+/**
+ * Middleware to check if user has access to a specific game
+ * Must be placed AFTER authenticateJWT middleware
+ * 
+ * This middleware:
+ * 1. Validates gameId parameter
+ * 2. Fetches the game from database
+ * 3. Checks if user has access to the game's team
+ * 4. Attaches game object to req.game for optimization
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const checkGameAccess = async (req, res, next) => {
+  try {
+    // Step 1: Get gameId from params (support both :id and :gameId)
+    const gameId = req.params.gameId || req.params.id;
+    
+    // Step 2: Validate gameId exists and is valid format
+    if (!gameId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Game ID is required'
+      });
+    }
+    
+    // Validate ObjectId format (MongoDB)
+    if (!mongoose.Types.ObjectId.isValid(gameId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid game ID format'
+      });
+    }
+    
+    // Step 3: Fetch game from database
+    const game = await Game.findById(gameId);
+    
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: 'Game not found'
+      });
+    }
+    
+    // Step 4: Get teamId from game
+    const teamId = game.team;
+    
+    if (!teamId) {
+      return res.status(500).json({
+        success: false,
+        error: 'Game has no associated team'
+      });
+    }
+    
+    // Step 5: Check user access based on role
+    const user = req.user;
+    
+    // Admin and Department Manager can access all games
+    if (user.role === 'Admin' || user.role === 'Department Manager') {
+      req.game = game; // Attach game for optimization
+      return next();
+    }
+    
+    // Division Manager: Check if team is in their division
+    if (user.role === 'Division Manager') {
+      // Fetch team to check division
+      const team = await Team.findById(teamId);
+      
+      if (!team) {
+        return res.status(404).json({
+          success: false,
+          error: 'Team not found'
+        });
+      }
+      
+      // Check if user is the division manager for this team
+      if (team.divisionManager && team.divisionManager.toString() === user._id.toString()) {
+        req.game = game;
+        return next();
+      }
+      
+      // If division manager logic is more complex, implement here
+      // For now, deny access if not explicitly assigned
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: You do not have permission to access this game'
+      });
+    }
+    
+    // Coach: Check if they are the coach of the team
+    if (user.role === 'Coach') {
+      const team = await Team.findById(teamId);
+      
+      if (!team) {
+        return res.status(404).json({
+          success: false,
+          error: 'Team not found'
+        });
+      }
+      
+      // Check if user is the coach of this team
+      if (team.coach.toString() === user._id.toString()) {
+        req.game = game; // Attach game for optimization
+        return next();
+      }
+      
+      // Access denied
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: You do not have permission to access this game'
+      });
+    }
+    
+    // Unknown role - deny access
+    return res.status(403).json({
+      success: false,
+      error: 'Access denied: Insufficient permissions'
+    });
+    
+  } catch (error) {
+    console.error('Game access check error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during access check'
+    });
+  }
+};
+
 module.exports = {
   authenticateJWT,
   requireRole,
-  checkTeamAccess
+  checkTeamAccess,
+  checkGameAccess
 };

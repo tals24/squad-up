@@ -35,7 +35,8 @@ import {
   FormField,
   Grid
 } from "@/shared/ui/primitives/design-system-components";
-import { PageLayout, LoadingState } from "@/shared/ui/primitives/design-system-components";
+import { PageLayout } from "@/shared/ui/primitives/design-system-components";
+import PageLoader from "@/components/PageLoader";
 import { 
   AnimatedButton, 
   AnimatedCard, 
@@ -187,7 +188,7 @@ export default function Players() {
   });
 
   if (isContextLoading || !currentUser) {
-    return <LoadingState message="Loading players..." />;
+    return <PageLoader message="Loading players..." />;
   }
 
   return (
