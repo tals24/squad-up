@@ -1,6 +1,5 @@
 import React from "react";
-import { Label } from "@/shared/ui/primitives/label";
-import { StatRatingControl } from "@/components/ui/StatRatingControl";
+import { StatSliderControl } from "@/components/ui/StatSliderControl";
 
 /**
  * DetailedStatsSection Component
@@ -43,100 +42,82 @@ export const DetailedStatsSection = ({
       {/* Fouls Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-300">Fouls</h3>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Fouls Committed</Label>
-            <StatRatingControl
-              value={stats.fouls?.committedRating || 0}
-              onChange={(value) => updateStat('fouls', 'committedRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Fouls Received</Label>
-            <StatRatingControl
-              value={stats.fouls?.receivedRating || 0}
-              onChange={(value) => updateStat('fouls', 'receivedRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
+        <div className="space-y-2">
+          <StatSliderControl
+            label="Fouls Committed"
+            value={stats.fouls?.committedRating || 0}
+            onChange={(value) => updateStat('fouls', 'committedRating', value)}
+            disabled={isReadOnly}
+          />
+          <StatSliderControl
+            label="Fouls Received"
+            value={stats.fouls?.receivedRating || 0}
+            onChange={(value) => updateStat('fouls', 'receivedRating', value)}
+            disabled={isReadOnly}
+          />
         </div>
       </div>
 
       {/* Shooting Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-300">Shooting</h3>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Shooting Volume</Label>
-            <StatRatingControl
-              value={stats.shooting?.volumeRating || 0}
-              onChange={(value) => updateStat('shooting', 'volumeRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Shooting Accuracy</Label>
-            <StatRatingControl
-              value={stats.shooting?.accuracyRating || 0}
-              onChange={(value) => updateStat('shooting', 'accuracyRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
+        <div className="space-y-2">
+          <StatSliderControl
+            label="Shooting Volume"
+            value={stats.shooting?.volumeRating || 0}
+            onChange={(value) => updateStat('shooting', 'volumeRating', value)}
+            disabled={isReadOnly}
+          />
+          <StatSliderControl
+            label="Shooting Accuracy"
+            value={stats.shooting?.accuracyRating || 0}
+            onChange={(value) => updateStat('shooting', 'accuracyRating', value)}
+            disabled={isReadOnly}
+          />
         </div>
       </div>
 
       {/* Passing Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-300">Passing</h3>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Passing Volume</Label>
-            <StatRatingControl
-              value={stats.passing?.volumeRating || 0}
-              onChange={(value) => updateStat('passing', 'volumeRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Passing Accuracy</Label>
-            <StatRatingControl
-              value={stats.passing?.accuracyRating || 0}
-              onChange={(value) => updateStat('passing', 'accuracyRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Key Passes</Label>
-            <StatRatingControl
-              value={stats.passing?.keyPassesRating || 0}
-              onChange={(value) => updateStat('passing', 'keyPassesRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
+        <div className="space-y-2">
+          <StatSliderControl
+            label="Passing Volume"
+            value={stats.passing?.volumeRating || 0}
+            onChange={(value) => updateStat('passing', 'volumeRating', value)}
+            disabled={isReadOnly}
+          />
+          <StatSliderControl
+            label="Passing Accuracy"
+            value={stats.passing?.accuracyRating || 0}
+            onChange={(value) => updateStat('passing', 'accuracyRating', value)}
+            disabled={isReadOnly}
+          />
+          <StatSliderControl
+            label="Key Passes"
+            value={stats.passing?.keyPassesRating || 0}
+            onChange={(value) => updateStat('passing', 'keyPassesRating', value)}
+            disabled={isReadOnly}
+          />
         </div>
       </div>
 
       {/* Duels Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-300">Duels</h3>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Duel Involvement</Label>
-            <StatRatingControl
-              value={stats.duels?.involvementRating || 0}
-              onChange={(value) => updateStat('duels', 'involvementRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-slate-400 mb-2 block">Duel Success</Label>
-            <StatRatingControl
-              value={stats.duels?.successRating || 0}
-              onChange={(value) => updateStat('duels', 'successRating', value)}
-              disabled={isReadOnly}
-            />
-          </div>
+        <div className="space-y-2">
+          <StatSliderControl
+            label="Duel Involvement"
+            value={stats.duels?.involvementRating || 0}
+            onChange={(value) => updateStat('duels', 'involvementRating', value)}
+            disabled={isReadOnly}
+          />
+          <StatSliderControl
+            label="Duel Success"
+            value={stats.duels?.successRating || 0}
+            onChange={(value) => updateStat('duels', 'successRating', value)}
+            disabled={isReadOnly}
+          />
         </div>
       </div>
     </div>
