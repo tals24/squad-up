@@ -368,5 +368,160 @@ describe('Critical Backend Tests: Draft API Security/Integrity', () => {
       await Game.deleteOne({ _id: game._id });
     });
   });
+
+  /**
+   * Test SI-008: PlayerMatchStats in reportDraft
+   * Risk: playerMatchStats should be saved to and loaded from reportDraft
+   * This ensures fouls are draftable and survive page refreshes
+   */
+  describe('SI-008: PlayerMatchStats in reportDraft', () => {
+    it('should save playerMatchStats to reportDraft for Played games', async () => {
+      const draftData = {
+        teamSummary: { defenseSummary: 'Test defense' },
+        playerMatchStats: {
+          'player1': {
+            fouls: {
+              committedRating: 2,
+              receivedRating: 0
+            },
+            shooting: {
+              volumeRating: 3,
+              accuracyRating: 4
+            }
+          },
+          'player2': {
+            fouls: {
+              committedRating: 4,
+              receivedRating: 5
+            },
+            passing: {
+              volumeRating: 5,
+              accuracyRating: 4,
+              keyPassesRating: 3
+            }
+          }
+        }
+      };
+
+      const game = await Game.findById(testGamePlayed._id);
+      
+      // Simulate the API merge logic
+      const existingDraft = game.reportDraft || {};
+      game.reportDraft = {
+        ...existingDraft,
+        ...draftData
+      };
+      await game.save();
+
+      const updatedGame = await Game.findById(testGamePlayed._id);
+      expect(updatedGame.reportDraft).toBeDefined();
+      expect(updatedGame.reportDraft.playerMatchStats).toBeDefined();
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.committedRating).toBe(2);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.receivedRating).toBe(0);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].shooting.volumeRating).toBe(3);
+      expect(updatedGame.reportDraft.playerMatchStats['player2'].fouls.committedRating).toBe(4);
+      expect(updatedGame.reportDraft.playerMatchStats['player2'].passing.keyPassesRating).toBe(3);
+    });
+
+    it('should merge playerMatchStats with existing draft', async () => {
+      // Setup: Game with existing draft containing playerReports
+      const existingDraft = {
+        teamSummary: { defenseSummary: 'Old defense' },
+        playerReports: {
+          'player1': { rating_physical: 4, rating_technical: 3 }
+        },
+        playerMatchStats: {
+          'player1': {
+            fouls: {
+              committedRating: 0,
+              receivedRating: 0
+            }
+          }
+        }
+      };
+
+      const game = await Game.create({
+        team: testTeam._id,
+        teamName: 'Test Team',
+        season: '2024',
+        opponent: 'Opponent H',
+        date: new Date(),
+        status: 'Played',
+        reportDraft: existingDraft
+      });
+
+      // Simulate partial update (only playerMatchStats for player1)
+      const partialUpdate = {
+        playerMatchStats: {
+          'player1': {
+            fouls: {
+              committedRating: 2,
+              receivedRating: 0
+            },
+            shooting: {
+              volumeRating: 3,
+              accuracyRating: 4
+            }
+          }
+        }
+      };
+
+      // Merge logic (as implemented in backend)
+      const updatedDraft = {
+        ...existingDraft,
+        ...partialUpdate
+      };
+
+      game.reportDraft = updatedDraft;
+      await game.save();
+
+      const updatedGame = await Game.findById(game._id);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.committedRating).toBe(2);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.receivedRating).toBe(0);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].shooting.volumeRating).toBe(3);
+      expect(updatedGame.reportDraft.playerReports).toEqual(existingDraft.playerReports); // Preserved
+      expect(updatedGame.reportDraft.teamSummary).toEqual(existingDraft.teamSummary); // Preserved
+
+      await Game.deleteOne({ _id: game._id });
+    });
+
+    it('should accept playerMatchStats as the only field in draft request', async () => {
+      const draftData = {
+        playerMatchStats: {
+          'player1': {
+            fouls: {
+              committedRating: 4,
+              receivedRating: 2
+            },
+            duels: {
+              involvementRating: 3,
+              successRating: 4
+            }
+          }
+        }
+      };
+
+      const game = await Game.findById(testGamePlayed._id);
+      
+      // Simulate validation: at least one field must be provided
+      const hasData = draftData.playerMatchStats;
+      expect(hasData).toBeTruthy();
+
+      // Simulate the API merge logic
+      const existingDraft = game.reportDraft || {};
+      game.reportDraft = {
+        ...existingDraft,
+        ...draftData
+      };
+      await game.save();
+
+      const updatedGame = await Game.findById(testGamePlayed._id);
+      expect(updatedGame.reportDraft.playerMatchStats).toBeDefined();
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.committedRating).toBe(4);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].fouls.receivedRating).toBe(2);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].duels.involvementRating).toBe(3);
+      expect(updatedGame.reportDraft.playerMatchStats['player1'].duels.successRating).toBe(4);
+    });
+  });
 });
 

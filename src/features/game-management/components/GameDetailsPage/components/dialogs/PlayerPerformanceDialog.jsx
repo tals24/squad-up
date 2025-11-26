@@ -18,9 +18,9 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
-import { AlertCircle, FileText, ShieldAlert, Info } from "lucide-react";
+import { AlertCircle, FileText, BarChart3, Info } from "lucide-react";
 import { FeatureGuard } from "@/components/FeatureGuard";
-import { DetailedDisciplinarySection } from "../features/DetailedDisciplinarySection";
+import { DetailedStatsSection } from "../features/DetailedStatsSection";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
 export default function PlayerPerformanceDialog({ 
@@ -145,11 +145,12 @@ export default function PlayerPerformanceDialog({
   };
 
   const getCardBadgeColor = (cardType) => {
+    // Return only text color, no background color
     switch (cardType) {
-      case 'yellow': return 'bg-yellow-500 text-black';
-      case 'red': return 'bg-red-500 text-white';
-      case 'second-yellow': return 'bg-orange-500 text-white';
-      default: return 'bg-slate-500 text-white';
+      case 'yellow': return 'text-yellow-400';
+      case 'red': return 'text-red-400';
+      case 'second-yellow': return 'text-orange-400';
+      default: return 'text-slate-400';
     }
   };
 
@@ -186,24 +187,20 @@ export default function PlayerPerformanceDialog({
               <FileText className="w-4 h-4 mr-2" />
               Performance
             </TabsTrigger>
-            <TabsTrigger value="disciplinary" className="data-[state=active]:bg-slate-700">
-              <ShieldAlert className="w-4 h-4 mr-2" />
-              Disciplinary
-              {playerCards.length > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {playerCards.length}
-                </Badge>
-              )}
+            <TabsTrigger value="detailed-stats" className="data-[state=active]:bg-slate-700">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Detailed Stats
             </TabsTrigger>
           </TabsList>
 
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-4 mt-4">
+          {/* Stats Grid: Minutes, Goals, Assists, Cards */}
+          <div className="grid grid-cols-4 gap-4">
           {/* Minutes Played */}
           <div>
             <label className="text-sm font-semibold text-slate-400 mb-1 block">
               Minutes Played
-              <span className="text-xs text-slate-500 ml-2">(Max: {maxMinutes} min)</span>
             </label>
             <Input
               type="number"
@@ -223,32 +220,18 @@ export default function PlayerPerformanceDialog({
               }`}
               placeholder={showStatsLoading ? "Loading..." : undefined}
             />
-            {showStatsLoading && (
+              {showStatsLoading ? (
               <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                 <span className="animate-spin">⏳</span>
-                Calculating minutes...
               </p>
-            )}
-            {errorMessage && (
-              <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
-                {errorMessage.includes("substituted in") && onAddSubstitution && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onAddSubstitution}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-                  >
-                    Create Substitution
-                  </Button>
-                )}
+              ) : (
+                <div className="mt-1 text-xs text-slate-500">
+                  Max: {maxMinutes} min
               </div>
             )}
           </div>
 
-          {/* Goals and Assists - Calculated from Goals collection */}
-          <div className="grid grid-cols-2 gap-4">
+            {/* Goals */}
             <div>
               <label className="text-sm font-semibold text-slate-400 mb-1 block">
                 Goals
@@ -272,10 +255,11 @@ export default function PlayerPerformanceDialog({
               {showStatsLoading && (
                 <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                   <span className="animate-spin">⏳</span>
-                  Calculating goals...
                 </p>
               )}
             </div>
+
+            {/* Assists */}
             <div>
               <label className="text-sm font-semibold text-slate-400 mb-1 block">
                 Assists
@@ -299,11 +283,61 @@ export default function PlayerPerformanceDialog({
               {showStatsLoading && (
                 <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                   <span className="animate-spin">⏳</span>
-                  Calculating assists...
                 </p>
               )}
             </div>
+
+            {/* Cards Display */}
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-1 block">
+                Cards
+              </label>
+              <div className="min-h-[2.5rem] flex flex-col gap-1.5 justify-center">
+                {playerCards.length > 0 ? (
+                  playerCards
+                    .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+                    .map((card) => {
+                      const cardType = card.cardType || card.type;
+                      const minute = card.minute;
+                      const cardEmoji = cardType === 'yellow' ? '🟨' : 
+                                       cardType === 'red' ? '🟥' : '🟨🟥';
+                      
+                      return (
+                        <div
+                          key={card.id || card._id}
+                          className="flex items-center gap-1.5"
+                        >
+                          <span className={`text-xs ${getCardBadgeColor(cardType)}`}>
+                            {cardEmoji}
+                          </span>
+                          <span className="text-xs text-slate-300">{minute}'</span>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <span className="text-xs text-slate-500">None</span>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
+              {errorMessage.includes("substituted in") && onAddSubstitution && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onAddSubstitution}
+                  className="border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                >
+                  Create Substitution
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Individual Rating Dimensions */}
           <div className="space-y-4">
@@ -425,66 +459,15 @@ export default function PlayerPerformanceDialog({
           </div>
           </TabsContent>
 
-          {/* Disciplinary Tab */}
-          <TabsContent value="disciplinary" className="space-y-4 mt-4">
-            {/* Cards Section - Read-Only */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-slate-300 mb-2 flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4" />
-                Cards Received
-              </h3>
-              {playerCards.length > 0 ? (
-                <div className="space-y-2">
-                  {playerCards.map((card) => {
-                    const cardType = card.cardType || card.type;
-                    const minute = card.minute;
-                    const reason = card.reason;
-                    
-                    return (
-                      <div
-                        key={card.id || card._id}
-                        className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-slate-700"
-                      >
-                        <Badge className={getCardBadgeColor(cardType)}>
-                          {cardType === 'yellow' && '🟨'}
-                          {cardType === 'red' && '🟥'}
-                          {cardType === 'second-yellow' && '🟨🟥'}
-                          {' '}
-                          {cardType?.replace('-', ' ').toUpperCase() || 'CARD'}
-                        </Badge>
-                        <div className="flex-1">
-                          <div className="text-sm text-white">
-                            Minute {minute}'
-                          </div>
-                          {reason && (
-                            <div className="text-xs text-slate-400 mt-1">{reason}</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-slate-500 text-sm">
-                  No cards received
-                </div>
-              )}
-              <p className="text-xs text-slate-500 italic mt-2">
-                Cards are managed via the Match Timeline sidebar
-              </p>
-            </div>
-
-            {/* Detailed Disciplinary Section - Fouls (Feature Flag Protected) */}
+          {/* Detailed Stats Tab */}
+          <TabsContent value="detailed-stats" className="space-y-4 mt-4">
+            {/* Detailed Stats Section (Feature Flag Protected) */}
             <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
-              <div className="border-t border-slate-700 pt-4 mt-4">
-                <DetailedDisciplinarySection
-                  foulsCommitted={data?.foulsCommitted || ''}
-                  foulsReceived={data?.foulsReceived || ''}
-                  onFoulsCommittedChange={(value) => onDataChange({ ...data, foulsCommitted: value })}
-                  onFoulsReceivedChange={(value) => onDataChange({ ...data, foulsReceived: value })}
-                  isReadOnly={isReadOnly}
-                />
-              </div>
+              <DetailedStatsSection
+                stats={data?.stats || {}}
+                onStatsChange={(updatedStats) => onDataChange({ ...data, stats: updatedStats })}
+                isReadOnly={isReadOnly}
+                    />
             </FeatureGuard>
           </TabsContent>
         </Tabs>

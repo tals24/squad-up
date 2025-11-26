@@ -11,29 +11,32 @@ const playerMatchStatSchema = new mongoose.Schema({
     ref: 'Player', 
     required: true 
   },
-  
-  // 1. Disciplinary Stats (Moved from DisciplinaryAction)
-  disciplinary: {
-    foulsCommitted: { type: Number, default: 0, min: 0 },
-    foulsReceived: { type: Number, default: 0, min: 0 }
+
+  // 1. Fouls Ratings (1-5 Estimates) - Changed from counters
+  fouls: {
+    committedRating: { type: Number, min: 0, max: 5, default: 0 },
+    receivedRating: { type: Number, min: 0, max: 5, default: 0 }
   },
 
-  // 2. Shot Tracking (Future Extensibility)
+  // 2. Shooting Ratings (1-5 Estimates)
   shooting: {
-    shotsOnTarget: { type: Number, default: 0 },
-    shotsOffTarget: { type: Number, default: 0 },
-    blockedShots: { type: Number, default: 0 },
-    hitWoodwork: { type: Number, default: 0 }
+    volumeRating: { type: Number, min: 0, max: 5, default: 0 },
+    accuracyRating: { type: Number, min: 0, max: 5, default: 0 }
   },
 
-  // 3. Passing (Future Extensibility)
+  // 3. Passing Ratings (1-5 Estimates)
   passing: {
-    totalPasses: { type: Number, default: 0 },
-    completedPasses: { type: Number, default: 0 },
-    keyPasses: { type: Number, default: 0 }
+    volumeRating: { type: Number, min: 0, max: 5, default: 0 },
+    accuracyRating: { type: Number, min: 0, max: 5, default: 0 },
+    keyPassesRating: { type: Number, min: 0, max: 5, default: 0 }
+  },
+
+  // 4. Duels Ratings (1-5 Estimates) - New
+  duels: {
+    involvementRating: { type: Number, min: 0, max: 5, default: 0 },
+    successRating: { type: Number, min: 0, max: 5, default: 0 }
   }
 
-  // ... add more stat categories as needed (corners, duels, etc.)
 }, { timestamps: true });
 
 // Compound Index: Ensures one stat sheet per player per game

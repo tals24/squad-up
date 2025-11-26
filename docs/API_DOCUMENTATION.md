@@ -347,7 +347,7 @@ Authorization: Bearer <your-jwt-token>
 **Authentication**: Required + game access check  
 **Behavior**:
 - **Scheduled games**: Saves to `lineupDraft` (rosters, formation, formationType)
-- **Played games**: Saves to `reportDraft` (teamSummary, finalScore, matchDuration, playerReports)
+- **Played games**: Saves to `reportDraft` (teamSummary, finalScore, matchDuration, playerReports, playerMatchStats)
 - **Other statuses**: Rejected with error
 
 **Body (Scheduled game)**:
@@ -374,9 +374,16 @@ Authorization: Bearer <your-jwt-token>
     "firstHalfExtraTime": 0,
     "secondHalfExtraTime": 0
   },
-  "playerReports": { "playerId": { "rating": 4, "notes": "..." } }
+  "playerReports": { "playerId": { "rating": 4, "notes": "..." } },
+  "playerMatchStats": {
+    "playerId": {
+      "foulsCommitted": "1-2",
+      "foulsReceived": "0"
+    }
+  }
 }
 ```
+**Note**: All fields are optional. The endpoint merges provided fields with existing draft data. `playerMatchStats` stores fouls data (as strings: '0', '1-2', '3-4', '5+') and is saved to `PlayerMatchStat` collection when game is finalized.
 
 **Response**:
 ```json
@@ -1625,8 +1632,9 @@ FRONTEND_URL=http://localhost:5173
 
 7. **Draft Autosave**: The `/api/games/:gameId/draft` endpoint is polymorphic:
    - For **Scheduled** games: Saves lineup draft (rosters, formation)
-   - For **Played** games: Saves report draft (teamSummary, finalScore, matchDuration, playerReports)
+   - For **Played** games: Saves report draft (teamSummary, finalScore, matchDuration, playerReports, playerMatchStats)
    - Drafts are automatically cleared when game status changes
+   - `playerMatchStats` in draft stores fouls data temporarily and is saved to `PlayerMatchStat` collection on final submission
 
 8. **Server-Calculated Fields**: The following fields are **always calculated by the server** and cannot be provided by the client:
    - `minutesPlayed` (calculated from substitutions and red cards)

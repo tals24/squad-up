@@ -93,7 +93,9 @@ squadup (database)
 - `lineupDraft`: Draft lineup for Scheduled games (temporary storage before game starts)
   - Format: `{ rosters: { playerId: status }, formation: {...}, formationType: string }`
 - `reportDraft`: Draft reports for Played games (temporary storage before final submission)
-  - Format: `{ teamSummary: {...}, finalScore: {...}, matchDuration: {...}, playerReports: {...} }`
+  - Format: `{ teamSummary: {...}, finalScore: {...}, matchDuration: {...}, playerReports: {...}, playerMatchStats: {...} }`
+  - `playerMatchStats`: Stores fouls data temporarily (as strings: '0', '1-2', '3-4', '5+')
+  - Saved to `PlayerMatchStat` collection when game status changes to "Done"
 
 **Indexes:**
 - `{ gameID: 1 }` - Unique game identifier

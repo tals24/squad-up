@@ -105,13 +105,13 @@ describe('Player Match Stats API Routes', () => {
 
   describe('GET /api/games/:gameId/player-match-stats', () => {
     it('should get all player match stats for a game', async () => {
-      // Create test stats
+      // Create test stats with new rating-based structure
       await PlayerMatchStat.create({
         gameId: testGame._id,
         playerId: testPlayer._id,
-        disciplinary: {
-          foulsCommitted: 3,
-          foulsReceived: 1
+        fouls: {
+          committedRating: 3,
+          receivedRating: 1
         }
       });
 
@@ -122,7 +122,8 @@ describe('Player Match Stats API Routes', () => {
 
       expect(response.body.totalStats).toBe(1);
       expect(response.body.stats).toHaveLength(1);
-      expect(response.body.stats[0].disciplinary.foulsCommitted).toBe(3);
+      expect(response.body.stats[0].fouls.committedRating).toBe(3);
+      expect(response.body.stats[0].fouls.receivedRating).toBe(1);
     });
 
     it('should return empty array if no stats exist', async () => {
@@ -141,9 +142,9 @@ describe('Player Match Stats API Routes', () => {
       await PlayerMatchStat.create({
         gameId: testGame._id,
         playerId: testPlayer._id,
-        disciplinary: {
-          foulsCommitted: 2,
-          foulsReceived: 0
+        fouls: {
+          committedRating: 2,
+          receivedRating: 0
         }
       });
 
@@ -152,7 +153,8 @@ describe('Player Match Stats API Routes', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.body.stats.disciplinary.foulsCommitted).toBe(2);
+      expect(response.body.stats.fouls.committedRating).toBe(2);
+      expect(response.body.stats.fouls.receivedRating).toBe(0);
       expect(response.body.playerId).toBe(testPlayer._id.toString());
     });
 
@@ -171,20 +173,21 @@ describe('Player Match Stats API Routes', () => {
         .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          disciplinary: {
-            foulsCommitted: 4,
-            foulsReceived: 2
+          fouls: {
+            committedRating: 4,
+            receivedRating: 2
           }
         })
         .expect(200);
 
-      expect(response.body.stats.disciplinary.foulsCommitted).toBe(4);
-      expect(response.body.stats.disciplinary.foulsReceived).toBe(2);
+      expect(response.body.stats.fouls.committedRating).toBe(4);
+      expect(response.body.stats.fouls.receivedRating).toBe(2);
 
       // Verify stats were saved
       const stats = await PlayerMatchStat.findOne({ gameId: testGame._id, playerId: testPlayer._id });
       expect(stats).toBeDefined();
-      expect(stats.disciplinary.foulsCommitted).toBe(4);
+      expect(stats.fouls.committedRating).toBe(4);
+      expect(stats.fouls.receivedRating).toBe(2);
     });
 
     it('should update existing stats (upsert)', async () => {
@@ -192,9 +195,9 @@ describe('Player Match Stats API Routes', () => {
       await PlayerMatchStat.create({
         gameId: testGame._id,
         playerId: testPlayer._id,
-        disciplinary: {
-          foulsCommitted: 2,
-          foulsReceived: 1
+        fouls: {
+          committedRating: 2,
+          receivedRating: 1
         }
       });
 
@@ -202,28 +205,28 @@ describe('Player Match Stats API Routes', () => {
         .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          disciplinary: {
-            foulsCommitted: 5,
-            foulsReceived: 3
+          fouls: {
+            committedRating: 5,
+            receivedRating: 3
           }
         })
         .expect(200);
 
-      expect(response.body.stats.disciplinary.foulsCommitted).toBe(5);
-      expect(response.body.stats.disciplinary.foulsReceived).toBe(3);
+      expect(response.body.stats.fouls.committedRating).toBe(5);
+      expect(response.body.stats.fouls.receivedRating).toBe(3);
     });
 
     it('should handle partial updates', async () => {
       await PlayerMatchStat.create({
         gameId: testGame._id,
         playerId: testPlayer._id,
-        disciplinary: {
-          foulsCommitted: 2,
-          foulsReceived: 1
+        fouls: {
+          committedRating: 2,
+          receivedRating: 1
         },
         shooting: {
-          shotsOnTarget: 3,
-          shotsOffTarget: 2
+          volumeRating: 3,
+          accuracyRating: 4
         }
       });
 
@@ -231,16 +234,18 @@ describe('Player Match Stats API Routes', () => {
         .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          disciplinary: {
-            foulsCommitted: 4,
-            foulsReceived: 2
+          fouls: {
+            committedRating: 4,
+            receivedRating: 2
           }
           // shooting should remain unchanged
         })
         .expect(200);
 
-      expect(response.body.stats.disciplinary.foulsCommitted).toBe(4);
-      expect(response.body.stats.shooting.shotsOnTarget).toBe(3); // Preserved
+      expect(response.body.stats.fouls.committedRating).toBe(4);
+      expect(response.body.stats.fouls.receivedRating).toBe(2);
+      expect(response.body.stats.shooting.volumeRating).toBe(3); // Preserved
+      expect(response.body.stats.shooting.accuracyRating).toBe(4); // Preserved
     });
 
     it('should return 404 if player not found', async () => {
@@ -249,48 +254,110 @@ describe('Player Match Stats API Routes', () => {
         .put(`/api/games/${testGame._id}/player-match-stats/player/${fakePlayerId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          disciplinary: {
-            foulsCommitted: 2,
-            foulsReceived: 1
+          fouls: {
+            committedRating: 2,
+            receivedRating: 1
           }
         })
         .expect(404);
     });
 
-    it('should handle shooting stats', async () => {
+    it('should handle shooting stats with ratings', async () => {
       const response = await request(app)
         .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           shooting: {
-            shotsOnTarget: 5,
-            shotsOffTarget: 3,
-            blockedShots: 1,
-            hitWoodwork: 0
+            volumeRating: 4,
+            accuracyRating: 5
           }
         })
         .expect(200);
 
-      expect(response.body.stats.shooting.shotsOnTarget).toBe(5);
-      expect(response.body.stats.shooting.shotsOffTarget).toBe(3);
+      expect(response.body.stats.shooting.volumeRating).toBe(4);
+      expect(response.body.stats.shooting.accuracyRating).toBe(5);
     });
 
-    it('should handle passing stats', async () => {
+    it('should handle passing stats with ratings', async () => {
       const response = await request(app)
         .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           passing: {
-            totalPasses: 50,
-            completedPasses: 45,
-            keyPasses: 3
+            volumeRating: 5,
+            accuracyRating: 4,
+            keyPassesRating: 3
           }
         })
         .expect(200);
 
-      expect(response.body.stats.passing.totalPasses).toBe(50);
-      expect(response.body.stats.passing.completedPasses).toBe(45);
-      expect(response.body.stats.passing.keyPasses).toBe(3);
+      expect(response.body.stats.passing.volumeRating).toBe(5);
+      expect(response.body.stats.passing.accuracyRating).toBe(4);
+      expect(response.body.stats.passing.keyPassesRating).toBe(3);
+    });
+
+    it('should handle duels stats with ratings', async () => {
+      const response = await request(app)
+        .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          duels: {
+            involvementRating: 4,
+            successRating: 3
+          }
+        })
+        .expect(200);
+
+      expect(response.body.stats.duels.involvementRating).toBe(4);
+      expect(response.body.stats.duels.successRating).toBe(3);
+    });
+
+    it('should handle all stat categories together', async () => {
+      const response = await request(app)
+        .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          fouls: {
+            committedRating: 2,
+            receivedRating: 1
+          },
+          shooting: {
+            volumeRating: 4,
+            accuracyRating: 5
+          },
+          passing: {
+            volumeRating: 5,
+            accuracyRating: 4,
+            keyPassesRating: 3
+          },
+          duels: {
+            involvementRating: 4,
+            successRating: 3
+          }
+        })
+        .expect(200);
+
+      expect(response.body.stats.fouls.committedRating).toBe(2);
+      expect(response.body.stats.shooting.volumeRating).toBe(4);
+      expect(response.body.stats.passing.keyPassesRating).toBe(3);
+      expect(response.body.stats.duels.successRating).toBe(3);
+    });
+
+    it('should validate rating values (0-5)', async () => {
+      // Test invalid values (should fail validation)
+      const response = await request(app)
+        .put(`/api/games/${testGame._id}/player-match-stats/player/${testPlayer._id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({
+          fouls: {
+            committedRating: 6, // Invalid: > 5
+            receivedRating: -1  // Invalid: < 0
+          }
+        })
+        .expect(500); // Mongoose validation error
+
+      // Verify error message indicates validation failure
+      expect(response.body.error).toBeDefined();
     });
   });
 });

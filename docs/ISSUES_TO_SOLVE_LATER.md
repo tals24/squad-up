@@ -255,11 +255,12 @@ Game Fetch (async)
 
 ## Fouls Not Draftable - Data Loss Risk
 
-**Status**: Identified but not implemented
+**Status**: ✅ **RESOLVED**
 
-**Last Updated**: 2024-12-19
+**Last Updated**: 2024-12-19  
+**Resolved**: 2024-12-19
 
-**Priority**: Medium
+**Priority**: Medium (was Medium)
 
 ---
 
@@ -425,14 +426,52 @@ After the disciplinary architecture refactor, **fouls committed/received** are s
 
 ---
 
-### Implementation Checklist (When Ready)
+### Resolution Summary
 
-- [ ] Update `Game` model schema documentation (add `playerMatchStats` to `reportDraft`)
-- [ ] Update `PUT /api/games/:gameId/draft` endpoint to accept `playerMatchStats`
-- [ ] Update `PlayerPerformanceDialog` to include fouls in autosave data
-- [ ] Update draft loading logic to restore fouls from draft
-- [ ] Update final submission logic to save `playerMatchStats` from draft
-- [ ] Add tests for fouls draft persistence
-- [ ] Update API documentation
-- [ ] Test: Edit fouls → Refresh page → Verify fouls restored
-- [ ] Test: Edit fouls → Mark game as Done → Verify fouls saved to `PlayerMatchStat`
+**Solution Implemented**: Solution 1 - Include PlayerMatchStats in reportDraft ✅
+
+**Implementation Date**: December 19, 2024
+
+**Changes Made**:
+
+1. ✅ **Backend Draft Endpoint** (`backend/src/routes/games.js`):
+   - Updated `PUT /api/games/:gameId/draft` to accept `playerMatchStats` in request body
+   - Added merge logic to preserve existing draft fields
+   - Added `playerMatchStatsCount` to response
+
+2. ✅ **Frontend State Management** (`src/features/game-management/components/GameDetailsPage/index.jsx`):
+   - Added `localPlayerMatchStats` state to track fouls
+   - Integrated `playerMatchStats` into `reportDataForAutosave` memo
+   - Updated autosave hook to include `playerMatchStats` in draft saves
+
+3. ✅ **Draft Loading** (`src/features/game-management/components/GameDetailsPage/index.jsx`):
+   - Added logic to restore `playerMatchStats` from `reportDraft` on game load
+   - Added conversion logic: Numbers → Strings (for UI) and Strings → Numbers (for API)
+
+4. ✅ **PlayerPerformanceDialog** (`src/features/game-management/components/GameDetailsPage/components/dialogs/PlayerPerformanceDialog.jsx`):
+   - Updated initialization to load fouls from `localPlayerMatchStats`
+   - Updated save handler to save fouls to `localPlayerMatchStats` (autosaved to draft)
+
+5. ✅ **Final Submission** (`src/features/game-management/components/GameDetailsPage/index.jsx`):
+   - Added logic to save `playerMatchStats` from draft to `PlayerMatchStat` collection on final submission
+   - Includes conversion from string values ('0', '1-2', '3-4', '5+') to numbers
+
+6. ✅ **Testing** (`backend/src/routes/__tests__/games.draft.test.js`):
+   - Added test suite SI-008: PlayerMatchStats in reportDraft
+   - Tests cover: saving to draft, merging with existing draft, and validation
+
+**Result**: Fouls are now fully draftable and survive page refreshes, consistent with ratings and notes.
+
+---
+
+### Implementation Checklist
+
+- [x] Update `Game` model schema documentation (add `playerMatchStats` to `reportDraft`)
+- [x] Update `PUT /api/games/:gameId/draft` endpoint to accept `playerMatchStats`
+- [x] Update `PlayerPerformanceDialog` to include fouls in autosave data
+- [x] Update draft loading logic to restore fouls from draft
+- [x] Update final submission logic to save `playerMatchStats` from draft
+- [x] Add tests for fouls draft persistence
+- [x] Update API documentation
+- [x] Test: Edit fouls → Refresh page → Verify fouls restored
+- [x] Test: Edit fouls → Mark game as Done → Verify fouls saved to `PlayerMatchStat`

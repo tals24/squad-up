@@ -12,5 +12,5 @@
  */
 
 export { GoalInvolvementSection } from './GoalInvolvementSection';
-export { DetailedDisciplinarySection } from './DetailedDisciplinarySection';
+export { DetailedStatsSection } from './DetailedStatsSection';
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
 import { useAutosave } from "@/hooks/useAutosave";
+import { useToast } from "@/shared/ui/primitives/use-toast";
 
 // Import formation configurations
 import { formations } from "./formations";
@@ -31,6 +32,7 @@ import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 import GoalDialog from "./components/dialogs/GoalDialog";
 import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
 import CardDialog from "./components/dialogs/CardDialog";
+import AutoFillReportsButton from "./components/AutoFillReportsButton";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
@@ -38,11 +40,13 @@ import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubst
 import { fetchCards, createCard, updateCard, deleteCard } from "../../api/cardsApi";
 import { fetchPlayerStats } from "../../api/playerStatsApi";
 import { fetchMatchTimeline } from "../../api/timelineApi";
+import { fetchPlayerMatchStats, upsertPlayerMatchStats } from "../../api/playerMatchStatsApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
   const gameId = searchParams.get("id");
   const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
+  const { toast } = useToast();
 
   // Main state
   const [game, setGame] = useState(null);
@@ -51,6 +55,7 @@ export default function GameDetails() {
   const [formationType, setFormationType] = useState("1-4-4-2");
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
+  const [localPlayerMatchStats, setLocalPlayerMatchStats] = useState({}); // Fouls and other match stats
   const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
@@ -482,8 +487,9 @@ export default function GameDetails() {
     teamSummary,
     finalScore,
     matchDuration,
-    playerReports: localPlayerReports
-  }), [teamSummary, finalScore, matchDuration, localPlayerReports]);
+    playerReports: localPlayerReports,
+    playerMatchStats: localPlayerMatchStats
+  }), [teamSummary, finalScore, matchDuration, localPlayerReports, localPlayerMatchStats]);
 
   // NEW: Autosave for Played games (report draft)
   const { 
@@ -506,8 +512,9 @@ export default function GameDetails() {
         data.matchDuration.secondHalfExtraTime > 0
       );
       const hasPlayerReports = data.playerReports && Object.keys(data.playerReports).length > 0;
+      const hasPlayerMatchStats = data.playerMatchStats && Object.keys(data.playerMatchStats).length > 0;
       
-      return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports;
+      return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports && !hasPlayerMatchStats;
     }
   });
 
@@ -575,11 +582,12 @@ export default function GameDetails() {
     }
   };
 
-  // Pre-fetch player stats for Played games (for instant dialog display)
+  // Pre-fetch player stats for Played and Done games (for instant dialog display)
   useEffect(() => {
-    if (!gameId || !game || game.status !== 'Played') {
-      // Clear stats if game is not Played
+    if (!gameId || !game || (game.status !== 'Played' && game.status !== 'Done')) {
+      // Clear stats if game is not Played or Done
       setTeamStats({});
+      setLocalPlayerMatchStats({});
       return;
     }
 
@@ -598,7 +606,62 @@ export default function GameDetails() {
       }
     };
 
+    const loadPlayerMatchStats = async () => {
+      try {
+        console.log(`🔍 [loadPlayerMatchStats] Loading stats for game ${gameId} (status: ${game.status})`);
+        const matchStats = await fetchPlayerMatchStats(gameId);
+        console.log(`📊 [loadPlayerMatchStats] Received ${matchStats.length} stat records from API`);
+        const statsMap = {};
+        matchStats.forEach(stat => {
+          const playerId = typeof stat.playerId === 'object' ? stat.playerId._id : stat.playerId;
+          // Map to new nested structure with ratings (direct mapping, no conversion needed)
+          statsMap[playerId] = {
+            fouls: {
+              committedRating: stat.fouls?.committedRating || 0,
+              receivedRating: stat.fouls?.receivedRating || 0
+            },
+            shooting: {
+              volumeRating: stat.shooting?.volumeRating || 0,
+              accuracyRating: stat.shooting?.accuracyRating || 0
+            },
+            passing: {
+              volumeRating: stat.passing?.volumeRating || 0,
+              accuracyRating: stat.passing?.accuracyRating || 0,
+              keyPassesRating: stat.passing?.keyPassesRating || 0
+            },
+            duels: {
+              involvementRating: stat.duels?.involvementRating || 0,
+              successRating: stat.duels?.successRating || 0
+            }
+          };
+          // Debug: Log non-zero stats
+          const hasNonZeroStats = 
+            (stat.fouls?.committedRating || 0) > 0 ||
+            (stat.fouls?.receivedRating || 0) > 0 ||
+            (stat.shooting?.volumeRating || 0) > 0 ||
+            (stat.shooting?.accuracyRating || 0) > 0 ||
+            (stat.passing?.volumeRating || 0) > 0 ||
+            (stat.passing?.accuracyRating || 0) > 0 ||
+            (stat.passing?.keyPassesRating || 0) > 0 ||
+            (stat.duels?.involvementRating || 0) > 0 ||
+            (stat.duels?.successRating || 0) > 0;
+          if (hasNonZeroStats) {
+            console.log(`  ✅ Player ${playerId}:`, statsMap[playerId]);
+          }
+        });
+        // MERGE with existing stats instead of replacing (preserve draft data)
+        setLocalPlayerMatchStats(prev => ({
+          ...prev, // Keep existing draft stats
+          ...statsMap // API stats override for players that have saved stats
+        }));
+      } catch (error) {
+        console.error('❌ Error pre-fetching player match stats:', error);
+        setLocalPlayerMatchStats({});
+      }
+    };
+
     loadTeamStats();
+    loadPlayerMatchStats();
   }, [gameId, game?.status]); // Re-fetch if game status changes
 
   // Calculate score from goals when goals are loaded or changed
@@ -718,8 +781,9 @@ export default function GameDetails() {
   }, [gameId, gameReports, isLoading]);
 
   // Load report draft for Played games (similar to lineup draft loading)
+  // Note: Done games don't have drafts, but we still need to load saved stats
   useEffect(() => {
-    if (!gameId || !game || game.status !== 'Played') return;
+    if (!gameId || !game || (game.status !== 'Played' && game.status !== 'Done')) return;
 
     console.log('🔍 [Report Draft Loading] Checking for draft:', {
       gameId,
@@ -763,13 +827,25 @@ export default function GameDetails() {
         }));
       }
 
+      if (draft.playerMatchStats) {
+        // Merge draft stats with existing stats (draft overrides saved stats for each player)
+        setLocalPlayerMatchStats(prev => ({
+          ...prev,
+          ...draft.playerMatchStats // Draft match stats override saved stats
+        }));
+      }
+
       console.log('✅ Report draft loaded and merged with saved data');
       return; // Draft loaded
     }
 
-    // Priority 2: Load from saved data (if no draft exists)
-    // This happens automatically via existing useEffects that load from game/gameReports
-    console.log('⚠️ [Report Draft Loading] No draft found, using saved data from DB');
+    // Priority 2: For Done games, stats are loaded from PlayerMatchStat collection via loadPlayerMatchStats
+    // For Played games without draft, stats will be loaded by loadPlayerMatchStats
+    if (game.status === 'Done') {
+      console.log('✅ [Done Game] Stats will be loaded from PlayerMatchStat collection (via loadPlayerMatchStats)');
+    } else {
+      console.log('⚠️ [Report Draft Loading] No draft found, stats will be loaded from PlayerMatchStat collection');
+    }
   }, [gameId, game]);
 
   // Auto-build formation from roster (only when NOT in manual mode)
@@ -1278,6 +1354,18 @@ export default function GameDetails() {
       });
     }
     
+    // Get stats from localPlayerMatchStats (draft or saved)
+    const playerMatchStat = localPlayerMatchStats[player._id] || {};
+    
+    console.log('🔍 [handleOpenPerformanceDialog] Stats check:', {
+      playerId: player._id,
+      playerName: player.fullName,
+      hasLocalPlayerMatchStats: Object.keys(localPlayerMatchStats).length > 0,
+      playerMatchStatKeys: Object.keys(playerMatchStat),
+      playerMatchStat,
+      gameStatus: game?.status
+    });
+    
     const playerPerfDataToSet = {
       // User-editable fields
       rating_physical: existingReport.rating_physical || 3,
@@ -1285,6 +1373,26 @@ export default function GameDetails() {
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
+      // Stats from PlayerMatchStat (draftable) - nested structure
+      stats: {
+        fouls: {
+          committedRating: playerMatchStat.fouls?.committedRating || 0,
+          receivedRating: playerMatchStat.fouls?.receivedRating || 0
+        },
+        shooting: {
+          volumeRating: playerMatchStat.shooting?.volumeRating || 0,
+          accuracyRating: playerMatchStat.shooting?.accuracyRating || 0
+        },
+        passing: {
+          volumeRating: playerMatchStat.passing?.volumeRating || 0,
+          accuracyRating: playerMatchStat.passing?.accuracyRating || 0,
+          keyPassesRating: playerMatchStat.passing?.keyPassesRating || 0
+        },
+        duels: {
+          involvementRating: playerMatchStat.duels?.involvementRating || 0,
+          successRating: playerMatchStat.duels?.successRating || 0
+        }
+      },
       // Server-calculated fields (from pre-fetched stats or existing report)
       minutesPlayed: playerStats.minutes !== undefined 
         ? playerStats.minutes 
@@ -1311,9 +1419,22 @@ export default function GameDetails() {
   const handleSavePerformanceReport = async () => {
     if (!selectedPlayer) return;
 
+    // Save ratings and notes to localPlayerReports
     setLocalPlayerReports((prev) => ({
       ...prev,
-      [selectedPlayer._id]: playerPerfData,
+      [selectedPlayer._id]: {
+        rating_physical: playerPerfData.rating_physical,
+        rating_technical: playerPerfData.rating_technical,
+        rating_tactical: playerPerfData.rating_tactical,
+        rating_mental: playerPerfData.rating_mental,
+        notes: playerPerfData.notes || null,
+      },
+    }));
+
+    // Save stats to localPlayerMatchStats (will be autosaved to draft)
+    setLocalPlayerMatchStats((prev) => ({
+      ...prev,
+      [selectedPlayer._id]: playerPerfData.stats || {},
     }));
 
     try {
@@ -1328,6 +1449,7 @@ export default function GameDetails() {
       };
       
       // DO NOT send: minutesPlayed, goals, assists (server calculates)
+      // DO NOT send: foulsCommitted, foulsReceived (saved to draft, will be saved on final submission)
 
       const response = await fetch(`http://localhost:3001/api/game-reports/batch`, {
         method: "POST",
@@ -1351,6 +1473,64 @@ export default function GameDetails() {
 
     setShowPlayerPerfDialog(false);
     setSelectedPlayer(null);
+  };
+
+  // Calculate remaining players without reports (for Auto-Fill button)
+  const remainingReportsCount = useMemo(() => {
+    if (!gamePlayers || gamePlayers.length === 0) return 0;
+    if (game?.status !== 'Played') return 0; // Only show for Played games
+    
+    const playersWithReports = Object.keys(localPlayerReports).length;
+    const totalPlayers = gamePlayers.length;
+    return Math.max(0, totalPlayers - playersWithReports);
+  }, [gamePlayers, localPlayerReports, game?.status]);
+
+  // Auto-fill remaining reports with default values
+  const handleAutoFillRemaining = () => {
+    if (!gamePlayers || gamePlayers.length === 0) return;
+    if (game?.status !== 'Played') return;
+
+    // Identify players without reports
+    const playersWithoutReports = gamePlayers.filter(
+      player => !localPlayerReports[player._id]
+    );
+
+    if (playersWithoutReports.length === 0) {
+      toast({
+        title: "No players to fill",
+        description: "All players already have reports.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Define default report object
+    const defaultReport = {
+      rating_physical: 3,
+      rating_technical: 3,
+      rating_tactical: 3,
+      rating_mental: 3,
+      notes: "Did not play / No specific observations.",
+    };
+
+    // Create reports for all missing players
+    const newReports = {};
+    playersWithoutReports.forEach(player => {
+      newReports[player._id] = defaultReport;
+    });
+
+    // Merge with existing reports
+    setLocalPlayerReports(prev => ({
+      ...prev,
+      ...newReports
+    }));
+
+    // Show success toast
+    toast({
+      title: "Reports auto-filled",
+      description: `Applied default reports to ${playersWithoutReports.length} player${playersWithoutReports.length > 1 ? 's' : ''}.`,
+      variant: "default",
+    });
   };
 
   const handleSubmitFinalReport = async () => {
@@ -1476,6 +1656,35 @@ export default function GameDetails() {
           errorMessage = `Failed to update reports: ${reportsResponse.status} ${reportsResponse.statusText}`;
         }
         throw new Error(errorMessage);
+      }
+
+      // Save player match stats from draft to PlayerMatchStat collection
+      if (localPlayerMatchStats && Object.keys(localPlayerMatchStats).length > 0) {
+        try {
+          const statsPromises = Object.entries(localPlayerMatchStats).map(async ([playerId, stats]) => {
+            // Check if any stat has a non-zero rating
+            const hasStats = 
+              (stats.fouls?.committedRating || 0) > 0 ||
+              (stats.fouls?.receivedRating || 0) > 0 ||
+              (stats.shooting?.volumeRating || 0) > 0 ||
+              (stats.shooting?.accuracyRating || 0) > 0 ||
+              (stats.passing?.volumeRating || 0) > 0 ||
+              (stats.passing?.accuracyRating || 0) > 0 ||
+              (stats.passing?.keyPassesRating || 0) > 0 ||
+              (stats.duels?.involvementRating || 0) > 0 ||
+              (stats.duels?.successRating || 0) > 0;
+            
+            if (hasStats) {
+              // Stats are already in the correct format (nested structure with ratings)
+              await upsertPlayerMatchStats(gameId, playerId, stats);
+            }
+          });
+          await Promise.all(statsPromises);
+          console.log('✅ Saved player match stats (fouls) to PlayerMatchStat collection');
+        } catch (error) {
+          console.error('Error saving player match stats:', error);
+          // Don't throw - allow game to be finalized even if stats save fails
+        }
       }
 
       await refreshData();
@@ -2082,7 +2291,7 @@ export default function GameDetails() {
         />
 
         {/* Center - Tactical Board */}
-        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm">
+        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm relative">
           <TacticalBoard
             formations={formations}
             formationType={formationType}
@@ -2101,6 +2310,14 @@ export default function GameDetails() {
             hasReport={hasReport}
             needsReport={needsReport}
           />
+          {/* Auto-Fill Reports Button - Only show for Played games */}
+          {isPlayed && (
+            <AutoFillReportsButton
+              remainingCount={remainingReportsCount}
+              onAutoFill={handleAutoFillRemaining}
+              disabled={remainingReportsCount === 0 || isDone}
+            />
+          )}
         </div>
 
         {/* Right Sidebar - Match Analysis */}

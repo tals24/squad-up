@@ -133,7 +133,8 @@ const gameSchema = new mongoose.Schema({
   //   teamSummary: { defenseSummary, midfieldSummary, attackSummary, generalSummary },
   //   finalScore: { ourScore, opponentScore },
   //   matchDuration: { regularTime, firstHalfExtraTime, secondHalfExtraTime },
-  //   playerReports: { playerId: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }, ... }
+  //   playerReports: { playerId: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }, ... },
+  //   playerMatchStats: { playerId: { foulsCommitted, foulsReceived }, ... }
   // }
   reportDraft: {
     type: mongoose.Schema.Types.Mixed, // JSON object: { teamSummary?, finalScore?, matchDuration?, playerReports? }

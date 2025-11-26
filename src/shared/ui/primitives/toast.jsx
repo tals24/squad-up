@@ -26,9 +26,9 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border-slate-700 bg-slate-800 text-slate-100",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive group border-red-500/50 bg-red-500/10 text-red-400",
       },
     },
     defaultVariants: {
@@ -37,11 +37,12 @@ const toastVariants = cva(
   }
 );
 
-const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
+const Toast = React.forwardRef(({ className, variant, open, ...props }, ref) => {
   return (
     <div
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
+      data-state={open === false ? 'closed' : 'open'}
       {...props}
     />
   );
@@ -60,14 +61,22 @@ const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastAction.displayName = "ToastAction";
 
-const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
+const ToastClose = React.forwardRef(({ className, onClick, ...props }, ref) => (
   <button
     ref={ref}
+    type="button"
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-2 top-2 z-50 rounded-md p-1.5 text-slate-400 opacity-80 transition-all hover:text-slate-200 hover:bg-slate-700 hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-500 cursor-pointer pointer-events-auto group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:hover:bg-red-500/20 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       className
     )}
-    toast-close=""
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onClick) {
+        onClick(e);
+      }
+    }}
+    aria-label="Close"
     {...props}
   >
     <X className="h-4 w-4" />
@@ -78,7 +87,7 @@ ToastClose.displayName = "ToastClose";
 const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm font-semibold", className)}
+    className={cn("text-sm font-semibold text-slate-100", className)}
     {...props}
   />
 ));
@@ -87,7 +96,7 @@ ToastTitle.displayName = "ToastTitle";
 const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm opacity-90", className)}
+    className={cn("text-sm opacity-90 text-slate-300", className)}
     {...props}
   />
 ));

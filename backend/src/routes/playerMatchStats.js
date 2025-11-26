@@ -75,7 +75,7 @@ router.get('/:gameId/player-match-stats/player/:playerId', checkGameAccess, asyn
 router.put('/:gameId/player-match-stats/player/:playerId', checkGameAccess, async (req, res) => {
   try {
     const { gameId, playerId } = req.params;
-    const { disciplinary, shooting, passing } = req.body;
+    const { fouls, shooting, passing, duels } = req.body;
 
     // Validate player exists
     const player = await Player.findById(playerId);
@@ -89,14 +89,17 @@ router.put('/:gameId/player-match-stats/player/:playerId', checkGameAccess, asyn
       playerId
     };
 
-    if (disciplinary !== undefined) {
-      updateData.disciplinary = disciplinary;
+    if (fouls !== undefined) {
+      updateData.fouls = fouls;
     }
     if (shooting !== undefined) {
       updateData.shooting = shooting;
     }
     if (passing !== undefined) {
       updateData.passing = passing;
+    }
+    if (duels !== undefined) {
+      updateData.duels = duels;
     }
 
     // Upsert stats (create if doesn't exist, update if exists)

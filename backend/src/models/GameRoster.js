@@ -26,6 +26,13 @@ const gameRosterSchema = new mongoose.Schema({
     required: true,
     enum: ['Starting Lineup', 'Bench', 'Unavailable', 'Not in Squad'],
     default: 'Not in Squad'
+  },
+  
+  // Indicates if player actually played in the game
+  // true if: status === 'Starting Lineup' OR (status === 'Bench' AND was subbed in)
+  playedInGame: {
+    type: Boolean,
+    default: false
   }
   
   // ✅ Removed denormalized fields: gameTitle, playerName, rosterEntry
@@ -39,6 +46,7 @@ gameRosterSchema.index({ gameRosterID: 1 });
 gameRosterSchema.index({ game: 1 });
 gameRosterSchema.index({ player: 1 });
 gameRosterSchema.index({ status: 1 });
+gameRosterSchema.index({ playedInGame: 1 });
 
 // Compound index to ensure unique player per game
 gameRosterSchema.index({ game: 1, player: 1 }, { unique: true });

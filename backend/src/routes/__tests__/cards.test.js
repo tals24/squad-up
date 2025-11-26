@@ -22,6 +22,7 @@ const Player = require('../../models/Player');
 const Team = require('../../models/Team');
 const User = require('../../models/User');
 const Job = require('../../models/Job');
+const GameRoster = require('../../models/GameRoster');
 
 describe('Cards API Routes', () => {
   jest.setTimeout(60000);
@@ -87,6 +88,14 @@ describe('Cards API Routes', () => {
       status: 'Played'
     });
 
+    // Create GameRoster entry so player is eligible for cards (must be in Starting Lineup or Bench)
+    await GameRoster.create({
+      game: testGame._id,
+      player: testPlayer._id,
+      status: 'Starting Lineup',
+      position: 'MF'
+    });
+
     // Generate auth token
     authToken = jwt.sign(
       { userId: testUser._id, role: testUser.role },
@@ -99,6 +108,7 @@ describe('Cards API Routes', () => {
     // Clean up cards and jobs after each test
     await Card.deleteMany({ gameId: testGame._id });
     await Job.deleteMany({ jobType: 'recalc-minutes' });
+    // Note: Keep GameRoster entries for all tests
   });
 
   afterAll(async () => {
@@ -108,6 +118,7 @@ describe('Cards API Routes', () => {
     await Player.deleteMany({ fullName: 'Test Player Cards' });
     await Card.deleteMany({});
     await Job.deleteMany({ jobType: 'recalc-minutes' });
+    await GameRoster.deleteMany({ game: testGame._id });
     await mongoose.connection.close();
   });
 
@@ -161,6 +172,14 @@ describe('Cards API Routes', () => {
     });
 
     it('should create a second-yellow card and trigger recalc-minutes job', async () => {
+      // First create a yellow card (required before second-yellow)
+      await Card.create({
+        gameId: testGame._id,
+        playerId: testPlayer._id,
+        cardType: 'yellow',
+        minute: 50
+      });
+
       const response = await request(app)
         .post(`/api/games/${testGame._id}/cards`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -192,14 +211,16 @@ describe('Cards API Routes', () => {
     });
 
     it('should validate required fields', async () => {
-      await request(app)
+      const response = await request(app)
         .post(`/api/games/${testGame._id}/cards`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           playerId: testPlayer._id
           // Missing cardType and minute
         })
-        .expect(500); // Mongoose validation error
+        .expect(400); // Route validation error (cardType validation runs before Mongoose)
+
+      expect(response.body.message).toBeDefined();
     });
   });
 
