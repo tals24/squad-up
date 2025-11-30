@@ -43,7 +43,10 @@ export default function Player() {
     }
 
     const playerRosters = gameRosters.filter(roster => {
-      const rosterPlayerId = typeof roster.player === 'object' ? roster.player._id : roster.player;
+      if (!roster || !roster.player) return false; // Handle null/undefined player
+      const rosterPlayerId = typeof roster.player === 'object' && roster.player !== null 
+        ? roster.player._id 
+        : roster.player;
       return rosterPlayerId === playerId;
     });
 

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useToast } from "@/shared/ui/primitives/use-toast";
+import { useFeature } from "@/hooks/useFeature";
 
 // Import formation configurations
 import { formations } from "./formations";
@@ -41,6 +42,7 @@ import { fetchCards, createCard, updateCard, deleteCard } from "../../api/cardsA
 import { fetchPlayerStats } from "../../api/playerStatsApi";
 import { fetchMatchTimeline } from "../../api/timelineApi";
 import { fetchPlayerMatchStats, upsertPlayerMatchStats } from "../../api/playerMatchStatsApi";
+import { fetchDifficultyAssessment, updateDifficultyAssessment, deleteDifficultyAssessment } from "../../api/difficultyAssessmentApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
@@ -87,6 +89,9 @@ export default function GameDetails() {
   const [cards, setCards] = useState([]);
   const [showCardDialog, setShowCardDialog] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  
+  // Difficulty assessment state
+  const [difficultyAssessment, setDifficultyAssessment] = useState(null);
   
   // Timeline state (unified events for state reconstruction)
   const [timeline, setTimeline] = useState([]);
@@ -135,6 +140,9 @@ export default function GameDetails() {
 
   // Get current formation positions
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
+
+  // Check if difficulty assessment feature is enabled
+  const isDifficultyAssessmentEnabled = useFeature('gameDifficultyAssessmentEnabled', game?.team);
 
   // Load game data (with direct fetch to ensure latest draft data)
   useEffect(() => {
@@ -283,6 +291,24 @@ export default function GameDetails() {
 
     fetchGameDirectly();
   }, [gameId, games]);
+
+  // Load difficulty assessment
+  useEffect(() => {
+    if (!gameId || !isDifficultyAssessmentEnabled) return;
+
+    const loadDifficultyAssessment = async () => {
+      try {
+        const assessment = await fetchDifficultyAssessment(gameId);
+        setDifficultyAssessment(assessment);
+      } catch (error) {
+        console.error('Error fetching difficulty assessment:', error);
+        // Silently fail - assessment might not exist yet
+        setDifficultyAssessment(null);
+      }
+    };
+
+    loadDifficultyAssessment();
+  }, [gameId, isDifficultyAssessmentEnabled]);
 
   // Load team players
   useEffect(() => {
@@ -1068,6 +1094,66 @@ export default function GameDetails() {
     setShowConfirmationModal(false);
   };
 
+  // Difficulty assessment handlers
+  const handleSaveDifficultyAssessment = async (assessment) => {
+    try {
+      const updated = await updateDifficultyAssessment(gameId, assessment);
+      setDifficultyAssessment(updated);
+      toast({
+        title: "Success",
+        description: "Difficulty assessment saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving difficulty assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save difficulty assessment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const handleDeleteDifficultyAssessment = async () => {
+    try {
+      await deleteDifficultyAssessment(gameId);
+      setDifficultyAssessment(null);
+      toast({
+        title: "Success",
+        description: "Difficulty assessment deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting difficulty assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete difficulty assessment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Helper function to check bench validation and proceed
+  const checkBenchAndProceed = async (squadValidation) => {
+    // Check bench size and show confirmation if needed
+    if (squadValidation.needsConfirmation) {
+      setPendingAction(() => executeGameWasPlayed);
+      showConfirmation({
+        title: "Bench Size Warning",
+        message: squadValidation.bench.confirmationMessage,
+        confirmText: "Continue",
+        cancelText: "Go Back",
+        onConfirm: () => executeGameWasPlayed(),
+        onCancel: () => {},
+        type: "warning"
+      });
+      return;
+    }
+    
+    // If no bench warning needed, proceed directly
+    await executeGameWasPlayed();
+  };
+
   // Validated game was played handler
   const handleGameWasPlayed = async () => {
     if (!game) return;
@@ -1109,23 +1195,22 @@ export default function GameDetails() {
       return;
     }
     
-    // Check bench size and show confirmation if needed
-    if (squadValidation.needsConfirmation) {
-      setPendingAction(() => executeGameWasPlayed);
+    // Check if difficulty assessment is incomplete (if feature is enabled)
+    if (isDifficultyAssessmentEnabled && (!difficultyAssessment || !difficultyAssessment.overallScore)) {
       showConfirmation({
-        title: "Bench Size Warning",
-        message: squadValidation.bench.confirmationMessage,
-        confirmText: "Continue",
+        title: "Difficulty Assessment Not Completed",
+        message: "⚠️ You haven't completed the difficulty assessment for this game. The assessment helps analyze team performance relative to game difficulty.\n\nDo you want to continue without completing it?",
+        confirmText: "Continue Anyway",
         cancelText: "Go Back",
-        onConfirm: () => executeGameWasPlayed(),
+        onConfirm: () => checkBenchAndProceed(squadValidation),
         onCancel: () => {},
         type: "warning"
       });
       return;
     }
     
-    // If all validations pass, proceed directly
-    await executeGameWasPlayed();
+    // If difficulty assessment is complete (or feature disabled), check bench validation
+    await checkBenchAndProceed(squadValidation);
   };
 
   // Execute the actual game was played logic (atomic operation)
@@ -2342,6 +2427,11 @@ export default function GameDetails() {
           onDeleteCard={handleDeleteCard}
           matchDuration={matchDuration}
           setMatchDuration={setMatchDuration}
+          game={game}
+          difficultyAssessment={difficultyAssessment}
+          onSaveDifficultyAssessment={handleSaveDifficultyAssessment}
+          onDeleteDifficultyAssessment={handleDeleteDifficultyAssessment}
+          isDifficultyAssessmentEnabled={isDifficultyAssessmentEnabled}
         />
       </div>
 

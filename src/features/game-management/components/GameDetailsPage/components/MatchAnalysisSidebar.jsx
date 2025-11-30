@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/primitives/tooltip";
+import DifficultyAssessmentCard from "./DifficultyAssessmentCard";
 
 export default function MatchAnalysisSidebar({
   isScheduled,
@@ -31,6 +32,11 @@ export default function MatchAnalysisSidebar({
   onDeleteCard,
   matchDuration,
   setMatchDuration,
+  game,
+  difficultyAssessment,
+  onSaveDifficultyAssessment,
+  onDeleteDifficultyAssessment,
+  isDifficultyAssessmentEnabled,
 }) {
   return (
     <div 
@@ -71,6 +77,18 @@ export default function MatchAnalysisSidebar({
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Difficulty Assessment - Below AI Match Preview */}
+      {isDifficultyAssessmentEnabled && (
+        <DifficultyAssessmentCard
+          game={game}
+          assessment={difficultyAssessment}
+          onSave={onSaveDifficultyAssessment}
+          onDelete={onDeleteDifficultyAssessment}
+          isScheduled={isScheduled}
+          isDone={isDone}
+        />
       )}
 
       {/* Extra Time Section - First component, one line */}
