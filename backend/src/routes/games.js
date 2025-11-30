@@ -9,6 +9,8 @@ const { recalculateGoalAnalytics } = require('../services/goalAnalytics');
 const { recalculateSubstitutionAnalytics } = require('../services/substitutionAnalytics');
 const { calculatePlayerMinutes } = require('../services/minutesCalculation');
 const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
+const { getMatchTimeline } = require('../services/timelineService');
+const Job = require('../models/Job');
 
 const router = express.Router();
 
@@ -210,6 +212,11 @@ router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
       console.log('🔍 [Backend PUT /games/:id] No matchDuration provided in request');
     }
 
+    // Check if status is changing to "Played" or "Done" (need to update played status)
+    const oldGame = await Game.findById(req.params.id);
+    const statusChangedToPlayed = status === 'Played' && oldGame && oldGame.status !== 'Played';
+    const statusChangedToDone = status === 'Done' && oldGame && oldGame.status !== 'Done';
+
     const game = await Game.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -226,6 +233,21 @@ router.put('/:id', authenticateJWT, checkTeamAccess, async (req, res) => {
 
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Create job to update minutes and played status when game status changes to "Played" or "Done"
+    if (statusChangedToPlayed || statusChangedToDone) {
+      try {
+        await Job.create({
+          jobType: 'recalc-minutes',
+          payload: { gameId: game._id },
+          status: 'pending',
+          runAt: new Date()
+        });
+        console.log(`📋 Created recalc-minutes job for game ${game._id} after status change to ${status}`);
+      } catch (error) {
+        console.error(`❌ Error creating recalc-minutes job:`, error);
+      }
     }
 
     // 🎯 GOAL ANALYTICS: Recalculate goal numbers and match states when game status changes to "Done"
@@ -336,14 +358,14 @@ router.put('/:gameId/draft', authenticateJWT, checkGameAccess, async (req, res) 
 
     } else if (game.status === 'Played') {
       // === NEW REPORT DRAFT LOGIC ===
-      const { teamSummary, finalScore, matchDuration, playerReports } = req.body;
+      const { teamSummary, finalScore, matchDuration, playerReports, playerMatchStats } = req.body;
 
       // Validate at least one field is provided
-      const hasData = teamSummary || finalScore || matchDuration || playerReports;
+      const hasData = teamSummary || finalScore || matchDuration || playerReports || playerMatchStats;
       if (!hasData) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid request format. Expected at least one of: { teamSummary?, finalScore?, matchDuration?, playerReports? }'
+          error: 'Invalid request format. Expected at least one of: { teamSummary?, finalScore?, matchDuration?, playerReports?, playerMatchStats? }'
         });
       }
 
@@ -387,12 +409,33 @@ router.put('/:gameId/draft', authenticateJWT, checkGameAccess, async (req, res) 
         draftData.playerReports = playerReports;
       }
 
+      // Extract playerMatchStats separately for deep merging
+      const incomingPlayerMatchStats = playerMatchStats && typeof playerMatchStats === 'object' ? playerMatchStats : null;
+
       // Merge with existing draft (preserve fields not in this request)
       const existingDraft = game.reportDraft || {};
+      
+      // Deep merge playerMatchStats to preserve all players' stats
+      let mergedPlayerMatchStats = existingDraft.playerMatchStats || {};
+      if (incomingPlayerMatchStats) {
+        mergedPlayerMatchStats = {
+          ...mergedPlayerMatchStats,
+          ...incomingPlayerMatchStats // Merge player stats (each player's stats are merged)
+        };
+      }
+      
+      // Build final draft object - merge everything except playerMatchStats (which we handle separately)
       game.reportDraft = {
         ...existingDraft,
-        ...draftData
+        ...draftData,
+        // Only include playerMatchStats if we have merged data
+        ...(Object.keys(mergedPlayerMatchStats).length > 0 ? { playerMatchStats: mergedPlayerMatchStats } : {})
       };
+      
+      // If no playerMatchStats exist, ensure it's not in the draft
+      if (Object.keys(mergedPlayerMatchStats).length === 0 && game.reportDraft.playerMatchStats) {
+        delete game.reportDraft.playerMatchStats;
+      }
 
       await game.save();
 
@@ -405,7 +448,8 @@ router.put('/:gameId/draft', authenticateJWT, checkGameAccess, async (req, res) 
           hasTeamSummary: !!draftData.teamSummary,
           hasFinalScore: !!draftData.finalScore,
           hasMatchDuration: !!draftData.matchDuration,
-          playerReportsCount: draftData.playerReports ? Object.keys(draftData.playerReports).length : 0
+          playerReportsCount: draftData.playerReports ? Object.keys(draftData.playerReports).length : 0,
+          playerMatchStatsCount: draftData.playerMatchStats ? Object.keys(draftData.playerMatchStats).length : 0
         }
       });
 
@@ -755,6 +799,21 @@ router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, async (req,
       totalTime: 'See console.time output above'
     });
 
+    // Step 10: Create job for minutes and played status recalculation (after transaction)
+    // This job will calculate minutes AND update playedInGame status
+    try {
+      await Job.create({
+        jobType: 'recalc-minutes',
+        payload: { gameId: game._id },
+        status: 'pending',
+        runAt: new Date() // Process immediately
+      });
+      console.log(`📋 Created recalc-minutes job for game ${game._id} after start-game`);
+    } catch (error) {
+      // Log but don't fail the request if job creation fails
+      console.error(`❌ Error creating recalc-minutes job:`, error);
+    }
+
     // Success! End session and return response
     session.endSession();
     return res.status(200).json(responseData);
@@ -882,6 +941,30 @@ router.get('/:gameId/player-stats', authenticateJWT, checkGameAccess, async (req
       success: false,
       error: 'Failed to calculate player stats',
       message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/games/:gameId/timeline
+ * Get unified chronological timeline for a match
+ */
+router.get('/:gameId/timeline', authenticateJWT, checkGameAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    
+    const timeline = await getMatchTimeline(gameId);
+    
+    res.json({
+      gameId,
+      totalEvents: timeline.length,
+      timeline
+    });
+  } catch (error) {
+    console.error('Error fetching match timeline:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch match timeline', 
+      error: error.message 
     });
   }
 });

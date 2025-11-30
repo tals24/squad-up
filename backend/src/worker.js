@@ -7,12 +7,12 @@ require('./models/Job');
 require('./models/Game');
 require('./models/GameRoster');
 require('./models/Substitution');
-require('./models/DisciplinaryAction');
+require('./models/Card'); // Replaced DisciplinaryAction
 require('./models/Player');
 require('./models/GameReport');
 
 const Job = require('./models/Job');
-const { recalculatePlayerMinutes } = require('./services/minutesCalculation');
+const { recalculatePlayerMinutes, updatePlayedStatusForGame } = require('./services/minutesCalculation');
 
 // Configuration
 const POLL_INTERVAL_MS = 5000; // Poll every 5 seconds
@@ -71,6 +71,8 @@ async function processJob(job) {
 }
 
 // Handler for recalc-minutes job type
+// This job now handles both minutes calculation AND played status update
+// Both use the same data (GameRoster + timeline), so combining is efficient
 async function handleRecalcMinutes(job) {
   const { gameId } = job.payload;
   
@@ -78,11 +80,14 @@ async function handleRecalcMinutes(job) {
     throw new Error('Missing gameId in job payload');
   }
   
-  // Call the recalculation service
-  // Note: We pass updateReports=true to actually update GameReport documents
+  // Step 1: Recalculate minutes (updates GameReport documents)
   await recalculatePlayerMinutes(gameId, true);
-  
   console.log(`✅ Recalculated minutes for game ${gameId}`);
+  
+  // Step 2: Update played status (updates GameRoster documents)
+  // Both operations use same GameRoster and timeline data, so combining is efficient
+  const statusResult = await updatePlayedStatusForGame(gameId);
+  console.log(`✅ Updated played status for game ${gameId}: ${statusResult.playersPlayed} played, ${statusResult.playersNotPlayed} not played`);
 }
 
 // Main polling loop

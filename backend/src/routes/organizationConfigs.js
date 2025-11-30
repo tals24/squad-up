@@ -34,7 +34,8 @@ router.get('/:orgId/config', authenticateJWT, async (req, res) => {
             shotTrackingEnabled: false,
             positionSpecificMetricsEnabled: false,
             detailedDisciplinaryEnabled: true,
-            goalInvolvementEnabled: true
+            goalInvolvementEnabled: true,
+            gameDifficultyAssessmentEnabled: false
           },
           ageGroupOverrides: [],
           isDefault: true, // Flag to indicate this is a default response
@@ -53,7 +54,7 @@ router.get('/:orgId/config', authenticateJWT, async (req, res) => {
         const cleaned = { ageGroup: override.ageGroup };
         // Explicitly include all feature fields that exist (including false)
         // Use 'in' operator to check if property exists, even if value is false
-        ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled'].forEach(feature => {
+        ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled', 'gameDifficultyAssessmentEnabled'].forEach(feature => {
           if (feature in override) {
             cleaned[feature] = override[feature];
           }
@@ -107,7 +108,8 @@ router.put('/:orgId/config', authenticateJWT, requireRole(['Admin']), async (req
           shotTrackingEnabled: false,
           positionSpecificMetricsEnabled: false,
           detailedDisciplinaryEnabled: true,
-          goalInvolvementEnabled: true
+          goalInvolvementEnabled: true,
+          gameDifficultyAssessmentEnabled: false
         },
         ageGroupOverrides: ageGroupOverrides || []
       });
@@ -121,7 +123,7 @@ router.put('/:orgId/config', authenticateJWT, requireRole(['Admin']), async (req
         config.ageGroupOverrides = ageGroupOverrides.map(override => {
           const overrideObj = { ageGroup: override.ageGroup };
           // Explicitly set all feature fields, preserving false values
-          ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled'].forEach(feature => {
+          ['shotTrackingEnabled', 'positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled', 'gameDifficultyAssessmentEnabled'].forEach(feature => {
             if (override.hasOwnProperty(feature) && override[feature] !== null && override[feature] !== undefined) {
               overrideObj[feature] = override[feature];
             } else {
@@ -185,7 +187,8 @@ router.get('/:orgId/config/feature/:featureName', authenticateJWT, async (req, r
         shotTrackingEnabled: false,
         positionSpecificMetricsEnabled: false,
         detailedDisciplinaryEnabled: true,
-        goalInvolvementEnabled: true
+        goalInvolvementEnabled: true,
+        gameDifficultyAssessmentEnabled: false
       };
       return res.json({
         success: true,

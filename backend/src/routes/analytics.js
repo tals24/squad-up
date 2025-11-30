@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Goal = require('../models/Goal');
 const Substitution = require('../models/Substitution');
-const DisciplinaryAction = require('../models/DisciplinaryAction');
+const Card = require('../models/Card'); // Replaced DisciplinaryAction
 const Game = require('../models/Game');
 const Player = require('../models/Player');
 const { authenticateJWT } = require('../middleware/jwtAuth');
@@ -309,8 +309,8 @@ router.get('/team-discipline', async (req, res) => {
     const games = await Game.find(gameFilter).select('_id');
     const gameIds = games.map(g => g._id);
 
-    // Get all disciplinary actions for these games
-    const actions = await DisciplinaryAction.find({
+    // Get all cards for these games
+    const actions = await Card.find({
       gameId: { $in: gameIds }
     }).populate('playerId', 'name position');
 

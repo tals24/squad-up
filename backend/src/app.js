@@ -26,8 +26,10 @@ const minutesValidationRoutes = require('./routes/minutesValidation');
 const goalRoutes = require('./routes/goals');
 const analyticsRoutes = require('./routes/analytics');
 const substitutionRoutes = require('./routes/substitutions');
-const disciplinaryActionRoutes = require('./routes/disciplinaryActions');
+const cardRoutes = require('./routes/cards');
+const playerMatchStatsRoutes = require('./routes/playerMatchStats');
 const organizationConfigRoutes = require('./routes/organizationConfigs');
+const difficultyAssessmentRoutes = require('./routes/difficultyAssessment');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -66,7 +68,9 @@ app.use('/api/games', gameRoutes);
 app.use('/api/games', minutesValidationRoutes); // Minutes validation routes (under /api/games/:gameId/...)
 app.use('/api/games', goalRoutes); // Goal routes (under /api/games/:gameId/goals)
 app.use('/api/games', substitutionRoutes); // Substitution routes (under /api/games/:gameId/substitutions)
-app.use('/api/games', disciplinaryActionRoutes); // Disciplinary routes (under /api/games/:gameId/disciplinary-actions)
+app.use('/api/games', cardRoutes); // Card routes (under /api/games/:gameId/cards)
+app.use('/api/games', playerMatchStatsRoutes); // Player match stats routes (under /api/games/:gameId/player-match-stats)
+app.use('/api/games', difficultyAssessmentRoutes); // Difficulty assessment routes (under /api/games/:gameId/difficulty-assessment)
 app.use('/api/game-rosters', gameRosterRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/timeline-events', timelineEventRoutes);

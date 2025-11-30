@@ -18,16 +18,11 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
-import { AlertCircle, FileText, ShieldAlert, Plus, Trash2, Info } from "lucide-react";
+import { AlertCircle, FileText, BarChart3, Info } from "lucide-react";
 import { FeatureGuard } from "@/components/FeatureGuard";
-import { DetailedDisciplinarySection } from "../features/DetailedDisciplinarySection";
+import { DetailedStatsSection } from "../features/DetailedStatsSection";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
-import {
-  fetchPlayerDisciplinaryActions,
-  createDisciplinaryAction,
-  deleteDisciplinaryAction,
-} from "../../../../api/disciplinaryActionsApi";
 export default function PlayerPerformanceDialog({ 
   open, 
   onOpenChange, 
@@ -43,6 +38,8 @@ export default function PlayerPerformanceDialog({
   playerReports = {},
   onAddSubstitution,
   goals = [], // Goals array from parent
+  timeline = [], // Unified timeline from parent (Cards, Goals, Substitutions)
+  cards = [], // Cards array from parent (fallback if timeline not available)
   // NEW: Pre-fetched stats (optional, for instant display)
   initialMinutes,
   initialGoals,
@@ -51,15 +48,6 @@ export default function PlayerPerformanceDialog({
   isLoadingStats = false,
 }) {
   const [errorMessage, setErrorMessage] = useState("");
-  const [disciplinaryActions, setDisciplinaryActions] = useState([]);
-  const [isLoadingActions, setIsLoadingActions] = useState(false);
-  const [newAction, setNewAction] = useState({
-    cardType: 'yellow',
-    minute: '',
-    reason: '',
-    foulsCommitted: '',
-    foulsReceived: ''
-  });
 
   // Close dialog if it opens without a player (prevents React reconciliation errors)
   useEffect(() => {
@@ -67,6 +55,28 @@ export default function PlayerPerformanceDialog({
       onOpenChange?.(false);
     }
   }, [open, player, onOpenChange]);
+
+  // Filter cards for this player from timeline or cards array
+  const playerCards = useMemo(() => {
+    if (!player?._id) return [];
+    
+    // Priority 1: Filter from timeline
+    if (timeline && timeline.length > 0) {
+      return timeline.filter(event => 
+        event.type === 'card' && 
+        (event.player?._id === player._id || event.playerId?._id === player._id || event.playerId === player._id)
+      );
+    }
+    
+    // Priority 2: Filter from cards array
+    if (cards && cards.length > 0) {
+      return cards.filter(card => 
+        card.playerId?._id === player._id || card.playerId === player._id
+      );
+    }
+    
+    return [];
+  }, [timeline, cards, player?._id]);
 
   const minutesPlayed = useMemo(() => Number(data?.minutesPlayed || 0), [data]);
   // Use matchDuration prop if available (real-time from header), otherwise fallback to game.matchDuration
@@ -127,71 +137,6 @@ export default function PlayerPerformanceDialog({
   
   const showCalculatedIndicator = useCalculated || useCalculatedGA || isDoneGame;
 
-  // Fetch disciplinary actions when dialog opens
-  useEffect(() => {
-    if (open && player && game?._id) {
-      loadDisciplinaryActions();
-    }
-  }, [open, player, game]);
-
-  const loadDisciplinaryActions = async () => {
-    if (!game?._id || !player?._id) return;
-    
-    setIsLoadingActions(true);
-    try {
-      const actions = await fetchPlayerDisciplinaryActions(game._id, player._id);
-      setDisciplinaryActions(actions);
-    } catch (error) {
-      console.error('Error loading disciplinary actions:', error);
-    } finally {
-      setIsLoadingActions(false);
-    }
-  };
-
-  const handleAddDisciplinaryAction = async () => {
-    if (!newAction.minute || !newAction.cardType) {
-      setErrorMessage("Card type and minute are required");
-      return;
-    }
-
-    try {
-      const actionData = {
-        playerId: player._id,
-        cardType: newAction.cardType,
-        minute: parseInt(newAction.minute),
-        reason: newAction.reason || '',
-        foulsCommitted: newAction.foulsCommitted ? newAction.foulsCommitted : '0',
-        foulsReceived: newAction.foulsReceived ? newAction.foulsReceived : '0'
-      };
-
-      await createDisciplinaryAction(game._id, actionData);
-      await loadDisciplinaryActions();
-      
-      // Reset form
-      setNewAction({
-        cardType: 'yellow',
-        minute: '',
-        reason: '',
-        foulsCommitted: '',
-        foulsReceived: ''
-      });
-      setErrorMessage("");
-    } catch (error) {
-      console.error('Error adding disciplinary action:', error);
-      setErrorMessage(error.response?.data?.message || "Failed to add disciplinary action");
-    }
-  };
-
-  const handleDeleteDisciplinaryAction = async (actionId) => {
-    try {
-      await deleteDisciplinaryAction(game._id, actionId);
-      await loadDisciplinaryActions();
-    } catch (error) {
-      console.error('Error deleting disciplinary action:', error);
-      setErrorMessage("Failed to delete disciplinary action");
-    }
-  };
-
   const handleSaveClick = () => {
     // Minutes are automatically calculated from game events (substitutions, red cards)
     // No validation needed - calculation ensures correctness
@@ -200,11 +145,12 @@ export default function PlayerPerformanceDialog({
   };
 
   const getCardBadgeColor = (cardType) => {
+    // Return only text color, no background color
     switch (cardType) {
-      case 'yellow': return 'bg-yellow-500 text-black';
-      case 'red': return 'bg-red-500 text-white';
-      case 'second-yellow': return 'bg-orange-500 text-white';
-      default: return 'bg-slate-500 text-white';
+      case 'yellow': return 'text-yellow-400';
+      case 'red': return 'text-red-400';
+      case 'second-yellow': return 'text-orange-400';
+      default: return 'text-slate-400';
     }
   };
 
@@ -241,24 +187,20 @@ export default function PlayerPerformanceDialog({
               <FileText className="w-4 h-4 mr-2" />
               Performance
             </TabsTrigger>
-            <TabsTrigger value="disciplinary" className="data-[state=active]:bg-slate-700">
-              <ShieldAlert className="w-4 h-4 mr-2" />
-              Disciplinary
-              {disciplinaryActions.length > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {disciplinaryActions.length}
-                </Badge>
-              )}
+            <TabsTrigger value="detailed-stats" className="data-[state=active]:bg-slate-700">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Detailed Stats
             </TabsTrigger>
           </TabsList>
 
           {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-4 mt-4">
+          {/* Stats Grid: Minutes, Goals, Assists, Cards */}
+          <div className="grid grid-cols-4 gap-4">
           {/* Minutes Played */}
           <div>
             <label className="text-sm font-semibold text-slate-400 mb-1 block">
               Minutes Played
-              <span className="text-xs text-slate-500 ml-2">(Max: {maxMinutes} min)</span>
             </label>
             <Input
               type="number"
@@ -278,32 +220,18 @@ export default function PlayerPerformanceDialog({
               }`}
               placeholder={showStatsLoading ? "Loading..." : undefined}
             />
-            {showStatsLoading && (
+              {showStatsLoading ? (
               <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                 <span className="animate-spin">⏳</span>
-                Calculating minutes...
               </p>
-            )}
-            {errorMessage && (
-              <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
-                {errorMessage.includes("substituted in") && onAddSubstitution && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onAddSubstitution}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300"
-                  >
-                    Create Substitution
-                  </Button>
-                )}
+              ) : (
+                <div className="mt-1 text-xs text-slate-500">
+                  Max: {maxMinutes} min
               </div>
             )}
           </div>
 
-          {/* Goals and Assists - Calculated from Goals collection */}
-          <div className="grid grid-cols-2 gap-4">
+            {/* Goals */}
             <div>
               <label className="text-sm font-semibold text-slate-400 mb-1 block">
                 Goals
@@ -327,10 +255,11 @@ export default function PlayerPerformanceDialog({
               {showStatsLoading && (
                 <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                   <span className="animate-spin">⏳</span>
-                  Calculating goals...
                 </p>
               )}
             </div>
+
+            {/* Assists */}
             <div>
               <label className="text-sm font-semibold text-slate-400 mb-1 block">
                 Assists
@@ -354,11 +283,61 @@ export default function PlayerPerformanceDialog({
               {showStatsLoading && (
                 <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                   <span className="animate-spin">⏳</span>
-                  Calculating assists...
                 </p>
               )}
             </div>
+
+            {/* Cards Display */}
+            <div>
+              <label className="text-sm font-semibold text-slate-400 mb-1 block">
+                Cards
+              </label>
+              <div className="min-h-[2.5rem] flex flex-col gap-1.5 justify-center">
+                {playerCards.length > 0 ? (
+                  playerCards
+                    .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+                    .map((card) => {
+                      const cardType = card.cardType || card.type;
+                      const minute = card.minute;
+                      const cardEmoji = cardType === 'yellow' ? '🟨' : 
+                                       cardType === 'red' ? '🟥' : '🟨🟥';
+                      
+                      return (
+                        <div
+                          key={card.id || card._id}
+                          className="flex items-center gap-1.5"
+                        >
+                          <span className={`text-xs ${getCardBadgeColor(cardType)}`}>
+                            {cardEmoji}
+                          </span>
+                          <span className="text-xs text-slate-300">{minute}'</span>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <span className="text-xs text-slate-500">None</span>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400 mb-2">{errorMessage}</p>
+              {errorMessage.includes("substituted in") && onAddSubstitution && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onAddSubstitution}
+                  className="border-red-500/50 text-red-400 hover:bg-red-500/20 hover:text-red-300"
+                >
+                  Create Substitution
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Individual Rating Dimensions */}
           <div className="space-y-4">
@@ -480,133 +459,16 @@ export default function PlayerPerformanceDialog({
           </div>
           </TabsContent>
 
-          {/* Disciplinary Tab */}
-          <TabsContent value="disciplinary" className="space-y-4 mt-4">
-            {/* Existing Disciplinary Actions */}
-            {isLoadingActions ? (
-              <div className="text-center py-8 text-slate-400">Loading disciplinary actions...</div>
-            ) : disciplinaryActions.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <ShieldAlert className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No disciplinary actions recorded</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">Disciplinary Actions</h3>
-                {disciplinaryActions.map((action) => (
-                  <div
-                    key={action._id}
-                    className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-slate-700"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <Badge className={getCardBadgeColor(action.cardType)}>
-                        {action.cardType === 'yellow' && '🟨'}
-                        {action.cardType === 'red' && '🟥'}
-                        {action.cardType === 'second-yellow' && '🟨🟥'}
-                        {' '}
-                        {action.cardType.replace('-', ' ').toUpperCase()}
-                      </Badge>
-                      <div className="flex-1">
-                        <div className="text-sm text-white">
-                          Minute {action.minute}'
-                        </div>
-                        {action.reason && (
-                          <div className="text-xs text-slate-400">{action.reason}</div>
-                        )}
-                        <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
-                          {(action.foulsCommitted !== '0' || action.foulsReceived !== '0') && (
-                            <div className="text-xs text-slate-500">
-                              Fouls: {action.foulsCommitted} committed, {action.foulsReceived} received
-                            </div>
-                          )}
-                        </FeatureGuard>
-                      </div>
-                    </div>
-                    {!isReadOnly && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteDisciplinaryAction(action._id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add New Disciplinary Action Form */}
-            {!isReadOnly && (
-              <div className="border-t border-slate-700 pt-4 mt-4">
-                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Disciplinary Action
-                </h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Card Type *</label>
-                      <Select
-                        value={newAction.cardType}
-                        onValueChange={(value) => setNewAction(prev => ({ ...prev, cardType: value }))}
-                      >
-                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-700">
-                          <SelectItem value="yellow" className="text-white">🟨 Yellow</SelectItem>
-                          <SelectItem value="red" className="text-white">🟥 Red</SelectItem>
-                          <SelectItem value="second-yellow" className="text-white">🟨🟥 Second Yellow</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Minute *</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max={maxMinutes}
-                        value={newAction.minute}
-                        onChange={(e) => setNewAction(prev => ({ ...prev, minute: e.target.value }))}
-                        className="bg-slate-800 border-slate-700 text-white"
-                        placeholder="45"
-                      />
-                    </div>
-                  </div>
-
-                  <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
-                    <DetailedDisciplinarySection
-                      foulsCommitted={newAction.foulsCommitted}
-                      foulsReceived={newAction.foulsReceived}
-                      onFoulsCommittedChange={(value) => setNewAction(prev => ({ ...prev, foulsCommitted: value }))}
-                      onFoulsReceivedChange={(value) => setNewAction(prev => ({ ...prev, foulsReceived: value }))}
-                      isReadOnly={isReadOnly}
+          {/* Detailed Stats Tab */}
+          <TabsContent value="detailed-stats" className="space-y-4 mt-4">
+            {/* Detailed Stats Section (Feature Flag Protected) */}
+            <FeatureGuard feature="detailedDisciplinaryEnabled" teamId={teamId}>
+              <DetailedStatsSection
+                stats={data?.stats || {}}
+                onStatsChange={(updatedStats) => onDataChange({ ...data, stats: updatedStats })}
+                isReadOnly={isReadOnly}
                     />
-                  </FeatureGuard>
-
-                  <div>
-                    <label className="text-xs text-slate-400 mb-1 block">Reason (Optional)</label>
-                    <Textarea
-                      value={newAction.reason}
-                      onChange={(e) => setNewAction(prev => ({ ...prev, reason: e.target.value }))}
-                      className="bg-slate-800 border-slate-700 text-white min-h-[60px]"
-                      placeholder="Brief description of the incident..."
-                      maxLength={200}
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleAddDisciplinaryAction}
-                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Disciplinary Action
-                  </Button>
-                </div>
-              </div>
-            )}
+            </FeatureGuard>
           </TabsContent>
         </Tabs>
 

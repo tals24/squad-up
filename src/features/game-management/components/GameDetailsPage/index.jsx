@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
 import { useAutosave } from "@/hooks/useAutosave";
+import { useToast } from "@/shared/ui/primitives/use-toast";
+import { useFeature } from "@/hooks/useFeature";
 
 // Import formation configurations
 import { formations } from "./formations";
@@ -30,16 +32,23 @@ import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
 import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
 import GoalDialog from "./components/dialogs/GoalDialog";
 import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
+import CardDialog from "./components/dialogs/CardDialog";
+import AutoFillReportsButton from "./components/AutoFillReportsButton";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
 import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from "../../api/substitutionsApi";
+import { fetchCards, createCard, updateCard, deleteCard } from "../../api/cardsApi";
 import { fetchPlayerStats } from "../../api/playerStatsApi";
+import { fetchMatchTimeline } from "../../api/timelineApi";
+import { fetchPlayerMatchStats, upsertPlayerMatchStats } from "../../api/playerMatchStatsApi";
+import { fetchDifficultyAssessment, updateDifficultyAssessment, deleteDifficultyAssessment } from "../../api/difficultyAssessmentApi";
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
   const gameId = searchParams.get("id");
   const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
+  const { toast } = useToast();
 
   // Main state
   const [game, setGame] = useState(null);
@@ -48,6 +57,7 @@ export default function GameDetails() {
   const [formationType, setFormationType] = useState("1-4-4-2");
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
+  const [localPlayerMatchStats, setLocalPlayerMatchStats] = useState({}); // Fouls and other match stats
   const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
@@ -74,6 +84,17 @@ export default function GameDetails() {
   const [substitutions, setSubstitutions] = useState([]);
   const [showSubstitutionDialog, setShowSubstitutionDialog] = useState(false);
   const [selectedSubstitution, setSelectedSubstitution] = useState(null);
+  
+  // Cards state
+  const [cards, setCards] = useState([]);
+  const [showCardDialog, setShowCardDialog] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
+  
+  // Difficulty assessment state
+  const [difficultyAssessment, setDifficultyAssessment] = useState(null);
+  
+  // Timeline state (unified events for state reconstruction)
+  const [timeline, setTimeline] = useState([]);
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -119,6 +140,9 @@ export default function GameDetails() {
 
   // Get current formation positions
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
+
+  // Check if difficulty assessment feature is enabled
+  const isDifficultyAssessmentEnabled = useFeature('gameDifficultyAssessmentEnabled', game?.team);
 
   // Load game data (with direct fetch to ensure latest draft data)
   useEffect(() => {
@@ -267,6 +291,24 @@ export default function GameDetails() {
 
     fetchGameDirectly();
   }, [gameId, games]);
+
+  // Load difficulty assessment
+  useEffect(() => {
+    if (!gameId || !isDifficultyAssessmentEnabled) return;
+
+    const loadDifficultyAssessment = async () => {
+      try {
+        const assessment = await fetchDifficultyAssessment(gameId);
+        setDifficultyAssessment(assessment);
+      } catch (error) {
+        console.error('Error fetching difficulty assessment:', error);
+        // Silently fail - assessment might not exist yet
+        setDifficultyAssessment(null);
+      }
+    };
+
+    loadDifficultyAssessment();
+  }, [gameId, isDifficultyAssessmentEnabled]);
 
   // Load team players
   useEffect(() => {
@@ -471,8 +513,9 @@ export default function GameDetails() {
     teamSummary,
     finalScore,
     matchDuration,
-    playerReports: localPlayerReports
-  }), [teamSummary, finalScore, matchDuration, localPlayerReports]);
+    playerReports: localPlayerReports,
+    playerMatchStats: localPlayerMatchStats
+  }), [teamSummary, finalScore, matchDuration, localPlayerReports, localPlayerMatchStats]);
 
   // NEW: Autosave for Played games (report draft)
   const { 
@@ -495,8 +538,9 @@ export default function GameDetails() {
         data.matchDuration.secondHalfExtraTime > 0
       );
       const hasPlayerReports = data.playerReports && Object.keys(data.playerReports).length > 0;
+      const hasPlayerMatchStats = data.playerMatchStats && Object.keys(data.playerMatchStats).length > 0;
       
-      return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports;
+      return !hasTeamSummary && !hasFinalScore && !hasMatchDuration && !hasPlayerReports && !hasPlayerMatchStats;
     }
   });
 
@@ -522,8 +566,30 @@ export default function GameDetails() {
       }
     };
     
+    const loadCards = async () => {
+      try {
+        const cardsData = await fetchCards(gameId);
+        setCards(cardsData);
+      } catch (error) {
+        console.error('Error fetching cards:', error);
+      }
+    };
+    
+    const loadTimeline = async () => {
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error fetching timeline:', error);
+        // Fallback: Build timeline from individual arrays if API fails
+        setTimeline([]);
+      }
+    };
+    
     loadGoals();
     loadSubstitutions();
+    loadCards();
+    loadTimeline();
   }, [gameId, game]);
 
   // Helper function to refresh team stats (used after goal/substitution changes)
@@ -542,11 +608,12 @@ export default function GameDetails() {
     }
   };
 
-  // Pre-fetch player stats for Played games (for instant dialog display)
+  // Pre-fetch player stats for Played and Done games (for instant dialog display)
   useEffect(() => {
-    if (!gameId || !game || game.status !== 'Played') {
-      // Clear stats if game is not Played
+    if (!gameId || !game || (game.status !== 'Played' && game.status !== 'Done')) {
+      // Clear stats if game is not Played or Done
       setTeamStats({});
+      setLocalPlayerMatchStats({});
       return;
     }
 
@@ -565,7 +632,62 @@ export default function GameDetails() {
       }
     };
 
+    const loadPlayerMatchStats = async () => {
+      try {
+        console.log(`🔍 [loadPlayerMatchStats] Loading stats for game ${gameId} (status: ${game.status})`);
+        const matchStats = await fetchPlayerMatchStats(gameId);
+        console.log(`📊 [loadPlayerMatchStats] Received ${matchStats.length} stat records from API`);
+        const statsMap = {};
+        matchStats.forEach(stat => {
+          const playerId = typeof stat.playerId === 'object' ? stat.playerId._id : stat.playerId;
+          // Map to new nested structure with ratings (direct mapping, no conversion needed)
+          statsMap[playerId] = {
+            fouls: {
+              committedRating: stat.fouls?.committedRating || 0,
+              receivedRating: stat.fouls?.receivedRating || 0
+            },
+            shooting: {
+              volumeRating: stat.shooting?.volumeRating || 0,
+              accuracyRating: stat.shooting?.accuracyRating || 0
+            },
+            passing: {
+              volumeRating: stat.passing?.volumeRating || 0,
+              accuracyRating: stat.passing?.accuracyRating || 0,
+              keyPassesRating: stat.passing?.keyPassesRating || 0
+            },
+            duels: {
+              involvementRating: stat.duels?.involvementRating || 0,
+              successRating: stat.duels?.successRating || 0
+            }
+          };
+          // Debug: Log non-zero stats
+          const hasNonZeroStats = 
+            (stat.fouls?.committedRating || 0) > 0 ||
+            (stat.fouls?.receivedRating || 0) > 0 ||
+            (stat.shooting?.volumeRating || 0) > 0 ||
+            (stat.shooting?.accuracyRating || 0) > 0 ||
+            (stat.passing?.volumeRating || 0) > 0 ||
+            (stat.passing?.accuracyRating || 0) > 0 ||
+            (stat.passing?.keyPassesRating || 0) > 0 ||
+            (stat.duels?.involvementRating || 0) > 0 ||
+            (stat.duels?.successRating || 0) > 0;
+          if (hasNonZeroStats) {
+            console.log(`  ✅ Player ${playerId}:`, statsMap[playerId]);
+          }
+        });
+        // MERGE with existing stats instead of replacing (preserve draft data)
+        setLocalPlayerMatchStats(prev => ({
+          ...prev, // Keep existing draft stats
+          ...statsMap // API stats override for players that have saved stats
+        }));
+      } catch (error) {
+        console.error('❌ Error pre-fetching player match stats:', error);
+        setLocalPlayerMatchStats({});
+      }
+    };
+
     loadTeamStats();
+    loadPlayerMatchStats();
   }, [gameId, game?.status]); // Re-fetch if game status changes
 
   // Calculate score from goals when goals are loaded or changed
@@ -685,8 +807,9 @@ export default function GameDetails() {
   }, [gameId, gameReports, isLoading]);
 
   // Load report draft for Played games (similar to lineup draft loading)
+  // Note: Done games don't have drafts, but we still need to load saved stats
   useEffect(() => {
-    if (!gameId || !game || game.status !== 'Played') return;
+    if (!gameId || !game || (game.status !== 'Played' && game.status !== 'Done')) return;
 
     console.log('🔍 [Report Draft Loading] Checking for draft:', {
       gameId,
@@ -730,13 +853,25 @@ export default function GameDetails() {
         }));
       }
 
+      if (draft.playerMatchStats) {
+        // Merge draft stats with existing stats (draft overrides saved stats for each player)
+        setLocalPlayerMatchStats(prev => ({
+          ...prev,
+          ...draft.playerMatchStats // Draft match stats override saved stats
+        }));
+      }
+
       console.log('✅ Report draft loaded and merged with saved data');
       return; // Draft loaded
     }
 
-    // Priority 2: Load from saved data (if no draft exists)
-    // This happens automatically via existing useEffects that load from game/gameReports
-    console.log('⚠️ [Report Draft Loading] No draft found, using saved data from DB');
+    // Priority 2: For Done games, stats are loaded from PlayerMatchStat collection via loadPlayerMatchStats
+    // For Played games without draft, stats will be loaded by loadPlayerMatchStats
+    if (game.status === 'Done') {
+      console.log('✅ [Done Game] Stats will be loaded from PlayerMatchStat collection (via loadPlayerMatchStats)');
+    } else {
+      console.log('⚠️ [Report Draft Loading] No draft found, stats will be loaded from PlayerMatchStat collection');
+    }
   }, [gameId, game]);
 
   // Auto-build formation from roster (only when NOT in manual mode)
@@ -842,6 +977,30 @@ export default function GameDetails() {
     return [...playersOnPitch, ...benchPlayers];
   }, [playersOnPitch, benchPlayers]);
 
+  // Build starting lineup map for game state reconstruction
+  const startingLineupMap = useMemo(() => {
+    const map = {};
+    gamePlayers.forEach(player => {
+      const status = getPlayerStatus(player._id);
+      if (status === 'Starting Lineup') {
+        map[player._id] = true;
+      }
+    });
+    return map;
+  }, [gamePlayers, localRosterStatuses]);
+
+  // Build squad players map for game state reconstruction
+  const squadPlayersMap = useMemo(() => {
+    const map = {};
+    gamePlayers.forEach(player => {
+      const status = getPlayerStatus(player._id);
+      if (status === 'Starting Lineup' || status === 'Bench') {
+        map[player._id] = status;
+      }
+    });
+    return map;
+  }, [gamePlayers, localRosterStatuses]);
+
   // Helper: Check if player has report
   const hasReport = (playerId) => {
     return localPlayerReports[playerId] !== undefined && localPlayerReports[playerId].rating_physical !== undefined;
@@ -935,6 +1094,66 @@ export default function GameDetails() {
     setShowConfirmationModal(false);
   };
 
+  // Difficulty assessment handlers
+  const handleSaveDifficultyAssessment = async (assessment) => {
+    try {
+      const updated = await updateDifficultyAssessment(gameId, assessment);
+      setDifficultyAssessment(updated);
+      toast({
+        title: "Success",
+        description: "Difficulty assessment saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving difficulty assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save difficulty assessment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const handleDeleteDifficultyAssessment = async () => {
+    try {
+      await deleteDifficultyAssessment(gameId);
+      setDifficultyAssessment(null);
+      toast({
+        title: "Success",
+        description: "Difficulty assessment deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting difficulty assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete difficulty assessment",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Helper function to check bench validation and proceed
+  const checkBenchAndProceed = async (squadValidation) => {
+    // Check bench size and show confirmation if needed
+    if (squadValidation.needsConfirmation) {
+      setPendingAction(() => executeGameWasPlayed);
+      showConfirmation({
+        title: "Bench Size Warning",
+        message: squadValidation.bench.confirmationMessage,
+        confirmText: "Continue",
+        cancelText: "Go Back",
+        onConfirm: () => executeGameWasPlayed(),
+        onCancel: () => {},
+        type: "warning"
+      });
+      return;
+    }
+    
+    // If no bench warning needed, proceed directly
+    await executeGameWasPlayed();
+  };
+
   // Validated game was played handler
   const handleGameWasPlayed = async () => {
     if (!game) return;
@@ -976,23 +1195,22 @@ export default function GameDetails() {
       return;
     }
     
-    // Check bench size and show confirmation if needed
-    if (squadValidation.needsConfirmation) {
-      setPendingAction(() => executeGameWasPlayed);
+    // Check if difficulty assessment is incomplete (if feature is enabled)
+    if (isDifficultyAssessmentEnabled && (!difficultyAssessment || !difficultyAssessment.overallScore)) {
       showConfirmation({
-        title: "Bench Size Warning",
-        message: squadValidation.bench.confirmationMessage,
-        confirmText: "Continue",
+        title: "Difficulty Assessment Not Completed",
+        message: "⚠️ You haven't completed the difficulty assessment for this game. The assessment helps analyze team performance relative to game difficulty.\n\nDo you want to continue without completing it?",
+        confirmText: "Continue Anyway",
         cancelText: "Go Back",
-        onConfirm: () => executeGameWasPlayed(),
+        onConfirm: () => checkBenchAndProceed(squadValidation),
         onCancel: () => {},
         type: "warning"
       });
       return;
     }
     
-    // If all validations pass, proceed directly
-    await executeGameWasPlayed();
+    // If difficulty assessment is complete (or feature disabled), check bench validation
+    await checkBenchAndProceed(squadValidation);
   };
 
   // Execute the actual game was played logic (atomic operation)
@@ -1221,6 +1439,18 @@ export default function GameDetails() {
       });
     }
     
+    // Get stats from localPlayerMatchStats (draft or saved)
+    const playerMatchStat = localPlayerMatchStats[player._id] || {};
+    
+    console.log('🔍 [handleOpenPerformanceDialog] Stats check:', {
+      playerId: player._id,
+      playerName: player.fullName,
+      hasLocalPlayerMatchStats: Object.keys(localPlayerMatchStats).length > 0,
+      playerMatchStatKeys: Object.keys(playerMatchStat),
+      playerMatchStat,
+      gameStatus: game?.status
+    });
+    
     const playerPerfDataToSet = {
       // User-editable fields
       rating_physical: existingReport.rating_physical || 3,
@@ -1228,6 +1458,26 @@ export default function GameDetails() {
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
+      // Stats from PlayerMatchStat (draftable) - nested structure
+      stats: {
+        fouls: {
+          committedRating: playerMatchStat.fouls?.committedRating || 0,
+          receivedRating: playerMatchStat.fouls?.receivedRating || 0
+        },
+        shooting: {
+          volumeRating: playerMatchStat.shooting?.volumeRating || 0,
+          accuracyRating: playerMatchStat.shooting?.accuracyRating || 0
+        },
+        passing: {
+          volumeRating: playerMatchStat.passing?.volumeRating || 0,
+          accuracyRating: playerMatchStat.passing?.accuracyRating || 0,
+          keyPassesRating: playerMatchStat.passing?.keyPassesRating || 0
+        },
+        duels: {
+          involvementRating: playerMatchStat.duels?.involvementRating || 0,
+          successRating: playerMatchStat.duels?.successRating || 0
+        }
+      },
       // Server-calculated fields (from pre-fetched stats or existing report)
       minutesPlayed: playerStats.minutes !== undefined 
         ? playerStats.minutes 
@@ -1254,9 +1504,22 @@ export default function GameDetails() {
   const handleSavePerformanceReport = async () => {
     if (!selectedPlayer) return;
 
+    // Save ratings and notes to localPlayerReports
     setLocalPlayerReports((prev) => ({
       ...prev,
-      [selectedPlayer._id]: playerPerfData,
+      [selectedPlayer._id]: {
+        rating_physical: playerPerfData.rating_physical,
+        rating_technical: playerPerfData.rating_technical,
+        rating_tactical: playerPerfData.rating_tactical,
+        rating_mental: playerPerfData.rating_mental,
+        notes: playerPerfData.notes || null,
+      },
+    }));
+
+    // Save stats to localPlayerMatchStats (will be autosaved to draft)
+    setLocalPlayerMatchStats((prev) => ({
+      ...prev,
+      [selectedPlayer._id]: playerPerfData.stats || {},
     }));
 
     try {
@@ -1271,6 +1534,7 @@ export default function GameDetails() {
       };
       
       // DO NOT send: minutesPlayed, goals, assists (server calculates)
+      // DO NOT send: foulsCommitted, foulsReceived (saved to draft, will be saved on final submission)
 
       const response = await fetch(`http://localhost:3001/api/game-reports/batch`, {
         method: "POST",
@@ -1294,6 +1558,64 @@ export default function GameDetails() {
 
     setShowPlayerPerfDialog(false);
     setSelectedPlayer(null);
+  };
+
+  // Calculate remaining players without reports (for Auto-Fill button)
+  const remainingReportsCount = useMemo(() => {
+    if (!gamePlayers || gamePlayers.length === 0) return 0;
+    if (game?.status !== 'Played') return 0; // Only show for Played games
+    
+    const playersWithReports = Object.keys(localPlayerReports).length;
+    const totalPlayers = gamePlayers.length;
+    return Math.max(0, totalPlayers - playersWithReports);
+  }, [gamePlayers, localPlayerReports, game?.status]);
+
+  // Auto-fill remaining reports with default values
+  const handleAutoFillRemaining = () => {
+    if (!gamePlayers || gamePlayers.length === 0) return;
+    if (game?.status !== 'Played') return;
+
+    // Identify players without reports
+    const playersWithoutReports = gamePlayers.filter(
+      player => !localPlayerReports[player._id]
+    );
+
+    if (playersWithoutReports.length === 0) {
+      toast({
+        title: "No players to fill",
+        description: "All players already have reports.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Define default report object
+    const defaultReport = {
+      rating_physical: 3,
+      rating_technical: 3,
+      rating_tactical: 3,
+      rating_mental: 3,
+      notes: "Did not play / No specific observations.",
+    };
+
+    // Create reports for all missing players
+    const newReports = {};
+    playersWithoutReports.forEach(player => {
+      newReports[player._id] = defaultReport;
+    });
+
+    // Merge with existing reports
+    setLocalPlayerReports(prev => ({
+      ...prev,
+      ...newReports
+    }));
+
+    // Show success toast
+    toast({
+      title: "Reports auto-filled",
+      description: `Applied default reports to ${playersWithoutReports.length} player${playersWithoutReports.length > 1 ? 's' : ''}.`,
+      variant: "default",
+    });
   };
 
   const handleSubmitFinalReport = async () => {
@@ -1419,6 +1741,35 @@ export default function GameDetails() {
           errorMessage = `Failed to update reports: ${reportsResponse.status} ${reportsResponse.statusText}`;
         }
         throw new Error(errorMessage);
+      }
+
+      // Save player match stats from draft to PlayerMatchStat collection
+      if (localPlayerMatchStats && Object.keys(localPlayerMatchStats).length > 0) {
+        try {
+          const statsPromises = Object.entries(localPlayerMatchStats).map(async ([playerId, stats]) => {
+            // Check if any stat has a non-zero rating
+            const hasStats = 
+              (stats.fouls?.committedRating || 0) > 0 ||
+              (stats.fouls?.receivedRating || 0) > 0 ||
+              (stats.shooting?.volumeRating || 0) > 0 ||
+              (stats.shooting?.accuracyRating || 0) > 0 ||
+              (stats.passing?.volumeRating || 0) > 0 ||
+              (stats.passing?.accuracyRating || 0) > 0 ||
+              (stats.passing?.keyPassesRating || 0) > 0 ||
+              (stats.duels?.involvementRating || 0) > 0 ||
+              (stats.duels?.successRating || 0) > 0;
+            
+            if (hasStats) {
+              // Stats are already in the correct format (nested structure with ratings)
+              await upsertPlayerMatchStats(gameId, playerId, stats);
+            }
+          });
+          await Promise.all(statsPromises);
+          console.log('✅ Saved player match stats (fouls) to PlayerMatchStat collection');
+        } catch (error) {
+          console.error('Error saving player match stats:', error);
+          // Don't throw - allow game to be finalized even if stats save fails
+        }
       }
 
       await refreshData();
@@ -1549,6 +1900,14 @@ export default function GameDetails() {
       // Refresh team stats after goal save (affects goals/assists)
       refreshTeamStats();
       
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+      
       setShowGoalDialog(false);
       setSelectedGoal(null);
     } catch (error) {
@@ -1630,11 +1989,116 @@ export default function GameDetails() {
       // Refresh team stats after substitution save (affects minutes)
       refreshTeamStats();
       
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+      
       setShowSubstitutionDialog(false);
       setSelectedSubstitution(null);
     } catch (error) {
       console.error('Error saving substitution:', error);
       throw error; // Re-throw to let SubstitutionDialog handle it
+    }
+  };
+
+  // Card handlers
+  const handleAddCard = () => {
+    setSelectedCard(null);
+    setShowCardDialog(true);
+  };
+
+  const handleEditCard = (card) => {
+    console.log('🔍 [GameDetailsPage] handleEditCard called:', {
+      card: card ? {
+        _id: card._id,
+        cardType: card.cardType,
+        playerId: card.playerId?._id || card.playerId,
+        minute: card.minute
+      } : null,
+      cardsArrayLength: cards.length,
+      cardInArray: cards.find(c => c._id === card?._id)
+    });
+    setSelectedCard(card);
+    setShowCardDialog(true);
+  };
+
+  const handleDeleteCard = async (cardId) => {
+    if (!window.confirm('Are you sure you want to delete this card?')) {
+      return;
+    }
+
+    try {
+      await deleteCard(gameId, cardId);
+      setCards(prevCards => prevCards.filter(c => c._id !== cardId));
+      // Refresh team stats if red card was deleted (affects minutes)
+      refreshTeamStats();
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Failed to delete card: ' + error.message);
+    }
+  };
+
+  const handleSaveCard = async (cardData) => {
+    try {
+      console.log('🔍 [GameDetailsPage] handleSaveCard called:', {
+        isEditing: !!selectedCard,
+        selectedCardId: selectedCard?._id,
+        cardData
+      });
+      
+      const wasEditing = !!selectedCard;
+      const editingCardId = selectedCard?._id;
+      const cardToUpdate = selectedCard; // Save reference before clearing
+      
+      if (cardToUpdate) {
+        // Update existing card
+        const updatedCard = await updateCard(gameId, cardToUpdate._id, cardData);
+        console.log('🔍 [GameDetailsPage] Card updated:', {
+          oldCardId: cardToUpdate._id,
+          updatedCardId: updatedCard._id,
+          updatedCard
+        });
+        setCards(prevCards => prevCards.map(c => c._id === updatedCard._id ? updatedCard : c));
+      } else {
+        // Create new card
+        const newCard = await createCard(gameId, cardData);
+        setCards(prevCards => [...prevCards, newCard]);
+      }
+      
+      // Close dialog AFTER successful save to prevent re-render issues during card refresh
+      setShowCardDialog(false);
+      setSelectedCard(null);
+      
+      // Refresh cards list (after dialog is closed)
+      const updatedCards = await fetchCards(gameId);
+      console.log('🔍 [GameDetailsPage] Cards refreshed:', {
+        updatedCardsCount: updatedCards.length,
+        wasEditing,
+        editingCardId,
+        updatedCardExists: wasEditing ? updatedCards.find(c => c._id === editingCardId) ? 'YES' : 'NO' : 'N/A'
+      });
+      setCards(updatedCards);
+      
+      // Refresh team stats if red card (affects minutes)
+      if (cardData.cardType === 'red' || cardData.cardType === 'second-yellow') {
+        refreshTeamStats();
+      }
+      
+      // Refresh timeline to update player states
+      try {
+        const timelineData = await fetchMatchTimeline(gameId);
+        setTimeline(timelineData);
+      } catch (error) {
+        console.error('Error refreshing timeline:', error);
+      }
+    } catch (error) {
+      // On error, keep dialog open so user can see the error
+      console.error('Error saving card:', error);
+      throw error; // Re-throw so CardDialog can handle it
     }
   };
 
@@ -1912,7 +2376,7 @@ export default function GameDetails() {
         />
 
         {/* Center - Tactical Board */}
-        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm">
+        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm relative">
           <TacticalBoard
             formations={formations}
             formationType={formationType}
@@ -1931,6 +2395,14 @@ export default function GameDetails() {
             hasReport={hasReport}
             needsReport={needsReport}
           />
+          {/* Auto-Fill Reports Button - Only show for Played games */}
+          {isPlayed && (
+            <AutoFillReportsButton
+              remainingCount={remainingReportsCount}
+              onAutoFill={handleAutoFillRemaining}
+              disabled={remainingReportsCount === 0 || isDone}
+            />
+          )}
         </div>
 
         {/* Right Sidebar - Match Analysis */}
@@ -1949,8 +2421,17 @@ export default function GameDetails() {
           onAddSubstitution={handleAddSubstitution}
           onEditSubstitution={handleEditSubstitution}
           onDeleteSubstitution={handleDeleteSubstitution}
+          cards={cards}
+          onAddCard={handleAddCard}
+          onEditCard={handleEditCard}
+          onDeleteCard={handleDeleteCard}
           matchDuration={matchDuration}
           setMatchDuration={setMatchDuration}
+          game={game}
+          difficultyAssessment={difficultyAssessment}
+          onSaveDifficultyAssessment={handleSaveDifficultyAssessment}
+          onDeleteDifficultyAssessment={handleDeleteDifficultyAssessment}
+          isDifficultyAssessmentEnabled={isDifficultyAssessmentEnabled}
         />
       </div>
 
@@ -1978,6 +2459,7 @@ export default function GameDetails() {
         substitutions={substitutions}
         playerReports={localPlayerReports}
         goals={goals}
+        cards={cards}
         // NEW: Pass pre-fetched stats (for display only, read-only)
         initialMinutes={teamStats[selectedPlayer?._id]?.minutes}
         initialGoals={teamStats[selectedPlayer?._id]?.goals}
@@ -2026,6 +2508,9 @@ export default function GameDetails() {
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
         game={game}
+        timeline={timeline}
+        startingLineup={startingLineupMap}
+        squadPlayers={squadPlayersMap}
       />
 
       <SubstitutionDialog
@@ -2041,6 +2526,31 @@ export default function GameDetails() {
         matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
         isReadOnly={isDone}
         playerReports={localPlayerReports}
+        timeline={timeline}
+        startingLineup={startingLineupMap}
+        squadPlayers={squadPlayersMap}
+      />
+
+      <CardDialog
+        isOpen={showCardDialog}
+        onClose={() => {
+          console.log('🔍 [GameDetailsPage] Closing CardDialog:', {
+            selectedCard: selectedCard ? {
+              _id: selectedCard._id,
+              cardType: selectedCard.cardType,
+              playerId: selectedCard.playerId?._id || selectedCard.playerId
+            } : null
+          });
+          setShowCardDialog(false);
+          setSelectedCard(null);
+        }}
+        onSave={handleSaveCard}
+        card={selectedCard}
+        gamePlayers={activeGamePlayers}
+        cards={cards}
+        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
+        isReadOnly={isDone}
+        game={game}
       />
 
       {/* Confirmation Modal for Validations */}

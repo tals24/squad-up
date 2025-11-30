@@ -34,7 +34,8 @@ export const createSubstitution = async (gameId, substitutionData) => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to create substitution');
+    // Prefer detailed error message if available, fallback to generic message
+    throw new Error(error.error || error.message || 'Failed to create substitution');
   }
 
   const data = await response.json();
@@ -56,7 +57,8 @@ export const updateSubstitution = async (gameId, subId, substitutionData) => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to update substitution');
+    // Prefer detailed error message if available, fallback to generic message
+    throw new Error(error.error || error.message || 'Failed to update substitution');
   }
 
   const data = await response.json();

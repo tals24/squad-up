@@ -34,7 +34,8 @@ export const createGoal = async (gameId, goalData) => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to create goal');
+    // Prefer detailed error message if available, fallback to generic message
+    throw new Error(error.error || error.message || 'Failed to create goal');
   }
 
   const data = await response.json();
@@ -56,7 +57,8 @@ export const updateGoal = async (gameId, goalId, goalData) => {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to update goal');
+    // Prefer detailed error message if available, fallback to generic message
+    throw new Error(error.error || error.message || 'Failed to update goal');
   }
 
   const data = await response.json();

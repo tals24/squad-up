@@ -103,7 +103,6 @@ export function useAutosave({
 
     // Create new timer
     timerRef.current = setTimeout(async () => {
-      console.log('🚀 [useAutosave] Executing autosave API call now...');
       try {
         const response = await fetch(endpoint, {
           method: 'PUT',

@@ -28,6 +28,10 @@ const organizationConfigSchema = new mongoose.Schema({
     goalInvolvementEnabled: {
       type: Boolean,
       default: true // Enabled by default (already implemented)
+    },
+    gameDifficultyAssessmentEnabled: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -51,6 +55,10 @@ const organizationConfigSchema = new mongoose.Schema({
       default: null // null = use global default
     },
     goalInvolvementEnabled: {
+      type: Boolean,
+      default: null // null = use global default
+    },
+    gameDifficultyAssessmentEnabled: {
       type: Boolean,
       default: null // null = use global default
     }

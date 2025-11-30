@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
 const GameReport = require('../models/GameReport');
 const Game = require('../models/Game');
+const GameRoster = require('../models/GameRoster');
 const { calculatePlayerMinutes } = require('../services/minutesCalculation');
 const { calculatePlayerGoalsAssists } = require('../services/goalsAssistsCalculation');
 
@@ -36,14 +37,42 @@ const checkGameAccessFromBody = async (req, res, next) => {
 
 const router = express.Router();
 
-// Get all game reports
+// Get all game reports (filtered by playedInGame)
 router.get('/', authenticateJWT, async (req, res) => {
   try {
-    const gameReports = await GameReport.find()
+    // Get all GameRoster entries where playedInGame is true
+    const playedRosters = await GameRoster.find({ playedInGame: true })
+      .select('game player')
+      .lean();
+    
+    // Create a Set of player-game combinations that played
+    const playedPlayerGameSet = new Set();
+    playedRosters.forEach(roster => {
+      const key = `${roster.game.toString()}-${roster.player.toString()}`;
+      playedPlayerGameSet.add(key);
+    });
+
+    // Fetch all game reports
+    const allGameReports = await GameReport.find()
       .populate('player', 'fullName kitNumber position')
       .populate('game', 'gameTitle opponent date')
       .populate('author', 'fullName role')
-      .sort({ date: -1 });
+      .lean();
+
+    // Filter reports to only include players who played
+    const gameReports = allGameReports.filter(report => {
+      const gameId = typeof report.game === 'object' ? report.game._id.toString() : report.game.toString();
+      const playerId = typeof report.player === 'object' ? report.player._id.toString() : report.player.toString();
+      const key = `${gameId}-${playerId}`;
+      return playedPlayerGameSet.has(key);
+    });
+
+    // Sort by date descending
+    gameReports.sort((a, b) => {
+      const dateA = a.game?.date || a.createdAt || new Date(0);
+      const dateB = b.game?.date || b.createdAt || new Date(0);
+      return new Date(dateB) - new Date(dateA);
+    });
 
     res.json({
       success: true,
@@ -55,10 +84,26 @@ router.get('/', authenticateJWT, async (req, res) => {
   }
 });
 
-// Get game reports by game ID
+// Get game reports by game ID (filtered by playedInGame)
 router.get('/game/:gameId', authenticateJWT, checkGameAccess, async (req, res) => {
   try {
-    const gameReports = await GameReport.find({ game: req.params.gameId })
+    const gameId = req.params.gameId;
+    
+    // Get GameRoster entries for this game where playedInGame is true
+    const playedRosters = await GameRoster.find({ 
+      game: gameId, 
+      playedInGame: true 
+    })
+      .select('player')
+      .lean();
+    
+    const playedPlayerIds = playedRosters.map(roster => roster.player.toString());
+
+    // Fetch game reports for this game, filtered to only players who played
+    const gameReports = await GameReport.find({ 
+      game: gameId,
+      player: { $in: playedPlayerIds }
+    })
       .populate('player', 'fullName kitNumber position')
       .populate('game', 'gameTitle opponent date')
       .populate('author', 'fullName role')

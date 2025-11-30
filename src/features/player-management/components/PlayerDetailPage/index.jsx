@@ -16,7 +16,7 @@ export default function Player() {
   const playerId = searchParams.get('id');
   
 
-  const { players, reports: allReports, teams, games, isLoading: isDataLoading } = useData();
+  const { players, reports: allReports, teams, games, gameRosters, isLoading: isDataLoading } = useData();
 
   const [player, setPlayer] = useState(null);
   const [playerReports, setPlayerReports] = useState([]);
@@ -35,6 +35,28 @@ export default function Player() {
       setIsLoading(false);
     }
   }, [playerId, players, allReports, teams, games, isDataLoading]);
+
+  // Calculate games played vs games in squad
+  const gameStats = useMemo(() => {
+    if (!playerId || !gameRosters || gameRosters.length === 0) {
+      return { gamesPlayed: 0, gamesInSquad: 0 };
+    }
+
+    const playerRosters = gameRosters.filter(roster => {
+      if (!roster || !roster.player) return false; // Handle null/undefined player
+      const rosterPlayerId = typeof roster.player === 'object' && roster.player !== null 
+        ? roster.player._id 
+        : roster.player;
+      return rosterPlayerId === playerId;
+    });
+
+    const gamesPlayed = playerRosters.filter(roster => roster.playedInGame === true).length;
+    const gamesInSquad = playerRosters.filter(roster => 
+      roster.status === 'Starting Lineup' || roster.status === 'Bench'
+    ).length;
+
+    return { gamesPlayed, gamesInSquad };
+  }, [playerId, gameRosters]);
 
   // Memoize expensive calculations to prevent unnecessary re-renders
   const stats = useMemo(() => {
@@ -124,6 +146,8 @@ export default function Player() {
             <PerformanceStatsCard 
               stats={stats}
               reportCount={playerReports.length}
+              gamesPlayed={gameStats.gamesPlayed}
+              gamesInSquad={gameStats.gamesInSquad}
             />
           </div>
 

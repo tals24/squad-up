@@ -12,7 +12,7 @@ const StatBox = ({ value, label, icon: Icon, color }) => (
   </div>
 );
 
-const PerformanceStatsCard = ({ stats, reportCount }) => {
+const PerformanceStatsCard = ({ stats, reportCount, gamesPlayed = 0, gamesInSquad = 0 }) => {
   return (
     <Card className="shadow-2xl border-slate-700 bg-slate-800/70 backdrop-blur-sm">
       <CardHeader>
@@ -35,6 +35,21 @@ const PerformanceStatsCard = ({ stats, reportCount }) => {
           <StatBox value={stats.totalMinutes} label="Minutes" icon={Clock} color="text-green-400" />
           <StatBox value={reportCount} label="Reports" icon={Eye} color="text-red-400" />
         </div>
+        {(gamesPlayed > 0 || gamesInSquad > 0) && (
+          <div className="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+            <div className="text-xs text-slate-400 uppercase tracking-wider mb-2 text-center">Game Participation</div>
+            <div className="flex justify-around text-sm">
+              <div className="text-center">
+                <div className="text-lg font-bold text-slate-100">{gamesPlayed}</div>
+                <div className="text-slate-400">Games Played</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-slate-100">{gamesInSquad}</div>
+                <div className="text-slate-400">Games in Squad</div>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -46,7 +46,10 @@ export default function GoalDialog({
   existingGoals = [],
   matchDuration = 90,
   isReadOnly = false,
-  game = null // Game object to extract teamId for feature flags
+  game = null, // Game object to extract teamId for feature flags
+  timeline = [], // Unified timeline from parent (Cards, Goals, Substitutions)
+  startingLineup = {}, // Map of playerId -> true for starting lineup players
+  squadPlayers = {} // Map of playerId -> status ('Starting Lineup' | 'Bench')
 }) {
   const [activeTab, setActiveTab] = useState('team');
   const [goalData, setGoalData] = useState({
@@ -340,11 +343,7 @@ export default function GoalDialog({
 
           {/* Opponent Goal Tab */}
           <TabsContent value="opponent" className="space-y-4 mt-4">
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4">
-              <p className="text-red-400 text-sm">
-                Recording an opponent goal will automatically increment the opponent's score.
-              </p>
-            </div>
+
 
             {/* Minute */}
             <div className="space-y-2">

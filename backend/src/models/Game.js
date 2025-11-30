@@ -133,11 +133,45 @@ const gameSchema = new mongoose.Schema({
   //   teamSummary: { defenseSummary, midfieldSummary, attackSummary, generalSummary },
   //   finalScore: { ourScore, opponentScore },
   //   matchDuration: { regularTime, firstHalfExtraTime, secondHalfExtraTime },
-  //   playerReports: { playerId: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }, ... }
+  //   playerReports: { playerId: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }, ... },
+  //   playerMatchStats: { playerId: { foulsCommitted, foulsReceived }, ... }
   // }
   reportDraft: {
     type: mongoose.Schema.Types.Mixed, // JSON object: { teamSummary?, finalScore?, matchDuration?, playerReports? }
     default: null
+  },
+
+  // Game Difficulty Assessment (pre-game estimation)
+  difficultyAssessment: {
+    opponentStrength: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null
+    },
+    matchImportance: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null
+    },
+    externalConditions: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null
+    },
+    overallScore: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+      set: v => v === null ? null : parseFloat(v.toFixed(1))
+    },
+    assessedAt: {
+      type: Date,
+      default: null
+    }
   }
 }, {
   timestamps: true
@@ -182,6 +216,18 @@ gameSchema.pre('save', async function(next) {
       secondHalfExtraTime: 0
     };
     this.totalMatchDuration = 90;
+  }
+  
+  // Calculate difficulty assessment overall score
+  if (this.difficultyAssessment) {
+    const { opponentStrength, matchImportance, externalConditions } = this.difficultyAssessment;
+    
+    // Only calculate if all three parameters are set (not null)
+    if (opponentStrength !== null && matchImportance !== null && externalConditions !== null) {
+      // Weighted formula: 40% opponent, 35% importance, 25% conditions
+      const calculated = (opponentStrength * 0.40) + (matchImportance * 0.35) + (externalConditions * 0.25);
+      this.difficultyAssessment.overallScore = calculated; // Setter will round to 1 decimal
+    }
   }
   
   next();
