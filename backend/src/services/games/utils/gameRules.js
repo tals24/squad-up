@@ -1,4 +1,4 @@
-const { getMatchTimeline: getTimelineFromService } = require('../../timelineService');
+const { getMatchTimeline: getTimelineFromService } = require('./gameEventsAggregator');
 const GameRoster = require('../../../models/GameRoster');
 
 // Re-export getMatchTimeline for convenience

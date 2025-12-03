@@ -5,7 +5,7 @@
 
 const express = require('express');
 const { authenticateJWT, checkGameAccess } = require('../../middleware/jwtAuth');
-const { getMatchTimeline } = require('../../services/timelineService');
+const { getMatchTimeline } = require('../../services/games/utils/gameEventsAggregator');
 
 const router = express.Router();
 
