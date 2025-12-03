@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
-import { useAutosave } from "@/hooks/useAutosave";
+import { useAutosave } from "@/shared/hooks";
 import { useToast } from "@/shared/ui/primitives/use-toast";
-import { useFeature } from "@/hooks/useFeature";
+import { useFeature } from "@/shared/hooks";
 
 // Import formation configurations
 import { formations } from "./formations";

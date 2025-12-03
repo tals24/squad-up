@@ -7,4 +7,6 @@ export { useDrillLabHistory } from './useDrillLabHistory';
 export { useDrillLabMode } from './useDrillLabMode';
 export { usePlayersData } from './usePlayersData';
 export { useUserRole } from './useUserRole';
+export { useAutosave } from './useAutosave';
+export { useFeature } from './useFeature';
 

@@ -1,4 +1,4 @@
-import { useFeature } from '@/hooks/useFeature';
+import { useFeature } from '@/shared/hooks';
 
 /**
  * FeatureGuard Component
