@@ -284,7 +284,7 @@ backend/src/
 
 #### ⚠️ Backend Issues
 
-**2.5 Route File Complexity**
+**2.5 Route File Complexity & Missing Controller Layer**
 ```
 backend/src/routes/
 ├── games.js           ⚠️ 974 LINES (TOO LARGE!)
@@ -292,19 +292,69 @@ backend/src/routes/
 └── analytics.js       ⚠️ Potentially large
 ```
 
-**Problem:** `games.js` is 974 lines - monolithic route file
+**Problem 1:** `games.js` is 974 lines - monolithic route file
 - **Impact:** Hard to maintain, test, and navigate
 - **Risk:** High - bugs can hide in large files
 
-**Recommendation:** Split games.js by domain:
+**Problem 2:** Routes contain business logic (Fat Controller anti-pattern)
+```javascript
+// Current: routes/games.js does EVERYTHING
+router.put('/:id', async (req, res) => {
+  // ❌ Role-based filtering
+  // ❌ Complex validation
+  // ❌ Business logic
+  // ❌ Status change detection
+  // ❌ Analytics recalculation
+  // ❌ Job creation
+  // ❌ Database queries
+  // 80+ lines of mixed concerns!
+});
+```
+
+**Root Cause:** Missing Controller Layer
+- Routes should be thin (just routing)
+- Business logic should be in controllers/services
+- Violates Single Responsibility Principle
+
+**Recommendation:** Add Controller Layer FIRST, then split routes:
+
+**Step 1: Add Controllers (Priority!)**
+```
+backend/src/
+├── controllers/              ✅ NEW - Orchestration layer
+│   ├── gameController.js     (handles requests/responses)
+│   ├── playerController.js
+│   └── index.js
+│
+├── services/                 ✅ Expand existing
+│   ├── gameService.js        (NEW - CRUD + orchestration)
+│   ├── gameAnalyticsService.js (NEW - analytics logic)
+│   ├── goalAnalytics.js      (already exists)
+│   ├── minutesCalculation.js (already exists)
+│   └── timelineService.js    (already exists)
+│
+└── routes/                   ✅ Make thin
+    └── games.js              (50-100 lines - routing only)
+```
+
+**Step 2: Split Routes (Now Easy!)**
 ```
 backend/src/routes/games/
-├── index.js              (router setup)
-├── games.crud.js         (GET, POST, PUT, DELETE)
-├── games.drafts.js       (draft operations)
-├── games.status.js       (status transitions)
-└── games.reports.js      (report operations)
+├── index.js              (aggregates routes)
+├── crud.js               (GET, POST, PUT, DELETE)
+├── drafts.js             (draft operations)
+├── status.js             (status transitions)
+└── reports.js            (report operations)
+
+All calling the same gameController methods!
 ```
+
+**Benefits:**
+- ✅ Single Responsibility (routes route, controllers orchestrate, services contain logic)
+- ✅ Testable (unit test controllers/services separately)
+- ✅ Reusable (services used by controllers, workers, CLI)
+- ✅ Maintainable (clear where each concern lives)
+- ✅ Industry standard (MVC, Clean Architecture)
 
 **2.6 Empty Component Directories**
 ```
@@ -401,10 +451,14 @@ jest.config.cjs → frontend/jest.config.cjs
 
 ### Priority 1: High Impact (Fix Soon)
 
-1. **Backend: games.js is 974 lines**
-   - **Impact:** High complexity, maintenance nightmare
-   - **Effort:** Medium (2-3 hours to split)
-   - **Solution:** Split into domain-specific route files
+1. **Backend: Missing Controller Layer + games.js is 974 lines**
+   - **Impact:** High complexity, maintenance nightmare, violated separation of concerns
+   - **Effort:** High (3-4 hours for controllers + 1-2 hours for route split = 5-6 hours total)
+   - **Solution:** 
+     1. Add controller layer (orchestration)
+     2. Extract business logic to services
+     3. Make routes thin (routing only)
+     4. Then split routes by domain
 
 2. **Frontend: Legacy API Layer Confusion**
    - **Impact:** Developers don't know where to add API calls
@@ -471,11 +525,23 @@ jest.config.cjs → frontend/jest.config.cjs
 
 ### Immediate Actions (This Week)
 
-1. **Split backend/src/routes/games.js** (Priority 1)
+1. **Add Controller Layer to Backend** (Priority 1A - Do First!)
+   ```bash
+   # Create structure
+   mkdir backend/src/controllers
+   touch backend/src/controllers/gameController.js
+   touch backend/src/services/gameService.js
+   
+   # Extract logic from routes to controllers
+   # Make routes thin (just routing)
+   # Test everything still works
+   ```
+
+2. **Split backend/src/routes/games.js** (Priority 1B - After controllers)
    ```bash
    # Create structure
    mkdir backend/src/routes/games
-   # Split by domain
+   # Split thin routes by domain
    # Update imports in app.js
    ```
 

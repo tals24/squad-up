@@ -97,20 +97,45 @@ squad-up-with-backend/
 
 ---
 
-### Phase 1: Backend Cleanup (Week 1)
+### Phase 1: Backend Architecture Improvement (Week 1)
 
-#### Task 1.1: Split backend/src/routes/games.js
+#### Task 1.1: Add Controller Layer (NEW - Critical!)
 
-**Current:** 974 lines (too large)  
-**Target:** 5 files (~200 lines each)
+**Current Problem:** Routes contain business logic (anti-pattern)
+- `routes/games.js` has 974 lines doing everything
+- Mixed concerns: HTTP + validation + business logic + database
+- Hard to test and maintain
+
+**Target Architecture:**
+```
+Routes (thin routing) → Controllers (orchestration) → Services (business logic) → Models
+```
+
+**What to Create:**
+- `backend/src/controllers/gameController.js` - Request/response orchestration
+- `backend/src/services/gameService.js` - Business logic orchestration
+
+**Effort:** 3-4 hours  
+**Impact:** HIGH - Proper separation of concerns
 
 See: `docs/CLEANUP_ACTION_PLAN.md` section 1.1
 
-#### Task 1.2: Consolidate API Layers
+#### Task 1.2: Split routes/games.js (Now Easy!)
 
-**Goal:** Remove duplicate `frontend/src/api/`, consolidate to `frontend/src/shared/api/`
+**After controllers exist, splitting becomes trivial:**
+- Routes are already thin (just routing)
+- Just organize by domain
+- All call same controller methods
+
+**Effort:** 1-2 hours (reduced!)
 
 See: `docs/CLEANUP_ACTION_PLAN.md` section 1.2
+
+#### Task 1.3: Add Backend Scripts README
+
+**Goal:** Document all utility scripts
+
+See: `docs/CLEANUP_ACTION_PLAN.md` section 5.1
 
 ---
 

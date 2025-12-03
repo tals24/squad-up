@@ -61,12 +61,19 @@ Performance         ████████░░░░░░░░░░░░
    Effort:  1-2 hours
    ```
 
-1. **📄 Backend games.js is 974 LINES** (Priority 1)
+1. **🏗️ Backend Missing Controller Layer + games.js is 974 LINES** (Priority 1)
    ```
-   Current: backend/src/routes/games.js (974 lines)
-   Target:  Split into 5 files (~200 lines each)
-   Impact:  High - Hard to maintain
-   Effort:  2-3 hours
+   Problem: Routes contain business logic (anti-pattern)
+   Current: backend/src/routes/games.js (974 lines doing everything)
+   
+   Solution:
+   Step 1: Add controllers/ (orchestration layer) [3-4 hours]
+   Step 2: Extract business logic to services [part of step 1]
+   Step 3: Make routes thin (routing only) [part of step 1]
+   Step 4: Split routes by domain [1-2 hours]
+   
+   Total Impact: CRITICAL - Proper architecture
+   Total Effort:  5-6 hours
    ```
 
 2. **🔀 Duplicate API Layers** (Priority 1)
@@ -184,8 +191,11 @@ squad-up-with-backend/
 
 ### 🔴 Week 1: Critical (Must Fix)
 ```
-□ Split backend/src/routes/games.js into 5 files
-□ Audit and consolidate API layers (frontend/src/api/ vs shared/api/)
+□ Add backend controller layer (proper MVC architecture)
+□ Extract business logic from routes to controllers/services
+□ Make routes thin (routing only)
+□ Split backend/src/routes/games.js into domain files (easier after controllers!)
+□ Audit and consolidate frontend API layers (frontend/src/api/ vs shared/api/)
 ```
 
 ### 🟡 Week 2: Important (Should Fix)

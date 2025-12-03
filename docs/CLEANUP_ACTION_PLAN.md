@@ -8,12 +8,12 @@
 
 ## 📊 Progress Tracker
 
-**Overall Progress:** 0/19 items completed (0%)
+**Overall Progress:** 1/20 items completed (5%)
 
 | Priority | Completed | Total | Progress |
 |----------|-----------|-------|----------|
-| P0 (Foundation) | 0 | 1 | ░░░░░░░░░░ 0%   |
-| P1 (High)       | 0 | 2 | ░░░░░░░░░░ 0%   |
+| P0 (Foundation) | 1 | 1 | ██████████ 100% ✅ |
+| P1 (High)       | 0 | 3 | ░░░░░░░░░░ 0%   |
 | P2 (Medium)     | 0 | 3 | ░░░░░░░░░░ 0%   |
 | P3 (Low)        | 0 | 3 | ░░░░░░░░░░ 0%   |
 | Testing         | 0 | 3 | ░░░░░░░░░░ 0%   |
@@ -23,11 +23,11 @@
 
 ---
 
-## 🔥 Priority 0: Foundation (DO THIS FIRST!)
+## ✅ Priority 0: Foundation (COMPLETED!)
 
 ### 0.1 Move Frontend to frontend/ Directory
 
-**Status:** ⏳ Not Started  
+**Status:** ✅ COMPLETED  
 **Effort:** 1-2 hours  
 **Impact:** CRITICAL - Foundational architecture
 
@@ -87,36 +87,141 @@ squad-up-with-backend/
 
 ## 🚨 Priority 1: High Impact (Fix Soon)
 
-### 1.1 Split Backend games.js (974 lines → ~200 lines each)
+### 1.1 Add Controller Layer (NEW - Do This First!)
 
 **Status:** ⏳ Not Started  
-**Effort:** 2-3 hours  
-**Impact:** High
+**Effort:** 3-4 hours  
+**Impact:** HIGH - Improves architecture significantly
+
+**⚠️ WHY THIS IS FIRST:**
+- Routes currently contain business logic (anti-pattern)
+- 974 lines in games.js doing too much
+- Controllers provide proper separation of concerns
+- Makes splitting routes easier afterward
+
+**Architecture:**
+```
+Routes (thin) → Controllers (orchestration) → Services (business logic) → Models (data)
+```
 
 **Tasks:**
-- [ ] Create `backend/src/routes/games/` directory
-- [ ] Split into domain files:
-  - [ ] `index.js` - Router setup
-  - [ ] `games.crud.js` - Basic CRUD operations
-  - [ ] `games.drafts.js` - Draft operations (lineupDraft, reportDraft)
-  - [ ] `games.status.js` - Status transitions (Scheduled → Played → Done)
-  - [ ] `games.reports.js` - Report operations
-- [ ] Update imports in `backend/src/app.js`
+- [ ] Create `backend/src/controllers/` directory
+- [ ] Create `backend/src/controllers/gameController.js`
+  - [ ] Extract `getAllGames` from routes
+  - [ ] Extract `getGameById` from routes
+  - [ ] Extract `createGame` from routes
+  - [ ] Extract `updateGame` from routes
+  - [ ] Extract `deleteGame` from routes
+  - [ ] Extract draft-related methods
+  - [ ] Extract status transition methods
+- [ ] Create `backend/src/services/gameService.js` (orchestration)
+  - [ ] Move CRUD business logic from routes
+  - [ ] Move status change detection
+  - [ ] Move analytics triggering
+  - [ ] Move job creation logic
+- [ ] Update `backend/src/routes/games.js` to use controllers
+  - [ ] Keep only route definitions
+  - [ ] Apply middleware
+  - [ ] Call controller methods
+  - [ ] Remove business logic
+- [ ] Test all endpoints still work
 - [ ] Run backend tests to verify
-- [ ] Update API documentation
+
+**Example Pattern:**
+```javascript
+// routes/games.js (BEFORE - 974 lines)
+router.put('/:id', authenticateJWT, async (req, res) => {
+  // 80+ lines of business logic
+});
+
+// routes/games.js (AFTER - 5 lines)
+const gameController = require('../controllers/gameController');
+router.put('/:id', authenticateJWT, gameController.updateGame);
+
+// controllers/gameController.js (NEW - orchestration)
+exports.updateGame = async (req, res, next) => {
+  try {
+    const game = await gameService.updateGame(req.params.id, req.body);
+    res.json({ success: true, data: game });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// services/gameService.js (NEW - business logic)
+exports.updateGame = async (gameId, updateData) => {
+  // All the complex logic here
+};
+```
+
+**Files to Create:**
+```
+backend/src/controllers/
+  ├── index.js
+  └── gameController.js
+
+backend/src/services/
+  └── gameService.js (NEW - orchestration service)
+```
 
 **Files to Modify:**
 ```
-backend/src/routes/games.js (delete after split)
-backend/src/app.js (update import)
-docs/API_DOCUMENTATION.md (verify routes still work)
+backend/src/routes/games.js (make thin, use controllers)
 ```
 
-**Note:** Do this AFTER Priority 0 (frontend restructure)
+**Benefits:**
+- ✅ Single Responsibility Principle
+- ✅ Easy to test (unit test controllers/services separately)
+- ✅ Reusable business logic
+- ✅ Clear error handling
+- ✅ Makes next step (splitting routes) trivial
 
 ---
 
-### 1.2 Consolidate API Layers
+### 1.2 Split Backend games.js (NOW MUCH EASIER!)
+
+**Status:** ⏳ Not Started  
+**Effort:** 1-2 hours (reduced from 2-3!)  
+**Impact:** Medium (easier after controllers)
+
+**Note:** Do this AFTER 1.1 (controller layer). With controllers, this becomes trivial!
+
+**Tasks:**
+- [ ] Create `backend/src/routes/games/` directory
+- [ ] Split thin routes into domain files:
+  - [ ] `index.js` - Aggregates all game routes
+  - [ ] `crud.js` - Basic CRUD endpoints
+  - [ ] `drafts.js` - Draft operation endpoints
+  - [ ] `status.js` - Status transition endpoints
+  - [ ] `reports.js` - Report operation endpoints
+- [ ] All call the same `gameController` methods
+- [ ] Update imports in `backend/src/app.js`
+- [ ] Run backend tests to verify
+
+**Files to Create:**
+```
+backend/src/routes/games/
+  ├── index.js (~30 lines - aggregates routes)
+  ├── crud.js (~50 lines - GET, POST, PUT, DELETE)
+  ├── drafts.js (~40 lines - draft operations)
+  ├── status.js (~30 lines - status transitions)
+  └── reports.js (~30 lines - report operations)
+```
+
+**Files to Delete:**
+```
+backend/src/routes/games.js (split into games/ folder)
+```
+
+**Why This Is Easier After Controllers:**
+- Routes are already thin (just routing)
+- No need to figure out where business logic goes
+- Just organize endpoints by domain
+- All complex logic already in controllers/services
+
+---
+
+### 1.3 Consolidate Frontend API Layers
 
 **Status:** ⏳ Not Started  
 **Effort:** 4-6 hours  

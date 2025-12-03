@@ -265,47 +265,91 @@ src/
 
 ## 🔧 Backend Structure Comparison
 
-### 🔴 CURRENT STATE
+### 🔴 CURRENT STATE - Missing Controller Layer!
 
 ```
 backend/src/
 ├── routes/
-│   ├── games.js                   ❌ 974 LINES! TOO LARGE!
-│   │   ├── CRUD operations        (lines 1-250)
-│   │   ├── Draft operations       (lines 251-450)
-│   │   ├── Status transitions     (lines 451-650)
-│   │   ├── Report operations      (lines 651-850)
-│   │   └── Misc operations        (lines 851-974)
+│   ├── games.js                   ❌ 974 LINES! CONTAINS BUSINESS LOGIC!
+│   │   ├── HTTP routing           ❌ Mixed with business logic
+│   │   ├── Authorization          ❌ Mixed with database queries
+│   │   ├── Validation             ❌ Mixed with service calls
+│   │   ├── Business logic         ❌ Should be in controllers
+│   │   ├── Database queries       ❌ Should be in services
+│   │   └── Analytics orchestration ❌ Should be in services
 │   │
-│   ├── auth.js                    ✅ Good size
-│   ├── players.js                 ✅ Good size
-│   └── [others...]                ✅ Good size
+│   ├── auth.js                    ⚠️ Probably has same issue
+│   ├── players.js                 ⚠️ Probably has same issue
+│   └── [others...]                ⚠️ Check for business logic
 │
-└── components/
-    └── player/                    ⚠️ Empty? (check and delete)
+├── services/                      ⚠️ INCOMPLETE
+│   ├── goalAnalytics.js           ✅ Good (specific calculations)
+│   ├── minutesCalculation.js      ✅ Good (specific calculations)
+│   └── timelineService.js         ✅ Good (specific calculations)
+│   (Missing: orchestration services!)
+│
+├── models/                        ✅ Good
+└── middleware/                    ✅ Good
+
+Problem: No Controller Layer!
+Routes doing too much → Hard to test, maintain, reuse
 ```
 
 ---
 
-### 🟢 TARGET STATE
+### 🟢 TARGET STATE - Proper MVC Architecture
 
 ```
 backend/src/
-├── routes/
-│   ├── games/                     ✅ SPLIT BY DOMAIN
-│   │   ├── index.js               (~30 lines: router setup)
-│   │   ├── games.crud.js          (~200 lines: GET, POST, PUT, DELETE)
-│   │   ├── games.drafts.js        (~200 lines: lineupDraft, reportDraft)
-│   │   ├── games.status.js        (~200 lines: status transitions)
-│   │   ├── games.reports.js       (~200 lines: report operations)
-│   │   └── games.validation.js    (~150 lines: validation logic)
+├── routes/                        ✅ THIN - Routing only (50-100 lines each)
+│   ├── games/
+│   │   ├── index.js               (~30 lines: aggregates routes)
+│   │   ├── crud.js                (~50 lines: GET, POST, PUT, DELETE endpoints)
+│   │   ├── drafts.js              (~40 lines: draft endpoints)
+│   │   ├── status.js              (~30 lines: status endpoints)
+│   │   └── reports.js             (~30 lines: report endpoints)
 │   │
-│   ├── auth.js                    ✅ Keep as is
-│   ├── players.js                 ✅ Keep as is
-│   └── [others...]                ✅ Keep as is
+│   ├── auth.js                    ✅ Keep but make thin
+│   ├── players.js                 ✅ Keep but make thin
+│   └── [others...]                ✅ Keep but make thin
 │
-└── scripts/
-    └── README.md                  ✅ NEW: Document all scripts
+├── controllers/                   ✅ NEW - Request/Response orchestration
+│   ├── gameController.js          (~300 lines: handles HTTP)
+│   │   ├── getAllGames()          (validates, calls service, formats response)
+│   │   ├── getGameById()          (validates, calls service, formats response)
+│   │   ├── createGame()           (validates, calls service, formats response)
+│   │   ├── updateGame()           (validates, calls service, handles errors)
+│   │   ├── deleteGame()           (validates, calls service, formats response)
+│   │   └── [draft/status methods]
+│   │
+│   ├── playerController.js        (~200 lines)
+│   ├── teamController.js          (~150 lines)
+│   └── index.js                   (exports all controllers)
+│
+├── services/                      ✅ EXPANDED - Business logic
+│   ├── gameService.js             ✅ NEW (~400 lines: CRUD + orchestration)
+│   │   ├── updateGame()           (status detection, validations, db updates)
+│   │   ├── handleStatusChange()   (job creation, analytics triggering)
+│   │   └── [other game logic]
+│   │
+│   ├── gameAnalyticsService.js    ✅ NEW (~200 lines: analytics orchestration)
+│   │   ├── recalculateAll()       (orchestrates goal + substitution analytics)
+│   │   └── [analytics coordination]
+│   │
+│   ├── goalAnalytics.js           ✅ Keep (specific calculations)
+│   ├── minutesCalculation.js      ✅ Keep (specific calculations)
+│   ├── timelineService.js         ✅ Keep (specific calculations)
+│   └── [other specific services]
+│
+├── models/                        ✅ Data access (already good)
+├── middleware/                    ✅ Auth (already good)
+└── utils/                         ✅ Helpers (already good)
+
+Benefits:
+- ✅ Clear separation: Routes → Controllers → Services → Models
+- ✅ Testable: Unit test each layer independently
+- ✅ Reusable: Services used by controllers, workers, CLI scripts
+- ✅ Maintainable: Know exactly where each concern lives
 ```
 
 ---
@@ -632,15 +676,24 @@ git add -A
 git commit -m "refactor: move frontend to frontend/ directory for better organization"
 ```
 
-### Phase 1: Backend (Week 1)
+### Phase 1: Backend Architecture (Week 1)
 ```bash
-1. Split games.js
+1. Add Controller Layer (PRIORITY - Do First!)
+   mkdir backend/src/controllers
+   touch backend/src/controllers/gameController.js
+   touch backend/src/services/gameService.js
+   # Extract logic from routes to controllers
+   # Extract orchestration to gameService
+   # Make routes thin
+   # Test all endpoints
+
+2. Split games.js (Now Easy!)
    mkdir backend/src/routes/games
-   # Split code into domain files
+   # Split thin routes by domain
    # Update app.js imports
    # Test
 
-2. Add scripts README
+3. Add scripts README
    touch backend/scripts/README.md
    # Document each script
 ```
