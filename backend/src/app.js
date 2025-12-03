@@ -12,24 +12,18 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const teamRoutes = require('./routes/teams');
 const playerRoutes = require('./routes/players');
-const gameRoutes = require('./routes/games');
-const gameRosterRoutes = require('./routes/gameRosters');
+const gameRoutes = require('./routes/games'); // All game-related routes now consolidated
+const gameRosterRoutes = require('./routes/games/gameRosters');
 const timelineEventRoutes = require('./routes/timelineEvents');
-const gameReportRoutes = require('./routes/gameReports');
+const gameReportRoutes = require('./routes/games/gameReports');
 const scoutReportRoutes = require('./routes/scoutReports');
 const drillRoutes = require('./routes/drills');
 const formationRoutes = require('./routes/formations');
 const trainingSessionRoutes = require('./routes/trainingSessions');
 const sessionDrillRoutes = require('./routes/sessionDrills');
 const dataRoutes = require('./routes/data');
-const minutesValidationRoutes = require('./routes/minutesValidation');
-const goalRoutes = require('./routes/goals');
 const analyticsRoutes = require('./routes/analytics');
-const substitutionRoutes = require('./routes/substitutions');
-const cardRoutes = require('./routes/cards');
-const playerMatchStatsRoutes = require('./routes/playerMatchStats');
 const organizationConfigRoutes = require('./routes/organizationConfigs');
-const difficultyAssessmentRoutes = require('./routes/difficultyAssessment');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -64,17 +58,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/players', playerRoutes);
-app.use('/api/games', gameRoutes);
-app.use('/api/games', minutesValidationRoutes); // Minutes validation routes (under /api/games/:gameId/...)
-app.use('/api/games', goalRoutes); // Goal routes (under /api/games/:gameId/goals)
-app.use('/api/games', substitutionRoutes); // Substitution routes (under /api/games/:gameId/substitutions)
-app.use('/api/games', cardRoutes); // Card routes (under /api/games/:gameId/cards)
-app.use('/api/games', playerMatchStatsRoutes); // Player match stats routes (under /api/games/:gameId/player-match-stats)
-app.use('/api/games', difficultyAssessmentRoutes); // Difficulty assessment routes (under /api/games/:gameId/difficulty-assessment)
-app.use('/api/game-rosters', gameRosterRoutes);
+app.use('/api/games', gameRoutes); // All game-related routes consolidated (CRUD, events, stats, rosters, etc.)
+app.use('/api/game-rosters', gameRosterRoutes); // Game rosters (separate endpoint pattern)
+app.use('/api/game-reports', gameReportRoutes); // Game reports (separate endpoint pattern)
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/timeline-events', timelineEventRoutes);
-app.use('/api/game-reports', gameReportRoutes);
 app.use('/api/scout-reports', scoutReportRoutes);
 app.use('/api/drills', drillRoutes);
 app.use('/api/formations', formationRoutes);

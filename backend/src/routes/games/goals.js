@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateJWT, checkGameAccess } = require('../middleware/jwtAuth');
-const goalController = require('../controllers/games/goalController');
+const { authenticateJWT, checkGameAccess } = require('../../middleware/jwtAuth');
+const goalController = require('../../controllers/games/goalController');
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
