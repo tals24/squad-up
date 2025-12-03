@@ -451,14 +451,27 @@ jest.config.cjs → frontend/jest.config.cjs
 
 ### Priority 1: High Impact (Fix Soon)
 
-1. **Backend: Missing Controller Layer + games.js is 974 lines**
-   - **Impact:** High complexity, maintenance nightmare, violated separation of concerns
-   - **Effort:** High (3-4 hours for controllers + 1-2 hours for route split = 5-6 hours total)
+1. **Backend: Missing Controller Layer Across ALL Routes** ← **UPDATED SCOPE**
+   - **Current Status:** ✅ games refactored (Phase 1A+1B done), 21 routes remaining
+   - **Impact:** CRITICAL - Need consistent MVC architecture across entire backend
+   - **Effort:** 
+     - ✅ Games: 5-6 hours (DONE)
+     - ⏳ Remaining 21 routes: 22-27 hours
+     - **Total: 27-33 hours** for complete backend consistency
    - **Solution:** 
-     1. Add controller layer (orchestration)
-     2. Extract business logic to services
-     3. Make routes thin (routing only)
-     4. Then split routes by domain
+     1. ✅ Add controller layer to games (DONE)
+     2. ✅ Extract games business logic to services (DONE)
+     3. ✅ Make games routes thin (DONE)
+     4. ✅ Split games routes by domain (DONE)
+     5. ⏳ Apply same pattern to ALL 21 remaining routes (Phase 1B1)
+   
+   **See Detailed Plan:** `docs/PHASE_1B1_BACKEND_REFACTORING_PLAN.md`
+   
+   **Why Critical:**
+   - Consistency across codebase
+   - All routes should follow same pattern
+   - Makes onboarding easier
+   - Professional standard throughout
 
 2. **Frontend: Legacy API Layer Confusion**
    - **Impact:** Developers don't know where to add API calls

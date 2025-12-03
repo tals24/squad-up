@@ -8,18 +8,23 @@
 
 ## 📊 Progress Tracker
 
-**Overall Progress:** 1/20 items completed (5%)
+**Overall Progress:** 3/27 items completed (11%)
 
 | Priority | Completed | Total | Progress |
 |----------|-----------|-------|----------|
 | P0 (Foundation) | 1 | 1 | ██████████ 100% ✅ |
-| P1 (High)       | 0 | 3 | ░░░░░░░░░░ 0%   |
+| P1 (High)       | 2 | 9 | ██░░░░░░░░ 22%  |
 | P2 (Medium)     | 0 | 3 | ░░░░░░░░░░ 0%   |
 | P3 (Low)        | 0 | 3 | ░░░░░░░░░░ 0%   |
 | Testing         | 0 | 3 | ░░░░░░░░░░ 0%   |
 | Docs            | 0 | 3 | ░░░░░░░░░░ 0%   |
 | Performance     | 0 | 2 | ░░░░░░░░░░ 0%   |
 | DevOps          | 0 | 2 | ░░░░░░░░░░ 0%   |
+
+**Phase 1 (Backend MVC) Progress:** 2/9 sub-phases complete
+- ✅ 1.1: Add controller layer (games) - DONE
+- ✅ 1.2: Split game routes - DONE
+- ⏳ 1.3: Apply to all 21 remaining routes (6 sub-phases)
 
 ---
 
@@ -247,6 +252,87 @@ frontend/src/api/integrations.js  → frontend/src/shared/api/integrations.js
 ```
 
 **Note:** Paths assume Priority 0 (frontend restructure) is complete
+
+---
+
+### 1.3 Apply MVC Architecture to All Backend Routes (Phase 1B1)
+
+**Status:** ⏳ Not Started  
+**Effort:** 22-27 hours (comprehensive refactoring)  
+**Impact:** HIGH - Professional, consistent backend architecture
+
+**⚠️ SCOPE:**
+Apply the same MVC pattern (Controllers → Services → Routes) to ALL 21 remaining backend route files.
+
+**See Detailed Plan:** [PHASE_1B1_BACKEND_REFACTORING_PLAN.md](./PHASE_1B1_BACKEND_REFACTORING_PLAN.md)
+
+**Sub-Phases:**
+
+#### 1.3.1 Game Events Domain (6-7 hours, Priority 1)
+- [ ] goals.js (305 lines) → goalController + goalService
+- [ ] substitutions.js (304 lines) → substitutionController + substitutionService
+- [ ] cards.js (319 lines) → cardController + cardService
+- [ ] playerMatchStats.js (111 lines) → playerMatchStatsController + service
+- [ ] timelineEvents.js (123 lines) → timelineEventController + service
+
+#### 1.3.2 Game Domain Extended (4-5 hours, Priority 2)
+- [ ] gameReports.js (354 lines) → gameReportController + gameReportService
+- [ ] gameRosters.js (115 lines) → gameRosterController + gameRosterService
+- [ ] difficultyAssessment.js (145 lines) → difficultyAssessmentController + service
+- [ ] minutesValidation.js (58 lines) → minutesValidationController (thin)
+
+#### 1.3.3 Training Domain (4-5 hours, Priority 3)
+- [ ] sessionDrills.js (348 lines) → sessionDrillController + sessionDrillService
+- [ ] trainingSessions.js (115 lines) → trainingSessionController + service
+- [ ] drills.js (103 lines) → drillController + drillService
+
+#### 1.3.4 Core Domain (3-4 hours, Priority 4)
+- [ ] players.js (122 lines) → playerController + playerService
+- [ ] teams.js (115 lines) → teamController + teamService
+- [ ] users.js (109 lines) → userController + userService
+
+#### 1.3.5 Supporting Domains (3-4 hours, Priority 5)
+- [ ] analytics.js (327 lines) → analyticsController + analyticsService
+- [ ] scoutReports.js (135 lines) → scoutReportController + scoutReportService
+- [ ] formations.js (103 lines) → formationController + formationService
+- [ ] organizationConfigs.js (221 lines) → organizationConfigController + service
+- [ ] auth.js (164 lines) → authController + authService ⚠️ Security critical!
+
+#### 1.3.6 Data Management (1-2 hours, Priority 6)
+- [ ] data.js (191 lines) → dataController + dataService
+
+**Expected Result:**
+```
+backend/src/
+├── controllers/ (22 files)
+│   ├── gameController.js ✅
+│   ├── goalController.js
+│   ├── substitutionController.js
+│   ├── cardController.js
+│   ├── [18 more controllers]
+│   └── index.js
+│
+├── services/ (25+ files)
+│   ├── gameService.js ✅
+│   ├── goalService.js
+│   ├── goalAnalytics.js ✅ (keep - specific calculations)
+│   ├── [20+ services]
+│   └── index.js
+│
+└── routes/ (21 files, all thin!)
+    ├── games/ ✅
+    ├── goals.js (thin)
+    ├── substitutions.js (thin)
+    ├── [18 more thin routes]
+    └── All < 150 lines each
+```
+
+**Benefits:**
+- ✅ 100% consistent MVC architecture
+- ✅ All routes follow same pattern
+- ✅ Easy for team to understand and contribute
+- ✅ Professional, industry-standard codebase
+- ✅ Fully testable and maintainable
 
 ---
 

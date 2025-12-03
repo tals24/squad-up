@@ -27,12 +27,13 @@ docs/
 ## 🎯 Quick Links
 
 ### **🔥 Start Here (Structure Review - Dec 2025)**
-> **New comprehensive project analysis with actionable recommendations**
+> **Comprehensive project analysis with actionable recommendations**
 
 - [📊 Quick Summary](STRUCTURE_REVIEW_SUMMARY.md) - **START HERE** - Grades, top issues, quick wins
 - [📄 Deep Review](PROJECT_STRUCTURE_DEEP_REVIEW.md) - Complete analysis (82/100 grade)
 - [🔄 Before/After](STRUCTURE_BEFORE_AFTER.md) - Visual comparison of current vs target state
 - [✅ Action Plan](CLEANUP_ACTION_PLAN.md) - Step-by-step cleanup tasks with progress tracking
+- [🏗️ Phase 1B1 Plan](PHASE_1B1_BACKEND_REFACTORING_PLAN.md) - **NEW** - Apply MVC to all 21 backend routes
 
 ### **Project Restructure**
 - [Architecture Plan](restructure/ARCHITECTURE_REFACTORING_PLAN.md) - Complete restructure plan

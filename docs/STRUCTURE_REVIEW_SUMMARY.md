@@ -189,12 +189,24 @@ squad-up-with-backend/
 □ Update all configs and test everything works
 ```
 
-### 🔴 Week 1: Critical (Must Fix)
+### 🔴 Week 1-2: Critical Backend Refactoring (Must Do)
 ```
-□ Add backend controller layer (proper MVC architecture)
-□ Extract business logic from routes to controllers/services
-□ Make routes thin (routing only)
-□ Split backend/src/routes/games.js into domain files (easier after controllers!)
+✅ Add backend controller layer for games (DONE)
+✅ Split games routes into domain files (DONE)
+□ Apply MVC architecture to ALL 21 remaining backend routes
+  └─ Sub-Phase 1: Game Events (5 files, 6-7h)
+  └─ Sub-Phase 2: Game Domain Extended (4 files, 4-5h)
+  └─ Sub-Phase 3: Training Domain (3 files, 4-5h)
+  └─ Sub-Phase 4: Core Domain (3 files, 3-4h)
+  └─ Sub-Phase 5: Supporting Domains (5 files, 3-4h)
+  └─ Sub-Phase 6: Data Management (1 file, 1-2h)
+  Total: ~22-27 hours, 42 new files
+
+See: docs/PHASE_1B1_BACKEND_REFACTORING_PLAN.md
+```
+
+### 🔴 Week 3: Frontend Organization
+```
 □ Audit and consolidate frontend API layers (frontend/src/api/ vs shared/api/)
 ```
 

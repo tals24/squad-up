@@ -97,41 +97,63 @@ squad-up-with-backend/
 
 ---
 
-### Phase 1: Backend Architecture Improvement (Week 1)
+### Phase 1: Backend MVC Architecture (Week 1-2)
 
-#### Task 1.1: Add Controller Layer (NEW - Critical!)
+#### ✅ Task 1.1: Add Controller Layer for Games (COMPLETED!)
 
-**Current Problem:** Routes contain business logic (anti-pattern)
-- `routes/games.js` has 974 lines doing everything
-- Mixed concerns: HTTP + validation + business logic + database
-- Hard to test and maintain
+**Status:** ✅ DONE  
+**Time Taken:** 3-4 hours  
+**Result:** Professional MVC architecture for games domain
 
-**Target Architecture:**
-```
-Routes (thin routing) → Controllers (orchestration) → Services (business logic) → Models
-```
+**Created:**
+- `controllers/gameController.js` (220 lines)
+- `services/gameService.js` (370 lines)
+- Made `routes/games.js` thin
 
-**What to Create:**
-- `backend/src/controllers/gameController.js` - Request/response orchestration
-- `backend/src/services/gameService.js` - Business logic orchestration
+#### ✅ Task 1.2: Split games routes (COMPLETED!)
 
-**Effort:** 3-4 hours  
-**Impact:** HIGH - Proper separation of concerns
+**Status:** ✅ DONE  
+**Time Taken:** 1 hour  
+**Result:** Domain-organized routes in `routes/games/` folder
 
-See: `docs/CLEANUP_ACTION_PLAN.md` section 1.1
+**Created:**
+- `routes/games/index.js` - Aggregator
+- `routes/games/crud.js` - CRUD operations
+- `routes/games/drafts.js` - Draft operations
+- `routes/games/status.js` - Status transitions
+- `routes/games/timeline.js` - Timeline endpoint
 
-#### Task 1.2: Split routes/games.js (Now Easy!)
+#### Task 1.3: Apply MVC to ALL Backend Routes (Phase 1B1)
 
-**After controllers exist, splitting becomes trivial:**
-- Routes are already thin (just routing)
-- Just organize by domain
-- All call same controller methods
+**Status:** ⏳ PLANNING  
+**Effort:** 22-27 hours total  
+**Impact:** CRITICAL - Complete backend consistency
 
-**Effort:** 1-2 hours (reduced!)
+**Scope:** Refactor 21 remaining route files following the games pattern
 
-See: `docs/CLEANUP_ACTION_PLAN.md` section 1.2
+**📋 Detailed Plan:** See `docs/PHASE_1B1_BACKEND_REFACTORING_PLAN.md`
 
-#### Task 1.3: Add Backend Scripts README
+**Sub-Phases:**
+1. **Game Events Domain** (5 files, 6-7h) - goals, substitutions, cards, playerMatchStats, timelineEvents
+2. **Game Domain Extended** (4 files, 4-5h) - gameReports, gameRosters, difficultyAssessment, minutesValidation
+3. **Training Domain** (3 files, 4-5h) - sessionDrills, trainingSessions, drills
+4. **Core Domain** (3 files, 3-4h) - players, teams, users
+5. **Supporting Domains** (5 files, 3-4h) - analytics, scoutReports, formations, organizationConfigs, auth
+6. **Data Management** (1 file, 1-2h) - data
+
+**Expected Outcome:**
+- 42 new files (21 controllers + 21 services)
+- All routes < 150 lines
+- 100% MVC consistency
+- Professional, maintainable codebase
+
+**Strategy:**
+- Complete one sub-phase at a time
+- Test after each
+- Commit after each sub-phase
+- Track progress in PHASE_1B1 plan
+
+#### Task 1.4: Add Backend Scripts README
 
 **Goal:** Document all utility scripts
 
