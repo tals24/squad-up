@@ -4,7 +4,7 @@ const Job = require('../../models/Job');
 const Goal = require('../../models/Goal');
 const Card = require('../../models/Card');
 const GameRoster = require('../../models/GameRoster');
-const { validateSubstitutionEligibility, validateFutureConsistency, getPlayerStateAtMinute, getMatchTimeline } = require('../gameRules');
+const { validateSubstitutionEligibility, validateFutureConsistency, getPlayerStateAtMinute, getMatchTimeline } = require('./utils/gameRules');
 
 /**
  * Create a new substitution for a game

@@ -10,11 +10,11 @@ const Team = require('../../models/Team');
 const GameRoster = require('../../models/GameRoster');
 const Player = require('../../models/Player');
 const Job = require('../../models/Job');
-const { recalculateGoalAnalytics } = require('../goalAnalytics');
-const { recalculateSubstitutionAnalytics } = require('../substitutionAnalytics');
-const { calculatePlayerMinutes } = require('../minutesCalculation');
-const { calculatePlayerGoalsAssists } = require('../goalsAssistsCalculation');
-const { calculateTotalMatchDuration } = require('../minutesValidation');
+const { recalculateGoalAnalytics } = require('./utils/goalAnalytics');
+const { recalculateSubstitutionAnalytics } = require('./utils/substitutionAnalytics');
+const { calculatePlayerMinutes } = require('./utils/minutesCalculation');
+const { calculatePlayerGoalsAssists } = require('./utils/goalsAssistsCalculation');
+const { calculateTotalMatchDuration } = require('./utils/minutesValidation');
 
 /**
  * Get all games with role-based filtering

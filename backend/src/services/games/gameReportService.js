@@ -1,7 +1,7 @@
 const GameReport = require('../../models/GameReport');
 const GameRoster = require('../../models/GameRoster');
-const { calculatePlayerMinutes } = require('../minutesCalculation');
-const { calculatePlayerGoalsAssists } = require('../goalsAssistsCalculation');
+const { calculatePlayerMinutes } = require('./utils/minutesCalculation');
+const { calculatePlayerGoalsAssists } = require('./utils/goalsAssistsCalculation');
 
 /**
  * Get all game reports (filtered by playedInGame)

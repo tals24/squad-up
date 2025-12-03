@@ -4,7 +4,7 @@ const Player = require('../../models/Player');
 const Substitution = require('../../models/Substitution');
 const Card = require('../../models/Card');
 const GameRoster = require('../../models/GameRoster');
-const { validateGoalEligibility, getPlayerStateAtMinute, getMatchTimeline } = require('../gameRules');
+const { validateGoalEligibility, getPlayerStateAtMinute, getMatchTimeline } = require('./utils/gameRules');
 
 /**
  * Create a new goal for a game

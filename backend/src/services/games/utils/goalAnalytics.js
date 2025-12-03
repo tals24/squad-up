@@ -1,4 +1,4 @@
-const Goal = require('../models/Goal');
+const Goal = require('../../../models/Goal');
 
 /**
  * Recalculate goal numbers and match states for all goals in a game

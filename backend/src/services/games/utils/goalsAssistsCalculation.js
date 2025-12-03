@@ -1,4 +1,4 @@
-const Goal = require('../models/Goal');
+const Goal = require('../../../models/Goal');
 
 /**
  * Calculate player goals and assists from Goals collection

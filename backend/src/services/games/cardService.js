@@ -5,7 +5,7 @@ const Goal = require('../../models/Goal');
 const Substitution = require('../../models/Substitution');
 const GameRoster = require('../../models/GameRoster');
 const { canReceiveCard } = require('../../utils/cardValidation');
-const { validateCardEligibility, validateFutureConsistency, getPlayerStateAtMinute, getMatchTimeline } = require('../gameRules');
+const { validateCardEligibility, validateFutureConsistency, getPlayerStateAtMinute, getMatchTimeline } = require('./utils/gameRules');
 
 /**
  * Create a new card for a game

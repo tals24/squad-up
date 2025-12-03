@@ -6,7 +6,7 @@ const {
   validateGoalEligibility,
   validateSubstitutionEligibility,
   validateCardEligibility
-} = require('../gameRules');
+} = require('../games/utils/gameRules');
 
 // Mock dependencies
 jest.mock('../timelineService');

@@ -1,5 +1,5 @@
-const { getMatchTimeline: getTimelineFromService } = require('./timelineService');
-const GameRoster = require('../models/GameRoster');
+const { getMatchTimeline: getTimelineFromService } = require('../../timelineService');
+const GameRoster = require('../../../models/GameRoster');
 
 // Re-export getMatchTimeline for convenience
 const getMatchTimeline = getTimelineFromService;

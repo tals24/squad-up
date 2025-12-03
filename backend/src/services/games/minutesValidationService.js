@@ -1,5 +1,5 @@
 const Game = require('../../models/Game');
-const { validateExtraTime, calculateTotalMatchDuration } = require('../minutesValidation');
+const { validateExtraTime, calculateTotalMatchDuration } = require('./utils/minutesValidation');
 
 /**
  * Update match duration (regular time + extra time)

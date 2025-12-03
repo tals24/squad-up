@@ -1,5 +1,5 @@
-const Substitution = require('../models/Substitution');
-const Goal = require('../models/Goal');
+const Substitution = require('../../../models/Substitution');
+const Goal = require('../../../models/Goal');
 
 /**
  * Recalculate match states for all substitutions in a game

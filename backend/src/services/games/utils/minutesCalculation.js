@@ -1,6 +1,6 @@
-const Game = require('../models/Game');
-const GameRoster = require('../models/GameRoster');
-const { getMatchTimeline } = require('./timelineService');
+const Game = require('../../../models/Game');
+const GameRoster = require('../../../models/GameRoster');
+const { getMatchTimeline } = require('../../timelineService');
 
 /**
  * Calculate player minutes from game events (substitutions and red cards)
