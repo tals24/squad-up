@@ -5,16 +5,16 @@
  */
 
 const mongoose = require('mongoose');
-const Game = require('../models/Game');
-const Team = require('../models/Team');
-const GameRoster = require('../models/GameRoster');
-const Player = require('../models/Player');
-const Job = require('../models/Job');
-const { recalculateGoalAnalytics } = require('./goalAnalytics');
-const { recalculateSubstitutionAnalytics } = require('./substitutionAnalytics');
-const { calculatePlayerMinutes } = require('./minutesCalculation');
-const { calculatePlayerGoalsAssists } = require('./goalsAssistsCalculation');
-const { calculateTotalMatchDuration } = require('./minutesValidation');
+const Game = require('../../models/Game');
+const Team = require('../../models/Team');
+const GameRoster = require('../../models/GameRoster');
+const Player = require('../../models/Player');
+const Job = require('../../models/Job');
+const { recalculateGoalAnalytics } = require('../goalAnalytics');
+const { recalculateSubstitutionAnalytics } = require('../substitutionAnalytics');
+const { calculatePlayerMinutes } = require('../minutesCalculation');
+const { calculatePlayerGoalsAssists } = require('../goalsAssistsCalculation');
+const { calculateTotalMatchDuration } = require('../minutesValidation');
 
 /**
  * Get all games with role-based filtering

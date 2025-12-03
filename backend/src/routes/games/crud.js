@@ -5,7 +5,7 @@
 
 const express = require('express');
 const { authenticateJWT, checkTeamAccess, checkGameAccess } = require('../../middleware/jwtAuth');
-const gameController = require('../../controllers/gameController');
+const gameController = require('../../controllers/games/gameController');
 
 const router = express.Router();
 

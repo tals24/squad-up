@@ -4,7 +4,7 @@
  * Orchestrates calls to services and formats responses
  */
 
-const gameService = require('../services/gameService');
+const gameService = require('../../services/games/gameService');
 
 /**
  * Get all games with role-based filtering
