@@ -6,17 +6,8 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-// Mock import.meta.env for Vite environment variables
-Object.defineProperty(globalThis, 'import', {
-  value: {
-    meta: {
-      env: {
-        VITE_API_URL: 'http://localhost:3001'
-      }
-    }
-  },
-  writable: true
-});
+// Mock Vite environment variables for tests (Babel transforms import.meta.env to process.env)
+process.env.VITE_API_URL = 'http://localhost:3001';
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

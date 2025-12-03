@@ -6,10 +6,11 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@/shared/(.*)$': '<rootDir>/src/shared/$1',
     '^@/features/(.*)$': '<rootDir>/src/features/$1',
-    '^@/app/(.*)$': '<rootDir>/src/app/$1'
+    '^@/app/(.*)$': '<rootDir>/src/app/$1',
+    '^lucide-react$': '<rootDir>/src/__mocks__/lucide-react.js'
   },
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-react'] }]
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
   },
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
   testMatch: [
