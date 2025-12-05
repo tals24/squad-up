@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Tag, Users, Video, Eye } from "lucide-react";
-import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
+import { getCategoryColor, getAgeColor } from '@/shared/utils';
 import {
   Dialog,
   DialogContent,

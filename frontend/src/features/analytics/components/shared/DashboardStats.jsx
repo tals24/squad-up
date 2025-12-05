@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Users, TrendingUp, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl, DASHBOARD_COLORS } from '@/utils';
+import { createPageUrl } from '@/shared/utils';
+import { DASHBOARD_COLORS } from '../../utils';
 
 /**
  * Stat Card Component

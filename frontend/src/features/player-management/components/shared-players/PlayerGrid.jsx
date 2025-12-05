@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, Trophy, Calendar, Target, TrendingUp } from 'lucide-react';
 import { AnimatedCard, StaggerContainer, StaggerItem } from '@/shared/ui/primitives/animated-components';
 import { Card, CardContent, CardHeader, CardTitle, Grid, Heading, Text } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/shared/utils';
 
 function getPlayerAge(dateOfBirth) {
   if (!dateOfBirth) return null;

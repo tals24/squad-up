@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/shared/utils";
 import {
   Users,
   User,

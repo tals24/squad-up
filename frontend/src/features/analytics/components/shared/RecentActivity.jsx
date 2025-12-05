@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Swords, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl, safeFormatDistanceToNow, DASHBOARD_COLORS } from '@/utils';
+import { createPageUrl, safeFormatDistanceToNow } from '@/shared/utils';
+import { DASHBOARD_COLORS } from '../../utils';
 
 /**
  * Activity Item Component

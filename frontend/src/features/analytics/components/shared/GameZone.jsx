@@ -2,7 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl, safeDate, safeIsPast, safeIsFuture, safeFormatDistanceToNow, getGameResult, getResultColor, getResultText, DASHBOARD_COLORS } from '@/utils';
+import { createPageUrl, safeDate, safeIsPast, safeIsFuture, safeFormatDistanceToNow } from '@/shared/utils';
+import { getGameResult, getResultColor, getResultText } from '@/features/game-management/utils';
+import { DASHBOARD_COLORS } from '../../utils';
 
 /**
  * Game Zone Component

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Target, Eye, Edit3, Plus } from 'lucide-react';
-import { getModeDisplayText, getModeColorClasses } from '@/utils/drillLabUtils';
+import { getModeDisplayText, getModeColorClasses } from '@/features/drill-system/utils';
 
 export default function DrillDesignerHeader({ 
   drillName, 

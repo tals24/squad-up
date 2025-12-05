@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl } from '@/utils';
-import { DASHBOARD_COLORS } from '@/utils';
+import { createPageUrl } from '@/shared/utils';
+import { DASHBOARD_COLORS } from '../../utils';
 
 /**
  * Dashboard Header Component

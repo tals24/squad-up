@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useData } from "@/app/providers/DataProvider";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/shared/utils";
 import { ClipboardList, Target } from "lucide-react";
 import { 
   Button,

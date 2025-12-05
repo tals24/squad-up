@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/shared/utils';
 import { DrillDesignerHeader, DrillDesignerToolbar, DrillDesignerCanvas } from '../shared';
 import DrillDescriptionModal from '../DrillDescriptionModal';
 import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import { useDrillLabData, useDrillLabHistory, useDrillLabMode } from '@/shared/hooks';
-import { postMessageToParent, navigateToLibrary, formatElementsForSave } from '@/utils/drillLabUtils';
+import { postMessageToParent, navigateToLibrary, formatElementsForSave } from '@/features/drill-system/utils';
 
 export default function DrillDesigner() {
   const navigate = useNavigate();

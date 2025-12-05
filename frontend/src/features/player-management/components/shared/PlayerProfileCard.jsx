@@ -4,7 +4,7 @@ import { Badge } from '@/shared/ui/primitives/badge';
 import { Users, Calendar, Phone, Hash } from 'lucide-react';
 import ProfileImage from './ProfileImage';
 import { useData } from "@/app/providers/DataProvider";
-import { getPositionBadgeClasses } from '@/utils';
+import { getPositionBadgeClasses } from '@/shared/utils';
 
 const PlayerProfileCard = ({ player }) => {
   const { teams } = useData();

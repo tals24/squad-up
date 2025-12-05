@@ -4,7 +4,7 @@ import { Badge } from '@/shared/ui/primitives/badge';
 import { Button } from '@/shared/ui/primitives/button';
 import { Tag, Users, Eye, Play, Clock, Users2, Wrench, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
+import { getCategoryColor, getAgeColor } from '@/shared/utils';
 
 const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
   if (!drill) return null;

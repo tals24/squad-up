@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/shared/utils";
 import { ArrowLeft, Trophy, Zap, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";

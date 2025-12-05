@@ -4,7 +4,7 @@ import { Input } from '@/shared/ui/primitives/input';
 import { Search, ClipboardList } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
-import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
+import { getCategoryColor, getAgeColor } from '@/shared/utils';
 import DrillMenuDropdown from '@/features/drill-system/components/DrillMenuDropdown';
 import DrillDetailModal from '@/features/drill-system/components/DrillDetailModal';
 

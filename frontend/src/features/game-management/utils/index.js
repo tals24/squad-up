@@ -1,3 +1,2 @@
-// Game Management Utilities - Barrel Export
-export * from './squadValidation';
-export * from './minutesValidation';
+// Game Management Utils - Barrel Export
+export * from './gameUtils';

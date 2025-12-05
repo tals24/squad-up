@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PageHeader, StandardButton } from '@/shared/ui/primitives/design-system-components';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/shared/utils';
 
 export default function PlayersHeader() {
   return (

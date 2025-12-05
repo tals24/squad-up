@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { User } from "@/api/entities"; // Updated import path
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/shared/utils";
 import {
   Calendar,
   MapPin,

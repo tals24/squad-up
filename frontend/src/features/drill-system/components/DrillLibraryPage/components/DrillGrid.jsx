@@ -1,6 +1,6 @@
 import React from "react";
 import { Tag, Users, Eye, ClipboardList } from "lucide-react";
-import { getCategoryColor, getAgeColor } from '@/utils/categoryColors';
+import { getCategoryColor, getAgeColor } from '@/shared/utils';
 
 export default function DrillGrid({ drills, onDrillClick }) {
   const displayAgeGroups = (ageGroups) => {

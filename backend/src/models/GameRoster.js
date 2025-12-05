@@ -35,8 +35,6 @@ const gameRosterSchema = new mongoose.Schema({
     default: false
   }
   
-  // ✅ Removed denormalized fields: gameTitle, playerName, rosterEntry
-  // Frontend now performs lookups from gamePlayers and game state
 }, {
   timestamps: true
 });
@@ -51,7 +49,6 @@ gameRosterSchema.index({ playedInGame: 1 });
 // Compound index to ensure unique player per game
 gameRosterSchema.index({ game: 1, player: 1 }, { unique: true });
 
-// ✅ Removed pre-save hook - no longer needed without denormalized fields
 
 module.exports = mongoose.model('GameRoster', gameRosterSchema);
 

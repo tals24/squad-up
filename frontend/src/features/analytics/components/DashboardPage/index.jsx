@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { User } from "@/api/entities";
 import { Link } from "react-router-dom";
-import { createPageUrl, getPositionBadgeClasses, safeDate, safeFormatDistanceToNow, safeIsFuture, safeIsPast, getGameResult, getResultColor, getResultText, DASHBOARD_COLORS, DRILL_CATEGORY_COLORS, CARD_STYLES } from "@/utils";
+import { createPageUrl, getPositionBadgeClasses, safeDate, safeFormatDistanceToNow, safeIsFuture, safeIsPast } from "@/shared/utils";
+import { getGameResult, getResultColor, getResultText } from "@/features/game-management/utils";
+import { DASHBOARD_COLORS, DRILL_CATEGORY_COLORS, CARD_STYLES } from "../../utils";
 import {
   Users,
   TrendingUp,
