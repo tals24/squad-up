@@ -25,7 +25,7 @@ import { Textarea } from "@/shared/ui/primitives/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/primitives/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
 import { useData } from "@/app/providers/DataProvider";
-import { getFormations, createFormation, updateFormation, deleteFormation, createTimelineEvent } from "@/shared/api";
+import { getFormations, createFormation, updateFormation, deleteFormation, createTimelineEvent } from "@/features/team-management/api";
 import ConfirmationToast from "@/shared/components/ConfirmationToast";
 import FormationEditorModal from "@/shared/components/FormationEditorModal";
 

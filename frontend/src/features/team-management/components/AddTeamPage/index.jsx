@@ -6,7 +6,8 @@ import {
   Calendar,
   Users
 } from "lucide-react";
-import { createTeam, getUsers } from "@/shared/api";
+import { createTeam } from "@/features/team-management/api";
+import { getUsers } from "@/features/user-management/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
 

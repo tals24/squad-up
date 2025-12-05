@@ -49,7 +49,7 @@ import {
 import { theme } from "@/shared/lib/theme";
 import { createAriaProps, createFormFieldProps } from "@/shared/lib/accessibility";
 import { useData } from "@/app/providers/DataProvider";
-import { getPlayersForTeam } from "@/shared/api";
+import { getPlayersForTeam } from "@/features/player-management/api";
 import PlayersHeader from "../shared-players/PlayersHeader";
 import PlayerFilters from "../shared-players/PlayerFilters";
 import PlayerGrid from "../shared-players/PlayerGrid";

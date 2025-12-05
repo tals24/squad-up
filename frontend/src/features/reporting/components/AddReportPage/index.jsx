@@ -13,7 +13,7 @@ import {
   ChevronDown,
   X
 } from "lucide-react";
-import { createScoutReport } from "@/shared/api";
+import { createScoutReport } from "@/features/reporting/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, TextareaField, FormGrid } from "@/shared/components/FormFields";
 import { Input } from "@/shared/ui/primitives/input";

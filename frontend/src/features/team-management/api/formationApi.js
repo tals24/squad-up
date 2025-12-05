@@ -1,52 +1,44 @@
 /**
  * Formation API
  * Handles all formation-related API calls
+ * 
+ * NOTE: These functions return { data, error } format for backward compatibility
  */
 
 import { apiClient } from '@/shared/api/client';
 
-/**
- * Get all formations
- * @returns {Promise<Array>} List of all formations
- */
+const wrapApiCall = async (apiCallFn) => {
+  try {
+    const data = await apiCallFn();
+    return { data, error: null };
+  } catch (error) {
+    console.error('API call error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
 export const getFormations = async () => {
-  return await apiClient.get('/api/formations');
+  return wrapApiCall(() => apiClient.get('/api/formations'));
 };
 
-/**
- * Get formation by ID
- * @param {string} formationId - Formation ID
- * @returns {Promise<Object>} Formation data
- */
 export const getFormationById = async (formationId) => {
-  return await apiClient.get(`/api/formations/${formationId}`);
+  return wrapApiCall(() => apiClient.get(`/api/formations/${formationId}`));
 };
 
-/**
- * Create new formation
- * @param {Object} formationData - Formation data
- * @returns {Promise<Object>} Created formation
- */
 export const createFormation = async (formationData) => {
-  return await apiClient.post('/api/formations', formationData);
+  return wrapApiCall(() => apiClient.post('/api/formations', formationData));
 };
 
-/**
- * Update formation
- * @param {string} formationId - Formation ID
- * @param {Object} formationData - Updated formation data
- * @returns {Promise<Object>} Updated formation
- */
 export const updateFormation = async (formationId, formationData) => {
-  return await apiClient.put(`/api/formations/${formationId}`, formationData);
+  return wrapApiCall(() => apiClient.put(`/api/formations/${formationId}`, formationData));
 };
 
-/**
- * Delete formation
- * @param {string} formationId - Formation ID
- * @returns {Promise<void>}
- */
 export const deleteFormation = async (formationId) => {
-  return await apiClient.delete(`/api/formations/${formationId}`);
+  return wrapApiCall(() => apiClient.delete(`/api/formations/${formationId}`));
+};
+
+// Timeline events (used by TacticBoard)
+export const createTimelineEvent = async (eventData) => {
+  return wrapApiCall(() => apiClient.post('/api/timeline-events', eventData));
 };
 

@@ -8,7 +8,8 @@ import {
   Trophy,
   Target
 } from "lucide-react";
-import { getTeams, createPlayer } from "@/shared/api";
+import { getTeams } from "@/features/team-management/api";
+import { createPlayer } from "@/features/player-management/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
 import { Input } from "@/shared/ui/primitives/input";

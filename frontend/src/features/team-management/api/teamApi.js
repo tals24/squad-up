@@ -1,52 +1,39 @@
 /**
  * Team Management API
  * Handles all team-related API calls
+ * 
+ * NOTE: These functions return { data, error } format for backward compatibility
  */
 
 import { apiClient } from '@/shared/api/client';
 
-/**
- * Get all teams
- * @returns {Promise<Array>} List of all teams
- */
+const wrapApiCall = async (apiCallFn) => {
+  try {
+    const data = await apiCallFn();
+    return { data, error: null };
+  } catch (error) {
+    console.error('API call error:', error);
+    return { data: null, error: error.message };
+  }
+};
+
 export const getTeams = async () => {
-  return await apiClient.get('/api/teams');
+  return wrapApiCall(() => apiClient.get('/api/teams'));
 };
 
-/**
- * Get team by ID
- * @param {string} teamId - Team ID
- * @returns {Promise<Object>} Team data
- */
 export const getTeamById = async (teamId) => {
-  return await apiClient.get(`/api/teams/${teamId}`);
+  return wrapApiCall(() => apiClient.get(`/api/teams/${teamId}`));
 };
 
-/**
- * Create new team
- * @param {Object} teamData - Team data
- * @returns {Promise<Object>} Created team
- */
 export const createTeam = async (teamData) => {
-  return await apiClient.post('/api/teams', teamData);
+  return wrapApiCall(() => apiClient.post('/api/teams', teamData));
 };
 
-/**
- * Update team
- * @param {string} teamId - Team ID
- * @param {Object} teamData - Updated team data
- * @returns {Promise<Object>} Updated team
- */
 export const updateTeam = async (teamId, teamData) => {
-  return await apiClient.put(`/api/teams/${teamId}`, teamData);
+  return wrapApiCall(() => apiClient.put(`/api/teams/${teamId}`, teamData));
 };
 
-/**
- * Delete team
- * @param {string} teamId - Team ID
- * @returns {Promise<void>}
- */
 export const deleteTeam = async (teamId) => {
-  return await apiClient.delete(`/api/teams/${teamId}`);
+  return wrapApiCall(() => apiClient.delete(`/api/teams/${teamId}`));
 };
 

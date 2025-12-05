@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useData } from "@/app/providers/DataProvider";
 import { User } from '@/shared/api';
-import { saveTrainingPlan, loadTrainingPlan } from '@/shared/api';
+import { saveTrainingPlan, loadTrainingPlan } from '@/features/training-management/api';
 import { useSearchParams } from 'react-router-dom';
 import { addWeeks, getYear, getISOWeek } from 'date-fns';
 import ConfirmationToast from "@/shared/components/ConfirmationToast";

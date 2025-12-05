@@ -8,7 +8,8 @@ import {
   Clock,
   Target
 } from "lucide-react";
-import { getTeams, createGame } from "@/shared/api";
+import { getTeams } from "@/features/team-management/api";
+import { createGame } from "@/features/game-management/api";
 import { getSeasonFromDate } from "@/shared/utils/date/seasonUtils";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
