@@ -36,7 +36,7 @@ import {
   Grid
 } from "@/shared/ui/primitives/design-system-components";
 import { PageLayout } from "@/shared/ui/primitives/design-system-components";
-import PageLoader from "@/components/PageLoader";
+import PageLoader from "@/shared/components/PageLoader";
 import { 
   AnimatedButton, 
   AnimatedCard, 

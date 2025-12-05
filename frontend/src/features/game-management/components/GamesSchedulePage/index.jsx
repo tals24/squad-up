@@ -25,7 +25,7 @@ import { Badge } from "@/shared/ui/primitives/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
 import { PageLayout, PageHeader, SearchFilter, DataCard, EmptyState } from "@/shared/ui/primitives/design-system-components";
 import { useData } from "@/app/providers/DataProvider";
-import PageLoader from "@/components/PageLoader";
+import PageLoader from "@/shared/components/PageLoader";
 
 // --- Game Stats Rotator Component ---
 const GameStatsRotator = ({ gameId, reports, players }) => {

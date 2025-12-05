@@ -19,7 +19,7 @@ import {
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
 import { AlertCircle, FileText, BarChart3, Info } from "lucide-react";
-import { FeatureGuard } from "@/components/FeatureGuard";
+import { FeatureGuard } from "@/app/router/guards/FeatureGuard";
 import { DetailedStatsSection } from "../features/DetailedStatsSection";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";

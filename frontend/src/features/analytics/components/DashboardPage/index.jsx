@@ -40,7 +40,7 @@ import { useData } from "@/app/providers/DataProvider";
 import { useDashboardData, useUserRole, useRecentEvents } from "@/shared/hooks";
 import { DashboardHeader, GameZone, DashboardStats, RecentActivity } from "../shared";
 import { format, formatDistanceToNow, isFuture, isPast, addWeeks, startOfWeek, endOfWeek, getYear, getISOWeek } from 'date-fns';
-import PageLoader from "@/components/PageLoader";
+import PageLoader from "@/shared/components/PageLoader";
 
 
 

@@ -19,7 +19,7 @@ import {
 
 // Import shared components
 import { ConfirmationModal } from "@/shared/components";
-import PageLoader from "@/components/PageLoader";
+import PageLoader from "@/shared/components/PageLoader";
 
 // Import modular components
 import GameDetailsHeader from "./components/GameDetailsHeader";

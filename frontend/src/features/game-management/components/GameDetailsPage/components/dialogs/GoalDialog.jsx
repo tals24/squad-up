@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
-import { FeatureGuard } from "@/components/FeatureGuard";
+import { FeatureGuard } from "@/app/router/guards/FeatureGuard";
 import { GoalInvolvementSection } from "../features/GoalInvolvementSection";
 
 const GOAL_TYPES = [

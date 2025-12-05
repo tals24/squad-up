@@ -41,7 +41,7 @@ import { User as UserEntity } from "@/api/entities";
 import { Button } from "@/shared/ui/primitives/design-system-components";
 // Removed airtableSync - now using MongoDB backend
 import { DataProvider } from "@/app/providers/DataProvider";
-import PageLoader from "@/components/PageLoader";
+import PageLoader from "@/shared/components/PageLoader";
 // Removed LoginModal - now using dedicated Login page
 
 // Note: ThemeProvider is now imported from ThemeContext
