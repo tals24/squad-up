@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import { Link } from "react-router-dom";
 import { createPageUrl, getPositionBadgeClasses, safeDate, safeFormatDistanceToNow, safeIsFuture, safeIsPast } from "@/shared/utils";
 import { getGameResult, getResultColor, getResultText } from "@/features/game-management/utils";

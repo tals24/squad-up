@@ -19,7 +19,7 @@ import { Checkbox } from "@/shared/ui/primitives/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/primitives/collapsible";
 import { useData } from "@/app/providers/DataProvider";
 import { useUserRole } from "@/shared/hooks/useUserRole";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import { DataCard, StandardButton } from "@/shared/ui/primitives/design-system-components";
 
 const AGE_GROUPS = ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'];

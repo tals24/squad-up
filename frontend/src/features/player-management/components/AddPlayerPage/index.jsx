@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import {
   User as UserIcon,
   Shield,
@@ -8,7 +8,7 @@ import {
   Trophy,
   Target
 } from "lucide-react";
-import { getTeams, createPlayer } from "@/api/functions";
+import { getTeams, createPlayer } from "@/shared/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
 import { Input } from "@/shared/ui/primitives/input";

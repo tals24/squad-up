@@ -37,7 +37,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/shared/ui/primitives/sidebar";
-import { User as UserEntity } from "@/api/entities";
+import { User as UserEntity } from "@/shared/api";
 import { Button } from "@/shared/ui/primitives/design-system-components";
 // Removed airtableSync - now using MongoDB backend
 import { DataProvider } from "@/app/providers/DataProvider";

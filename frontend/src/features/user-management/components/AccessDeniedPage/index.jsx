@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 
 export default function AccessDenied() {
   const handleTryAgain = async () => {

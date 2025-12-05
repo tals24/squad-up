@@ -1,15 +1,31 @@
-// Data service for connecting to custom backend API
+/**
+ * LEGACY API CLIENT
+ * 
+ * ⚠️ WARNING: This file contains legacy API functions that need to be migrated
+ * to feature-specific API modules. This centralization is temporary to complete
+ * the Phase 2 cleanup while maintaining functionality.
+ * 
+ * TODO - Future Refactoring (Phase 3):
+ * - Migrate user/team functions → features/user-management/api/
+ * - Migrate player functions → features/player-management/api/
+ * - Migrate game functions → features/game-management/api/
+ * - Migrate drill functions → features/drill-system/api/
+ * - Migrate training functions → features/training-management/api/
+ * - Migrate formation functions → features/team-management/api/
+ * - Migrate report functions → features/reporting/api/
+ * 
+ * After migration, this file should be deleted.
+ * 
+ * @deprecated Use feature-specific APIs instead
+ * @since Phase 2 cleanup (December 2025)
+ */
+
 const API_BASE_URL = 'http://localhost:3001/api';
 
 // Helper function to get auth token
 const getAuthToken = () => {
-  // Get the JWT auth token from localStorage
   const token = localStorage.getItem('authToken');
-  
-  console.log('🔐 Getting auth token:');
-  console.log('  - JWT Token exists:', !!token);
-  console.log('  - Token length:', token ? token.length : 0);
-  
+  console.log('🔐 Getting auth token:', !!token);
   return token;
 };
 
@@ -29,8 +45,6 @@ const apiCall = async (endpoint, options = {}) => {
     },
     ...options,
   };
-
-  console.log('  - Request headers:', config.headers);
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -54,15 +68,19 @@ const apiCall = async (endpoint, options = {}) => {
   }
 };
 
-// Data fetching functions
+// ===========================================================================
+// DATA AGGREGATION
+// ===========================================================================
+
 export const fetchAllTables = async () => {
   console.log('Fetching all data from backend API...');
   return await apiCall('/data/all');
 };
 
-// Removed airtableSync - now using MongoDB backend directly
+// ===========================================================================
+// USER MANAGEMENT
+// ===========================================================================
 
-// User management
 export const getUsers = async () => {
   return await apiCall('/users');
 };
@@ -87,7 +105,10 @@ export const deleteUser = async (userId) => {
   });
 };
 
-// Team management
+// ===========================================================================
+// TEAM MANAGEMENT
+// ===========================================================================
+
 export const getTeams = async () => {
   return await apiCall('/teams');
 };
@@ -112,7 +133,10 @@ export const deleteTeam = async (teamId) => {
   });
 };
 
-// Player management
+// ===========================================================================
+// PLAYER MANAGEMENT
+// ===========================================================================
+
 export const getPlayers = async () => {
   return await apiCall('/players');
 };
@@ -137,7 +161,7 @@ export const searchAllPlayers = async ({ searchTerm, teamId }) => {
     url += `?${params.toString()}`;
   }
   
-  console.log(`🔍 DataService search - URL: ${url}, searchTerm: "${searchTerm}", teamId: "${teamId}"`);
+  console.log(`🔍 Search - URL: ${url}, searchTerm: "${searchTerm}", teamId: "${teamId}"`);
   
   return await apiCall(url);
 };
@@ -162,7 +186,10 @@ export const deletePlayer = async (playerId) => {
   });
 };
 
-// Game management
+// ===========================================================================
+// GAME MANAGEMENT
+// ===========================================================================
+
 export const getGames = async () => {
   return await apiCall('/games');
 };
@@ -187,7 +214,10 @@ export const deleteGame = async (gameId) => {
   });
 };
 
-// Game Roster management
+// ===========================================================================
+// GAME ROSTER MANAGEMENT
+// ===========================================================================
+
 export const getGameRosters = async () => {
   return await apiCall('/game-rosters');
 };
@@ -212,7 +242,18 @@ export const deleteGameRoster = async (rosterId) => {
   });
 };
 
-// Timeline Events (Reports) management
+export const initializeGameRoster = async (gameId, teamId) => {
+  console.log('Initializing game roster...', { gameId, teamId });
+  return await apiCall('/game-rosters/initialize', {
+    method: 'POST',
+    body: JSON.stringify({ gameId, teamId }),
+  });
+};
+
+// ===========================================================================
+// TIMELINE EVENTS
+// ===========================================================================
+
 export const getTimelineEvents = async () => {
   return await apiCall('/timeline-events');
 };
@@ -237,7 +278,10 @@ export const deleteTimelineEvent = async (eventId) => {
   });
 };
 
-// Game Reports API
+// ===========================================================================
+// REPORTS
+// ===========================================================================
+
 export const getGameReports = async () => {
   return await apiCall('/game-reports');
 };
@@ -262,7 +306,6 @@ export const deleteGameReport = async (reportId) => {
   });
 };
 
-// Scout Reports API
 export const getScoutReports = async () => {
   return await apiCall('/scout-reports');
 };
@@ -287,7 +330,13 @@ export const deleteScoutReport = async (reportId) => {
   });
 };
 
-// Drill management
+// Legacy alias for backward compatibility (will be removed)
+export const createReport = createScoutReport;
+
+// ===========================================================================
+// DRILLS
+// ===========================================================================
+
 export const getDrills = async () => {
   return await apiCall('/drills');
 };
@@ -312,7 +361,10 @@ export const deleteDrill = async (drillId) => {
   });
 };
 
-// Formation management
+// ===========================================================================
+// FORMATIONS
+// ===========================================================================
+
 export const getFormations = async () => {
   return await apiCall('/formations');
 };
@@ -337,7 +389,10 @@ export const deleteFormation = async (formationId) => {
   });
 };
 
-// Training Session management
+// ===========================================================================
+// TRAINING SESSIONS
+// ===========================================================================
+
 export const getTrainingSessions = async () => {
   return await apiCall('/training-sessions');
 };
@@ -362,7 +417,10 @@ export const deleteTrainingSession = async (sessionId) => {
   });
 };
 
-// Session Drill management
+// ===========================================================================
+// SESSION DRILLS
+// ===========================================================================
+
 export const getSessionDrills = async () => {
   return await apiCall('/session-drills');
 };
@@ -387,10 +445,12 @@ export const deleteSessionDrill = async (drillId) => {
   });
 };
 
-// Training Plan management (using session drills)
+// ===========================================================================
+// TRAINING PLANS
+// ===========================================================================
+
 export const saveTrainingPlan = async (planData) => {
   console.log('Saving training plan to backend...', planData);
-  // This would save a complete training plan with multiple session drills
   return await apiCall('/session-drills/batch', {
     method: 'POST',
     body: JSON.stringify(planData),
@@ -399,16 +459,6 @@ export const saveTrainingPlan = async (planData) => {
 
 export const loadTrainingPlan = async (planData) => {
   console.log('Loading training plan from backend...', planData);
-  // This would load a complete training plan
   return await apiCall(`/session-drills/plan/${planData.teamId}/${planData.weekIdentifier}`);
-};
-
-// Initialize game roster (create roster entries for a game)
-export const initializeGameRoster = async (gameId, teamId) => {
-  console.log('Initializing game roster...', { gameId, teamId });
-  return await apiCall('/game-rosters/initialize', {
-    method: 'POST',
-    body: JSON.stringify({ gameId, teamId }),
-  });
 };
 

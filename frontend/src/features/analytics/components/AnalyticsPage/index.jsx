@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import {
   TrendingUp,
   Users,

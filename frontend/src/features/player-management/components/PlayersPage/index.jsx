@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/shared/utils";
 import {
@@ -49,7 +49,7 @@ import {
 import { theme } from "@/shared/lib/theme";
 import { createAriaProps, createFormFieldProps } from "@/shared/lib/accessibility";
 import { useData } from "@/app/providers/DataProvider";
-import { getPlayersForTeam } from "@/api/functions"; // Changed from airtableSync
+import { getPlayersForTeam } from "@/shared/api";
 import PlayersHeader from "../shared-players/PlayersHeader";
 import PlayerFilters from "../shared-players/PlayerFilters";
 import PlayerGrid from "../shared-players/PlayerGrid";

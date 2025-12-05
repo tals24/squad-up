@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import {
   Trophy,
   Calendar,
@@ -8,7 +8,7 @@ import {
   Clock,
   Target
 } from "lucide-react";
-import { getTeams, createGame } from "@/api/functions";
+import { getTeams, createGame } from "@/shared/api";
 import { getSeasonFromDate } from "@/shared/utils/date/seasonUtils";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";

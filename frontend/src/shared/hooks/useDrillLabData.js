@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDrills, updateDrill } from '@/api/functions';
+import { getDrills, updateDrill } from '@/shared/api';
 
 export function useDrillLabData(drillId, mode, searchParams) {
   const [drillData, setDrillData] = useState({

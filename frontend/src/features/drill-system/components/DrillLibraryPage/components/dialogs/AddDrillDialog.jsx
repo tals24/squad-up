@@ -21,8 +21,8 @@ import {
   SelectTrigger, 
   SelectValue
 } from "@/shared/ui/primitives/design-system-components";
-import { createDrill, getDrills } from "@/api/functions";
-import { User } from "@/api/entities";
+import { createDrill, getDrills } from "@/shared/api";
+import { User } from "@/shared/api";
 
 export default function AddDrillDialog({ open, setOpen, refreshData, showConfirmation, categories, ageGroups }) {
   const { users } = useData();

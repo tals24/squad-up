@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { fetchAllTables } from '@/api/functions';
+import { fetchAllTables } from '@/shared/api';
 
 const DataContext = createContext(null);
 

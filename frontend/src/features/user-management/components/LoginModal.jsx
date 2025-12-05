@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User } from '@/api/entities';
+import { User } from '@/shared/api';
 import { 
   Button, 
   Input, 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import {
   Trophy,
   Shield,
   Calendar,
   Users
 } from "lucide-react";
-import { createTeam, getUsers } from "@/api/functions";
+import { createTeam, getUsers } from "@/shared/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
 

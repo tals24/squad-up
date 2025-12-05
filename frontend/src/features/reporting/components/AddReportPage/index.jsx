@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { User } from "@/api/entities";
+import { User } from "@/shared/api";
 import { useSearchParams } from "react-router-dom";
 import {
   Eye,
@@ -13,7 +13,7 @@ import {
   ChevronDown,
   X
 } from "lucide-react";
-import { createScoutReport } from "@/api/functions";
+import { createScoutReport } from "@/shared/api";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, TextareaField, FormGrid } from "@/shared/components/FormFields";
 import { Input } from "@/shared/ui/primitives/input";
