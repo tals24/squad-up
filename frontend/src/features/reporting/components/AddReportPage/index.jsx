@@ -162,14 +162,14 @@ export default function AddReport() {
 
       const response = await createScoutReport(reportData);
 
-      if (response.data?.success) {
+      if (response?.success) {
         const playerName = selectedPlayerDetails?.fullName || "Player";
         return {
           success: true,
           message: `${reportType} for ${playerName} has been saved successfully!`
         };
       } else {
-        throw new Error(response.data?.error || "Failed to save report");
+        throw new Error(response?.error || "Failed to save report");
       }
     } catch (error) {
       throw new Error(error.message);

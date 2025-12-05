@@ -38,12 +38,12 @@ export default function AddGame() {
       const user = await User.me();
       setCurrentUser(user);
       
-      // Load teams for team selection using MongoDB backend
+      // Load teams for team selection
       const teamsResponse = await getTeams();
       console.log('🔍 Teams response:', teamsResponse);
-      if (teamsResponse.data?.success && teamsResponse.data?.data) {
-        console.log('🔍 Teams data:', teamsResponse.data.data);
-        setTeams(teamsResponse.data.data);
+      if (teamsResponse?.success && teamsResponse?.data) {
+        console.log('🔍 Teams data:', teamsResponse.data);
+        setTeams(teamsResponse.data);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -85,13 +85,13 @@ export default function AddGame() {
 
       const response = await createGame(gameData);
 
-      if (response.data?.success) {
+      if (response?.success) {
         return {
           success: true,
           message: `${teamName} vs ${formData.Opponent} has been scheduled successfully for the ${season} season!`
         };
       } else {
-        throw new Error(response.data?.error || "Failed to save game");
+        throw new Error(response?.error || "Failed to save game");
       }
     } catch (error) {
       throw new Error(error.message);

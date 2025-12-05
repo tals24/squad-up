@@ -40,19 +40,17 @@ export const DataProvider = ({ children }) => {
             const response = await fetchAllTables();
 
             console.log('📊 DataContext: Response received:', {
-                hasError: !!response.error,
-                hasData: !!response.data,
-                dataKeys: response.data ? Object.keys(response.data) : 'none'
+                hasData: !!response,
+                dataKeys: response ? Object.keys(response) : 'none'
             });
 
-            if (response.error || !response.data) {
+            if (!response || !response.success) {
                 console.error("❌ DataContext fetch error:", response);
-                throw new Error(response.error || "Failed to fetch data from backend.");
+                throw new Error(response?.error || "Failed to fetch data from backend.");
             }
             
-            // The backend API returns: { success: true, data: { users: [], teams: [], ... } }
-            // So we need to access response.data.data.* not response.data.*
-            const apiData = response.data.data || response.data; // Fallback for different API structures
+            // Backend returns: { success: true, data: { users: [], teams: [], ... } }
+            const apiData = response.data;
             const newData = {
                 users: apiData.users || [],
                 teams: apiData.teams || [],

@@ -21,8 +21,9 @@ The `apiClient` from `client.js` provides a consistent interface for all API cal
 ```javascript
 import { apiClient } from '@/shared/api/client';
 
-// GET request
-const data = await apiClient.get('/api/endpoint');
+// GET request - returns backend response directly
+const response = await apiClient.get('/api/endpoint');
+// response = { success: true, data: [...] }
 
 // POST request
 const result = await apiClient.post('/api/endpoint', { data });
@@ -39,6 +40,19 @@ await apiClient.delete('/api/endpoint/id');
 - Consistent error handling
 - Base URL configuration via environment variables
 - JSON content-type headers
+- Returns backend response directly (no wrapper)
+
+**Response Format:**
+All API calls return the backend response directly:
+```javascript
+{
+  success: true,
+  data: [...] or {...},
+  message: "Optional success message"
+}
+```
+
+On error, apiClient throws an exception (handle with try/catch).
 
 ## Authentication
 
@@ -70,6 +84,7 @@ Each feature has its own `api/` folder with domain-specific API functions:
 // features/{feature-name}/api/{resource}Api.js
 import { apiClient } from '@/shared/api/client';
 
+// Simple, direct API calls - no wrappers needed
 export const getResources = async () => {
   return await apiClient.get('/api/resources');
 };
@@ -78,7 +93,11 @@ export const createResource = async (data) => {
   return await apiClient.post('/api/resources', data);
 };
 
-// ... other CRUD operations
+// Usage in components
+const response = await getResources();
+if (response?.success) {
+  setData(response.data);  // Direct access to backend data
+}
 ```
 
 ### Barrel Export
@@ -108,20 +127,27 @@ export * from './resourceApi';
 
 ## ✅ Legacy API Migration Complete (Phase 3)
 
-All legacy API functions have been successfully migrated to feature-specific APIs!
+All legacy API functions have been successfully migrated to feature-specific APIs with simplified, direct responses!
 
 ```javascript
 // ✅ Use feature-specific APIs
 import { getPlayers } from '@/features/player-management/api';
 import { getTeams } from '@/features/team-management/api';
 import { getDrills } from '@/features/drill-system/api';
+
+// Direct response format - no wrapper
+const response = await getPlayers();
+if (response?.success) {
+  const players = response.data;  // Direct access
+}
 ```
 
 **Completed:**
 - ✅ All legacy functions migrated to feature-specific APIs
 - ✅ All imports updated across the codebase
 - ✅ `legacy.js` deleted
-- ✅ Backward compatibility maintained with { data, error } format
+- ✅ Simplified to direct backend responses (no wrapper layer)
+- ✅ Cleaner, more maintainable code
 
 ## Best Practices
 

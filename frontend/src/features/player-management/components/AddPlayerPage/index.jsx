@@ -38,10 +38,10 @@ export default function AddPlayer() {
       const user = await User.me();
       setCurrentUser(user);
       
-      // Load teams for team selection using MongoDB backend
+      // Load teams for team selection
       const teamsResponse = await getTeams();
-      if (teamsResponse.data?.success && teamsResponse.data?.data) {
-        setTeams(teamsResponse.data.data);
+      if (teamsResponse?.success && teamsResponse?.data) {
+        setTeams(teamsResponse.data);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -71,13 +71,13 @@ export default function AddPlayer() {
 
       const response = await createPlayer(playerData);
 
-      if (response.data?.success) {
+      if (response?.success) {
         return {
           success: true,
           message: `${formData.Name} has been added to the squad and is now ready to start training!`
         };
       } else {
-        throw new Error(response.data?.error || "Failed to save player");
+        throw new Error(response?.error || "Failed to save player");
       }
     } catch (error) {
       throw new Error(error.message);

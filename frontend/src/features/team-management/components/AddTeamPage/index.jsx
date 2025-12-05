@@ -32,18 +32,17 @@ export default function AddTeam() {
       const user = await User.me();
       setCurrentUser(user);
 
-      // Load users for coach selection using new backend API
+      // Load users for coach selection
       console.log("🔄 Loading users for coach selection...");
       const usersResponse = await getUsers();
       console.log("📊 Users response:", usersResponse);
       
-      if (usersResponse.data?.success && usersResponse.data?.data) {
-        setUsers(usersResponse.data.data);
-        console.log("✅ Loaded users:", usersResponse.data.data.length);
-        console.log("📋 Users data:", usersResponse.data.data);
+      if (usersResponse?.success && usersResponse?.data) {
+        setUsers(usersResponse.data);
+        console.log("✅ Loaded users:", usersResponse.data.length);
         
         // Log specifically for coaches
-        const coaches = usersResponse.data.data.filter(user => user.role === 'Coach');
+        const coaches = usersResponse.data.filter(user => user.role === 'Coach');
         console.log("👥 Found coaches:", coaches.length, coaches);
       } else {
         console.error("❌ Failed to load users:", usersResponse);
@@ -69,13 +68,13 @@ export default function AddTeam() {
       const response = await createTeam(teamData);
       console.log("📊 Create team response:", response);
 
-      if (response.data?.success) {
+      if (response?.success) {
         return {
           success: true,
           message: `${formData.Name} has been created and is ready to start the season!`
         };
       } else {
-        throw new Error(response.data?.error || response.error || "Failed to save team");
+        throw new Error(response?.error || "Failed to save team");
       }
     } catch (error) {
       console.error("❌ Error creating team:", error);

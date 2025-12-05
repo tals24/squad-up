@@ -155,12 +155,12 @@ export default function TrainingPlanner() {
         const response = await loadTrainingPlan({ teamId: selectedTeamId, weekIdentifier: weekId });
         console.log('🔍 Load response:', response);
         console.log('🔍 Response data structure:', {
-          success: response.data?.success,
-          hasSavedData: response.data?.data?.hasSavedData,
-          weeklyPlanKeys: response.data?.data?.weeklyPlan ? Object.keys(response.data.data.weeklyPlan) : 'undefined',
-          mondayDrills: response.data?.data?.weeklyPlan?.Monday?.["Warm-up"]?.drills?.length || 0
+          success: response?.success,
+          hasSavedData: response?.data?.hasSavedData,
+          weeklyPlanKeys: response?.data?.weeklyPlan ? Object.keys(response.data.weeklyPlan) : 'undefined',
+          mondayDrills: response?.data?.weeklyPlan?.Monday?.["Warm-up"]?.drills?.length || 0
         });
-        if (response.data?.success) {
+        if (response?.success) {
           // Use the loaded plan if it exists, otherwise use initial structure
           const loadedPlan = response.data.data?.weeklyPlan || initialPlanStructure();
           console.log('🔍 Setting training plan to:', loadedPlan);
@@ -168,7 +168,7 @@ export default function TrainingPlanner() {
           setHasSavedData(response.data.data?.hasSavedData || false);
           console.log('Loaded plan from database:', response.data.data?.hasSavedData ? 'with saved data' : 'empty plan');
         } else {
-          console.error('Failed to load training plan:', response.data?.error);
+          console.error('Failed to load training plan:', response?.error);
           setTrainingPlan(initialPlanStructure());
           setHasSavedData(false);
         }
@@ -260,7 +260,7 @@ export default function TrainingPlanner() {
         });
         const response = await saveTrainingPlan({ weeklyPlan: trainingPlan, teamId: selectedTeamId, weekIdentifier: weekId });
         console.log('🔍 Save response:', response);
-        if (response.data?.success) {
+        if (response?.success) {
             // Clear localStorage draft since it's now saved to database
             console.log('🧹 Clearing localStorage draft:', localStorageKey);
             localStorage.removeItem(localStorageKey);
@@ -287,7 +287,7 @@ export default function TrainingPlanner() {
             
             setConfirmationConfig({ type: 'success', title: 'Plan Saved!', message: 'The weekly training plan has been successfully saved and dashboard updated.' });
         } else {
-            throw new Error(response.data?.error || "An unknown error occurred.");
+            throw new Error(response?.error || "An unknown error occurred.");
         }
     } catch (error) {
         setConfirmationConfig({ type: 'error', title: 'Save Failed', message: `Could not save the plan: ${error.message}` });

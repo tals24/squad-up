@@ -221,7 +221,7 @@ export default function TacticBoard() {
 
       const response = await createFormation(recordData);
 
-      if (response.data?.success) {
+      if (response?.success) {
         setConfirmationConfig({
           type: 'success',
           title: 'Formation Saved! ⚽',
@@ -233,7 +233,7 @@ export default function TacticBoard() {
 
         await loadSavedFormations();
       } else {
-        throw new Error(response.data?.error || "Failed to save formation");
+        throw new Error(response?.error || "Failed to save formation");
       }
     } catch (error) {
       console.error("Error saving formation:", error);
@@ -374,12 +374,12 @@ export default function TacticBoard() {
       if (isAirtableFormation) {
         const response = await deleteFormation(formationToDelete.id);
 
-        if (response.data?.success) {
+        if (response?.success) {
           await loadSavedFormations();
           success = true;
           message = `"${formationToDelete.FormationName}" has been removed from your formation library (Airtable).`;
         } else {
-          throw new Error(response.data?.error || "Failed to delete from Airtable");
+          throw new Error(response?.error || "Failed to delete from Airtable");
         }
       } else {
         setCustomFormations(prev => prev.filter(f => f.name !== formationToDelete.name || f.gameSize !== formationToDelete.gameSize));
@@ -489,7 +489,7 @@ export default function TacticBoard() {
             response = await createFormation(recordData);
         }
 
-        if (response.data?.success) {
+        if (response?.success) {
           setIsEditingFormation(false);
           setEditingFormationData(null);
           setEditingFormationName("");
@@ -506,7 +506,7 @@ export default function TacticBoard() {
           });
           setShowConfirmation(true);
         } else {
-          throw new Error(response.data?.error || `Failed to ${isUpdating ? 'update' : 'save'} formation`);
+          throw new Error(response?.error || `Failed to ${isUpdating ? 'update' : 'save'} formation`);
         }
       } catch (error) {
         console.error(`Error ${isUpdating ? 'updating' : 'saving'} custom formation:`, error);
@@ -844,7 +844,7 @@ export default function TacticBoard() {
 
       const response = await createTimelineEvent(eventData);
 
-      if (response.data?.success) {
+      if (response?.success) {
         setConfirmationConfig({
           type: 'success',
           title: 'Performance Data Saved! ⚽',
@@ -853,7 +853,7 @@ export default function TacticBoard() {
         setShowConfirmation(true);
         setShowPerformanceModal(false);
       } else {
-        throw new Error(response.data?.error || "Failed to save performance data");
+        throw new Error(response?.error || "Failed to save performance data");
       }
     } catch (error) {
       console.error("Error saving performance data:", error);

@@ -164,7 +164,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
 
       const response = await createDrill(drillData);
 
-      if (response.data?.success && response.data.data?._id) {
+      if (response?.success && response.data?._id) {
         showConfirmation({
           type: 'success',
           title: openTacticBoard ? 'Drill Created! 🎯' : 'Drill Created Successfully! 🎯',
@@ -173,7 +173,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
         refreshData();
         setOpen(false);
       } else {
-        throw new Error(response.data?.error || "Failed to create drill");
+        throw new Error(response?.error || "Failed to create drill");
       }
     } catch (error) {
       console.error("Error adding/creating drill:", error);
