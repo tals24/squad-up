@@ -46,7 +46,7 @@ import {
 } from '@/features/reporting';
 
 // Page Imports (not migrated - misc pages)
-import SettingsPage from '@/pages/Settings';
+import { SettingsPage } from '@/features/settings';
 
 /**
  * Public routes (no authentication required)

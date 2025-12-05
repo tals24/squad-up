@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
 import { PageLayout, PageHeader } from "@/shared/ui/primitives/design-system-components";
-import DatabaseSyncSection from "./components/DatabaseSyncSection";
-import OrganizationSettingsSection from "./components/OrganizationSettingsSection";
+import DatabaseSyncSection from "./DatabaseSyncSection";
+import OrganizationSettingsSection from "./OrganizationSettingsSection";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("database");
