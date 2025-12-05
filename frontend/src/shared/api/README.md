@@ -101,25 +101,27 @@ export * from './resourceApi';
 | **training-management** | trainingApi.js (sessions, drills, plans) | ✅ Complete |
 | **user-management** | userApi.js | ✅ Complete |
 | **drill-system** | drillApi.js | ✅ Complete |
-| **analytics** | - | ⏳ Pending |
-| **settings** | - | ⏳ Pending |
+| **analytics** | - | ⏳ Pending (uses DataProvider) |
+| **settings** | - | ⏳ Pending (minimal needs) |
 
-## Legacy API (Deprecated)
+**Note:** All other features have complete API modules with backward-compatible { data, error } format.
 
-The `legacy.js` file contains consolidated legacy API functions from the old `src/api/` folder. These functions are **deprecated** and should be migrated to feature-specific APIs:
+## ✅ Legacy API Migration Complete (Phase 3)
+
+All legacy API functions have been successfully migrated to feature-specific APIs!
 
 ```javascript
-// ❌ OLD (using legacy.js)
-import { getPlayers } from '@/shared/api';
-
-// ✅ NEW (using feature-specific API)
+// ✅ Use feature-specific APIs
 import { getPlayers } from '@/features/player-management/api';
+import { getTeams } from '@/features/team-management/api';
+import { getDrills } from '@/features/drill-system/api';
 ```
 
-**TODO for Phase 3:**
-- Migrate all legacy functions to feature-specific APIs
-- Update all imports across the codebase
-- Delete `legacy.js`
+**Completed:**
+- ✅ All legacy functions migrated to feature-specific APIs
+- ✅ All imports updated across the codebase
+- ✅ `legacy.js` deleted
+- ✅ Backward compatibility maintained with { data, error } format
 
 ## Best Practices
 
@@ -210,12 +212,13 @@ Default fallback: `http://localhost:3001`
 
 ## Future Improvements
 
-- [ ] Create analytics API
-- [ ] Create settings API  
-- [ ] Migrate all legacy functions
-- [ ] Delete `legacy.js`
+- [ ] Create analytics API (if needed)
+- [ ] Create settings API (if needed)
+- [x] ~~Migrate all legacy functions~~ ✅ COMPLETE (Phase 3)
+- [x] ~~Delete `legacy.js`~~ ✅ COMPLETE (Phase 3)
 - [ ] Add request/response interceptors
 - [ ] Add request caching
 - [ ] Add retry logic for failed requests
 - [ ] Add request cancellation support
+- [ ] Migrate to direct apiClient usage (remove { data, error } wrapper)
 
