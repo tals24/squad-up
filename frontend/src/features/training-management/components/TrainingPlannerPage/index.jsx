@@ -162,13 +162,13 @@ export default function TrainingPlanner() {
         });
         if (response?.success) {
           // Use the loaded plan if it exists, otherwise use initial structure
-          const loadedPlan = response.data.data?.weeklyPlan || initialPlanStructure();
+          const loadedPlan = response.data?.weeklyPlan || initialPlanStructure();
           console.log('🔍 Setting training plan to:', loadedPlan);
           setTrainingPlan(loadedPlan);
-          setHasSavedData(response.data.data?.hasSavedData || false);
-          console.log('Loaded plan from database:', response.data.data?.hasSavedData ? 'with saved data' : 'empty plan');
+          setHasSavedData(response.data?.hasSavedData || false);
+          console.log('Loaded plan from database:', response.data?.hasSavedData ? 'with saved data' : 'empty plan');
         } else {
-          console.error('Failed to load training plan:', response?.error);
+          console.error('Failed to load training plan:', response);
           setTrainingPlan(initialPlanStructure());
           setHasSavedData(false);
         }

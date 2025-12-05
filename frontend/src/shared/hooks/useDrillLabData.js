@@ -50,8 +50,8 @@ export function useDrillLabData(drillId, mode, searchParams) {
           const response = await getDrills();
           console.log('[useDrillLabData] getDrills response:', response);
           
-          if (response.data?.data) {
-            const drill = response.data.data.find(d => d._id === drillId);
+          if (response?.success && response?.data) {
+            const drill = response.data.find(d => d._id === drillId);
             console.log('[useDrillLabData] Found drill:', drill);
             
             if (drill) {
@@ -102,9 +102,9 @@ export function useDrillLabData(drillId, mode, searchParams) {
       const response = await updateDrill(drillId, {
         layoutData: layoutData
       });
-      console.log('[useDrillLabData] Update response:', response?.data);
+      console.log('[useDrillLabData] Update response:', response);
       
-      if (response.data?.success) {
+      if (response?.success) {
         return { success: true };
       } else {
         setError('Failed to save drill');

@@ -41,12 +41,13 @@ export const DataProvider = ({ children }) => {
 
             console.log('📊 DataContext: Response received:', {
                 hasData: !!response,
-                dataKeys: response ? Object.keys(response) : 'none'
+                success: response?.success,
+                dataKeys: response?.data ? Object.keys(response.data) : 'none'
             });
 
             if (!response || !response.success) {
                 console.error("❌ DataContext fetch error:", response);
-                throw new Error(response?.error || "Failed to fetch data from backend.");
+                throw new Error("Failed to fetch data from backend.");
             }
             
             // Backend returns: { success: true, data: { users: [], teams: [], ... } }
@@ -84,26 +85,13 @@ export const DataProvider = ({ children }) => {
                 sessionDrills: newData.sessionDrills.length
             });
             
-            // 🔍 DETAILED DEBUG: Let's see the actual data structure
-            console.log('🔍 DETAILED DEBUG - Full response object:', response);
-            console.log('🔍 DETAILED DEBUG - Response status:', response.status);
-            console.log('🔍 DETAILED DEBUG - Response headers:', response.headers);
-            console.log('🔍 DETAILED DEBUG - Raw response.data:', response.data);
-            console.log('🔍 DETAILED DEBUG - typeof response.data:', typeof response.data);
-            console.log('🔍 DETAILED DEBUG - response.data keys:', Object.keys(response.data || {}));
-            
-            // Check each property individually
-            console.log('🔍 INDIVIDUAL CHECKS:');
-            console.log('  - response.data.users:', response.data.users);
-            console.log('  - response.data.teams:', response.data.teams);
-            console.log('  - response.data.players:', response.data.players);
-            console.log('  - response.data.games:', response.data.games);
-            
-            console.log('🔍 NESTED DATA CHECKS:');
-            console.log('  - response.data.data?.users:', response.data.data?.users);
-            console.log('  - response.data.data?.teams:', response.data.data?.teams);
-            console.log('  - response.data.data?.players:', response.data.data?.players);
-            console.log('  - apiData used:', apiData);
+            // Debug logging
+            console.log('🔍 Data structure:', {
+                users: apiData.users?.length || 0,
+                teams: apiData.teams?.length || 0,
+                players: apiData.players?.length || 0,
+                games: apiData.games?.length || 0
+            });
             
             console.log('🔍 DETAILED DEBUG - newData structure:', newData);
             console.log('🔍 DETAILED DEBUG - First few players:', newData.players.slice(0, 3));
