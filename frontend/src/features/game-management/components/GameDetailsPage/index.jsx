@@ -1238,7 +1238,11 @@ export default function GameDetails() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({ rosters: rosterUpdates }),
+        body: JSON.stringify({ 
+          rosters: rosterUpdates,
+          formation: formation,
+          formationType: formationType
+        }),
       });
 
       if (!response.ok) {
