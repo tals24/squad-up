@@ -1,15 +1,22 @@
 /**
  * useGames Hook Tests
  * Tests for React Query game hooks
+ * 
+ * Note: These tests are examples. Run them with:
+ * npm test -- useGames.test.js
  */
 
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useGames, useGame, useCreateGame } from '../queries/useGames';
-import * as gameApi from '@/features/game-management/api/gameApi';
+import { useGames, useGame, useCreateGame } from '../queries/useGames.js';
+import { vi } from 'vitest';
 
-// Mock the game API
-jest.mock('@/features/game-management/api/gameApi');
+// Mock the game API module
+vi.mock('@/features/game-management/api/gameApi.js', () => ({
+  getGames: vi.fn(),
+  getGame: vi.fn(),
+  createGame: vi.fn(),
+}));
 
 // Create a wrapper with QueryClient
 const createWrapper = () => {
