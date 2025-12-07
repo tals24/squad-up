@@ -133,11 +133,20 @@ exports.startGame = async (req, res, next) => {
     
     const result = await gameService.startGame(gameId, { rosters, formation, formationType });
     
-    res.json({
+    // Match original response format exactly
+    res.status(200).json({
       success: true,
-      game: result.game,
-      gameRosters: result.gameRosters,
-      message: 'Game started successfully'
+      message: 'Game started successfully',
+      data: {
+        game: {
+          _id: result.game._id,
+          status: result.game.status,
+          gameTitle: result.game.gameTitle || `${result.game.teamName} vs ${result.game.opponent}`,
+          lineupDraft: null
+        },
+        rosters: result.gameRosters,
+        rosterCount: result.gameRosters.length
+      }
     });
   } catch (error) {
     console.error('Start game controller error:', error);

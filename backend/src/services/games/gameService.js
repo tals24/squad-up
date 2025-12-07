@@ -232,7 +232,7 @@ exports.startGame = async (gameId, { rosters, formation, formationType }) => {
     game.lineupDraft = undefined;
     await game.save({ session });
 
-    // Create GameRosters from lineupDraft
+    // Upsert GameRosters (update existing or create new)
     const gameRosterPromises = Object.entries(rosters).map(async ([playerId, rosterStatus]) => {
       // Fetch player to get playerNumber
       const player = await Player.findById(playerId).session(session);
@@ -246,21 +246,33 @@ exports.startGame = async (gameId, { rosters, formation, formationType }) => {
       // Starting Lineup always plays, Bench players only if subbed in (checked later by Job)
       const playedInGame = rosterStatus === 'Starting Lineup';
 
-      const rosterData = {
-        game: gameId,
-        player: playerId,
-        status: rosterStatus,  // Fixed: was 'rosterStatus', should be 'status'
-        playedInGame: playedInGame,
-        playerNumber: player.playerNumber,
-        formation: formation,
-        formationType: formationType
-      };
+      // Use findOneAndUpdate with upsert to update existing or create new
+      const gameRoster = await GameRoster.findOneAndUpdate(
+        { game: gameId, player: playerId },
+        {
+          status: rosterStatus,
+          playedInGame: playedInGame,
+          playerNumber: player.playerNumber,
+          formation: formation,
+          formationType: formationType
+        },
+        {
+          new: true,
+          upsert: true,
+          setDefaultsOnInsert: true,
+          session
+        }
+      );
 
-      const gameRoster = new GameRoster(rosterData);
-      return await gameRoster.save({ session });
+      return gameRoster;
     });
 
     const gameRosters = (await Promise.all(gameRosterPromises)).filter(r => r !== null);
+
+    // Populate player references for response
+    await Promise.all(
+      gameRosters.map(roster => roster.populate('game player'))
+    );
 
     await session.commitTransaction();
     session.endSession();
