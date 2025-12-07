@@ -158,6 +158,36 @@ exports.startGame = async (req, res, next) => {
 };
 
 /**
+ * Get player statistics (real-time calculation)
+ * GET /api/games/:gameId/player-stats
+ */
+exports.getPlayerStats = async (req, res, next) => {
+  try {
+    const { gameId } = req.params;
+    const game = req.game; // From checkGameAccess middleware
+
+    // Only allow for Played games (not Scheduled or Done)
+    if (game.status !== 'Played') {
+      return res.status(400).json({
+        success: false,
+        error: 'Player stats calculation is only available for games in "Played" status'
+      });
+    }
+
+    const playerStats = await gameService.calculatePlayerStatsRealtime(gameId);
+
+    res.json({
+      success: true,
+      gameId,
+      playerStats
+    });
+  } catch (error) {
+    console.error('Get player stats controller error:', error);
+    next(error);
+  }
+};
+
+/**
  * Get game draft (lineup or report)
  * GET /api/games/:id/draft
  */

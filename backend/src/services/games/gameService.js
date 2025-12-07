@@ -206,6 +206,40 @@ exports.deleteGame = async (gameId) => {
 };
 
 /**
+ * Calculate player statistics in real-time (for instant display)
+ * This is separate from the worker's persistence logic
+ * Used by the /player-stats API endpoint for immediate feedback
+ */
+exports.calculatePlayerStatsRealtime = async (gameId) => {
+  // Run both calculations in parallel for efficiency
+  const [calculatedMinutes, calculatedGoalsAssists] = await Promise.all([
+    calculatePlayerMinutes(gameId),
+    calculatePlayerGoalsAssists(gameId)
+  ]);
+
+  // Consolidate into single response object
+  // Format: { playerId: { minutes: number, goals: number, assists: number } }
+  const playerStats = {};
+
+  // Get all unique player IDs from both results
+  const allPlayerIds = new Set([
+    ...Object.keys(calculatedMinutes),
+    ...Object.keys(calculatedGoalsAssists)
+  ]);
+
+  // Merge data for each player
+  allPlayerIds.forEach(playerId => {
+    playerStats[playerId] = {
+      minutes: calculatedMinutes[playerId] || 0,
+      goals: calculatedGoalsAssists[playerId]?.goals || 0,
+      assists: calculatedGoalsAssists[playerId]?.assists || 0
+    };
+  });
+
+  return playerStats;
+};
+
+/**
  * Start game - Move from Scheduled to Played with lineup
  */
 exports.startGame = async (gameId, { rosters, formation, formationType }) => {
