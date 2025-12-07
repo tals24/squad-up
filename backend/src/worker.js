@@ -12,7 +12,7 @@ require('./models/Player');
 require('./models/GameReport');
 
 const Job = require('./models/Job');
-const { recalculatePlayerMinutes, updatePlayedStatusForGame } = require('./services/minutesCalculation');
+const { recalculatePlayerMinutes, updatePlayedStatusForGame } = require('./services/games/utils/minutesCalculation');
 
 // Configuration
 const POLL_INTERVAL_MS = 5000; // Poll every 5 seconds

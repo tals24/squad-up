@@ -279,6 +279,21 @@ exports.startGame = async (gameId, { rosters, formation, formationType }) => {
 
     console.log(`✅ Game ${gameId} started successfully. Created ${gameRosters.length} rosters.`);
 
+    // Create job for minutes and played status recalculation (after transaction)
+    // This job will calculate minutes AND update playedInGame status
+    try {
+      await Job.create({
+        jobType: 'recalc-minutes',
+        payload: { gameId: gameId },
+        status: 'pending',
+        runAt: new Date() // Process immediately
+      });
+      console.log(`📋 Created recalc-minutes job for game ${gameId} after start-game`);
+    } catch (error) {
+      // Log but don't fail the request if job creation fails
+      console.error(`⚠️ Error creating recalc-minutes job:`, error);
+    }
+
     return {
       game,
       gameRosters
