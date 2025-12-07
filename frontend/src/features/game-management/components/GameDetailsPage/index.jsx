@@ -1219,17 +1219,29 @@ export default function GameDetails() {
     setIsSaving(true);
     try {
       // ✅ Single atomic call: Start game with lineup
-      const rosterUpdates = gamePlayers.map((player) => ({
-        playerId: player._id,
-        status: getPlayerStatus(player._id)
-        // ✅ Removed: playerName, gameTitle, rosterEntry (denormalized fields)
-      }));
+      // Backend expects rosters as object: { playerId: status }
+      const rostersObject = {};
+      gamePlayers.forEach((player) => {
+        const status = getPlayerStatus(player._id);
+        if (status !== 'Not in Squad') {
+          rostersObject[player._id] = status;
+        }
+      });
+
+      // Clean formation: remove null/empty positions and keep only valid player IDs
+      const cleanFormation = {};
+      Object.entries(formation).forEach(([position, player]) => {
+        if (player && player._id && player._id !== '0') {
+          cleanFormation[position] = player._id;
+        }
+      });
 
       console.log('🔍 Starting game with roster:', {
         gameId,
-        rosterCount: rosterUpdates.length,
-        startingLineupCount: rosterUpdates.filter(r => r.status === 'Starting Lineup').length,
-        benchCount: rosterUpdates.filter(r => r.status === 'Bench').length
+        rosterCount: Object.keys(rostersObject).length,
+        startingLineupCount: Object.values(rostersObject).filter(s => s === 'Starting Lineup').length,
+        benchCount: Object.values(rostersObject).filter(s => s === 'Bench').length,
+        formationPositions: Object.keys(cleanFormation).length
       });
 
       const response = await fetch(`http://localhost:3001/api/games/${gameId}/start-game`, {
@@ -1239,8 +1251,8 @@ export default function GameDetails() {
           "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({ 
-          rosters: rosterUpdates,
-          formation: formation,
+          rosters: rostersObject,
+          formation: cleanFormation,
           formationType: formationType
         }),
       });
