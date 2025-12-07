@@ -7,7 +7,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import MainLayout from '../layout/MainLayout';
 import { publicRoutes, protectedRoutes, getCurrentPage } from './routes';
-import { SuspenseLoader } from '@/shared/components/PageLoader/SuspenseLoader';
+import { SuspenseLoader } from '@/shared/components';
 
 /**
  * Router Content (must be inside Router context to use useLocation)
