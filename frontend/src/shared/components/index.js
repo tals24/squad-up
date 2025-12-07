@@ -10,4 +10,5 @@ export { SuspenseLoader, MinimalLoader } from './PageLoader';
 
 // Performance Components
 export { VirtualList, VirtualGrid } from './VirtualList';
+export { OptimizedImage, AvatarImage, CardImage } from './OptimizedImage';
 
