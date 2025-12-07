@@ -79,7 +79,19 @@ exports.populateGameTeam = async (game) => {
  * Create new game
  */
 exports.createGame = async (gameData) => {
-  const game = new Game(gameData);
+  // Get team details to populate required lookup fields
+  const teamDoc = await Team.findById(gameData.team);
+  if (!teamDoc) {
+    throw new Error('Team not found');
+  }
+
+  // Create game with lookup fields from team
+  const game = new Game({
+    ...gameData,
+    season: teamDoc.season,
+    teamName: teamDoc.teamName
+  });
+  
   await game.save();
   await game.populate('team', 'teamName season division');
   return game;
@@ -230,10 +242,15 @@ exports.startGame = async (gameId, { rosters, formation, formationType }) => {
         return null;
       }
 
+      // Determine if player played in game
+      // Starting Lineup always plays, Bench players only if subbed in (checked later by Job)
+      const playedInGame = rosterStatus === 'Starting Lineup';
+
       const rosterData = {
         game: gameId,
         player: playerId,
-        rosterStatus: rosterStatus,
+        status: rosterStatus,  // Fixed: was 'rosterStatus', should be 'status'
+        playedInGame: playedInGame,
         playerNumber: player.playerNumber,
         formation: formation,
         formationType: formationType
