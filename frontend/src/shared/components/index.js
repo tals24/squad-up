@@ -8,3 +8,6 @@ export { default as PlayerSelectionModal } from './PlayerSelectionModal';
 // Loading Components
 export { SuspenseLoader, MinimalLoader } from './PageLoader';
 
+// Performance Components
+export { VirtualList, VirtualGrid } from './VirtualList';
+
