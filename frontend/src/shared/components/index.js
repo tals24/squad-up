@@ -5,3 +5,6 @@ export { default as CustomNumberInput } from './CustomNumberInput';
 export { default as CustomTooltip } from './CustomTooltip';
 export { default as PlayerSelectionModal } from './PlayerSelectionModal';
 
+// Loading Components
+export { SuspenseLoader, MinimalLoader } from './PageLoader';
+
