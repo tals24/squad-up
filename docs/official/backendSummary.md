@@ -1072,6 +1072,61 @@ Mongoose schemas defining database structure. All models use MongoDB and include
 - **Services** - Business logic (80-400 lines per file)
 - **Utils** - Reusable calculations/validations
 
+### Dual-System Architecture: Player Statistics
+
+The system uses **two complementary systems** for calculating player statistics (minutes played, goals, assists):
+
+#### System 1: Background Worker (Persistence)
+```
+Game Status → Played/Done
+     ↓
+Job Created (recalc-minutes)
+     ↓
+Worker Processes (every 5s)
+     ↓
+Saves to GameReport DB
+```
+
+- **File**: `src/worker.js`
+- **Purpose**: Save stats to database for history
+- **Speed**: 5-10 seconds
+- **When**: Runs automatically when game status changes
+
+#### System 2: Real-Time API (Instant Display)
+```
+Frontend Requests Stats
+     ↓
+Calculate On-The-Fly
+     ↓
+Return Immediately
+```
+
+- **Endpoint**: `GET /api/games/:gameId/player-stats`
+- **Purpose**: Instant stats for UI display
+- **Speed**: < 1 second
+- **When**: Called when viewing Played/Done games
+
+#### Why Both Systems?
+
+| Benefit | Description |
+|---------|-------------|
+| **Instant UX** | Users see stats immediately (no waiting) |
+| **Data Persistence** | Stats saved to DB for reports and history |
+| **Reliability** | If worker fails, API still provides stats |
+| **Always Fresh** | API calculates from latest game events |
+
+**How They Work Together:**
+1. Game becomes "Played" → Both systems trigger
+2. API provides instant feedback to user
+3. Worker saves to database in background
+4. Historical queries use database, live views use API
+
+This dual approach provides both **immediate user feedback** and **long-term data storage**.
+
+For detailed comparison, see: `docs/STATS_CALCULATION_COMPARISON.md`
+
+---
+
 ### Security
 - **JWT Tokens** - Stateless authentication
 - **bcrypt** - Password hashing (10 rounds)
