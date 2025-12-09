@@ -1123,7 +1123,14 @@ Return Immediately
 
 This dual approach provides both **immediate user feedback** and **long-term data storage**.
 
-For detailed comparison, see: `docs/STATS_CALCULATION_COMPARISON.md`
+**📚 For Complete Technical Details:**
+- **Comprehensive Guide:** `docs/official/DUAL_SYSTEM_ARCHITECTURE.md` (1,100+ lines)
+  - All 6 job creation triggers with code examples
+  - Complete calculation function explanations
+  - 3 detailed scenarios with timelines
+  - Troubleshooting guide
+- **Comparison Document:** `docs/STATS_CALCULATION_COMPARISON.md`
+  - Main branch vs refactored branch comparison
 
 ---
 
