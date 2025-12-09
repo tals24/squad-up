@@ -62,6 +62,11 @@ Controllers handle HTTP requests, call services for business logic, and format r
 - `createGame(req, res)` - Creates a new game (draft status by default).
 - `updateGame(req, res)` - Updates game details (restricted to scheduled/draft status).
 - `deleteGame(req, res)` - Deletes a game (only if in draft status).
+- `startGame(req, res)` - Transitions game from Scheduled to Played with lineup validation and roster creation.
+- `getPlayerStats(req, res)` - Calculates player statistics (minutes, goals, assists) in real-time for Played/Done games.
+- `getGameDraft(req, res)` - Retrieves saved draft data (lineup draft for Scheduled, report draft for Played).
+- `updateGameDraft(req, res)` - Saves draft data with autosave support (polymorphic based on game status).
+- `submitFinalReport(req, res)` - Transitions game from Played to Done, submits final report.
 - `transitionToScheduled(req, res)` - Moves game from draft to scheduled status.
 - `transitionToDone(req, res)` - Marks game as completed, triggers analytics recalculation.
 - `getGameTimeline(req, res)` - Retrieves chronological timeline of game events (cards, goals, subs).
@@ -324,13 +329,18 @@ Services contain all business logic. They should never handle HTTP requests dire
 
 **Functions:**
 - `getAllGames(user)` - Retrieves games with role-based filtering (coaches see only their teams).
+- `populateGameTeam(game)` - Populates team relationship if needed.
 - `getGameById(gameId)` - Fetches game with populated team/coach data.
-- `createGame(gameData)` - Creates game, auto-generates roster from team players, sets draft status.
-- `updateGame(gameId, updateData)` - Updates game details with status validation.
+- `createGame(gameData)` - Creates game with team lookup fields (season, teamName) populated from Team document.
+- `updateGame(gameId, updateData)` - Updates game details with status validation, triggers Jobs for status changes.
 - `deleteGame(gameId)` - Deletes game if in draft status.
-- `transitionToScheduled(gameId)` - Moves game to scheduled status with validation.
-- `transitionToDone(gameId, finalScores)` - Marks game complete, recalculates all analytics (goals, subs, minutes).
-- `recalculateMinutes(gameId)` - Recalculates player minutes considering subs and red cards.
+- `handleStatusChangeToPlayed(gameId, status)` - Creates recalc-minutes Job when game becomes Played/Done.
+- `handleStatusChangeToDone(gameId, ourScore, opponentScore)` - Recalculates goal and substitution analytics.
+- `startGame(gameId, { rosters, formation, formationType })` - Transitions to Played, creates GameRoster entries, triggers Job.
+- `getGameDraft(gameId)` - Retrieves lineupDraft or reportDraft based on status.
+- `updateGameDraft(gameId, draftData)` - Saves draft data (polymorphic: lineup for Scheduled, report for Played).
+- `submitFinalReport(gameId, reportData)` - Transitions to Done, merges report data, triggers analytics.
+- `calculatePlayerStatsRealtime(gameId)` - Calculates minutes/goals/assists in real-time for instant display (Played/Done games).
 
 ---
 
@@ -777,11 +787,19 @@ All game routes are organized under `/api/games` base path and aggregated in `ro
 
 ---
 
+#### `stats.js`
+**Purpose:** Player statistics endpoint. Provides real-time calculation of player stats for instant display.
+
+**Routes:**
+- `GET /:gameId/player-stats` - Get player stats (authenticated, Played/Done games only)
+
+---
+
 #### `index.js`
 **Purpose:** Games routes aggregator. Imports and combines all game-related route files under single router.
 
 **Aggregates:**
-- All 13 game route files listed above under `/api/games` prefix
+- All 14 game route files listed above under `/api/games` prefix
 
 ---
 

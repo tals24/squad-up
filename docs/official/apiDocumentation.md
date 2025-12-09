@@ -442,7 +442,7 @@ Authorization: Bearer <your-jwt-token>
 #### **GET** `/api/games/:gameId/player-stats`
 **Purpose**: Get consolidated player statistics (minutes, goals, assists) for all players in a game  
 **Authentication**: Required + game access check  
-**Note**: Only available for games with status "Played". Optimized for pre-fetching - returns all stats in one request.  
+**Note**: Only available for games with status "Played" or "Done". Optimized for pre-fetching - returns all stats in one request. Calculates stats in real-time from game events.  
 **Response**:
 ```json
 {
