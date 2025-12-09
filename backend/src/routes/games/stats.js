@@ -14,6 +14,7 @@ const router = express.Router();
  * Get consolidated player statistics (minutes, goals, assists) for all players
  * Calculates on-demand for instant display (not from GameReport)
  * 
+ * Works for games with status 'Played' or 'Done'
  * This provides instant stats display while the worker persists data in background
  */
 router.get('/:gameId/player-stats', authenticateJWT, checkGameAccess, gameController.getPlayerStats);

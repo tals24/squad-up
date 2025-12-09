@@ -166,11 +166,11 @@ exports.getPlayerStats = async (req, res, next) => {
     const { gameId } = req.params;
     const game = req.game; // From checkGameAccess middleware
 
-    // Only allow for Played games (not Scheduled or Done)
-    if (game.status !== 'Played') {
+    // Only allow for Played and Done games (not Scheduled)
+    if (game.status !== 'Played' && game.status !== 'Done') {
       return res.status(400).json({
         success: false,
-        error: 'Player stats calculation is only available for games in "Played" status'
+        error: 'Player stats calculation is only available for games in "Played" or "Done" status'
       });
     }
 
