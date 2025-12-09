@@ -1,0 +1,52 @@
+# Draft & Autosave System: Improvements and Future Enhancements
+
+This document outlines potential improvements, edge case handling, and optimization strategies for the existing Draft and Autosave mechanism in the SquadUp project.
+
+---
+
+## 🔴 Potential Issues & Risks (Medium-Low Severity)
+
+### 1. Concurrent Editing Conflicts
+* **The Problem:** The current system uses a "Last Write Wins" approach. If two users (e.g., Head Coach and Assistant Coach) edit the same game draft simultaneously on different devices, the last autosave request (`PUT`) will overwrite the entire draft object in the database, potentially overwriting the other user's changes.
+* **Scenario:** User A edits the General Summary. User B edits a Player's Rating. If User B's autosave finishes last, it will overwrite User A's changes because User B's draft object sent from the frontend still contained the old General Summary.
+* **Proposed Solutions:**
+    * **Optimistic Locking (Recommended - Simpler):** Add a `version` field to the draft in the DB. Each save request sends the current version. The backend only updates if the sent version matches the DB version, then increments it. If it doesn't match, the save fails, and the client must reload the latest data.
+    * **Partial Updates (PATCH) (More Complex):** Change the API to accept only modified fields (e.g., using JSON Patch format) instead of replacement of the entire draft object. This requires significant changes to `useAutosave` and the backend API logic.
+
+### 2. Lack of User Feedback on Autosave Status
+* **The Problem:** Users currently have no visual indication that their data is being autosaved, or if the save was successful or failed. This leads to uncertainty regarding data safety.
+* **Proposed Solution:**
+    * Implement a UI indicator (e.g., near the main action buttons or top right corner).
+    * Use the state from the `useAutosave` hook:
+        * `isAutosaving: true` -> Show "Saving..." spinner or text.
+        * `lastSavedAt` -> Show "Last saved: 15:45" (green text).
+        * `autosaveError` -> Show "Save failed. Click to retry." (red text with manual retry button).
+
+---
+
+## 🟡 Enhancements & Optimization
+
+### 1. Optimize Autosave Debounce Time
+* **The Problem:** The current fixed debounce time of `2500ms` is suitable for long text fields but might be too slow for quick, small actions (like selecting a player in the lineup), increasing the risk of data loss on quick browser closes.
+* **Proposed Solution:**
+    * Pass a different `debounceMs` value to `useAutosave` based on the context.
+    * **Lineup Draft:** Reduce to `1000ms` (1 second) or less for quick clicks.
+    * **Report Draft:** Keep `2500ms` for text fields, but consider a shorter time for rating sliders within the player dialog.
+
+### 2. Proactive Cleanup of Old Drafts
+* **The Problem:** Drafts for games that were postponed indefinitely, cancelled, or passed their date long ago might remain in the database indefinitely, taking up storage space.
+* **Proposed Solution:**
+    * Implement a scheduled background job (Cron Job) on the backend.
+    * The job should run periodically (e.g., weekly) and delete drafts (`lineupDraft`, `reportDraft`) for games that are very old (e.g., > 30 days past their scheduled date) and are not in a 'Done' status.
+
+### 3. Improve User Experience (UX) on Draft Load
+* **The Problem:** When a user opens a game page and data is pre-loaded from a saved draft, it's not explicitly clear that this happened.
+* **Proposed Solution:**
+    * Display a temporary toast notification or a subtle banner when draft data is successfully loaded.
+    * Example Message: "Restored unsaved changes from your last session (15:45)."
+
+### 4. Review Default Ratings in `GameReport` Model (Technical Note)
+* **The Problem:** The `GameReport` model currently sets a default value of `3` for rating fields (`rating_physical`, etc.).
+* **Proposed Solution:**
+    * Consider changing the default to `null`.
+    * **Why:** If a coach explicitly does not rate a player, it should be represented as "no rating" (`null`) rather than a mediocre rating (`3`), which can skew performance averages. The frontend should handle `null` values gracefully (e.g., showing grayed-out stars).
