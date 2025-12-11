@@ -22,24 +22,33 @@ import {
 } from "lucide-react";
 
 export default function GameDetailsHeader({
-  game,
-  finalScore,
-  setFinalScore,
-  matchDuration,
-  setMatchDuration,
-  missingReportsCount,
+  gameCore,
+  reports,
   teamSummary,
+  derivedState,
+  handlers,
   isSaving,
-  isScheduled,
-  isPlayed,
-  isDone,
-  handleGameWasPlayed,
-  handlePostpone,
-  handleSubmitFinalReport,
-  handleEditReport,
-  playerReports,
-  matchStats,
 }) {
+  // Destructure needed values
+  const { 
+    game, 
+    finalScore, 
+    setFinalScore, 
+    matchDuration, 
+    setMatchDuration, 
+    isScheduled, 
+    isPlayed, 
+    isDone 
+  } = gameCore;
+  const { missingReportsCount, localPlayerReports: playerReports } = reports;
+  const { teamSummary: teamSummaryData } = teamSummary;
+  const { matchStats } = derivedState;
+  const {
+    handleGameWasPlayed,
+    handlePostpone,
+    handleSubmitFinalReport,
+    handleEditReport,
+  } = handlers;
   const navigate = useNavigate();
 
   // Format date

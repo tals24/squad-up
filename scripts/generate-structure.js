@@ -6,6 +6,21 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * Count the number of lines in a file
+ * @param {string} filePath - The path to the file
+ * @returns {number} - The number of lines in the file
+ */
+function countLines(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n').length;
+    return lines;
+  } catch (err) {
+    return 0;
+  }
+}
+
 // Directories to exclude from the tree
 const EXCLUDED_DIRS = new Set([
   'node_modules',
@@ -33,22 +48,27 @@ function buildTree(dirPath, prefix = '', isLast = true, relativePath = '') {
     return '';
   }
 
-  // Add current directory/file to output
-  const connector = isLast ? '└── ' : '├── ';
-  const displayName = relativePath === '' ? path.basename(process.cwd()) : dirName;
-  output += prefix + connector + displayName + '\n';
-
-  // Check if it's a directory
+  // Check if it's a directory or file
   let stats;
   try {
     stats = fs.statSync(dirPath);
   } catch (err) {
-    return output; // Skip if we can't read it
+    return ''; // Skip if we can't read it
   }
 
+  // Add current directory/file to output
+  const connector = isLast ? '└── ' : '├── ';
+  const displayName = relativePath === '' ? path.basename(dirPath) : dirName;
+  
+  // For files, add line count
   if (!stats.isDirectory()) {
+    const lineCount = countLines(dirPath);
+    output += prefix + connector + displayName + ` (${lineCount} lines)\n`;
     return output;
   }
+  
+  // For directories, just show the name
+  output += prefix + connector + displayName + '\n';
 
   // Read directory contents
   let items;
@@ -87,10 +107,31 @@ function buildTree(dirPath, prefix = '', isLast = true, relativePath = '') {
 }
 
 /**
+ * Find the project root directory
+ * @returns {string} - The project root directory path
+ */
+function findProjectRoot() {
+  // Start from the script's directory
+  let currentDir = __dirname;
+  
+  // Go up one level from scripts directory to get project root
+  const projectRoot = path.resolve(currentDir, '..');
+  
+  // Verify that package.json exists in the root
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    return projectRoot;
+  }
+  
+  // If not found, use current working directory as fallback
+  return process.cwd();
+}
+
+/**
  * Main function to generate the project structure
  */
 function generateProjectStructure() {
-  const rootDir = process.cwd();
+  const rootDir = findProjectRoot();
   console.log('Scanning project structure...');
   console.log('Root directory:', rootDir);
 

@@ -326,3 +326,4 @@ export default function GoalDialog({
     </Dialog>
   );
 }
+
