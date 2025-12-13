@@ -55,7 +55,7 @@ export function DialogsContainer({
   // Destructure other needed data
   const { game, gamePlayers, matchDuration, isDone } = gameCore;
   const { localRosterStatuses } = roster;
-  const { goals, substitutions, cards, timeline } = events;
+  const { goals, substitutions, cards, timeline, handleSaveGoal, handleSaveSubstitution, handleSaveCard } = events;
   const { localPlayerReports, teamStats, isLoadingTeamStats } = reports;
   const { playersOnPitch, benchPlayers, squadPlayers } = derivedState;
   const {
