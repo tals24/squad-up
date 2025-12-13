@@ -61,7 +61,9 @@ export default function GameDetailsHeader({
 
   // Handle back button navigation
   // Use window.location.href like reference code does in handlePostpone
-  const handleBackClick = () => {
+  const handleBackClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     console.log('🔙 Back button clicked, navigating to GamesSchedule');
     window.location.href = "/GamesSchedule";
   };
