@@ -53,7 +53,7 @@ export function DialogsContainer({
   } = dialogs;
 
   // Destructure other needed data
-  const { game, gamePlayers, matchDuration, isDone } = gameCore;
+  const { game, gamePlayers, matchDuration, finalScore, isDone } = gameCore;
   const { localRosterStatuses } = roster;
   const { goals, substitutions, cards, timeline, handleSaveGoal, handleSaveSubstitution, handleSaveCard } = events;
   const { localPlayerReports, teamStats, isLoadingTeamStats } = reports;
@@ -63,7 +63,7 @@ export function DialogsContainer({
     handleConfirmFinalSubmission: handleFinalizeDoneGame,
     handleSelectPlayerForPosition,
   } = handlers;
-  const { getCurrentSummaryValue, handleTeamSummarySave } = teamSummary;
+  const { getCurrentSummaryValue, handleTeamSummarySave, teamSummary: teamSummaryData } = teamSummary;
   return (
     <>
       {/* Player Performance Dialog */}
@@ -96,8 +96,11 @@ export function DialogsContainer({
       {/* Final Report Dialog */}
       <FinalReportDialog
         open={showFinalReportDialog}
-        onClose={closeFinalReportDialog}
-        onFinalize={handleFinalizeDoneGame}
+        onOpenChange={closeFinalReportDialog}
+        finalScore={finalScore}
+        teamSummary={teamSummaryData}
+        onConfirm={handleFinalizeDoneGame}
+        isSaving={isSaving}
       />
 
       {/* Player Selection Dialog */}
