@@ -5,6 +5,9 @@ import { useData } from '@/app/providers/DataProvider';
 import { ConfirmationModal } from '@/shared/components';
 import PageLoader from '@/shared/components/PageLoader';
 
+// Import formations
+import { formations } from './formations';
+
 // Import custom hooks
 import {
   useGameCore,
@@ -146,6 +149,7 @@ export default function GameDetailsPage() {
         gameCore={gameCore}
         roster={roster}
         formation={formation}
+        formations={formations}
         events={events}
         reports={reports}
         difficulty={difficulty}

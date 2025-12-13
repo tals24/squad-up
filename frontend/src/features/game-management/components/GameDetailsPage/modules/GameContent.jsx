@@ -13,6 +13,7 @@ export function GameContent({
   gameCore,
   roster,
   formation,
+  formations,
   events,
   reports,
   difficulty,
@@ -23,7 +24,7 @@ export function GameContent({
 }) {
   // Destructure only what's needed for this component
   const { game, gamePlayers, matchDuration, finalScore, isScheduled, isPlayed, isDone, playerMap } = gameCore;
-  const { localRosterStatuses, updatePlayerStatus, isAutosaving } = roster;
+  const { localRosterStatuses, updatePlayerStatus, getPlayerStatus } = roster;
   const { 
     formation: formationState, 
     formationType, 
@@ -60,24 +61,31 @@ export function GameContent({
     openPlayerSelectionDialog, 
     openFinalReportDialog 
   } = dialogs;
+  const { playersOnPitch, benchPlayers, squadPlayers } = derivedState;
+  
   return (
     <div className="flex flex-1 gap-6 overflow-hidden">
       {/* Left Sidebar - Roster */}
       <GameDayRosterSidebar
-        gamePlayers={gamePlayers}
-        localRosterStatuses={localRosterStatuses}
+        playersOnPitch={playersOnPitch}
+        benchPlayers={benchPlayers}
+        squadPlayers={squadPlayers}
+        hasReport={hasReport}
+        needsReport={needsReport}
+        getPlayerStatus={getPlayerStatus}
+        handleOpenPerformanceDialog={openPlayerPerfDialog}
         updatePlayerStatus={updatePlayerStatus}
+        handleDragStart={handleDragStart}
+        handleDragEnd={handleDragEnd}
         isScheduled={isScheduled}
         isPlayed={isPlayed}
         isDone={isDone}
-        isAutosaving={isAutosaving}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
       />
 
       {/* Center - Tactical Board */}
       <div className="flex-1 flex flex-col gap-4">
         <TacticalBoard
+          formations={formations}
           formation={formationState}
           formationType={formationType}
           positions={positions}
@@ -91,6 +99,8 @@ export function GameContent({
           manualFormationMode={manualFormationMode}
           draggedPlayer={draggedPlayer}
           isDragging={isDragging}
+          hasReport={hasReport}
+          needsReport={needsReport}
         />
       </div>
 
