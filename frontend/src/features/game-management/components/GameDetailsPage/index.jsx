@@ -112,6 +112,9 @@ export default function GameDetailsPage() {
     updatePlayerStatus: roster.updatePlayerStatus,
     setManualFormationMode: formation.setManualFormationMode,
     selectedPosition: dialogs.selectedPosition,
+    setLocalRosterStatuses: roster.setLocalRosterStatuses,
+    updateGameRostersInCache: roster.updateGameRostersInCache,
+    matchDuration: gameCore.matchDuration,
   });
 
   // Early returns

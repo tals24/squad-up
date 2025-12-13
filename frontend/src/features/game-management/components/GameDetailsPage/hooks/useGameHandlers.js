@@ -44,6 +44,9 @@ export function useGameHandlers({
   updatePlayerStatus,
   setManualFormationMode,
   selectedPosition,
+  setLocalRosterStatuses,
+  updateGameRostersInCache,
+  matchDuration,
 }) {
   // Game state transitions
   const handleGameWasPlayed = async () => {
@@ -152,6 +155,37 @@ export function useGameHandlers({
         await refreshData();
       }
 
+      // Step 2: Update localRosterStatuses directly from response rosters
+      if (result.data?.rosters && Array.isArray(result.data.rosters)) {
+        const statuses = {};
+        
+        // Extract statuses from response rosters
+        result.data.rosters.forEach((roster) => {
+          const playerId = typeof roster.player === "object" 
+            ? roster.player._id 
+            : roster.player;
+          statuses[playerId] = roster.status;
+        });
+        
+        // Ensure all gamePlayers have a status (default to "Not in Squad" if missing)
+        gamePlayers.forEach((player) => {
+          if (!statuses[player._id]) {
+            statuses[player._id] = "Not in Squad";
+          }
+        });
+        
+        console.log('✅ Updated roster statuses from response:', {
+          rosterCount: result.data.rosters.length,
+          statusesCount: Object.keys(statuses).length,
+        });
+        
+        setLocalRosterStatuses(statuses);
+
+        // Update global gameRosters cache immediately
+        updateGameRostersInCache(result.data.rosters, gameId);
+        console.log('✅ [State Update] Global gameRosters cache updated');
+      }
+
       alert("Game status changed to 'Played' successfully!");
     } catch (error) {
       console.error("Error updating game status:", error);
@@ -252,19 +286,49 @@ export function useGameHandlers({
       const result = await response.json();
 
       if (result.data?.game) {
-        updateGameInCache(gameId, {
+        // Preserve matchDuration when updating game status
+        const updatedGameData = {
           status: result.data.game.status,
           lineupDraft: null,
-        });
-        setGame((prev) => ({ ...prev, status: result.data.game.status, lineupDraft: null }));
+          matchDuration: matchDuration, // Preserve the matchDuration state
+        };
+        
+        updateGameInCache(gameId, updatedGameData);
+        setGame((prev) => ({ 
+          ...prev, 
+          status: result.data.game.status, 
+          lineupDraft: null,
+          matchDuration: matchDuration // Preserve the matchDuration state
+        }));
         await refreshData();
       }
 
       setShowFinalReportDialog(false);
-      alert("✅ Final report submitted successfully! Game status is now 'Done'.");
+      
+      // Show success confirmation dialog
+      showConfirmation({
+        title: "Success",
+        message: "Final report submitted successfully! Game status is now 'Done'.",
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "success"
+      });
     } catch (error) {
       console.error("Error submitting final report:", error);
-      alert(error.message || "Failed to submit final report. Please try again.");
+      
+      // Show error confirmation dialog
+      const errorMessage = error.message || "Failed to submit final report. Please try again.";
+      showConfirmation({
+        title: "Error",
+        message: errorMessage,
+        confirmText: "OK",
+        cancelText: null,
+        onConfirm: () => setShowConfirmationModal(false),
+        onCancel: null,
+        type: "warning"
+      });
     } finally {
       setIsSaving(false);
       setIsFinalizingGame(false);

@@ -55,7 +55,7 @@ export function DialogsContainer({
   // Destructure other needed data
   const { game, gamePlayers, matchDuration, finalScore, isDone } = gameCore;
   const { localRosterStatuses } = roster;
-  const { goals, substitutions, cards, timeline, handleSaveGoal, handleSaveSubstitution, handleSaveCard } = events;
+  const { goals, substitutions, cards, timeline, handleSaveGoal, handleSaveOpponentGoal, handleSaveSubstitution, handleSaveCard } = events;
   const { localPlayerReports, teamStats, isLoadingTeamStats } = reports;
   const { playersOnPitch, benchPlayers, squadPlayers } = derivedState;
   const {
@@ -128,7 +128,7 @@ export function DialogsContainer({
         isOpen={showGoalDialog}
         onClose={closeGoalDialog}
         onSave={handleSaveGoal}
-        onSaveOpponentGoal={handleSaveGoal}
+        onSaveOpponentGoal={handleSaveOpponentGoal}
         goal={selectedGoal}
         gamePlayers={gamePlayers}
         existingGoals={goals}

@@ -59,6 +59,18 @@ export default function GameDetailsHeader({
     year: "numeric",
   });
 
+  // Handle back button navigation
+  const handleBackClick = () => {
+    try {
+      // Try React Router navigation first
+      navigate("/GamesSchedule");
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to window.location if navigate fails
+      window.location.href = "/GamesSchedule";
+    }
+  };
+
   return (
     <div className="border-b border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800 shadow-xl backdrop-blur-sm">
       <div className="max-w-[1800px] mx-auto px-6 py-4">
@@ -69,7 +81,7 @@ export default function GameDetailsHeader({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/GamesSchedule")}
+              onClick={handleBackClick}
               className="text-cyan-400 hover:text-cyan-300 hover:bg-slate-800"
             >
               <ArrowLeft className="w-5 h-5" />

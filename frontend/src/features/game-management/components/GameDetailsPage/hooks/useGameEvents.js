@@ -141,6 +141,34 @@ export function useGameEvents(gameId, game, setFinalScore) {
     }
   };
 
+  // Opponent Goal handler
+  const handleSaveOpponentGoal = async (opponentGoalData) => {
+    try {
+      // Save opponent goal to database with isOpponentGoal flag
+      const goalData = {
+        minute: opponentGoalData.minute,
+        goalType: opponentGoalData.goalType || 'open-play',
+        isOpponentGoal: true, // ⚠️ KEY: Marks as opponent goal
+      };
+      
+      await createGoal(gameId, goalData);
+      
+      // Refresh goals list to include the new opponent goal
+      const updatedGoals = await fetchGoals(gameId);
+      setGoals(updatedGoals);
+      
+      // Refresh timeline
+      const timelineData = await fetchMatchTimeline(gameId);
+      setTimeline(timelineData);
+      
+      // Refresh team stats (no player stats change, but keep consistency)
+      await refreshTeamStats();
+    } catch (error) {
+      console.error('Error saving opponent goal:', error);
+      throw error;
+    }
+  };
+
   // Substitution handlers
   const handleSaveSubstitution = async (subData) => {
     const isEditing = subData._id;
@@ -232,6 +260,7 @@ export function useGameEvents(gameId, game, setFinalScore) {
     
     // Handlers
     handleSaveGoal,
+    handleSaveOpponentGoal,
     handleDeleteGoal,
     handleSaveSubstitution,
     handleDeleteSubstitution,
