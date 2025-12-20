@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 import { useData } from '@/app/providers/DataProvider';
 
@@ -26,6 +26,9 @@ export function useGameCore(gameId) {
   // Local loading state for direct game fetch
   const [isFetchingGame, setIsFetchingGame] = useState(true);
   
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+  
   // Load game data (with direct fetch to ensure latest draft data)
   useEffect(() => {
     if (!gameId) {
@@ -33,18 +36,28 @@ export function useGameCore(gameId) {
       return;
     }
 
+    // Create AbortController for this fetch
+    const abortController = new AbortController();
+    isMountedRef.current = true;
+
     const fetchGameDirectly = async () => {
+      if (!isMountedRef.current) return;
       setIsFetchingGame(true);
       try {
         const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           },
+          signal: abortController.signal,
         });
+
+        if (!isMountedRef.current) return;
 
         if (response.ok) {
           const result = await response.json();
           const fetchedGame = result.data;
+          
+          if (!isMountedRef.current) return;
           
           if (fetchedGame) {
             console.log('🔍 [useGameCore] Fetched game directly:', {
@@ -61,33 +74,39 @@ export function useGameCore(gameId) {
               secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
             };
             
-            setMatchDuration(loadedMatchDuration);
-            setGame({
-              ...fetchedGame,
-              matchDuration: loadedMatchDuration
-            });
-            
-            // Initialize score from game data
-            if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
-              setFinalScore({
-                ourScore: fetchedGame.ourScore || 0,
-                opponentScore: fetchedGame.opponentScore || 0,
+            if (isMountedRef.current) {
+              setMatchDuration(loadedMatchDuration);
+              setGame({
+                ...fetchedGame,
+                matchDuration: loadedMatchDuration
               });
+              
+              // Initialize score from game data
+              if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
+                setFinalScore({
+                  ourScore: fetchedGame.ourScore || 0,
+                  opponentScore: fetchedGame.opponentScore || 0,
+                });
+              }
+              
+              setIsFetchingGame(false);
             }
-            
-            setIsFetchingGame(false);
             return;
           }
         }
 
         // Fallback: Use games array from DataProvider
+        if (!isMountedRef.current) return;
+        
         if (!games || games.length === 0) {
-          setIsFetchingGame(false);
+          if (isMountedRef.current) {
+            setIsFetchingGame(false);
+          }
           return;
         }
 
         const foundGame = games.find((g) => g._id === gameId);
-        if (foundGame) {
+        if (foundGame && isMountedRef.current) {
           const gameMatchDuration = foundGame.matchDuration || {};
           const loadedMatchDuration = {
             regularTime: gameMatchDuration.regularTime || 90,
@@ -109,13 +128,25 @@ export function useGameCore(gameId) {
           }
         }
       } catch (error) {
-        console.error('Error fetching game directly:', error);
-      } finally {
-        setIsFetchingGame(false);
+        // Ignore abort errors (component unmounted)
+        if (error.name === 'AbortError') {
+          console.log('🚫 [useGameCore] Fetch cancelled (component unmounted)');
+          return;
+        }
+        if (isMountedRef.current) {
+          console.error('Error fetching game directly:', error);
+          setIsFetchingGame(false);
+        }
       }
     };
 
     fetchGameDirectly();
+
+    // Cleanup: Cancel fetch and mark as unmounted
+    return () => {
+      isMountedRef.current = false;
+      abortController.abort();
+    };
   }, [gameId, games]);
 
   // Load team players

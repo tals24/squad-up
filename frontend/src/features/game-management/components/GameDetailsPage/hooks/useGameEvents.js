@@ -42,6 +42,10 @@ export function useGameEvents(gameId, game, setFinalScore) {
   useEffect(() => {
     if (!gameId || !game) return;
     
+    // Create AbortController for this fetch
+    const abortController = new AbortController();
+    let isMounted = true;
+    
     const loadEvents = async () => {
       try {
         const [goalsData, subsData, cardsData, timelineData] = await Promise.all([
@@ -51,16 +55,31 @@ export function useGameEvents(gameId, game, setFinalScore) {
           fetchMatchTimeline(gameId).catch(() => []),
         ]);
         
+        if (!isMounted) return;
+        
         setGoals(goalsData);
         setSubstitutions(subsData);
         setCards(cardsData);
         setTimeline(timelineData);
       } catch (error) {
-        console.error('Error fetching game events:', error);
+        // Ignore abort errors (component unmounted)
+        if (error.name === 'AbortError') {
+          console.log('🚫 [useGameEvents] Load events cancelled (component unmounted)');
+          return;
+        }
+        if (isMounted) {
+          console.error('Error fetching game events:', error);
+        }
       }
     };
     
     loadEvents();
+
+    // Cleanup: Cancel fetch and mark as unmounted
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, [gameId, game]);
 
   // Calculate score from goals when goals are loaded or changed

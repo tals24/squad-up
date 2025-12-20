@@ -86,13 +86,24 @@ export function usePlayerReports(gameId, game, gamePlayers, localRosterStatuses)
       return;
     }
 
+    // Create AbortController for this fetch
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const loadTeamStats = async () => {
+      if (!isMounted) return;
       setIsLoadingTeamStats(true);
       try {
         const stats = await fetchPlayerStats(gameId);
+        
+        if (!isMounted) return;
+        
         setTeamStats(stats);
         
         const matchStats = await fetchPlayerMatchStats(gameId);
+        
+        if (!isMounted) return;
+        
         const statsMap = {};
         matchStats.forEach(stat => {
           const playerId = typeof stat.playerId === 'object' ? stat.playerId._id : stat.playerId;
@@ -117,19 +128,36 @@ export function usePlayerReports(gameId, game, gamePlayers, localRosterStatuses)
           };
         });
         
-        setLocalPlayerMatchStats(prev => ({
-          ...prev,
-          ...statsMap
-        }));
+        if (isMounted) {
+          setLocalPlayerMatchStats(prev => ({
+            ...prev,
+            ...statsMap
+          }));
+        }
       } catch (error) {
-        console.error('Error pre-fetching player stats:', error);
-        setTeamStats({});
+        // Ignore abort errors (component unmounted)
+        if (error.name === 'AbortError') {
+          console.log('🚫 [usePlayerReports] Load stats cancelled (component unmounted)');
+          return;
+        }
+        if (isMounted) {
+          console.error('Error pre-fetching player stats:', error);
+          setTeamStats({});
+        }
       } finally {
-        setIsLoadingTeamStats(false);
+        if (isMounted) {
+          setIsLoadingTeamStats(false);
+        }
       }
     };
 
     loadTeamStats();
+
+    // Cleanup: Cancel fetch and mark as unmounted
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
   }, [gameId, game?.status]);
 
   // Helper: Check if player has report

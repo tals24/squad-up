@@ -99,7 +99,13 @@ export function useFormationManagement(gamePlayers, localRosterStatuses, game, g
     if (!game || game.status !== 'Scheduled') return;
     if (Object.keys(localRosterStatuses).length === 0) return;
 
+    // Create AbortController for this fetch
+    const abortController = new AbortController();
+    let isMounted = true;
+
     const autosaveTimer = setTimeout(async () => {
+      if (!isMounted) return;
+      
       try {
         const formationForDraft = {};
         Object.keys(formation).forEach((posId) => {
@@ -124,7 +130,10 @@ export function useFormationManagement(gamePlayers, localRosterStatuses, game, g
             formation: formationForDraft,
             formationType: formationType
           }),
+          signal: abortController.signal,
         });
+
+        if (!isMounted) return;
 
         if (!response.ok) {
           throw new Error('Failed to save draft');
@@ -132,11 +141,22 @@ export function useFormationManagement(gamePlayers, localRosterStatuses, game, g
 
         console.log('✅ [useFormationManagement] Draft autosaved');
       } catch (error) {
-        console.error('❌ Error autosaving formation draft:', error);
+        // Ignore abort errors (component unmounted)
+        if (error.name === 'AbortError') {
+          console.log('🚫 [useFormationManagement] Autosave cancelled (component unmounted)');
+          return;
+        }
+        if (isMounted) {
+          console.error('❌ Error autosaving formation draft:', error);
+        }
       }
     }, 2500);
 
-    return () => clearTimeout(autosaveTimer);
+    return () => {
+      isMounted = false;
+      clearTimeout(autosaveTimer);
+      abortController.abort();
+    };
   }, [localRosterStatuses, formation, formationType, gameId, game, isFinalizingGame]);
 
   const handleFormationChange = (newFormationType) => {
