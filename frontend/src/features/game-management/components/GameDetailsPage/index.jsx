@@ -21,19 +21,14 @@ import {
 import { ConfirmationModal } from "@/shared/components";
 import PageLoader from "@/shared/components/PageLoader";
 
-// Import modular components
-import GameDetailsHeader from "./components/GameDetailsHeader";
-import GameDayRosterSidebar from "./components/GameDayRosterSidebar";
-import TacticalBoard from "./components/TacticalBoard";
-import MatchAnalysisSidebar from "./components/MatchAnalysisSidebar";
-import PlayerPerformanceDialog from "./components/dialogs/PlayerPerformanceDialog";
-import FinalReportDialog from "./components/dialogs/FinalReportDialog";
-import PlayerSelectionDialog from "./components/dialogs/PlayerSelectionDialog";
-import TeamSummaryDialog from "./components/dialogs/TeamSummaryDialog";
-import GoalDialog from "./components/dialogs/GoalDialog";
-import SubstitutionDialog from "./components/dialogs/SubstitutionDialog";
-import CardDialog from "./components/dialogs/CardDialog";
-import AutoFillReportsButton from "./components/AutoFillReportsButton";
+// Import UI modules (composition wrappers)
+import {
+  GameHeaderModule,
+  RosterSidebarModule,
+  TacticalBoardModule,
+  MatchAnalysisModule,
+  DialogsModule
+} from "./modules";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
@@ -2352,7 +2347,7 @@ export default function GameDetails() {
         </div>
       )}
       {/* Header */}
-      <GameDetailsHeader
+      <GameHeaderModule
         game={game}
         finalScore={finalScore}
         setFinalScore={setFinalScore}
@@ -2375,7 +2370,7 @@ export default function GameDetails() {
       {/* Main Content - 3 Column Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Game Day Roster */}
-        <GameDayRosterSidebar
+        <RosterSidebarModule
           playersOnPitch={playersOnPitch}
           benchPlayers={benchPlayers}
           squadPlayers={squadPlayers}
@@ -2392,37 +2387,35 @@ export default function GameDetails() {
         />
 
         {/* Center - Tactical Board */}
-        <div className="flex-1 bg-slate-900/95 backdrop-blur-sm relative">
-          <TacticalBoard
-            formations={formations}
-            formationType={formationType}
-            positions={positions}
-            formation={formation}
-            onFormationChange={handleFormationChange}
-            onPositionDrop={handlePositionDrop}
-            onRemovePlayer={handleRemovePlayerFromPosition}
-            onPlayerClick={handleOpenPerformanceDialog}
-            onPositionClick={handlePositionClick}
-            isDragging={isDragging}
-            isScheduled={isScheduled}
-            isPlayed={isPlayed}
-            isReadOnly={isDone}
-            isDone={isDone}
-            hasReport={hasReport}
-            needsReport={needsReport}
-          />
-          {/* Auto-Fill Reports Button - Only show for Played games */}
-          {isPlayed && (
-            <AutoFillReportsButton
-              remainingCount={remainingReportsCount}
-              onAutoFill={handleAutoFillRemaining}
-              disabled={remainingReportsCount === 0 || isDone}
-            />
-          )}
-        </div>
+        <TacticalBoardModule
+          tacticalBoardProps={{
+            formations,
+            formationType,
+            positions,
+            formation,
+            onFormationChange: handleFormationChange,
+            onPositionDrop: handlePositionDrop,
+            onRemovePlayer: handleRemovePlayerFromPosition,
+            onPlayerClick: handleOpenPerformanceDialog,
+            onPositionClick: handlePositionClick,
+            isDragging,
+            isScheduled,
+            isPlayed,
+            isReadOnly: isDone,
+            isDone,
+            hasReport,
+            needsReport,
+          }}
+          autoFillProps={{
+            showAutoFill: isPlayed,
+            remainingCount: remainingReportsCount,
+            onAutoFill: handleAutoFillRemaining,
+            disabled: remainingReportsCount === 0 || isDone,
+          }}
+        />
 
         {/* Right Sidebar - Match Analysis */}
-        <MatchAnalysisSidebar
+        <MatchAnalysisModule
           isScheduled={isScheduled}
           isPlayed={isPlayed}
           isDone={isDone}
@@ -2452,135 +2445,129 @@ export default function GameDetails() {
       </div>
 
       {/* Dialogs */}
-      <FinalReportDialog
-        open={showFinalReportDialog}
-        onOpenChange={setShowFinalReportDialog}
-        finalScore={finalScore}
-        teamSummary={teamSummary}
-        onConfirm={handleConfirmFinalSubmission}
-        isSaving={isSaving}
-      />
-
-      <PlayerPerformanceDialog
-        open={showPlayerPerfDialog}
-        onOpenChange={setShowPlayerPerfDialog}
-        player={selectedPlayer}
-        data={playerPerfData}
-        onDataChange={setPlayerPerfData}
-        onSave={handleSavePerformanceReport}
-        isReadOnly={isDone}
-        isStarting={!!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id))}
-        game={game}
-        matchDuration={matchDuration}
-        substitutions={substitutions}
-        playerReports={localPlayerReports}
-        goals={goals}
-        cards={cards}
-        // NEW: Pass pre-fetched stats (for display only, read-only)
-        initialMinutes={teamStats[selectedPlayer?._id]?.minutes}
-        initialGoals={teamStats[selectedPlayer?._id]?.goals}
-        initialAssists={teamStats[selectedPlayer?._id]?.assists}
-        // NEW: Pass loading state for stat fields
-        isLoadingStats={isLoadingTeamStats}
-        onAddSubstitution={() => {
-          setShowPlayerPerfDialog(false);
-          setShowSubstitutionDialog(true);
+      <DialogsModule
+        dialogs={{
+          finalReport: {
+            open: showFinalReportDialog,
+            onOpenChange: setShowFinalReportDialog,
+            finalScore,
+            teamSummary,
+            onConfirm: handleConfirmFinalSubmission,
+            isSaving,
+          },
+          playerPerformance: {
+            open: showPlayerPerfDialog,
+            onOpenChange: setShowPlayerPerfDialog,
+            player: selectedPlayer,
+            data: playerPerfData,
+            onDataChange: setPlayerPerfData,
+            onSave: handleSavePerformanceReport,
+            isReadOnly: isDone,
+            isStarting: !!(selectedPlayer && playersOnPitch.some(p => p._id === selectedPlayer._id)),
+            game,
+            matchDuration,
+            substitutions,
+            playerReports: localPlayerReports,
+            goals,
+            cards,
+            initialMinutes: teamStats[selectedPlayer?._id]?.minutes,
+            initialGoals: teamStats[selectedPlayer?._id]?.goals,
+            initialAssists: teamStats[selectedPlayer?._id]?.assists,
+            isLoadingStats: isLoadingTeamStats,
+            onAddSubstitution: () => {
+              setShowPlayerPerfDialog(false);
+              setShowSubstitutionDialog(true);
+            },
+          },
+          playerSelection: {
+            open: showPlayerSelectionDialog,
+            onClose: () => {
+              setShowPlayerSelectionDialog(false);
+              setSelectedPosition(null);
+              setSelectedPositionData(null);
+            },
+            position: selectedPosition,
+            positionData: selectedPositionData,
+            availablePlayers: squadPlayers,
+            onSelectPlayer: handleSelectPlayerForPosition,
+          },
+          teamSummary: {
+            open: showTeamSummaryDialog,
+            onOpenChange: setShowTeamSummaryDialog,
+            summaryType: selectedSummaryType,
+            currentValue: getCurrentSummaryValue(),
+            onSave: handleTeamSummarySave,
+            isSaving,
+          },
+          goal: {
+            isOpen: showGoalDialog,
+            onClose: () => {
+              setShowGoalDialog(false);
+              setSelectedGoal(null);
+            },
+            onSave: handleSaveGoal,
+            onSaveOpponentGoal: handleSaveOpponentGoal,
+            goal: selectedGoal,
+            gamePlayers: activeGamePlayers,
+            existingGoals: goals,
+            matchDuration: matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime,
+            isReadOnly: isDone,
+            game,
+            timeline,
+            startingLineup: startingLineupMap,
+            squadPlayers: squadPlayersMap,
+          },
+          substitution: {
+            isOpen: showSubstitutionDialog,
+            onClose: () => {
+              setShowSubstitutionDialog(false);
+              setSelectedSubstitution(null);
+            },
+            onSave: handleSaveSubstitution,
+            substitution: selectedSubstitution,
+            playersOnPitch: Object.values(formation).filter(player => player && player._id),
+            benchPlayers,
+            matchDuration: matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime,
+            isReadOnly: isDone,
+            playerReports: localPlayerReports,
+            timeline,
+            startingLineup: startingLineupMap,
+            squadPlayers: squadPlayersMap,
+          },
+          card: {
+            isOpen: showCardDialog,
+            onClose: () => {
+              console.log('🔍 [GameDetailsPage] Closing CardDialog:', {
+                selectedCard: selectedCard ? {
+                  _id: selectedCard._id,
+                  cardType: selectedCard.cardType,
+                  playerId: selectedCard.playerId?._id || selectedCard.playerId
+                } : null
+              });
+              setShowCardDialog(false);
+              setSelectedCard(null);
+            },
+            onSave: handleSaveCard,
+            card: selectedCard,
+            gamePlayers: activeGamePlayers,
+            cards,
+            matchDuration: matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime,
+            isReadOnly: isDone,
+            game,
+          },
+          confirmation: {
+            isOpen: showConfirmationModal,
+            onClose: () => setShowConfirmationModal(false),
+            title: confirmationConfig.title,
+            message: confirmationConfig.message,
+            confirmText: confirmationConfig.confirmText,
+            cancelText: confirmationConfig.cancelText,
+            onConfirm: handleConfirmation,
+            onCancel: handleConfirmationCancel,
+            type: confirmationConfig.type,
+            isLoading: isSaving,
+          },
         }}
-      />
-
-      <PlayerSelectionDialog
-        open={showPlayerSelectionDialog}
-        onClose={() => {
-          setShowPlayerSelectionDialog(false);
-          setSelectedPosition(null);
-          setSelectedPositionData(null);
-        }}
-        position={selectedPosition}
-        positionData={selectedPositionData}
-        availablePlayers={squadPlayers}
-        onSelectPlayer={handleSelectPlayerForPosition}
-      />
-
-      <TeamSummaryDialog
-        open={showTeamSummaryDialog}
-        onOpenChange={setShowTeamSummaryDialog}
-        summaryType={selectedSummaryType}
-        currentValue={getCurrentSummaryValue()}
-        onSave={handleTeamSummarySave}
-        isSaving={isSaving}
-      />
-
-      <GoalDialog
-        isOpen={showGoalDialog}
-        onClose={() => {
-          setShowGoalDialog(false);
-          setSelectedGoal(null);
-        }}
-        onSave={handleSaveGoal}
-        onSaveOpponentGoal={handleSaveOpponentGoal}
-        goal={selectedGoal}
-        gamePlayers={activeGamePlayers}
-        existingGoals={goals}
-        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
-        isReadOnly={isDone}
-        game={game}
-        timeline={timeline}
-        startingLineup={startingLineupMap}
-        squadPlayers={squadPlayersMap}
-      />
-
-      <SubstitutionDialog
-        isOpen={showSubstitutionDialog}
-        onClose={() => {
-          setShowSubstitutionDialog(false);
-          setSelectedSubstitution(null);
-        }}
-        onSave={handleSaveSubstitution}
-        substitution={selectedSubstitution}
-        playersOnPitch={Object.values(formation).filter(player => player && player._id)}
-        benchPlayers={benchPlayers}
-        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
-        isReadOnly={isDone}
-        playerReports={localPlayerReports}
-        timeline={timeline}
-        startingLineup={startingLineupMap}
-        squadPlayers={squadPlayersMap}
-      />
-
-      <CardDialog
-        isOpen={showCardDialog}
-        onClose={() => {
-          console.log('🔍 [GameDetailsPage] Closing CardDialog:', {
-            selectedCard: selectedCard ? {
-              _id: selectedCard._id,
-              cardType: selectedCard.cardType,
-              playerId: selectedCard.playerId?._id || selectedCard.playerId
-            } : null
-          });
-          setShowCardDialog(false);
-          setSelectedCard(null);
-        }}
-        onSave={handleSaveCard}
-        card={selectedCard}
-        gamePlayers={activeGamePlayers}
-        cards={cards}
-        matchDuration={matchDuration.regularTime + matchDuration.firstHalfExtraTime + matchDuration.secondHalfExtraTime}
-        isReadOnly={isDone}
-        game={game}
-      />
-
-      {/* Confirmation Modal for Validations */}
-      <ConfirmationModal
-        isOpen={showConfirmationModal}
-        onClose={() => setShowConfirmationModal(false)}
-        title={confirmationConfig.title}
-        message={confirmationConfig.message}
-        confirmText={confirmationConfig.confirmText}
-        cancelText={confirmationConfig.cancelText}
-        onConfirm={handleConfirmation}
-        onCancel={handleConfirmationCancel}
-        type={confirmationConfig.type}
-        isLoading={isSaving}
       />
     </div>
   );

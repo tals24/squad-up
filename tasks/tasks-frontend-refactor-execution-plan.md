@@ -65,10 +65,10 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 2.1.1 Inventory responsibilities inside `GameDetailsPage/index.jsx` (data loading, draft autosave, formation, dialogs, validation, etc.)
     - [x] 2.1.2 Identify "stable boundaries" for extraction (what can move without changing behavior)
     - [x] 2.1.3 Document a target folder layout for the pilot (modules + hooks), keeping current imports working
-  - [ ] 2.2 PR set A — UI module extraction (pure composition)
-    - [ ] 2.2.1 Create `GameDetailsPage/modules/` and extract top-level layout sections as wrappers (no logic changes)
-    - [ ] 2.2.2 Ensure all props passed through unchanged (same values, same handlers)
-    - [ ] 2.2.3 Verify: E2E smoke + integration tests green
+  - [x] 2.2 PR set A — UI module extraction (pure composition)
+    - [x] 2.2.1 Create `GameDetailsPage/modules/` and extract top-level layout sections as wrappers (no logic changes)
+    - [x] 2.2.2 Ensure all props passed through unchanged (same values, same handlers)
+    - [x] 2.2.3 Verify: E2E smoke + integration tests green
   - [ ] 2.3 PR set B — Extract “data loading” hook (preserve current behavior)
     - [ ] 2.3.1 Extract the “fetch game directly + fallback to DataProvider” logic into `useGameDetailsData(gameId, games, ...)`
     - [ ] 2.3.2 Preserve semantics: `isFetchingGame`, `isReadOnly`, matchDuration init, finalScore init, teamSummary init
