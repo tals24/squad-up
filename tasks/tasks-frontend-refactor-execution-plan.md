@@ -37,7 +37,7 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 0.1 Create and checkout a new branch for this work (e.g., `git checkout -b refactor/frontend-alignment-plan`)
   - [x] 0.2 Push branch to remote and open a draft PR describing scope + "no behavior change" policy
 
-- [ ] 1.0 Phase 0 — Safety Net: establish regression protection (tests + smoke)
+- [x] 1.0 Phase 0 — Safety Net: establish regression protection (tests + smoke)
   - [x] 1.1 Read and internalize the constitution + diagnosis
     - [x] 1.1.1 Read `docs/frontendImproved.md` and extract the non-negotiables into the PR description
     - [x] 1.1.2 Read `docs/refactorUi.txt` and list the top 5 offenders + why they are risky
@@ -45,20 +45,20 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 1.2.1 Identify the critical user flows for the pilot page (Scheduled/Played/Done)
     - [x] 1.2.2 Write a short "manual smoke checklist" (steps + expected results) for GameDetails
     - [x] 1.2.3 Capture baseline console/network expectations (e.g., which endpoints are called in each flow)
-  - [ ] 1.3 Add/extend E2E smoke coverage for game flow
-    - [ ] 1.3.1 Review `frontend/src/__tests__/e2e/gameManagement.spec.js` and existing coverage gaps
-    - [ ] 1.3.2 Add a stable E2E smoke scenario: open schedule → open game details → verify key UI loads
-    - [ ] 1.3.3 Add at least one smoke scenario per game status (Scheduled, Played, Done) if feasible
-  - [ ] 1.4 Add integration regression tests for `GameDetailsPage` (behavior parity)
-    - [ ] 1.4.1 Add tests for Scheduled: draft loads, roster changes trigger autosave debounce
-    - [ ] 1.4.2 Add tests for Played: report draft autosave enabled; “final report” validation blocks as before
-    - [ ] 1.4.3 Add tests for Done: read-only behavior enforced, dialogs reflect read-only state
-    - [ ] 1.4.4 Add tests for dialogs: Goal/Card/Substitution open/close/save paths (happy paths)
-  - [ ] 1.5 Define “refactor gates” that must stay green for every PR
-    - [ ] 1.5.1 Gate: E2E smoke passes
-    - [ ] 1.5.2 Gate: pilot integration tests pass
-    - [ ] 1.5.3 Gate: no cross-feature imports introduced
-    - [ ] 1.5.4 Gate: behavior parity checklist has no regressions
+  - [x] 1.3 Add/extend E2E smoke coverage for game flow
+    - [x] 1.3.1 Review `frontend/src/__tests__/e2e/gameManagement.spec.js` and existing coverage gaps
+    - [x] 1.3.2 Add a stable E2E smoke scenario: open schedule → open game details → verify key UI loads
+    - [x] 1.3.3 Add at least one smoke scenario per game status (Scheduled, Played, Done) if feasible
+  - [x] 1.4 Add integration regression tests for `GameDetailsPage` (behavior parity)
+    - [x] 1.4.1 Add tests for Scheduled: draft loads, roster changes trigger autosave debounce
+    - [x] 1.4.2 Add tests for Played: report draft autosave enabled; "final report" validation blocks as before
+    - [x] 1.4.3 Add tests for Done: read-only behavior enforced, dialogs reflect read-only state
+    - [x] 1.4.4 Add tests for dialogs: Goal/Card/Substitution open/close/save paths (happy paths)
+  - [x] 1.5 Define "refactor gates" that must stay green for every PR
+    - [x] 1.5.1 Gate: E2E smoke passes
+    - [x] 1.5.2 Gate: pilot integration tests pass
+    - [x] 1.5.3 Gate: no cross-feature imports introduced
+    - [x] 1.5.4 Gate: behavior parity checklist has no regressions
 
 - [ ] 2.0 Phase 1 — Pilot: decompose `GameDetailsPage` into modules + hooks (no behavior changes)
   - [ ] 2.1 Create a decomposition map before moving code
