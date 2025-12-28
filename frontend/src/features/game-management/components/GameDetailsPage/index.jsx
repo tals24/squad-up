@@ -61,6 +61,7 @@ export default function GameDetails() {
     setMatchDuration,
     setFinalScore,
     setTeamSummary,
+    setIsReadOnly, // ✅ FIX: Added for handleConfirmFinalSubmission & handleEditReport
   } = useGameDetailsData(gameId, { games, players, teams });
 
   // Formation state (needed before lineup draft manager)

@@ -252,6 +252,7 @@ export function useGameDetailsData(gameId, { games, players, teams }) {
     setMatchDuration,
     setFinalScore,
     setTeamSummary,
+    setIsReadOnly, // ✅ FIX: Expose for handleConfirmFinalSubmission & handleEditReport
   };
 }
 
