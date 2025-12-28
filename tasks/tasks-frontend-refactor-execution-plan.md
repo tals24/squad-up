@@ -83,11 +83,11 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 2.5.1 Extract report draft merge logic (draft overrides saved)
     - [x] 2.5.2 Preserve the "shouldSkip" semantics used by `useAutosave`
     - [x] 2.5.3 Verify: played/done tests + smoke green (Manual testing required)
-  - [ ] 2.6 PR set E — Extract formation/roster derivations + DnD behavior into hooks
-    - [ ] 2.6.1 Extract player grouping logic (bench/squad/onPitch, maps for reconstruction)
-    - [ ] 2.6.2 Extract formation auto-build logic and ensure manual mode behavior stays identical
-    - [ ] 2.6.3 Extract drag/drop handlers and out-of-position confirmation logic
-    - [ ] 2.6.4 Verify: same DnD UX + tests green
+  - [x] 2.6 PR set E — Extract formation/roster derivations + DnD behavior into hooks ✅
+    - [x] 2.6.1 Extract player grouping logic (bench/squad/onPitch, maps for reconstruction) ✅
+    - [x] 2.6.2 Extract formation auto-build logic and ensure manual mode behavior stays identical ✅
+    - [x] 2.6.3 Extract drag/drop handlers and out-of-position confirmation logic ✅
+    - [x] 2.6.4 Verify: same DnD UX + tests green ✅
   - [ ] 2.7 PR set F — Normalize API calls in the pilot (remove hardcoded URLs)
     - [ ] 2.7.1 Replace `fetch('http://localhost:3001/...')` in the pilot with `src/shared/api/client.js` usage
     - [ ] 2.7.2 Preserve auth header behavior and response parsing behavior
