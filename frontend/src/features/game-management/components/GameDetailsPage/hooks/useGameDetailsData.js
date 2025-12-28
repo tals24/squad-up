@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiClient } from '@/shared/api/client';
 
 /**
  * useGameDetailsData
@@ -74,67 +75,61 @@ export function useGameDetailsData(gameId, { games, players, teams }) {
     const fetchGameDirectly = async () => {
       setIsFetchingGame(true); // Set loading state at the start
       try {
-        const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
+        // ✅ REFACTORED: Use apiClient instead of manual fetch
+        const result = await apiClient.get(`/api/games/${gameId}`);
+        const fetchedGame = result.data;
+        
+        if (fetchedGame) {
+          console.log('🔍 [useGameDetailsData] Fetched game directly:', {
+            gameId: fetchedGame._id,
+            status: fetchedGame.status,
+            hasLineupDraft: !!fetchedGame.lineupDraft,
+            lineupDraft: fetchedGame.lineupDraft
+          });
 
-        if (response.ok) {
-          const result = await response.json();
-          const fetchedGame = result.data;
+          // Initialize match duration from game data FIRST (before setting game)
+          const gameMatchDuration = fetchedGame.matchDuration || {};
+          const loadedMatchDuration = {
+            regularTime: gameMatchDuration.regularTime || 90,
+            firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
+            secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
+          };
           
-          if (fetchedGame) {
-            console.log('🔍 [useGameDetailsData] Fetched game directly:', {
-              gameId: fetchedGame._id,
-              status: fetchedGame.status,
-              hasLineupDraft: !!fetchedGame.lineupDraft,
-              lineupDraft: fetchedGame.lineupDraft
+          setMatchDuration(loadedMatchDuration);
+          
+          // Set game object, ensuring matchDuration is included
+          setGame({
+            ...fetchedGame,
+            matchDuration: loadedMatchDuration
+          });
+          setIsReadOnly(fetchedGame.status === "Done");
+          
+          // Initialize score from game data if available
+          if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
+            setFinalScore({
+              ourScore: fetchedGame.ourScore || 0,
+              opponentScore: fetchedGame.opponentScore || 0,
             });
-
-            // Initialize match duration from game data FIRST (before setting game)
-            const gameMatchDuration = fetchedGame.matchDuration || {};
-            const loadedMatchDuration = {
-              regularTime: gameMatchDuration.regularTime || 90,
-              firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
-              secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
-            };
-            
-            setMatchDuration(loadedMatchDuration);
-            
-            // Set game object, ensuring matchDuration is included
-            setGame({
-              ...fetchedGame,
-              matchDuration: loadedMatchDuration
+          } else {
+            setFinalScore({
+              ourScore: 0,
+              opponentScore: 0,
             });
-            setIsReadOnly(fetchedGame.status === "Done");
-            
-            // Initialize score from game data if available
-            if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
-              setFinalScore({
-                ourScore: fetchedGame.ourScore || 0,
-                opponentScore: fetchedGame.opponentScore || 0,
-              });
-            } else {
-              setFinalScore({
-                ourScore: 0,
-                opponentScore: 0,
-              });
-            }
-            
-            if (fetchedGame.defenseSummary || fetchedGame.midfieldSummary || fetchedGame.attackSummary || fetchedGame.generalSummary) {
-              setTeamSummary({
-                defenseSummary: fetchedGame.defenseSummary || "",
-                midfieldSummary: fetchedGame.midfieldSummary || "",
-                attackSummary: fetchedGame.attackSummary || "",
-                generalSummary: fetchedGame.generalSummary || "",
-              });
-            }
-            
-            return; // Successfully loaded from direct fetch
           }
+          
+          if (fetchedGame.defenseSummary || fetchedGame.midfieldSummary || fetchedGame.attackSummary || fetchedGame.generalSummary) {
+            setTeamSummary({
+              defenseSummary: fetchedGame.defenseSummary || "",
+              midfieldSummary: fetchedGame.midfieldSummary || "",
+              attackSummary: fetchedGame.attackSummary || "",
+              generalSummary: fetchedGame.generalSummary || "",
+            });
+          }
+          
+          return; // Successfully loaded from direct fetch
         }
 
+        // If no data in result, fall through to DataProvider fallback
         // Fallback: Use games array from DataProvider if direct fetch fails
         if (!games || games.length === 0) {
           return;

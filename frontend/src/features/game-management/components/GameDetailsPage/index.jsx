@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useData } from "@/app/providers/DataProvider";
 import { useToast } from "@/shared/ui/primitives/use-toast";
 import { useFeature } from "@/shared/hooks";
+import { apiClient } from "@/shared/api/client";
 
 // Import formation configurations
 import { formations } from "./formations";
@@ -775,25 +776,12 @@ export default function GameDetails() {
         formationPositions: Object.keys(cleanFormation).length
       });
 
-      const response = await fetch(`http://localhost:3001/api/games/${gameId}/start-game`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({ 
-          rosters: rostersObject,
-          formation: cleanFormation,
-          formationType: formationType
-        }),
+      // ✅ REFACTORED: Use apiClient instead of manual fetch
+      const result = await apiClient.post(`/api/games/${gameId}/start-game`, { 
+        rosters: rostersObject,
+        formation: cleanFormation,
+        formationType: formationType
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `Failed to start game: ${response.status}`);
-      }
-
-      const result = await response.json();
       console.log('✅ Game started successfully:', result);
 
       // ✅ Step 1: Update game state from response (DEFENSIVE MERGE - preserve all existing fields)
@@ -931,16 +919,8 @@ export default function GameDetails() {
     
     setIsSaving(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({ status: "Postponed" }),
-      });
-
-      if (!response.ok) throw new Error("Failed to postpone game");
+      // ✅ REFACTORED: Use apiClient instead of manual fetch
+      await apiClient.put(`/api/games/${gameId}`, { status: "Postponed" });
 
       await refreshData();
       window.location.href = "/GamesSchedule";
@@ -1083,21 +1063,14 @@ export default function GameDetails() {
       // DO NOT send: minutesPlayed, goals, assists (server calculates)
       // DO NOT send: foulsCommitted, foulsReceived (saved to draft, will be saved on final submission)
 
-      const response = await fetch(`http://localhost:3001/api/game-reports/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({
+      // ✅ REFACTORED: Use apiClient instead of manual fetch
+      try {
+        await apiClient.post(`/api/game-reports/batch`, {
           gameId,
           reports: [reportPayload],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to save performance report:", errorData.error || "Unknown error");
+        });
+      } catch (error) {
+        console.error("Failed to save performance report:", error.message || "Unknown error");
       }
     } catch (error) {
       console.error("Error saving performance report:", error);
@@ -1225,37 +1198,14 @@ export default function GameDetails() {
         fullRequestBody: requestBody
       });
       
-      const gameResponse = await fetch(`http://localhost:3001/api/games/${gameId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      // 🔍 DEBUG: Log response
-      const responseData = await gameResponse.json();
+      // ✅ REFACTORED: Use apiClient instead of manual fetch
+      const responseData = await apiClient.put(`/api/games/${gameId}`, requestBody);
+      
       console.log('🔍 [GameDetails] Backend response:', {
-        ok: gameResponse.ok,
-        status: gameResponse.status,
         responseData: responseData,
         gameMatchDuration: responseData?.data?.matchDuration,
         savedMatchDuration: responseData?.data?.matchDuration
       });
-      
-      if (!gameResponse.ok) {
-        // Try to extract error message from response
-        let errorMessage = "Failed to update game";
-        try {
-          const errorData = responseData;
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (e) {
-          // If response is not JSON, use status text
-          errorMessage = `Failed to update game: ${gameResponse.status} ${gameResponse.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
 
       // Build report updates: ONLY user-editable fields
       const reportUpdates = Object.entries(localPlayerReports).map(([playerId, report]) => ({
@@ -1268,27 +1218,8 @@ export default function GameDetails() {
         // DO NOT send: minutesPlayed, goals, assists (server calculates)
       }));
 
-      const reportsResponse = await fetch(`http://localhost:3001/api/game-reports/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify({ gameId, reports: reportUpdates }),
-      });
-
-      if (!reportsResponse.ok) {
-        // Try to extract error message from response
-        let errorMessage = "Failed to update reports";
-        try {
-          const errorData = await reportsResponse.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (e) {
-          // If response is not JSON, use status text
-          errorMessage = `Failed to update reports: ${reportsResponse.status} ${reportsResponse.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
+      // ✅ REFACTORED: Use apiClient instead of manual fetch
+      await apiClient.post(`/api/game-reports/batch`, { gameId, reports: reportUpdates });
 
       // Save player match stats from draft to PlayerMatchStat collection
       if (localPlayerMatchStats && Object.keys(localPlayerMatchStats).length > 0) {

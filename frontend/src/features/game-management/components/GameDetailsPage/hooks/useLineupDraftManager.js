@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiClient } from '@/shared/api/client';
 
 /**
  * useLineupDraftManager
@@ -384,26 +385,8 @@ export function useLineupDraftManager({
           })),
         });
 
-        const response = await fetch(`http://localhost:3001/api/games/${gameId}/draft`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('❌ [useLineupDraftManager] Autosave failed - HTTP error:', {
-            status: response.status,
-            statusText: response.statusText,
-            errorData,
-          });
-          throw new Error(errorData.error || `Failed to save draft: ${response.status}`);
-        }
-
-        const result = await response.json();
+        // ✅ REFACTORED: Use apiClient instead of manual fetch
+        const result = await apiClient.put(`/api/games/${gameId}/draft`, payload);
         console.log('✅ [useLineupDraftManager] Draft autosaved successfully!', {
           result,
           savedFormationPositions: Object.keys(formationForDraft).length,
