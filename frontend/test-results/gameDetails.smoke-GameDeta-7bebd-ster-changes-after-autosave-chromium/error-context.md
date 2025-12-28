@@ -4,34 +4,360 @@
 - generic [ref=e2]:
   - generic [ref=e4]:
     - generic [ref=e5]:
-      - img [ref=e7]
-      - heading "Welcome to SquadUp" [level=1] [ref=e9]
-      - paragraph [ref=e10]: Sign in to your account
-    - generic [ref=e11]:
-      - generic [ref=e13]:
-        - img [ref=e15]
-        - text: Sign In
-      - generic [ref=e18]:
-        - generic [ref=e19]:
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic:
+          - heading "SquadUp" [level=2]
+          - paragraph: Youth Soccer Club
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Navigation
           - generic [ref=e20]:
-            - generic [ref=e21]:
-              - img [ref=e22]
-              - text: Email Address *
-            - textbox "Email Address *" [ref=e25]:
-              - /placeholder: Enter your email
-          - generic [ref=e26]:
-            - generic [ref=e27]:
-              - img [ref=e28]
-              - text: Password *
-            - generic [ref=e31]:
-              - textbox "Password *" [ref=e32]:
-                - /placeholder: Enter your password
-              - button [ref=e33] [cursor=pointer]:
-                - img [ref=e34]
-          - button "Sign In" [disabled]
-        - paragraph [ref=e38]: Don't have access? Contact your administrator to create an account.
-  - generic [ref=e41]:
-    - img [ref=e43]
-    - button "Open Tanstack query devtools" [ref=e91] [cursor=pointer]:
-      - img [ref=e92]
+            - link "Dashboard" [ref=e21] [cursor=pointer]:
+              - /url: /dashboard
+              - generic [ref=e22]:
+                - img [ref=e23]
+                - img [ref=e29]
+              - generic: Dashboard
+            - link "My Players" [ref=e35] [cursor=pointer]:
+              - /url: /players
+              - generic [ref=e36]:
+                - img [ref=e37]
+                - img [ref=e42]
+              - generic: My Players
+            - link "Games Schedule" [ref=e47] [cursor=pointer]:
+              - /url: /gamesschedule
+              - generic [ref=e48]:
+                - img [ref=e49]
+                - img [ref=e51]
+              - generic: Games Schedule
+            - link "Training Planner" [ref=e53] [cursor=pointer]:
+              - /url: /trainingplanner
+              - generic [ref=e54]:
+                - img [ref=e55]
+                - img [ref=e58]
+              - generic: Training Planner
+            - link "Drill Library" [ref=e61] [cursor=pointer]:
+              - /url: /drilllibrary
+              - generic [ref=e62]:
+                - img [ref=e63]
+                - img [ref=e66]
+              - generic: Drill Library
+            - link "Tactic Board" [ref=e69] [cursor=pointer]:
+              - /url: /tacticboard
+              - generic [ref=e70]:
+                - img [ref=e71]
+                - img [ref=e75]
+              - generic: Tactic Board
+            - link "Analytics" [ref=e79] [cursor=pointer]:
+              - /url: /analytics
+              - generic [ref=e80]:
+                - img [ref=e81]
+                - img [ref=e84]
+              - generic: Analytics
+            - link "Settings" [ref=e87] [cursor=pointer]:
+              - /url: /settings
+              - generic [ref=e88]:
+                - img [ref=e89]
+                - img [ref=e92]
+              - generic: Settings
+        - generic [ref=e95]:
+          - generic [ref=e96]: Quick Actions
+          - generic [ref=e97]:
+            - link "Add Player" [ref=e98] [cursor=pointer]:
+              - /url: /addplayer
+              - img
+              - generic [ref=e103]: Add Player
+            - link "Add Team" [ref=e104] [cursor=pointer]:
+              - /url: /addteam
+              - img
+              - generic [ref=e110]: Add Team
+            - link "Add Game" [ref=e111] [cursor=pointer]:
+              - /url: /addgame
+              - img
+              - generic [ref=e113]: Add Game
+            - link "Add Report" [ref=e114] [cursor=pointer]:
+              - /url: /addreport
+              - img
+              - generic [ref=e117]: Add Report
+            - link "Add User" [ref=e118] [cursor=pointer]:
+              - /url: /adduser
+              - img
+              - generic [ref=e121]: Add User
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e125]: U
+          - generic:
+            - paragraph
+            - generic:
+              - img
+              - paragraph: Admin
+        - generic [ref=e127]:
+          - button "Switch to Light theme" [ref=e128] [cursor=pointer]:
+            - img [ref=e131]
+          - button [ref=e133] [cursor=pointer]:
+            - img
+    - main [ref=e136]:
+      - generic [ref=e138]:
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - button [ref=e143] [cursor=pointer]:
+              - img
+            - generic [ref=e144]:
+              - heading "U12 vs Hapoel yafo20" [level=1] [ref=e145]
+              - generic [ref=e146]:
+                - generic [ref=e147]:
+                  - img [ref=e148]
+                  - text: Sat, Dec 20, 2025
+                - generic [ref=e150]:
+                  - img [ref=e151]
+                  - text: Home
+                - generic [ref=e154]:
+                  - img [ref=e155]
+                  - text: vs Hapoel yafo20
+          - generic [ref=e160]:
+            - generic [ref=e161]: Scheduled
+            - button "Game Was Played" [ref=e163] [cursor=pointer]:
+              - img
+              - text: Game Was Played
+            - button "Postpone" [ref=e164] [cursor=pointer]:
+              - img
+              - text: Postpone
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - heading "Game Day Roster" [level=2] [ref=e168]:
+                - img [ref=e169]
+                - text: Game Day Roster
+              - paragraph [ref=e174]: Drag players to the formation or click to assign
+            - generic [ref=e175]:
+              - generic [ref=e176]:
+                - heading "Players on Pitch 6" [level=3] [ref=e177]:
+                  - generic [ref=e178]: Players on Pitch
+                  - generic [ref=e179]: "6"
+                - generic [ref=e180]:
+                  - generic [ref=e181]:
+                    - button "23" [disabled] [ref=e182]
+                    - generic [ref=e183]:
+                      - generic [ref=e184]: Tal Mizrahi
+                      - generic [ref=e185]: Goalkeeper
+                  - generic [ref=e186]:
+                    - button "4" [disabled] [ref=e187]
+                    - generic [ref=e188]:
+                      - generic [ref=e189]: Yoni Katz
+                      - generic [ref=e190]: Defender
+                  - generic [ref=e191]:
+                    - button "7" [disabled] [ref=e192]
+                    - generic [ref=e193]:
+                      - generic [ref=e194]: Itai Saban
+                      - generic [ref=e195]: Midfielder
+                  - generic [ref=e196]:
+                    - button "14" [disabled] [ref=e197]
+                    - generic [ref=e198]:
+                      - generic [ref=e199]: Yuval Dahan
+                      - generic [ref=e200]: Midfielder
+                  - generic [ref=e201]:
+                    - button "9" [disabled] [ref=e202]
+                    - generic [ref=e203]:
+                      - generic [ref=e204]: Daniel Levy
+                      - generic [ref=e205]: Forward
+                  - generic [ref=e206]:
+                    - button "11" [disabled] [ref=e207]
+                    - generic [ref=e208]:
+                      - generic [ref=e209]: Shon Avraham
+                      - generic [ref=e210]: Forward
+              - generic [ref=e211]:
+                - heading "Squad Players 15" [level=3] [ref=e212]:
+                  - generic [ref=e213]: Squad Players
+                  - generic [ref=e214]: "15"
+                - generic [ref=e215]:
+                  - generic [ref=e216]:
+                    - button "1" [disabled] [ref=e217]
+                    - generic [ref=e218]:
+                      - generic [ref=e219]: Idan Cohen
+                      - generic [ref=e220]: Goalkeeper
+                    - button [ref=e221] [cursor=pointer]:
+                      - img
+                  - generic [ref=e222]:
+                    - button "12" [disabled] [ref=e223]
+                    - generic [ref=e224]:
+                      - generic [ref=e225]: Roi Levi
+                      - generic [ref=e226]: Goalkeeper
+                    - button [ref=e227] [cursor=pointer]:
+                      - img
+                  - generic [ref=e228]:
+                    - button "2" [disabled] [ref=e229]
+                    - generic [ref=e230]:
+                      - generic [ref=e231]: Eyal Ashkenazi
+                      - generic [ref=e232]: Defender
+                    - button [ref=e233] [cursor=pointer]:
+                      - img
+                  - generic [ref=e234]:
+                    - button "3" [disabled] [ref=e235]
+                    - generic [ref=e236]:
+                      - generic [ref=e237]: Noam Ben-David
+                      - generic [ref=e238]: Defender
+                    - button [ref=e239] [cursor=pointer]:
+                      - img
+                  - generic [ref=e240]:
+                    - button "5" [disabled] [ref=e241]
+                    - generic [ref=e242]:
+                      - generic [ref=e243]: Aviv Rosen
+                      - generic [ref=e244]: Defender
+                    - button [ref=e245] [cursor=pointer]:
+                      - img
+                  - generic [ref=e246]:
+                    - button "15" [disabled] [ref=e247]
+                    - generic [ref=e248]:
+                      - generic [ref=e249]: Dor Shapira
+                      - generic [ref=e250]: Defender
+                    - button [ref=e251] [cursor=pointer]:
+                      - img
+                  - generic [ref=e252]:
+                    - button "16" [disabled] [ref=e253]
+                    - generic [ref=e254]:
+                      - generic [ref=e255]: Gal Friedman
+                      - generic [ref=e256]: Defender
+                    - button [ref=e257] [cursor=pointer]:
+                      - img
+                  - generic [ref=e258]:
+                    - button "6" [disabled] [ref=e259]
+                    - generic [ref=e260]:
+                      - generic [ref=e261]: Amit Goldberg
+                      - generic [ref=e262]: Midfielder
+                    - button [ref=e263] [cursor=pointer]:
+                      - img
+                  - generic [ref=e264]:
+                    - button "8" [disabled] [ref=e265]
+                    - generic [ref=e266]:
+                      - generic [ref=e267]: Omer Klein
+                      - generic [ref=e268]: Midfielder
+                    - button [ref=e269] [cursor=pointer]:
+                      - img
+                  - generic [ref=e270]:
+                    - button "17" [disabled] [ref=e271]
+                    - generic [ref=e272]:
+                      - generic [ref=e273]: Niv Peretz
+                      - generic [ref=e274]: Midfielder
+                    - button [ref=e275] [cursor=pointer]:
+                      - img
+                  - generic [ref=e276]:
+                    - button "18" [disabled] [ref=e277]
+                    - generic [ref=e278]:
+                      - generic [ref=e279]: Bar Malka
+                      - generic [ref=e280]: Midfielder
+                    - button [ref=e281] [cursor=pointer]:
+                      - img
+                  - generic [ref=e282]:
+                    - button "10" [disabled] [ref=e283]
+                    - generic [ref=e284]:
+                      - generic [ref=e285]: Maya Cohen
+                      - generic [ref=e286]: Forward
+                    - button [ref=e287] [cursor=pointer]:
+                      - img
+                  - generic [ref=e288]:
+                    - button "19" [disabled] [ref=e289]
+                    - generic [ref=e290]:
+                      - generic [ref=e291]: Ron Biton
+                      - generic [ref=e292]: Forward
+                    - button [ref=e293] [cursor=pointer]:
+                      - img
+                  - generic [ref=e294]:
+                    - button "20" [disabled] [ref=e295]
+                    - generic [ref=e296]:
+                      - generic [ref=e297]: Lia Segal
+                      - generic [ref=e298]: Forward
+                    - button [ref=e299] [cursor=pointer]:
+                      - img
+                  - generic [ref=e300]:
+                    - button "21" [disabled] [ref=e301]
+                    - generic [ref=e302]:
+                      - generic [ref=e303]: Tom Russo
+                      - generic [ref=e304]: Forward
+                    - button [ref=e305] [cursor=pointer]:
+                      - img
+          - generic [ref=e308]:
+            - generic [ref=e311]:
+              - generic [ref=e312]: FORMATION
+              - combobox [ref=e313] [cursor=pointer]:
+                - generic: 1-4-4-2
+                - img [ref=e314]
+            - generic [ref=e316]:
+              - img [ref=e318]
+              - generic [ref=e326]:
+                - generic [ref=e328]: "23"
+                - generic:
+                  - generic: Tal Mizrahi
+              - generic [ref=e330]:
+                - generic [ref=e332]: "4"
+                - generic:
+                  - generic: Yoni Katz
+              - generic [ref=e333] [cursor=pointer]:
+                - generic [ref=e335]: CB
+                - generic: Click to assign
+              - generic [ref=e336] [cursor=pointer]:
+                - generic [ref=e338]: CB
+                - generic: Click to assign
+              - generic [ref=e339] [cursor=pointer]:
+                - generic [ref=e341]: RB
+                - generic: Click to assign
+              - generic [ref=e343]:
+                - generic [ref=e345]: "7"
+                - generic:
+                  - generic: Itai Saban
+              - generic [ref=e346] [cursor=pointer]:
+                - generic [ref=e348]: CM
+                - generic: Click to assign
+              - generic [ref=e349] [cursor=pointer]:
+                - generic [ref=e351]: CM
+                - generic: Click to assign
+              - generic [ref=e353]:
+                - generic [ref=e355]: "14"
+                - generic:
+                  - generic: Yuval Dahan
+              - generic [ref=e357]:
+                - generic [ref=e359]: "9"
+                - generic:
+                  - generic: Daniel Levy
+              - generic [ref=e361]:
+                - generic [ref=e363]: "11"
+                - generic:
+                  - generic: Shon Avraham
+          - generic [ref=e364]:
+            - generic [ref=e365]:
+              - generic [ref=e367]:
+                - img [ref=e368]
+                - text: AI Match Preview
+              - generic [ref=e370]:
+                - paragraph [ref=e371]: The AI will provide preparation data and insights for the upcoming match.
+                - paragraph [ref=e372]: (This component will be implemented in a future step, showing prepare to game data)
+            - generic [ref=e373]:
+              - generic [ref=e376]:
+                - img [ref=e377]
+                - text: Difficulty Assessment
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - generic [ref=e382]:
+                    - generic [ref=e383]:
+                      - generic [ref=e384]: Opponent Strength
+                      - generic [ref=e385]: Not Set
+                    - slider [ref=e386] [cursor=pointer]: "3"
+                  - generic [ref=e387]:
+                    - generic [ref=e388]:
+                      - generic [ref=e389]: Match Importance
+                      - generic [ref=e390]: Not Set
+                    - slider [ref=e391] [cursor=pointer]: "3"
+                  - generic [ref=e392]:
+                    - generic [ref=e393]:
+                      - generic [ref=e394]: External Conditions
+                      - generic [ref=e395]: Not Set
+                    - slider [ref=e396] [cursor=pointer]: "3"
+                - generic [ref=e397]:
+                  - button "Save Assessment" [disabled]:
+                    - img
+                    - text: Save Assessment
+  - generic [ref=e400]:
+    - img [ref=e402]
+    - button "Open Tanstack query devtools" [ref=e450] [cursor=pointer]:
+      - img [ref=e451]
 ```

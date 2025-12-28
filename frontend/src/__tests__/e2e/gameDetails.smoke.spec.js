@@ -15,34 +15,35 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:5174';
 const TEST_USER = {
-  email: 'coach@test.com',
-  password: 'password123',
+  email: 'admin@squadup.com',
+  password: '123456',
 };
 
 // Helper: Login before each test
 async function login(page) {
   await page.goto(`${BASE_URL}/login`);
-  await page.fill('[name="email"]', TEST_USER.email);
-  await page.fill('[name="password"]', TEST_USER.password);
+  await page.fill('#email', TEST_USER.email);
+  await page.fill('#password', TEST_USER.password);
   await page.click('button[type="submit"]');
-  await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
+  await page.waitForURL(`${BASE_URL}/Dashboard`, { timeout: 10000 });
 }
 
 // Helper: Navigate to a game by status
 async function navigateToGame(page, status) {
-  await page.click('text=Games');
-  await page.waitForURL(`${BASE_URL}/games-schedule`, { timeout: 5000 });
+  // Navigate directly to games schedule page
+  await page.goto(`${BASE_URL}/GamesSchedule`);
+  await page.waitForLoadState('networkidle');
   
-  // Wait for games to load
-  await page.waitForSelector('[data-testid="game-card"]', { timeout: 10000 });
+  // Wait for games to load - look for Card components
+  await page.waitForSelector('.shadow-2xl', { timeout: 10000 });
   
-  // Find and click first game with matching status
-  const gameCard = page.locator(`[data-testid="game-card"][data-status="${status}"]`).first();
-  await gameCard.waitFor({ state: 'visible', timeout: 5000 });
-  await gameCard.click();
+  // Find game link that contains the status badge
+  const gameLink = page.locator(`a.block.group:has-text("${status}")`).first();
+  await gameLink.waitFor({ state: 'visible', timeout: 5000 });
+  await gameLink.click();
   
   // Wait for game details page to load
-  await page.waitForURL(/\/game-details\?id=/, { timeout: 10000 });
+  await page.waitForURL(/\/gamedetails\?id=/, { timeout: 10000 });
 }
 
 test.describe('GameDetailsPage Smoke - Scheduled Status', () => {
@@ -53,14 +54,14 @@ test.describe('GameDetailsPage Smoke - Scheduled Status', () => {
   test('should load scheduled game with draft lineup', async ({ page }) => {
     await navigateToGame(page, 'Scheduled');
 
-    // Verify page structure
-    await expect(page.locator('h1, h2, [data-testid="game-header"]')).toContainText(/vs|Game Details/i);
+    // Verify page structure - look for game title with "vs"
+    await expect(page.locator('h1:has-text("vs")')).toBeVisible({ timeout: 5000 });
     
-    // Verify tactical board visible
-    await expect(page.locator('[data-testid="tactical-board"], .tactical-board')).toBeVisible({ timeout: 5000 });
+    // Verify tactical board visible - main content area
+    await expect(page.locator('.flex-1.bg-slate-900')).toBeVisible({ timeout: 5000 });
     
     // Verify roster sidebar visible
-    await expect(page.locator('[data-testid="roster-sidebar"], .roster-sidebar, text=Squad')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text="Game Day Roster"').or(page.locator('text="Starting Lineup"'))).toBeVisible({ timeout: 5000 });
     
     // Verify "Game Was Played" button exists (for Scheduled games)
     await expect(page.locator('button:has-text("Game Was Played"), button:has-text("Mark as Played")')).toBeVisible({ timeout: 5000 });

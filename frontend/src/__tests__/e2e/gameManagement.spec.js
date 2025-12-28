@@ -13,20 +13,20 @@ import { test, expect } from '@playwright/test';
 // Test configuration
 const BASE_URL = 'http://localhost:5174';
 const TEST_USER = {
-  email: 'coach@test.com',
-  password: 'password123',
+  email: 'admin@squadup.com',
+  password: '123456',
 };
 
 test.describe('Game Management', () => {
   // Login before each test
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
-    await page.fill('[name="email"]', TEST_USER.email);
-    await page.fill('[name="password"]', TEST_USER.password);
+    await page.fill('#email', TEST_USER.email);
+    await page.fill('#password', TEST_USER.password);
     await page.click('button[type="submit"]');
     
     // Wait for dashboard to load
-    await page.waitForURL(`${BASE_URL}/dashboard`);
+    await page.waitForURL(`${BASE_URL}/Dashboard`);
   });
 
   test('should create a new game', async ({ page }) => {
@@ -155,10 +155,10 @@ test.describe('Game Management - Error Handling', () => {
   test.beforeEach(async ({ page }) => {
     // Login
     await page.goto(`${BASE_URL}/login`);
-    await page.fill('[name="email"]', TEST_USER.email);
-    await page.fill('[name="password"]', TEST_USER.password);
+    await page.fill('#email', TEST_USER.email);
+    await page.fill('#password', TEST_USER.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE_URL}/dashboard`);
+    await page.waitForURL(`${BASE_URL}/Dashboard`);
   });
 
   test('should show validation error for invalid date', async ({ page }) => {
