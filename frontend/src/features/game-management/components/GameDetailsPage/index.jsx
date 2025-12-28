@@ -54,7 +54,12 @@ export default function GameDetails() {
   };
   const updatePlayerStatus = (playerId, newStatus) => setLocalRosterStatuses(prev => ({ ...prev, [playerId]: newStatus }));
 
-  // Compute match stats from goals and reports
+  // Dialog & entity state hooks
+  const dialogState = useDialogState();
+  const { showConfirmation, showConfirmationModal, setShowConfirmationModal, confirmationConfig } = dialogState;
+  const { goals, setGoals, substitutions, setSubstitutions, cards, setCards, difficultyAssessment, setDifficultyAssessment, teamStats, timeline, setTimeline, refreshTeamStats } = useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled });
+
+  // Compute match stats from goals and reports (AFTER goals is defined)
   const matchStats = useMemo(() => {
     const scorerMap = new Map();
     const assisterMap = new Map();
@@ -90,11 +95,6 @@ export default function GameDetails() {
       topRated
     };
   }, [goals, localPlayerReports, gamePlayers]);
-
-  // Dialog & entity state hooks
-  const dialogState = useDialogState();
-  const { showConfirmation, showConfirmationModal, setShowConfirmationModal, confirmationConfig } = dialogState;
-  const { goals, setGoals, substitutions, setSubstitutions, cards, setCards, difficultyAssessment, setDifficultyAssessment, teamStats, timeline, setTimeline, refreshTeamStats } = useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled });
 
   // Formation & DnD hooks
   useFormationAutoBuild({ positions, gamePlayers, localRosterStatuses, formation, setFormation, manualFormationMode, setManualFormationMode });
