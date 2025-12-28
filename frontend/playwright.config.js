@@ -30,7 +30,7 @@ export default defineConfig({
   
   // Shared settings for all tests
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

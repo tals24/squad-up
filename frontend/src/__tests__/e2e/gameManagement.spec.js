@@ -11,7 +11,7 @@
 import { test, expect } from '@playwright/test';
 
 // Test configuration
-const BASE_URL = 'http://localhost:5174';
+const BASE_URL = 'http://localhost:5173';
 const TEST_USER = {
   email: 'admin@squadup.com',
   password: '123456',
