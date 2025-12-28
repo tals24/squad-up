@@ -12,4 +12,5 @@ export { useReportDraftManager } from './useReportDraftManager';
 export { usePlayerGrouping } from './usePlayerGrouping';
 export { useFormationAutoBuild } from './useFormationAutoBuild';
 export { useTacticalBoardDragDrop } from './useTacticalBoardDragDrop';
+export { useGameStateHandlers } from './useGameStateHandlers';
 
