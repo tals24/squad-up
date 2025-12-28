@@ -34,8 +34,8 @@ Update the file after completing each sub-task, not just after completing an ent
 ## Tasks
 
 - [ ] 0.0 Create feature branch
-  - [ ] 0.1 Create and checkout a new branch for this work (e.g., `git checkout -b refactor/frontend-alignment-plan`)
-  - [ ] 0.2 Push branch to remote and open a draft PR describing scope + “no behavior change” policy
+  - [x] 0.1 Create and checkout a new branch for this work (e.g., `git checkout -b refactor/frontend-alignment-plan`)
+  - [x] 0.2 Push branch to remote and open a draft PR describing scope + "no behavior change" policy
 
 - [ ] 1.0 Phase 0 — Safety Net: establish regression protection (tests + smoke)
   - [ ] 1.1 Read and internalize the constitution + diagnosis
