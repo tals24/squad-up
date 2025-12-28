@@ -79,10 +79,10 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 2.4.2 Extract autosave debounce logic (2.5s) and "skip while finalizing" guard
     - [x] 2.4.3 Preserve payload shape and endpoint used for draft updates
     - [x] 2.4.4 Verify: scheduled tests + smoke green (Note: 3 Scheduled tests fail due to test data - no Scheduled games in DB, not code issue)
-  - [ ] 2.5 PR set D — Extract report draft load + autosave hook (Played/Done games)
-    - [ ] 2.5.1 Extract report draft merge logic (draft overrides saved)
-    - [ ] 2.5.2 Preserve the “shouldSkip” semantics used by `useAutosave`
-    - [ ] 2.5.3 Verify: played/done tests + smoke green
+  - [x] 2.5 PR set D — Extract report draft load + autosave hook (Played/Done games)
+    - [x] 2.5.1 Extract report draft merge logic (draft overrides saved)
+    - [x] 2.5.2 Preserve the "shouldSkip" semantics used by `useAutosave`
+    - [x] 2.5.3 Verify: played/done tests + smoke green (Manual testing required)
   - [ ] 2.6 PR set E — Extract formation/roster derivations + DnD behavior into hooks
     - [ ] 2.6.1 Extract player grouping logic (bench/squad/onPitch, maps for reconstruction)
     - [ ] 2.6.2 Extract formation auto-build logic and ensure manual mode behavior stays identical
