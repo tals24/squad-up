@@ -1,5 +1,5 @@
 import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from '../../../api/substitutionsApi';
-import { fetchMatchTimeline } from '../../../api/matchTimelineApi';
+import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useSubstitutionsHandlers

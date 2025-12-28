@@ -1,5 +1,5 @@
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from '../../../api/goalsApi';
-import { fetchMatchTimeline } from '../../../api/matchTimelineApi';
+import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useGoalsHandlers

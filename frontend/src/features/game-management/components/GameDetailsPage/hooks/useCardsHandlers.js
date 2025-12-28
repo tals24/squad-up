@@ -1,5 +1,5 @@
 import { fetchCards, createCard, updateCard, deleteCard } from '../../../api/cardsApi';
-import { fetchMatchTimeline } from '../../../api/matchTimelineApi';
+import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useCardsHandlers
