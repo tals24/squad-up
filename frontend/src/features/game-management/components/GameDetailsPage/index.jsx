@@ -30,7 +30,7 @@ import {
 } from "./modules";
 
 // Import custom hooks
-import { useGameDetailsData, useLineupDraftManager, useReportDraftManager, usePlayerGrouping } from "./hooks";
+import { useGameDetailsData, useLineupDraftManager, useReportDraftManager, usePlayerGrouping, useFormationAutoBuild } from "./hooks";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
@@ -129,6 +129,17 @@ export default function GameDetails() {
     formation,
     gamePlayers,
     localRosterStatuses,
+  });
+
+  // Custom hook: Formation auto-build (when NOT in manual mode)
+  useFormationAutoBuild({
+    positions,
+    gamePlayers,
+    localRosterStatuses,
+    formation,
+    setFormation,
+    manualFormationMode,
+    setManualFormationMode,
   });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
@@ -485,108 +496,7 @@ export default function GameDetails() {
 
   // ✅ OLD REPORT DRAFT LOADING REMOVED - Now handled by useReportDraftManager hook
 
-  // Auto-build formation from roster (only when NOT in manual mode)
-  useEffect(() => {
-    console.log('🔍 [Formation Rebuild] Effect triggered:', {
-      hasGamePlayers: !!gamePlayers,
-      gamePlayersCount: gamePlayers?.length || 0,
-      hasRosterStatuses: !!localRosterStatuses,
-      rosterStatusesCount: localRosterStatuses ? Object.keys(localRosterStatuses).length : 0,
-      manualFormationMode,
-      currentFormationCount: Object.values(formation).filter(p => p !== null).length
-    });
-
-    if (!gamePlayers || gamePlayers.length === 0) {
-      console.log('⚠️ [Formation Rebuild] Skipping - no game players');
-      return;
-    }
-    if (!localRosterStatuses || Object.keys(localRosterStatuses).length === 0) {
-      console.log('⚠️ [Formation Rebuild] Skipping - no roster statuses');
-      return;
-    }
-    
-    // Only skip auto-build if we already have a formation with players AND we're in manual mode
-    // OR if we're in manual mode (which means we're restoring from draft or user manually set it)
-    const hasFormationWithPlayers = Object.values(formation).some(p => p !== null);
-    if (manualFormationMode) {
-      if (hasFormationWithPlayers) {
-        console.log('⚠️ [Formation Rebuild] Manual formation mode with existing formation - skipping auto-build');
-      } else {
-        console.log('⚠️ [Formation Rebuild] Manual formation mode active (likely restoring from draft) - skipping auto-build');
-      }
-      return;
-    }
-
-    console.log('🤖 [Formation Rebuild] Auto-building formation from roster...');
-    const newFormation = {};
-    const startingPlayers = gamePlayers.filter(player => localRosterStatuses[player._id] === "Starting Lineup");
-    
-    console.log('🔍 [Formation Rebuild] Starting players:', {
-      count: startingPlayers.length,
-      players: startingPlayers.map(p => ({ name: p.fullName, position: p.position, id: p._id }))
-    });
-    
-    // Phase 1: Match players with exact position labels (e.g., player.position = "RM" → rm position)
-    Object.entries(positions).forEach(([posId, posData]) => {
-      const matchingPlayer = startingPlayers.find((player) => {
-        const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
-        const exactLabelMatch = player.position === posData.label;
-        return notYetPlaced && exactLabelMatch;
-      });
-
-      if (matchingPlayer) {
-        newFormation[posId] = matchingPlayer;
-        console.log(`✅ [Formation Rebuild - Phase 1] Exact match: ${matchingPlayer.fullName} (${matchingPlayer.position}) → ${posId} (${posData.label})`);
-      }
-    });
-    
-    // Phase 2: Fill remaining positions by type (e.g., any "Midfielder" → any empty midfielder slot)
-    Object.entries(positions).forEach(([posId, posData]) => {
-      if (newFormation[posId]) return; // Already filled in Phase 1
-      
-      const matchingPlayer = startingPlayers.find((player) => {
-        const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
-        const typeMatch = player.position === posData.type;
-        return notYetPlaced && typeMatch;
-      });
-
-      if (matchingPlayer) {
-        newFormation[posId] = matchingPlayer;
-        console.log(`✅ [Formation Rebuild - Phase 2] Type match: ${matchingPlayer.fullName} (${matchingPlayer.position}) → ${posId} (${posData.label})`);
-      }
-    });
-    
-    // Phase 3: Fill any remaining empty positions with unplaced players (fallback)
-    Object.entries(positions).forEach(([posId, posData]) => {
-      if (newFormation[posId]) return; // Already filled
-      
-      const anyUnplacedPlayer = startingPlayers.find((player) => {
-        const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
-        return notYetPlaced;
-      });
-
-      if (anyUnplacedPlayer) {
-        newFormation[posId] = anyUnplacedPlayer;
-        console.log(`⚠️ [Formation Rebuild - Phase 3] Fallback: ${anyUnplacedPlayer.fullName} (${anyUnplacedPlayer.position}) → ${posId} (${posData.label}) [Out of position]`);
-      } else {
-        newFormation[posId] = null;
-      }
-    });
-
-    const assignedCount = Object.values(newFormation).filter(p => p !== null).length;
-    const totalPositions = Object.keys(positions).length;
-    console.log(`✅ [Formation Rebuild] Complete - ${assignedCount}/${totalPositions} positions filled`);
-    
-    if (assignedCount < startingPlayers.length) {
-      console.warn(`⚠️ [Formation Rebuild] ${startingPlayers.length - assignedCount} starting players could not be placed`);
-    }
-    
-    setFormation(newFormation);
-    // Reset manual mode after rebuilding so it can rebuild again if needed
-    if (hasFormationWithPlayers) {
-      setManualFormationMode(false);
-    }
-  }, [positions, gamePlayers, localRosterStatuses]);
+  // ✅ OLD FORMATION AUTO-BUILD REMOVED - Now handled by useFormationAutoBuild hook
 
   // Helper: Get player status
   const getPlayerStatus = (playerId) => {
