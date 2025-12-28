@@ -30,7 +30,7 @@ import {
 } from "./modules";
 
 // Import custom hooks
-import { useGameDetailsData, useLineupDraftManager, useReportDraftManager, usePlayerGrouping, useFormationAutoBuild } from "./hooks";
+import { useGameDetailsData, useLineupDraftManager, useReportDraftManager, usePlayerGrouping, useFormationAutoBuild, useTacticalBoardDragDrop } from "./hooks";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
@@ -141,6 +141,24 @@ export default function GameDetails() {
     manualFormationMode,
     setManualFormationMode,
   });
+
+  // Custom hook: Tactical board drag & drop
+  const {
+    isDragging,
+    draggedPlayer,
+    handleDragStart,
+    handleDragEnd,
+    handlePositionDrop,
+    handleRemovePlayerFromPosition,
+  } = useTacticalBoardDragDrop({
+    positions,
+    formation,
+    setFormation,
+    updatePlayerStatus,
+    setManualFormationMode,
+    showConfirmation,
+    validatePlayerPosition,
+  });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
   const [teamStats, setTeamStats] = useState({});
@@ -176,8 +194,7 @@ export default function GameDetails() {
   const [showPlayerSelectionDialog, setShowPlayerSelectionDialog] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [selectedPositionData, setSelectedPositionData] = useState(null);
-  const [draggedPlayer, setDraggedPlayer] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // ✅ draggedPlayer and isDragging now managed by useTacticalBoardDragDrop hook
   
   // Team Summary Dialog state
   const [showTeamSummaryDialog, setShowTeamSummaryDialog] = useState(false);
@@ -195,7 +212,7 @@ export default function GameDetails() {
     type: "warning"
   });
   const [pendingAction, setPendingAction] = useState(null);
-  const [pendingPlayerPosition, setPendingPlayerPosition] = useState(null);
+  // ✅ pendingPlayerPosition removed - unused state
 
   // Get current formation positions
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
@@ -1668,104 +1685,7 @@ export default function GameDetails() {
     };
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (e, player) => {
-    console.log('🚀 DRAG START:', {
-      playerName: player.fullName,
-      playerId: player._id,
-      playerKitNumber: player.kitNumber
-    });
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", player._id);
-    setDraggedPlayer(player);
-    setIsDragging(true);
-    setManualFormationMode(true);
-    console.log('🎯 Manual formation mode ENABLED');
-  };
-
-  const handleDragEnd = () => {
-    console.log('🏁 DRAG END');
-    setDraggedPlayer(null);
-    setIsDragging(false);
-  };
-
-  const handlePositionDrop = (e, posId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('📍 DROP EVENT FIRED:', {
-      posId,
-      draggedPlayer: draggedPlayer ? draggedPlayer.fullName : 'NULL',
-      eventTarget: e.target.className,
-      currentTarget: e.currentTarget.className
-    });
-    
-    if (!draggedPlayer) {
-      console.error('❌ No dragged player in state!');
-      return;
-    }
-    
-    // Get position data for validation
-    const positionData = positions[posId];
-    
-    // Validate player position
-    const positionValidation = validatePlayerPosition(draggedPlayer, positionData);
-    
-    // If player is being placed out of position, show confirmation
-    if (!positionValidation.isNaturalPosition) {
-      setPendingPlayerPosition({ player: draggedPlayer, position: posId, positionData });
-      showConfirmation({
-        title: "Out of Position Warning",
-        message: `${draggedPlayer.fullName} is being placed out of their natural position. Are you sure you want to place them here?`,
-        confirmText: "Confirm",
-        cancelText: "Cancel",
-        onConfirm: () => executePositionDrop(draggedPlayer, posId),
-        onCancel: () => {
-          setIsDragging(false);
-          setDraggedPlayer(null);
-        },
-        type: "warning"
-      });
-      return;
-    }
-    
-    // If position is natural, proceed directly
-    executePositionDrop(draggedPlayer, posId);
-  };
-
-  // Execute the actual position drop logic
-  const executePositionDrop = (player, posId) => {
-    console.log(`✅ Assigning player ${player.fullName} to position ${posId}`);
-    
-    setFormation((prev) => {
-      const updated = { ...prev };
-      
-      Object.keys(updated).forEach((key) => {
-        if (updated[key]?._id === player._id) {
-          console.log(`🧹 Removing ${player.fullName} from position ${key}`);
-          updated[key] = null;
-        }
-      });
-      
-      updated[posId] = player;
-      
-      console.log('🔄 Formation updated:', Object.entries(updated).filter(([_, p]) => p !== null).map(([pos, p]) => ({ pos, player: p.fullName })));
-      return updated;
-    });
-    
-    updatePlayerStatus(player._id, "Starting Lineup");
-    
-    setIsDragging(false);
-    setDraggedPlayer(null);
-  };
-
-  const handleRemovePlayerFromPosition = (posId) => {
-    const player = formation[posId];
-    if (!player) return;
-
-    setFormation((prev) => ({ ...prev, [posId]: null }));
-    updatePlayerStatus(player._id, "Not in Squad");
-  };
+  // ✅ OLD DRAG AND DROP HANDLERS REMOVED - Now handled by useTacticalBoardDragDrop hook
 
   const handleFormationChange = (newFormationType) => {
     if (window.confirm("Changing formation will clear all current position assignments. Continue?")) {
