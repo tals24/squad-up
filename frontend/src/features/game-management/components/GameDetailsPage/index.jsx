@@ -100,75 +100,161 @@ export default function GameDetails() {
   if (!game) return <div className="p-8 text-gray-400">Game not found</div>;
 
   // Render: Module composition
+  // Computed status flags for readability
+  const isScheduled = game?.status === "Scheduled";
+  const isPlayed = game?.status === "Played";
+  const isDone = game?.status === "Done";
+
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Blocking Modal for Game Finalization */}
+      {isFinalizingGame && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-4 text-center border border-cyan-500/30 shadow-2xl">
+            <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-2xl font-bold text-white mb-2">Finalizing Game</h2>
+            <p className="text-slate-300 mb-4">Please do not navigate away...</p>
+          </div>
+        </div>
+      )}
+      
       <GameHeaderModule
-        gameHeaderProps={{
-          game, isReadOnly, isSaving, isAutosaving, autosaveError, isAutosavingReport, reportAutosaveError,
-          onGameWasPlayed: gameStateHandlers.handleGameWasPlayed, onPostpone: gameStateHandlers.handlePostpone,
-          onSubmitFinalReport: gameStateHandlers.handleSubmitFinalReport, onEditReport: gameStateHandlers.handleEditReport,
-          difficultyAssessment, onSaveDifficultyAssessment: difficultyHandlers.handleSaveDifficultyAssessment,
-          onDeleteDifficultyAssessment: difficultyHandlers.handleDeleteDifficultyAssessment, isDifficultyAssessmentEnabled
-        }}
+        game={game}
+        finalScore={finalScore}
+        setFinalScore={setFinalScore}
+        matchDuration={matchDuration}
+        setMatchDuration={setMatchDuration}
+        isSaving={isSaving}
+        isScheduled={isScheduled}
+        isPlayed={isPlayed}
+        isDone={isDone}
+        handleGameWasPlayed={gameStateHandlers.handleGameWasPlayed}
+        handlePostpone={gameStateHandlers.handlePostpone}
+        handleSubmitFinalReport={gameStateHandlers.handleSubmitFinalReport}
+        handleEditReport={gameStateHandlers.handleEditReport}
       />
+      
       <RosterSidebarModule
-        rosterProps={{
-          gamePlayers, squadPlayers, benchPlayers, formation, localRosterStatuses, updatePlayerStatus, isReadOnly,
-          getPlayerStatus, hasReport, needsReport, onOpenPerformanceDialog: reportHandlers.handleOpenPerformanceDialog
-        }}
+        playersOnPitch={playersOnPitch}
+        benchPlayers={benchPlayers}
+        squadPlayers={squadPlayers}
+        hasReport={hasReport}
+        needsReport={needsReport}
+        getPlayerStatus={getPlayerStatus}
+        handleOpenPerformanceDialog={reportHandlers.handleOpenPerformanceDialog}
+        updatePlayerStatus={updatePlayerStatus}
+        handleDragStart={dndHandlers.handleDragStart}
+        handleDragEnd={dndHandlers.handleDragEnd}
+        isScheduled={isScheduled}
+        isPlayed={isPlayed}
+        isDone={isDone}
       />
+      
       <TacticalBoardModule
         tacticalBoardProps={{
-          formations, formationType, positions, formation, onFormationChange: formationHandlers.handleFormationChange,
-          onDragStart: dndHandlers.handleDragStart, onDragEnd: dndHandlers.handleDragEnd,
-          onPositionDrop: dndHandlers.handlePositionDrop, onRemovePlayerFromPosition: dndHandlers.handleRemovePlayerFromPosition,
-          onPositionClick: formationHandlers.handlePositionClick, isDragging: dndHandlers.isDragging,
-          draggedPlayer: dndHandlers.draggedPlayer, isReadOnly, playersOnPitch, benchPlayers
+          formations,
+          formationType,
+          positions,
+          formation,
+          onFormationChange: formationHandlers.handleFormationChange,
+          onPositionDrop: dndHandlers.handlePositionDrop,
+          onRemovePlayer: dndHandlers.handleRemovePlayerFromPosition,
+          onPlayerClick: reportHandlers.handleOpenPerformanceDialog,
+          onPositionClick: formationHandlers.handlePositionClick,
+          isDragging: dndHandlers.isDragging,
+          isScheduled,
+          isPlayed,
+          isReadOnly: isDone,
+          isDone,
+          hasReport,
+          needsReport,
         }}
-        autoFillButtonProps={{ onClick: reportHandlers.handleAutoFillRemaining, disabled: game.status !== 'Played' }}
+        autoFillProps={{
+          showAutoFill: isPlayed,
+          remainingCount: 0,
+          onAutoFill: reportHandlers.handleAutoFillRemaining,
+          disabled: isDone,
+        }}
       />
+      
       <MatchAnalysisModule
-        matchAnalysisProps={{
-          game, isReadOnly, finalScore, setFinalScore, matchDuration, setMatchDuration, teamSummary,
-          onTeamSummaryClick: reportHandlers.handleTeamSummaryClick, timeline, goals, substitutions, cards,
-          onAddGoal: goalsHandlers.handleAddGoal, onEditGoal: goalsHandlers.handleEditGoal, onDeleteGoal: goalsHandlers.handleDeleteGoal,
-          onAddSubstitution: subsHandlers.handleAddSubstitution, onEditSubstitution: subsHandlers.handleEditSubstitution,
-          onDeleteSubstitution: subsHandlers.handleDeleteSubstitution, onAddCard: cardsHandlers.handleAddCard,
-          onEditCard: cardsHandlers.handleEditCard, onDeleteCard: cardsHandlers.handleDeleteCard
-        }}
+        isScheduled={isScheduled}
+        isPlayed={isPlayed}
+        isDone={isDone}
+        teamSummary={teamSummary}
+        setTeamSummary={setTeamSummary}
+        onTeamSummaryClick={reportHandlers.handleTeamSummaryClick}
+        goals={goals}
+        onAddGoal={goalsHandlers.handleAddGoal}
+        onEditGoal={goalsHandlers.handleEditGoal}
+        onDeleteGoal={goalsHandlers.handleDeleteGoal}
+        substitutions={substitutions}
+        onAddSubstitution={subsHandlers.handleAddSubstitution}
+        onEditSubstitution={subsHandlers.handleEditSubstitution}
+        onDeleteSubstitution={subsHandlers.handleDeleteSubstitution}
+        cards={cards}
+        onAddCard={cardsHandlers.handleAddCard}
+        onEditCard={cardsHandlers.handleEditCard}
+        onDeleteCard={cardsHandlers.handleDeleteCard}
       />
+      
       <DialogsModule
-        dialogsProps={{
-          showGoalDialog: dialogState.showGoalDialog, selectedGoal: dialogState.selectedGoal, activeGamePlayers,
-          onSaveGoal: goalsHandlers.handleSaveGoal, onSaveOpponentGoal: goalsHandlers.handleSaveOpponentGoal,
-          onCloseGoalDialog: () => { dialogState.setShowGoalDialog(false); dialogState.setSelectedGoal(null); },
-          showSubstitutionDialog: dialogState.showSubstitutionDialog, selectedSubstitution: dialogState.selectedSubstitution,
-          onSaveSubstitution: subsHandlers.handleSaveSubstitution,
-          onCloseSubstitutionDialog: () => { dialogState.setShowSubstitutionDialog(false); dialogState.setSelectedSubstitution(null); },
-          showCardDialog: dialogState.showCardDialog, selectedCard: dialogState.selectedCard,
-          onSaveCard: cardsHandlers.handleSaveCard,
-          onCloseCardDialog: () => { dialogState.setShowCardDialog(false); dialogState.setSelectedCard(null); },
-          showPlayerPerfDialog: dialogState.showPlayerPerfDialog, selectedPlayer: dialogState.selectedPlayer,
-          playerPerfData: dialogState.playerPerfData, setPlayerPerfData: dialogState.setPlayerPerfData,
-          onSavePerformanceReport: reportHandlers.handleSavePerformanceReport,
-          onClosePlayerPerfDialog: () => dialogState.setShowPlayerPerfDialog(false),
-          showTeamSummaryDialog: dialogState.showTeamSummaryDialog, selectedSummaryType: dialogState.selectedSummaryType, teamSummary,
-          onSaveTeamSummary: reportHandlers.handleTeamSummarySave,
-          onCloseTeamSummaryDialog: () => dialogState.setShowTeamSummaryDialog(false),
-          showPlayerSelectionDialog: dialogState.showPlayerSelectionDialog, selectedPosition: dialogState.selectedPosition,
-          selectedPositionData: dialogState.selectedPositionData, squadPlayers,
-          onSelectPlayerForPosition: formationHandlers.handleSelectPlayerForPosition,
-          onClosePlayerSelectionDialog: () => {
-            dialogState.setShowPlayerSelectionDialog(false);
-            dialogState.setSelectedPosition(null);
-            dialogState.setSelectedPositionData(null);
+        dialogs={{
+          goal: {
+            isOpen: dialogState.showGoalDialog,
+            selected: dialogState.selectedGoal,
+            onSave: goalsHandlers.handleSaveGoal,
+            onSaveOpponent: goalsHandlers.handleSaveOpponentGoal,
+            onClose: () => { dialogState.setShowGoalDialog(false); dialogState.setSelectedGoal(null); },
           },
-          showFinalReportDialog: gameStateHandlers.showFinalReportDialog,
-          onConfirmFinalSubmission: gameStateHandlers.handleConfirmFinalSubmission,
-          onCloseFinalReportDialog: () => gameStateHandlers.setShowFinalReportDialog(false),
-          isFinalizingGame
+          substitution: {
+            isOpen: dialogState.showSubstitutionDialog,
+            selected: dialogState.selectedSubstitution,
+            onSave: subsHandlers.handleSaveSubstitution,
+            onClose: () => { dialogState.setShowSubstitutionDialog(false); dialogState.setSelectedSubstitution(null); },
+          },
+          card: {
+            isOpen: dialogState.showCardDialog,
+            selected: dialogState.selectedCard,
+            onSave: cardsHandlers.handleSaveCard,
+            onClose: () => { dialogState.setShowCardDialog(false); dialogState.setSelectedCard(null); },
+          },
+          playerPerf: {
+            isOpen: dialogState.showPlayerPerfDialog,
+            selectedPlayer: dialogState.selectedPlayer,
+            playerPerfData: dialogState.playerPerfData,
+            setPlayerPerfData: dialogState.setPlayerPerfData,
+            onSave: reportHandlers.handleSavePerformanceReport,
+            onClose: () => dialogState.setShowPlayerPerfDialog(false),
+          },
+          teamSummary: {
+            isOpen: dialogState.showTeamSummaryDialog,
+            selectedType: dialogState.selectedSummaryType,
+            teamSummary,
+            onSave: reportHandlers.handleTeamSummarySave,
+            onClose: () => dialogState.setShowTeamSummaryDialog(false),
+          },
+          playerSelection: {
+            isOpen: dialogState.showPlayerSelectionDialog,
+            selectedPosition: dialogState.selectedPosition,
+            selectedPositionData: dialogState.selectedPositionData,
+            squadPlayers,
+            onSelect: formationHandlers.handleSelectPlayerForPosition,
+            onClose: () => {
+              dialogState.setShowPlayerSelectionDialog(false);
+              dialogState.setSelectedPosition(null);
+              dialogState.setSelectedPositionData(null);
+            },
+          },
+          finalReport: {
+            isOpen: gameStateHandlers.showFinalReportDialog,
+            onConfirm: gameStateHandlers.handleConfirmFinalSubmission,
+            onClose: () => gameStateHandlers.setShowFinalReportDialog(false),
+          },
         }}
+        activeGamePlayers={activeGamePlayers}
       />
+      
       <ConfirmationModal
         isOpen={showConfirmationModal}
         onClose={() => setShowConfirmationModal(false)}
