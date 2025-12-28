@@ -512,23 +512,61 @@ export default function GameDetails() {
       players: startingPlayers.map(p => ({ name: p.fullName, position: p.position, id: p._id }))
     });
     
+    // Phase 1: Match players with exact position labels (e.g., player.position = "RM" → rm position)
     Object.entries(positions).forEach(([posId, posData]) => {
       const matchingPlayer = startingPlayers.find((player) => {
         const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
-        const positionMatch = player.position === posData.type || player.position === posData.label;
-        return notYetPlaced && positionMatch;
+        const exactLabelMatch = player.position === posData.label;
+        return notYetPlaced && exactLabelMatch;
       });
 
       if (matchingPlayer) {
         newFormation[posId] = matchingPlayer;
-        console.log(`✅ [Formation Rebuild] Assigned ${matchingPlayer.fullName} to ${posId} (${posData.label})`);
+        console.log(`✅ [Formation Rebuild - Phase 1] Exact match: ${matchingPlayer.fullName} (${matchingPlayer.position}) → ${posId} (${posData.label})`);
+      }
+    });
+    
+    // Phase 2: Fill remaining positions by type (e.g., any "Midfielder" → any empty midfielder slot)
+    Object.entries(positions).forEach(([posId, posData]) => {
+      if (newFormation[posId]) return; // Already filled in Phase 1
+      
+      const matchingPlayer = startingPlayers.find((player) => {
+        const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
+        const typeMatch = player.position === posData.type;
+        return notYetPlaced && typeMatch;
+      });
+
+      if (matchingPlayer) {
+        newFormation[posId] = matchingPlayer;
+        console.log(`✅ [Formation Rebuild - Phase 2] Type match: ${matchingPlayer.fullName} (${matchingPlayer.position}) → ${posId} (${posData.label})`);
+      }
+    });
+    
+    // Phase 3: Fill any remaining empty positions with unplaced players (fallback)
+    Object.entries(positions).forEach(([posId, posData]) => {
+      if (newFormation[posId]) return; // Already filled
+      
+      const anyUnplacedPlayer = startingPlayers.find((player) => {
+        const notYetPlaced = !Object.values(newFormation).some((p) => p?._id === player._id);
+        return notYetPlaced;
+      });
+
+      if (anyUnplacedPlayer) {
+        newFormation[posId] = anyUnplacedPlayer;
+        console.log(`⚠️ [Formation Rebuild - Phase 3] Fallback: ${anyUnplacedPlayer.fullName} (${anyUnplacedPlayer.position}) → ${posId} (${posData.label}) [Out of position]`);
       } else {
         newFormation[posId] = null;
       }
     });
 
     const assignedCount = Object.values(newFormation).filter(p => p !== null).length;
-    console.log(`✅ [Formation Rebuild] Complete - ${assignedCount} players assigned to positions`);
+    const totalPositions = Object.keys(positions).length;
+    console.log(`✅ [Formation Rebuild] Complete - ${assignedCount}/${totalPositions} positions filled`);
+    
+    if (assignedCount < startingPlayers.length) {
+      console.warn(`⚠️ [Formation Rebuild] ${startingPlayers.length - assignedCount} starting players could not be placed`);
+    }
+    
     setFormation(newFormation);
     // Reset manual mode after rebuilding so it can rebuild again if needed
     if (hasFormationWithPlayers) {
