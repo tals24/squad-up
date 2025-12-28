@@ -676,6 +676,30 @@ moduleNameMapper: {
 
 ---
 
+### Issue: "module is not defined in ES module scope" Error
+
+**Cause**: Babel configuration file using CommonJS syntax in ESM project
+
+**Error Message**:
+```
+ReferenceError: module is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension 
+and 'package.json' contains "type": "module"
+```
+
+**Solution**:
+The project has both `.babelrc.js` (CommonJS) and `.babelrc.cjs` files. Delete `.babelrc.js`:
+
+```bash
+cd frontend
+rm .babelrc.js
+npm test
+```
+
+Already fixed in this branch ✅
+
+---
+
 ### Issue: Tests Pass Locally but Fail in CI
 
 **Cause**: Timing differences or environment issues
