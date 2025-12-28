@@ -247,6 +247,18 @@ export function useLineupDraftManager({
         
         // FIX: Extract formation from gameRosters (all rosters have same formation, so take first)
         const firstRoster = rosterForGame[0];
+        
+        // 🔍 DIAGNOSTIC: Log the actual gameRoster structure
+        console.log('🔍 [useLineupDraftManager] First gameRoster record structure:', {
+          hasFormation: !!firstRoster.formation,
+          formationValue: firstRoster.formation,
+          formationType: typeof firstRoster.formation,
+          hasFormationType: !!firstRoster.formationType,
+          formationTypeValue: firstRoster.formationType,
+          allKeys: Object.keys(firstRoster),
+          fullRosterSample: firstRoster
+        });
+        
         const hasFormationData = firstRoster.formation && firstRoster.formationType;
         
         if (hasFormationData) {
