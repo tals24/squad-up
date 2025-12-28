@@ -67,27 +67,62 @@ export function useLineupDraftManager({
   
   // Effect 1: Load existing roster statuses (with draft priority)
   useEffect(() => {
-    if (!gameId || !game || gamePlayers.length === 0) return;
+    if (!gameId || !game || gamePlayers.length === 0) {
+      console.log('⚠️ [useLineupDraftManager] Skipping draft load - missing dependencies:', {
+        hasGameId: !!gameId,
+        hasGame: !!game,
+        gamePlayersCount: gamePlayers.length
+      });
+      return;
+    }
 
-    // 🔍 DEBUG: Log draft loading check
-    console.log('🔍 [useLineupDraftManager] Checking for draft:', {
+    // 🔍 DEBUG: Log draft loading check with full context
+    console.log('🔍 [useLineupDraftManager] === DRAFT LOADING START ===');
+    console.log('🔍 [useLineupDraftManager] Game context:', {
       gameId,
       gameStatus: game.status,
+      gameOpponent: game.opponent,
+      gameDate: game.date,
+    });
+    console.log('🔍 [useLineupDraftManager] Draft data:', {
       hasLineupDraft: !!game.lineupDraft,
-      lineupDraft: game.lineupDraft,
       lineupDraftType: typeof game.lineupDraft,
-      isScheduled: game.status === 'Scheduled',
-      hasGamePlayers: gamePlayers.length > 0
+      lineupDraftKeys: game.lineupDraft ? Object.keys(game.lineupDraft) : null,
+      draftRostersCount: game.lineupDraft?.rosters ? Object.keys(game.lineupDraft.rosters).length : 0,
+      draftFormationCount: game.lineupDraft?.formation ? Object.keys(game.lineupDraft.formation).length : 0,
+      draftFormationType: game.lineupDraft?.formationType,
+    });
+    console.log('🔍 [useLineupDraftManager] Available data:', {
+      gamePlayersCount: gamePlayers.length,
+      gameRostersCount: gameRosters?.length || 0,
+      currentFormationType: formationType,
     });
 
-    // Priority 1: Check for draft (only for Scheduled games)
-    if (game.status === 'Scheduled' && game.lineupDraft && typeof game.lineupDraft === 'object') {
-      console.log('📋 [useLineupDraftManager] Loading draft lineup:', game.lineupDraft);
+    // Priority 1: Check for draft (for Scheduled AND Played games)
+    // ✅ FIX: Load draft for both Scheduled and Played to preserve formation when status changes
+    // Only skip draft for Done games (which are finalized and shouldn't use draft)
+    const shouldLoadDraft = (game.status === 'Scheduled' || game.status === 'Played') && 
+                            game.lineupDraft && 
+                            typeof game.lineupDraft === 'object';
+    
+    if (shouldLoadDraft) {
+      console.log(`✅ [useLineupDraftManager] LOADING DRAFT (${game.status} game)`);
+      console.log('📋 [useLineupDraftManager] Draft content:', {
+        fullDraft: game.lineupDraft,
+        rostersKeys: Object.keys(game.lineupDraft.rosters || {}),
+        formationKeys: Object.keys(game.lineupDraft.formation || {}),
+      });
       
       // Extract rosters and formation from draft
       const draftRosters = game.lineupDraft.rosters || game.lineupDraft; // Support both old and new format
       const draftFormation = game.lineupDraft.formation || {};
       const draftFormationType = game.lineupDraft.formationType || formationType;
+      
+      console.log('🔍 [useLineupDraftManager] Draft extraction:', {
+        draftRostersCount: Object.keys(draftRosters).length,
+        draftFormationCount: Object.keys(draftFormation).length,
+        draftFormationType,
+      });
       
       // Merge draft rosters with all players (ensure all players have a status)
       const draftStatuses = { ...draftRosters };
@@ -99,48 +134,92 @@ export function useLineupDraftManager({
       
       // Restore formation from draft
       if (Object.keys(draftFormation).length > 0) {
+        console.log('🔧 [useLineupDraftManager] Restoring formation from draft...');
+        console.log('🔍 [useLineupDraftManager] Draft formation positions:', Object.keys(draftFormation));
+        
         // Set manual mode FIRST to prevent auto-rebuild from interfering
         setManualFormationMode(true);
         
         // Rebuild formation object with full player objects from gamePlayers
         const restoredFormation = {};
+        let missingPlayers = [];
+        
         Object.keys(draftFormation).forEach((posId) => {
           const draftPlayer = draftFormation[posId];
+          console.log(`🔍 [useLineupDraftManager] Processing position ${posId}:`, {
+            draftPlayer,
+            hasPlayerId: !!(draftPlayer && draftPlayer._id),
+          });
+          
           if (draftPlayer && draftPlayer._id) {
             // Find full player object from gamePlayers
             const fullPlayer = gamePlayers.find(p => p._id === draftPlayer._id);
             if (fullPlayer) {
               restoredFormation[posId] = fullPlayer;
+              console.log(`✅ [useLineupDraftManager] Position ${posId} restored:`, {
+                playerId: fullPlayer._id,
+                playerName: fullPlayer.fullName,
+                kitNumber: fullPlayer.kitNumber,
+              });
             } else {
-              console.warn(`⚠️ [useLineupDraftManager] Player not found for position ${posId}:`, draftPlayer._id);
+              missingPlayers.push({ posId, playerId: draftPlayer._id, playerName: draftPlayer.fullName });
+              console.error(`❌ [useLineupDraftManager] MISSING PLAYER for position ${posId}:`, {
+                playerId: draftPlayer._id,
+                playerName: draftPlayer.fullName,
+                availablePlayerIds: gamePlayers.map(p => p._id),
+                availablePlayerNames: gamePlayers.map(p => p.fullName),
+              });
             }
+          } else {
+            console.warn(`⚠️ [useLineupDraftManager] Empty position ${posId} in draft`);
           }
         });
         
-        console.log('✅ [useLineupDraftManager] Draft loaded, restoring formation:', {
-          restoredFormation,
-          positionCount: Object.keys(restoredFormation).length,
-          playerIds: Object.values(restoredFormation).map(p => p._id)
+        console.log('✅ [useLineupDraftManager] Formation restoration complete:', {
+          totalPositions: Object.keys(draftFormation).length,
+          restoredPositions: Object.keys(restoredFormation).length,
+          missingPlayersCount: missingPlayers.length,
+          missingPlayers,
+          restoredFormation: Object.entries(restoredFormation).map(([pos, player]) => ({
+            position: pos,
+            playerId: player._id,
+            playerName: player.fullName,
+          })),
         });
+        
         setFormation(restoredFormation);
         setFormationType(draftFormationType);
+      } else {
+        console.log('⚠️ [useLineupDraftManager] No formation in draft to restore');
       }
       
-      console.log('✅ [useLineupDraftManager] Draft loaded, setting roster statuses:', draftStatuses);
+      console.log('✅ [useLineupDraftManager] Draft loaded, setting roster statuses:', {
+        statusCount: Object.keys(draftStatuses).length,
+        statuses: draftStatuses,
+      });
       setLocalRosterStatuses(draftStatuses);
+      console.log('🔍 [useLineupDraftManager] === DRAFT LOADING END (draft path) ===');
       return; // Draft loaded, skip gameRosters
     }
 
     // 🔍 DEBUG: Log why draft wasn't loaded
-    if (game.status === 'Scheduled') {
-      console.log('⚠️ [useLineupDraftManager] Scheduled game but no draft found:', {
+    if (game.status === 'Scheduled' || game.status === 'Played') {
+      console.error(`⚠️ [useLineupDraftManager] ${game.status} game but NO DRAFT found:`, {
         hasLineupDraft: !!game.lineupDraft,
         lineupDraft: game.lineupDraft,
-        fallingBackTo: 'gameRosters or default'
+        fallingBackTo: 'gameRosters or default',
+        WARNING: `This might indicate draft was not saved or cleared! Formation data may be lost.`
+      });
+    } else {
+      console.log('📝 [useLineupDraftManager] Done/other game, draft loading skipped (expected):', {
+        gameStatus: game.status,
+        hasLineupDraft: !!game.lineupDraft,
+        decision: 'Fall back to gameRosters (done games use finalized rosters)'
       });
     }
 
     // Priority 2: Load from gameRosters (for Played/Done games, or if no draft)
+    console.log('🔍 [useLineupDraftManager] Attempting gameRosters fallback...');
     if (gameRosters && gameRosters.length > 0) {
       const rosterForGame = gameRosters.filter(
         (roster) => {
@@ -149,19 +228,43 @@ export function useLineupDraftManager({
         }
       );
 
+      console.log('🔍 [useLineupDraftManager] GameRosters found:', {
+        totalRosters: gameRosters.length,
+        rostersForThisGame: rosterForGame.length,
+        rosterDetails: rosterForGame.map(r => ({
+          playerId: typeof r.player === "object" ? r.player._id : r.player,
+          playerName: typeof r.player === "object" ? r.player.fullName : 'Unknown',
+          status: r.status,
+        })),
+      });
+
       if (rosterForGame.length > 0) {
         const statuses = {};
         rosterForGame.forEach((roster) => {
           const playerId = typeof roster.player === "object" && roster.player !== null ? roster.player._id : roster.player;
           statuses[playerId] = roster.status;
         });
+        
+        console.log('✅ [useLineupDraftManager] Loaded from gameRosters:', {
+          playerCount: Object.keys(statuses).length,
+          playerStatuses: statuses,
+          ⚠️: 'NOTE: gameRosters does NOT include formation data! Formation will be auto-built.'
+        });
+        
         setLocalRosterStatuses(statuses);
+        console.log('🔍 [useLineupDraftManager] === DRAFT LOADING END (gameRosters path) ===');
         return;
+      } else {
+        console.warn('⚠️ [useLineupDraftManager] No rosters found for this game in gameRosters');
       }
+    } else {
+      console.warn('⚠️ [useLineupDraftManager] No gameRosters available');
     }
 
     // Priority 3: Default (empty rosters)
+    console.log('⚠️ [useLineupDraftManager] Using default (empty) rosters');
     setLocalRosterStatuses({});
+    console.log('🔍 [useLineupDraftManager] === DRAFT LOADING END (default path) ===');
   }, [gameId, game, gameRosters, gamePlayers]);
   
   // Effect 2: Debounced autosave for roster statuses and formation
@@ -173,10 +276,23 @@ export function useLineupDraftManager({
     }
     
     // Only autosave for Scheduled games
-    if (!game || game.status !== 'Scheduled') return;
+    if (!game || game.status !== 'Scheduled') {
+      if (game) {
+        console.log('⏸️ [useLineupDraftManager] Skipping autosave - not Scheduled:', {
+          gameStatus: game.status,
+          note: 'Autosave only runs for Scheduled games'
+        });
+      }
+      return;
+    }
     
     // Don't autosave on initial load (wait for user changes)
-    if (Object.keys(localRosterStatuses).length === 0) return;
+    if (Object.keys(localRosterStatuses).length === 0) {
+      console.log('⏸️ [useLineupDraftManager] Skipping autosave - no roster data yet');
+      return;
+    }
+    
+    console.log('💾 [useLineupDraftManager] Autosave triggered - starting 2.5s timer...');
     
     // Set autosaving state
     setIsAutosaving(true);
@@ -185,6 +301,8 @@ export function useLineupDraftManager({
     // Debounce: Wait 2.5 seconds after last change
     const autosaveTimer = setTimeout(async () => {
       try {
+        console.log('💾 [useLineupDraftManager] 2.5s elapsed, executing autosave...');
+        
         // Prepare formation data for draft (only include player IDs and basic info)
         const formationForDraft = {};
         Object.keys(formation).forEach((posId) => {
@@ -198,29 +316,54 @@ export function useLineupDraftManager({
           }
         });
 
+        const payload = {
+          rosters: localRosterStatuses,
+          formation: formationForDraft,
+          formationType: formationType
+        };
+        
+        console.log('💾 [useLineupDraftManager] Autosave payload:', {
+          rostersCount: Object.keys(localRosterStatuses).length,
+          formationPositions: Object.keys(formationForDraft).length,
+          formationType,
+          formationDetails: Object.entries(formationForDraft).map(([pos, player]) => ({
+            position: pos,
+            playerId: player._id,
+            playerName: player.fullName,
+          })),
+        });
+
         const response = await fetch(`http://localhost:3001/api/games/${gameId}/draft`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           },
-          body: JSON.stringify({
-            rosters: localRosterStatuses,
-            formation: formationForDraft,
-            formationType: formationType
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('❌ [useLineupDraftManager] Autosave failed - HTTP error:', {
+            status: response.status,
+            statusText: response.statusText,
+            errorData,
+          });
           throw new Error(errorData.error || `Failed to save draft: ${response.status}`);
         }
 
         const result = await response.json();
-        console.log('✅ [useLineupDraftManager] Draft autosaved successfully:', result);
+        console.log('✅ [useLineupDraftManager] Draft autosaved successfully!', {
+          result,
+          savedFormationPositions: Object.keys(formationForDraft).length,
+          savedRostersCount: Object.keys(localRosterStatuses).length,
+        });
         setIsAutosaving(false);
       } catch (error) {
-        console.error('❌ [useLineupDraftManager] Error autosaving draft:', error);
+        console.error('❌ [useLineupDraftManager] Error autosaving draft:', {
+          error: error.message,
+          stack: error.stack,
+        });
         setAutosaveError(error.message);
         setIsAutosaving(false);
       }
