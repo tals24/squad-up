@@ -19,4 +19,6 @@ export { useSubstitutionsHandlers } from './useSubstitutionsHandlers';
 export { useCardsHandlers } from './useCardsHandlers';
 export { useFormationHandlers } from './useFormationHandlers';
 export { useDifficultyHandlers } from './useDifficultyHandlers';
+export { useDialogState } from './useDialogState';
+export { useEntityLoading } from './useEntityLoading';
 
