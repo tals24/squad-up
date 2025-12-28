@@ -61,10 +61,10 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 1.5.4 Gate: behavior parity checklist has no regressions
 
 - [ ] 2.0 Phase 1 — Pilot: decompose `GameDetailsPage` into modules + hooks (no behavior changes)
-  - [ ] 2.1 Create a decomposition map before moving code
-    - [ ] 2.1.1 Inventory responsibilities inside `GameDetailsPage/index.jsx` (data loading, draft autosave, formation, dialogs, validation, etc.)
-    - [ ] 2.1.2 Identify “stable boundaries” for extraction (what can move without changing behavior)
-    - [ ] 2.1.3 Document a target folder layout for the pilot (modules + hooks), keeping current imports working
+  - [x] 2.1 Create a decomposition map before moving code
+    - [x] 2.1.1 Inventory responsibilities inside `GameDetailsPage/index.jsx` (data loading, draft autosave, formation, dialogs, validation, etc.)
+    - [x] 2.1.2 Identify "stable boundaries" for extraction (what can move without changing behavior)
+    - [x] 2.1.3 Document a target folder layout for the pilot (modules + hooks), keeping current imports working
   - [ ] 2.2 PR set A — UI module extraction (pure composition)
     - [ ] 2.2.1 Create `GameDetailsPage/modules/` and extract top-level layout sections as wrappers (no logic changes)
     - [ ] 2.2.2 Ensure all props passed through unchanged (same values, same handlers)
