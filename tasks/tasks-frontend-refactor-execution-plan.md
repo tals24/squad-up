@@ -38,13 +38,13 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 0.2 Push branch to remote and open a draft PR describing scope + "no behavior change" policy
 
 - [ ] 1.0 Phase 0 — Safety Net: establish regression protection (tests + smoke)
-  - [ ] 1.1 Read and internalize the constitution + diagnosis
-    - [ ] 1.1.1 Read `docs/frontendImproved.md` and extract the non-negotiables into the PR description
-    - [ ] 1.1.2 Read `docs/refactorUi.txt` and list the top 5 offenders + why they are risky
-  - [ ] 1.2 Establish a reproducible baseline (record “known good” behavior)
-    - [ ] 1.2.1 Identify the critical user flows for the pilot page (Scheduled/Played/Done)
-    - [ ] 1.2.2 Write a short “manual smoke checklist” (steps + expected results) for GameDetails
-    - [ ] 1.2.3 Capture baseline console/network expectations (e.g., which endpoints are called in each flow)
+  - [x] 1.1 Read and internalize the constitution + diagnosis
+    - [x] 1.1.1 Read `docs/frontendImproved.md` and extract the non-negotiables into the PR description
+    - [x] 1.1.2 Read `docs/refactorUi.txt` and list the top 5 offenders + why they are risky
+  - [x] 1.2 Establish a reproducible baseline (record "known good" behavior)
+    - [x] 1.2.1 Identify the critical user flows for the pilot page (Scheduled/Played/Done)
+    - [x] 1.2.2 Write a short "manual smoke checklist" (steps + expected results) for GameDetails
+    - [x] 1.2.3 Capture baseline console/network expectations (e.g., which endpoints are called in each flow)
   - [ ] 1.3 Add/extend E2E smoke coverage for game flow
     - [ ] 1.3.1 Review `frontend/src/__tests__/e2e/gameManagement.spec.js` and existing coverage gaps
     - [ ] 1.3.2 Add a stable E2E smoke scenario: open schedule → open game details → verify key UI loads
