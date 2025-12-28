@@ -74,6 +74,9 @@ export function useReportHandlers({
       });
     }
     
+    // Load ALL detailed stats from localPlayerMatchStats (nested structure)
+    const savedDetailedStats = playerMatchStat || {};
+    
     const playerPerfDataToSet = {
       // User-editable fields
       rating_physical: existingReport.rating_physical || 3,
@@ -81,26 +84,33 @@ export function useReportHandlers({
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
-      // Stats from PlayerMatchStat (draftable) - nested structure
+      // ALL Detailed Stats from localPlayerMatchStats (draftable, nested structure)
       stats: {
-        fouls: {
-          committed: playerMatchStat.foulsCommitted || 0,
-          received: playerMatchStat.foulsReceived || 0,
-        },
+        fouls: savedDetailedStats.fouls || { committedRating: 0, receivedRating: 0 },
+        shooting: savedDetailedStats.shooting || { volumeRating: 0, accuracyRating: 0 },
+        passing: savedDetailedStats.passing || { volumeRating: 0, accuracyRating: 0, keyPassesRating: 0 },
+        duels: savedDetailedStats.duels || { involvementRating: 0, successRating: 0 },
       },
-      // Stats from pre-fetch (read-only, calculated by server)
-      minutesPlayed: existingReport.minutesPlayed || 0,
-      goals: existingReport.goals || 0,
-      assists: existingReport.assists || 0,
+      // Stats from teamStats (read-only, calculated by server)
+      // Try both 'minutes' and 'minutesPlayed' keys
+      minutesPlayed: playerStats.minutesPlayed || playerStats.minutes || 0,
+      goals: playerStats.goals || 0,
+      assists: playerStats.assists || 0,
     };
     
-    console.log('🔍 [useReportHandlers] Stats check:', {
+    console.log('🔍 [useReportHandlers] Opening player dialog:', {
       playerId: player._id,
       playerName: player.fullName,
       hasLocalPlayerMatchStats: Object.keys(localPlayerMatchStats).length > 0,
       playerMatchStatKeys: Object.keys(playerMatchStat),
-      playerMatchStat,
-      gameStatus: game?.status
+      savedDetailedStats: savedDetailedStats,
+      teamStatsKeys: Object.keys(teamStats),
+      teamStatsForPlayer: playerStats,
+      minutesFromTeamStats: playerStats.minutesPlayed || playerStats.minutes,
+      goalsFromTeamStats: playerStats.goals,
+      assistsFromTeamStats: playerStats.assists,
+      gameStatus: game?.status,
+      finalDataToSet: playerPerfDataToSet
     });
     
     setPlayerPerfData(playerPerfDataToSet);
@@ -125,10 +135,17 @@ export function useReportHandlers({
       },
     }));
 
-    // Save stats to localPlayerMatchStats (will be autosaved to draft)
+    // Save ALL detailed stats to localPlayerMatchStats (will be autosaved to draft)
+    // Keep nested structure: {fouls: {...}, shooting: {...}, passing: {...}, duels: {...}}
+    const detailedStats = playerPerfData.stats || {};
+    console.log('💾 [useReportHandlers] Saving detailed stats:', {
+      playerId: selectedPlayer._id,
+      playerName: selectedPlayer.fullName,
+      stats: detailedStats
+    });
     setLocalPlayerMatchStats((prev) => ({
       ...prev,
-      [selectedPlayer._id]: playerPerfData.stats || {},
+      [selectedPlayer._id]: detailedStats,
     }));
 
     try {
@@ -207,17 +224,31 @@ export function useReportHandlers({
    * Open team summary dialog
    */
   const handleTeamSummaryClick = (summaryType) => {
+    const currentValue = teamSummary[`${summaryType}Summary`] || "";
+    console.log('🔍 [useReportHandlers] Team summary clicked:', {
+      summaryType,
+      fullKey: `${summaryType}Summary`,
+      currentValue,
+      fullTeamSummary: teamSummary,
+      willSetDialog: true
+    });
     setSelectedSummaryType(summaryType);
     setShowTeamSummaryDialog(true);
+    console.log('✅ [useReportHandlers] Team summary dialog state updated');
   };
 
   /**
    * Save team summary
    */
   const handleTeamSummarySave = (summaryType, value) => {
+    console.log('💾 [useReportHandlers] Saving team summary:', {
+      summaryType,
+      fullKey: `${summaryType}Summary`,
+      value
+    });
     setTeamSummary((prev) => ({
       ...prev,
-      [summaryType]: value,
+      [`${summaryType}Summary`]: value,  // defense -> defenseSummary
     }));
     setShowTeamSummaryDialog(false);
   };

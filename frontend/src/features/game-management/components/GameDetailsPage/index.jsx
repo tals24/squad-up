@@ -24,7 +24,8 @@ export default function GameDetails() {
   const gameId = searchParams.get("id");
   const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
   const { toast } = useToast();
-  const isDifficultyAssessmentEnabled = useFeature("difficultyAssessment");
+  const isDifficultyAssessmentEnabled = useFeature("gameDifficultyAssessmentEnabled");
+  console.log('🔍 [GameDetailsPage] isDifficultyAssessmentEnabled:', isDifficultyAssessmentEnabled);
 
   // Formation state (required early for hooks)
   const [formationType, setFormationType] = useState("1-4-4-2");
@@ -40,7 +41,7 @@ export default function GameDetails() {
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [localPlayerMatchStats, setLocalPlayerMatchStats] = useState({});
   const { isAutosavingReport, reportAutosaveError } = useReportDraftManager({ gameId, game, isFinalizingGame, teamSummary, setTeamSummary, finalScore, setFinalScore, matchDuration, setMatchDuration, localPlayerReports, setLocalPlayerReports, localPlayerMatchStats, setLocalPlayerMatchStats });
-  const { playersOnPitch, benchPlayers, squadPlayers, activeGamePlayers } = usePlayerGrouping({ formation, gamePlayers, localRosterStatuses });
+  const { playersOnPitch, benchPlayers, squadPlayers, activeGamePlayers, startingLineupMap, squadPlayersMap } = usePlayerGrouping({ formation, gamePlayers, localRosterStatuses });
 
   // Helper functions
   const getPlayerStatus = (playerId) => localRosterStatuses[playerId] || "Not in Squad";
@@ -53,6 +54,15 @@ export default function GameDetails() {
     return (status === "Starting Lineup" || status === "Bench") && !hasReport(playerId);
   };
   const updatePlayerStatus = (playerId, newStatus) => setLocalRosterStatuses(prev => ({ ...prev, [playerId]: newStatus }));
+
+  // Calculate missing reports count for active players (Starting Lineup + Bench)
+  const missingReportsCount = useMemo(() => {
+    if (!gamePlayers || gamePlayers.length === 0) return 0;
+    return gamePlayers.filter(player => {
+      const status = getPlayerStatus(player._id);
+      return (status === "Starting Lineup" || status === "Bench") && !hasReport(player._id);
+    }).length;
+  }, [gamePlayers, localRosterStatuses, localPlayerReports]);
 
   // Dialog & entity state hooks
   const dialogState = useDialogState();
@@ -103,7 +113,7 @@ export default function GameDetails() {
   // All handler hooks
   const gameStateHandlers = useGameStateHandlers({
     gameId, game, formation, formationType, gamePlayers, benchPlayers, localRosterStatuses, getPlayerStatus, finalScore, matchDuration, teamSummary,
-    localPlayerReports, localPlayerMatchStats, difficultyAssessment, isDifficultyAssessmentEnabled, games, updateGameInCache, refreshData,
+    localPlayerReports, localPlayerMatchStats, difficultyAssessment, isDifficultyAssessmentEnabled, games, updateGameInCache, updateGameRostersInCache, refreshData,
     setGame, setIsReadOnly, setIsFinalizingGame, setIsSaving, showConfirmation, setShowConfirmationModal, setPendingAction: dialogState.setPendingAction, toast
   });
   const reportHandlers = useReportHandlers({
@@ -117,7 +127,7 @@ export default function GameDetails() {
     selectedGoal: dialogState.selectedGoal, setSelectedGoal: dialogState.setSelectedGoal, setShowGoalDialog: dialogState.setShowGoalDialog
   });
   const subsHandlers = useSubstitutionsHandlers({
-    gameId, substitutions, setSubstitutions, setTimeline, refreshTeamStats,
+    gameId, substitutions, setSubstitutions, setTimeline, refreshTeamStats, goals,
     selectedSubstitution: dialogState.selectedSubstitution, setSelectedSubstitution: dialogState.setSelectedSubstitution, setShowSubstitutionDialog: dialogState.setShowSubstitutionDialog
   });
   const cardsHandlers = useCardsHandlers({
@@ -143,7 +153,7 @@ export default function GameDetails() {
   const isDone = game?.status === "Done";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Blocking Modal for Game Finalization */}
       {isFinalizingGame && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -155,6 +165,7 @@ export default function GameDetails() {
         </div>
       )}
       
+      {/* Header - Full Width */}
       <GameHeaderModule
         game={game}
         finalScore={finalScore}
@@ -162,7 +173,7 @@ export default function GameDetails() {
         matchDuration={matchDuration}
         setMatchDuration={setMatchDuration}
         teamSummary={teamSummary}
-        missingReportsCount={0}
+        missingReportsCount={missingReportsCount}
         playerReports={localPlayerReports}
         matchStats={matchStats}
         isSaving={isSaving}
@@ -175,112 +186,161 @@ export default function GameDetails() {
         handleEditReport={gameStateHandlers.handleEditReport}
       />
       
-      <RosterSidebarModule
-        playersOnPitch={playersOnPitch}
-        benchPlayers={benchPlayers}
-        squadPlayers={squadPlayers}
-        hasReport={hasReport}
-        needsReport={needsReport}
-        getPlayerStatus={getPlayerStatus}
-        handleOpenPerformanceDialog={reportHandlers.handleOpenPerformanceDialog}
-        updatePlayerStatus={updatePlayerStatus}
-        handleDragStart={dndHandlers.handleDragStart}
-        handleDragEnd={dndHandlers.handleDragEnd}
-        isScheduled={isScheduled}
-        isPlayed={isPlayed}
-        isDone={isDone}
-      />
-      
-      <TacticalBoardModule
-        tacticalBoardProps={{
-          formations,
-          formationType,
-          positions,
-          formation,
-          onFormationChange: formationHandlers.handleFormationChange,
-          onPositionDrop: dndHandlers.handlePositionDrop,
-          onRemovePlayer: dndHandlers.handleRemovePlayerFromPosition,
-          onPlayerClick: reportHandlers.handleOpenPerformanceDialog,
-          onPositionClick: formationHandlers.handlePositionClick,
-          isDragging: dndHandlers.isDragging,
-          isScheduled,
-          isPlayed,
-          isReadOnly: isDone,
-          isDone,
-          hasReport,
-          needsReport,
-        }}
-        autoFillProps={{
-          showAutoFill: isPlayed,
-          remainingCount: 0,
-          onAutoFill: reportHandlers.handleAutoFillRemaining,
-          disabled: isDone,
-        }}
-      />
-      
-      <MatchAnalysisModule
-        isScheduled={isScheduled}
-        isPlayed={isPlayed}
-        isDone={isDone}
-        teamSummary={teamSummary}
-        setTeamSummary={setTeamSummary}
-        onTeamSummaryClick={reportHandlers.handleTeamSummaryClick}
-        goals={goals}
-        onAddGoal={goalsHandlers.handleAddGoal}
-        onEditGoal={goalsHandlers.handleEditGoal}
-        onDeleteGoal={goalsHandlers.handleDeleteGoal}
-        substitutions={substitutions}
-        onAddSubstitution={subsHandlers.handleAddSubstitution}
-        onEditSubstitution={subsHandlers.handleEditSubstitution}
-        onDeleteSubstitution={subsHandlers.handleDeleteSubstitution}
-        cards={cards}
-        onAddCard={cardsHandlers.handleAddCard}
-        onEditCard={cardsHandlers.handleEditCard}
-        onDeleteCard={cardsHandlers.handleDeleteCard}
-      />
+      {/* Main Content - 3 Column Layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Game Day Roster */}
+        <RosterSidebarModule
+          playersOnPitch={playersOnPitch}
+          benchPlayers={benchPlayers}
+          squadPlayers={squadPlayers}
+          hasReport={hasReport}
+          needsReport={needsReport}
+          getPlayerStatus={getPlayerStatus}
+          handleOpenPerformanceDialog={reportHandlers.handleOpenPerformanceDialog}
+          updatePlayerStatus={updatePlayerStatus}
+          handleDragStart={dndHandlers.handleDragStart}
+          handleDragEnd={dndHandlers.handleDragEnd}
+          isScheduled={isScheduled}
+          isPlayed={isPlayed}
+          isDone={isDone}
+        />
+        
+        {/* Center - Tactical Board */}
+        <TacticalBoardModule
+          tacticalBoardProps={{
+            formations,
+            formationType,
+            positions,
+            formation,
+            onFormationChange: formationHandlers.handleFormationChange,
+            onPositionDrop: dndHandlers.handlePositionDrop,
+            onRemovePlayer: dndHandlers.handleRemovePlayerFromPosition,
+            onPlayerClick: reportHandlers.handleOpenPerformanceDialog,
+            onPositionClick: formationHandlers.handlePositionClick,
+            isDragging: dndHandlers.isDragging,
+            isScheduled,
+            isPlayed,
+            isReadOnly: isDone,
+            isDone,
+            hasReport,
+            needsReport,
+          }}
+          autoFillProps={{
+            showAutoFill: isPlayed,
+            remainingCount: missingReportsCount,
+            onAutoFill: reportHandlers.handleAutoFillRemaining,
+            disabled: isDone,
+          }}
+        />
+        
+        {/* Right Sidebar - Match Analysis */}
+        <MatchAnalysisModule
+          isScheduled={isScheduled}
+          isPlayed={isPlayed}
+          isDone={isDone}
+          game={game}
+          teamSummary={teamSummary}
+          setTeamSummary={setTeamSummary}
+          onTeamSummaryClick={reportHandlers.handleTeamSummaryClick}
+          goals={goals}
+          onAddGoal={goalsHandlers.handleAddGoal}
+          onEditGoal={goalsHandlers.handleEditGoal}
+          onDeleteGoal={goalsHandlers.handleDeleteGoal}
+          substitutions={substitutions}
+          onAddSubstitution={subsHandlers.handleAddSubstitution}
+          onEditSubstitution={subsHandlers.handleEditSubstitution}
+          onDeleteSubstitution={subsHandlers.handleDeleteSubstitution}
+          cards={cards}
+          onAddCard={cardsHandlers.handleAddCard}
+          onEditCard={cardsHandlers.handleEditCard}
+          onDeleteCard={cardsHandlers.handleDeleteCard}
+          matchDuration={matchDuration}
+          setMatchDuration={setMatchDuration}
+          difficultyAssessment={difficultyAssessment}
+          onSaveDifficultyAssessment={difficultyHandlers.handleSaveDifficultyAssessment}
+          onDeleteDifficultyAssessment={difficultyHandlers.handleDeleteDifficultyAssessment}
+          isDifficultyAssessmentEnabled={isDifficultyAssessmentEnabled}
+        />
+      </div>
       
       <DialogsModule
         dialogs={{
           goal: {
             isOpen: dialogState.showGoalDialog,
-            selected: dialogState.selectedGoal,
+            goal: dialogState.selectedGoal,
+            gamePlayers: activeGamePlayers,
+            existingGoals: goals,
+            matchDuration: matchDuration?.minutes || 90,
+            isReadOnly: isDone,
+            game,
+            timeline,
+            startingLineup: startingLineupMap,
+            squadPlayers: squadPlayersMap,
             onSave: goalsHandlers.handleSaveGoal,
             onSaveOpponent: goalsHandlers.handleSaveOpponentGoal,
             onClose: () => { dialogState.setShowGoalDialog(false); dialogState.setSelectedGoal(null); },
           },
           substitution: {
             isOpen: dialogState.showSubstitutionDialog,
-            selected: dialogState.selectedSubstitution,
+            substitution: dialogState.selectedSubstitution,
+            playersOnPitch,
+            benchPlayers,
+            matchDuration: matchDuration?.minutes || 90,
+            isReadOnly: isDone,
+            playerReports: localPlayerReports,
+            timeline,
+            startingLineup: startingLineupMap,
+            squadPlayers: squadPlayersMap,
             onSave: subsHandlers.handleSaveSubstitution,
             onClose: () => { dialogState.setShowSubstitutionDialog(false); dialogState.setSelectedSubstitution(null); },
           },
           card: {
             isOpen: dialogState.showCardDialog,
-            selected: dialogState.selectedCard,
+            card: dialogState.selectedCard,
+            gamePlayers: activeGamePlayers,
+            cards,
+            matchDuration: matchDuration?.minutes || 90,
+            isReadOnly: isDone,
+            game,
             onSave: cardsHandlers.handleSaveCard,
             onClose: () => { dialogState.setShowCardDialog(false); dialogState.setSelectedCard(null); },
           },
-          playerPerf: {
-            isOpen: dialogState.showPlayerPerfDialog,
-            selectedPlayer: dialogState.selectedPlayer,
-            playerPerfData: dialogState.playerPerfData,
-            setPlayerPerfData: dialogState.setPlayerPerfData,
+          playerPerformance: {
+            open: dialogState.showPlayerPerfDialog,
+            onOpenChange: dialogState.setShowPlayerPerfDialog,
+            player: dialogState.selectedPlayer,
+            data: dialogState.playerPerfData,
+            onDataChange: dialogState.setPlayerPerfData,
+            isReadOnly: isDone,
+            isStarting: dialogState.selectedPlayer ? getPlayerStatus(dialogState.selectedPlayer._id) === "Starting Lineup" : false,
+            game,
+            matchDuration: matchDuration?.minutes || 90,
+            substitutions,
+            playerReports: localPlayerReports,
+            onAddSubstitution: () => { /* TODO: handle add substitution from player dialog */ },
+            goals,
+            timeline,
+            cards,
+            // Add calculated stats for read-only display (API returns 'minutes', not 'minutesPlayed')
+            initialMinutes: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.minutes || teamStats[dialogState.selectedPlayer._id]?.minutesPlayed || 0),
+            initialGoals: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.goals || 0),
+            initialAssists: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.assists || 0),
             onSave: reportHandlers.handleSavePerformanceReport,
             onClose: () => dialogState.setShowPlayerPerfDialog(false),
           },
           teamSummary: {
-            isOpen: dialogState.showTeamSummaryDialog,
-            selectedType: dialogState.selectedSummaryType,
-            teamSummary,
+            open: dialogState.showTeamSummaryDialog,
+            onOpenChange: dialogState.setShowTeamSummaryDialog,
+            summaryType: dialogState.selectedSummaryType,
+            currentValue: teamSummary[`${dialogState.selectedSummaryType}Summary`] || "",
             onSave: reportHandlers.handleTeamSummarySave,
-            onClose: () => dialogState.setShowTeamSummaryDialog(false),
           },
           playerSelection: {
-            isOpen: dialogState.showPlayerSelectionDialog,
-            selectedPosition: dialogState.selectedPosition,
-            selectedPositionData: dialogState.selectedPositionData,
-            squadPlayers,
-            onSelect: formationHandlers.handleSelectPlayerForPosition,
+            open: dialogState.showPlayerSelectionDialog,
+            position: dialogState.selectedPosition,
+            positionData: dialogState.selectedPositionData,
+            availablePlayers: squadPlayers,
+            onSelectPlayer: formationHandlers.handleSelectPlayerForPosition,
             onClose: () => {
               dialogState.setShowPlayerSelectionDialog(false);
               dialogState.setSelectedPosition(null);
@@ -288,26 +348,25 @@ export default function GameDetails() {
             },
           },
           finalReport: {
-            isOpen: gameStateHandlers.showFinalReportDialog,
+            open: gameStateHandlers.showFinalReportDialog,
+            onOpenChange: gameStateHandlers.setShowFinalReportDialog,
             finalScore,
             teamSummary,
             onConfirm: gameStateHandlers.handleConfirmFinalSubmission,
-            onClose: () => gameStateHandlers.setShowFinalReportDialog(false),
+            isSaving: isSaving,
+          },
+          confirmation: {
+            isOpen: showConfirmationModal,
+            onClose: () => setShowConfirmationModal(false),
+            onConfirm: confirmationConfig.onConfirm,
+            onCancel: confirmationConfig.onCancel,
+            title: confirmationConfig.title,
+            message: confirmationConfig.message,
+            confirmText: confirmationConfig.confirmText,
+            cancelText: confirmationConfig.cancelText,
+            type: confirmationConfig.type,
           },
         }}
-        activeGamePlayers={activeGamePlayers}
-      />
-      
-      <ConfirmationModal
-        isOpen={showConfirmationModal}
-        onClose={() => setShowConfirmationModal(false)}
-        onConfirm={confirmationConfig.onConfirm}
-        onCancel={confirmationConfig.onCancel}
-        title={confirmationConfig.title}
-        message={confirmationConfig.message}
-        confirmText={confirmationConfig.confirmText}
-        cancelText={confirmationConfig.cancelText}
-        type={confirmationConfig.type}
       />
     </div>
   );

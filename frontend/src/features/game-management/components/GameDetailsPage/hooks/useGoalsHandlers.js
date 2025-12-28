@@ -74,13 +74,61 @@ export function useGoalsHandlers({
   };
 
   /**
+   * Calculate match state at a specific minute based on goals timeline
+   * For goals, calculate the state BEFORE the goal was scored
+   */
+  const calculateMatchStateForGoal = (minute, excludeGoalId = null) => {
+    // Count goals BEFORE this minute (not including this goal itself)
+    const ourGoalsBeforeThis = goals.filter(g => 
+      g.minute < minute && 
+      !g.isOpponentGoal &&
+      g._id !== excludeGoalId
+    ).length;
+    
+    const opponentGoalsBeforeThis = goals.filter(g => 
+      g.minute < minute && 
+      g.isOpponentGoal &&
+      g._id !== excludeGoalId
+    ).length;
+
+    console.log(`🔍 [useGoalsHandlers] Calculating match state BEFORE goal at minute ${minute}:`, {
+      ourGoals: ourGoalsBeforeThis,
+      opponentGoals: opponentGoalsBeforeThis
+    });
+
+    if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
+      return 'winning';
+    } else if (ourGoalsBeforeThis < opponentGoalsBeforeThis) {
+      return 'losing';
+    } else {
+      return 'drawing';
+    }
+  };
+
+  /**
    * Save goal (create or update)
    */
   const handleSaveGoal = async (goalData) => {
     try {
+      // Calculate match state based on goals timeline BEFORE this goal
+      const matchState = calculateMatchStateForGoal(
+        goalData.minute, 
+        selectedGoal?._id // Exclude current goal if editing
+      );
+      const goalDataWithMatchState = {
+        ...goalData,
+        matchState
+      };
+
+      console.log('💾 [useGoalsHandlers] Saving goal with match state:', {
+        minute: goalData.minute,
+        matchState,
+        goalData: goalDataWithMatchState
+      });
+
       if (selectedGoal) {
         // Update existing goal
-        const updatedGoal = await updateGoal(gameId, selectedGoal._id, goalData);
+        const updatedGoal = await updateGoal(gameId, selectedGoal._id, goalDataWithMatchState);
         setGoals(prevGoals => prevGoals.map(g => g._id === updatedGoal._id ? updatedGoal : g));
         
         // Recalculate score from goals
@@ -88,7 +136,7 @@ export function useGoalsHandlers({
         setGoals(updatedGoals);
       } else {
         // Create new goal
-        const newGoal = await createGoal(gameId, goalData);
+        const newGoal = await createGoal(gameId, goalDataWithMatchState);
         setGoals(prevGoals => [...prevGoals, newGoal]);
         
         // Increment team score when team goal is recorded
@@ -126,12 +174,22 @@ export function useGoalsHandlers({
    */
   const handleSaveOpponentGoal = async (opponentGoalData) => {
     try {
+      // Calculate match state BEFORE this opponent goal
+      const matchState = calculateMatchStateForGoal(opponentGoalData.minute);
+      
       // Save opponent goal to database
       const goalData = {
         minute: opponentGoalData.minute,
         goalType: opponentGoalData.goalType || 'open-play',
-        isOpponentGoal: true
+        isOpponentGoal: true,
+        matchState
       };
+      
+      console.log('💾 [useGoalsHandlers] Saving opponent goal with match state:', {
+        minute: opponentGoalData.minute,
+        matchState,
+        goalData
+      });
       
       await createGoal(gameId, goalData);
       

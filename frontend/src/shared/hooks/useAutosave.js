@@ -104,6 +104,8 @@ export function useAutosave({
     // Create new timer
     timerRef.current = setTimeout(async () => {
       try {
+        console.log('🚀 [useAutosave] Sending autosave request to:', endpoint);
+        console.log('📦 [useAutosave] Request body:', JSON.stringify(data, null, 2));
         const response = await fetch(endpoint, {
           method: 'PUT',
           headers: {

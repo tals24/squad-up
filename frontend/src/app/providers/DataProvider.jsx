@@ -112,15 +112,19 @@ export const DataProvider = ({ children }) => {
             
             if (!token) {
                 console.warn('⚠️ No auth token found, skipping config fetch');
-                setOrganizationConfig({
+                const defaultConfig = {
                     features: {
                         shotTrackingEnabled: false,
                         positionSpecificMetricsEnabled: false,
                         detailedDisciplinaryEnabled: true,
-                        goalInvolvementEnabled: true
+                        goalInvolvementEnabled: true,
+                        gameDifficultyAssessmentEnabled: true
                     },
                     ageGroupOverrides: []
-                });
+                };
+                setOrganizationConfig(defaultConfig);
+                console.log('🔍 [DEBUG] Using default config (no token):', defaultConfig.features);
+                console.log('🔍 [DEBUG] gameDifficultyAssessmentEnabled in default:', defaultConfig.features.gameDifficultyAssessmentEnabled);
                 setIsLoadingConfig(false);
                 return;
             }
@@ -140,19 +144,25 @@ export const DataProvider = ({ children }) => {
             if (result.success && result.data) {
                 setOrganizationConfig(result.data);
                 console.log('✅ Organization config loaded:', result.data.isDefault ? '(default)' : '(saved)');
+                console.log('🔍 [DEBUG] Organization config features:', result.data.features);
+                console.log('🔍 [DEBUG] gameDifficultyAssessmentEnabled enabled?', result.data.features?.gameDifficultyAssessmentEnabled);
             }
         } catch (error) {
             console.error('❌ Failed to fetch organization config:', error);
             // Set default config on error
-            setOrganizationConfig({
+            const fallbackConfig = {
                 features: {
                     shotTrackingEnabled: false,
                     positionSpecificMetricsEnabled: false,
                     detailedDisciplinaryEnabled: true,
-                    goalInvolvementEnabled: true
+                    goalInvolvementEnabled: true,
+                    gameDifficultyAssessmentEnabled: true
                 },
                 ageGroupOverrides: []
-            });
+            };
+            setOrganizationConfig(fallbackConfig);
+            console.log('🔍 [DEBUG] Using fallback config (error):', fallbackConfig.features);
+            console.log('🔍 [DEBUG] gameDifficultyAssessmentEnabled in fallback:', fallbackConfig.features.gameDifficultyAssessmentEnabled);
         } finally {
             setIsLoadingConfig(false);
         }

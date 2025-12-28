@@ -35,14 +35,32 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
 
     const loadEntities = async () => {
       try {
+        console.log('🔍 [useEntityLoading] Loading entities...', {
+          gameId,
+          gameStatus: game?.status,
+          isDifficultyAssessmentEnabled
+        });
+        
+        // Only fetch player stats for Played/Done games
+        const shouldFetchStats = game.status === 'Played' || game.status === 'Done';
+        
         const [goalsData, subsData, cardsData, difficultyData, timelineData, statsData] = await Promise.all([
           fetchGoals(gameId),
           fetchSubstitutions(gameId),
           fetchCards(gameId),
           isDifficultyAssessmentEnabled ? fetchDifficultyAssessment(gameId) : Promise.resolve(null),
           fetchMatchTimeline(gameId),
-          fetchPlayerStats(gameId),
+          shouldFetchStats ? fetchPlayerStats(gameId) : Promise.resolve({}),
         ]);
+        
+        console.log('🔍 [useEntityLoading] Entities loaded:', {
+          goalsCount: goalsData?.length,
+          subsCount: subsData?.length,
+          cardsCount: cardsData?.length,
+          hasDifficultyData: !!difficultyData,
+          difficultyData
+        });
+        
         setGoals(goalsData);
         setSubstitutions(subsData);
         setCards(cardsData);
@@ -81,11 +99,26 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
   // Refresh team stats function
   const refreshTeamStats = async () => {
     if (!gameId || !game) return;
+    // Only fetch stats for Played/Done games
+    if (game.status !== 'Played' && game.status !== 'Done') {
+      console.log('⏸️ [useEntityLoading] Skipping refreshTeamStats - game status:', game.status);
+      return;
+    }
+    
     try {
+      console.log('🔄 [useEntityLoading] Refreshing team stats for game:', gameId);
       const stats = await fetchPlayerStats(gameId);
+      const firstPlayerId = Object.keys(stats)[0];
+      console.log('✅ [useEntityLoading] Team stats refreshed:', {
+        playerCount: Object.keys(stats).length,
+        allPlayerIds: Object.keys(stats),
+        samplePlayerId: firstPlayerId,
+        sampleStats: firstPlayerId ? stats[firstPlayerId] : null,
+        allStats: stats
+      });
       setTeamStats(stats);
     } catch (error) {
-      console.error('[useEntityLoading] Error refreshing team stats:', error);
+      console.error('❌ [useEntityLoading] Error refreshing team stats:', error);
     }
   };
 

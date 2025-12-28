@@ -249,7 +249,16 @@ export const validateReportCompleteness = (startingLineup, playerReports) => {
 
   const playersWithoutReports = startingLineup.filter(player => {
     const report = playerReports[player._id];
-    return !report || !report.minutesPlayed;
+    // Check if report exists and has at least one rating
+    // Reports structure: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }
+    if (!report) return true;
+    
+    // Check if report has all required ratings
+    const hasAllRatings = report.rating_physical !== undefined && 
+                         report.rating_technical !== undefined && 
+                         report.rating_tactical !== undefined && 
+                         report.rating_mental !== undefined;
+    return !hasAllRatings;
   });
 
   if (playersWithoutReports.length > 0) {

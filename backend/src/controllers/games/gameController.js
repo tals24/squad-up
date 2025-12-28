@@ -144,7 +144,7 @@ exports.startGame = async (req, res, next) => {
           gameTitle: result.game.gameTitle || `${result.game.teamName} vs ${result.game.opponent}`,
           lineupDraft: null
         },
-        rosters: result.gameRosters,
+        gameRosters: result.gameRosters,  // ✅ Fixed: changed 'rosters' to 'gameRosters'
         rosterCount: result.gameRosters.length
       }
     });

@@ -19,6 +19,7 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
  * @param {Function} params.setSelectedSubstitution - Set selected substitution
  * @param {Function} params.setShowSubstitutionDialog - Show/hide dialog
  * @param {Function} params.refreshTeamStats - Refresh team stats after changes
+ * @param {Array} params.goals - Current goals array (to calculate match state)
  * 
  * @returns {Object} Substitution handlers
  */
@@ -31,6 +32,7 @@ export function useSubstitutionsHandlers({
   setSelectedSubstitution,
   setShowSubstitutionDialog,
   refreshTeamStats,
+  goals = [],
 }) {
   
   /**
@@ -69,17 +71,57 @@ export function useSubstitutionsHandlers({
   };
 
   /**
+   * Calculate match state at a specific minute based on goals timeline
+   */
+  const calculateMatchState = (minute) => {
+    // Count our goals and opponent goals before this minute
+    const ourGoalsBeforeThis = goals.filter(g => 
+      g.minute <= minute && !g.isOpponentGoal
+    ).length;
+    
+    const opponentGoalsBeforeThis = goals.filter(g => 
+      g.minute <= minute && g.isOpponentGoal
+    ).length;
+
+    console.log(`🔍 [useSubstitutionsHandlers] Calculating match state at minute ${minute}:`, {
+      ourGoals: ourGoalsBeforeThis,
+      opponentGoals: opponentGoalsBeforeThis
+    });
+
+    if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
+      return 'winning';
+    } else if (ourGoalsBeforeThis < opponentGoalsBeforeThis) {
+      return 'losing';
+    } else {
+      return 'drawing';
+    }
+  };
+
+  /**
    * Save substitution (create or update)
    */
   const handleSaveSubstitution = async (subData) => {
     try {
+      // Calculate match state based on goals timeline
+      const matchState = calculateMatchState(subData.minute);
+      const subDataWithMatchState = {
+        ...subData,
+        matchState
+      };
+
+      console.log('💾 [useSubstitutionsHandlers] Saving substitution with match state:', {
+        minute: subData.minute,
+        matchState,
+        subData: subDataWithMatchState
+      });
+
       if (selectedSubstitution) {
         // Update existing substitution
-        const updatedSub = await updateSubstitution(gameId, selectedSubstitution._id, subData);
+        const updatedSub = await updateSubstitution(gameId, selectedSubstitution._id, subDataWithMatchState);
         setSubstitutions(prevSubs => prevSubs.map(s => s._id === updatedSub._id ? updatedSub : s));
       } else {
         // Create new substitution
-        const newSub = await createSubstitution(gameId, subData);
+        const newSub = await createSubstitution(gameId, subDataWithMatchState);
         setSubstitutions(prevSubs => [...prevSubs, newSub]);
       }
       

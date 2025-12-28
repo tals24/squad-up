@@ -37,6 +37,7 @@ import {
  * @param {boolean} params.isDifficultyAssessmentEnabled - Feature flag
  * @param {Array} params.games - Games array from DataProvider
  * @param {Function} params.updateGameInCache - Update game in cache
+ * @param {Function} params.updateGameRostersInCache - Update gameRosters in cache
  * @param {Function} params.refreshData - Refresh all data
  * @param {Function} params.setGame - Set game state
  * @param {Function} params.setIsReadOnly - Set read-only mode
@@ -67,6 +68,7 @@ export function useGameStateHandlers({
   isDifficultyAssessmentEnabled,
   games,
   updateGameInCache,
+  updateGameRostersInCache,
   refreshData,
   setGame,
   setIsReadOnly,
@@ -83,12 +85,27 @@ export function useGameStateHandlers({
    * Comprehensive validation for finalizing a game
    */
   const validatePlayedStatus = () => {
+    console.log('🔍 [useGameStateHandlers] validatePlayedStatus called');
     const errors = [];
     const warnings = [];
 
     // Validate report completion
-    const reportValidation = validateReportCompleteness(localPlayerReports, gamePlayers, localRosterStatuses);
-    if (!reportValidation.isComplete) {
+    // Get starting lineup players (filter gamePlayers by roster status)
+    const startingLineupPlayers = gamePlayers.filter(player => {
+      const status = getPlayerStatus(player._id);
+      return status === 'Starting Lineup';
+    });
+    
+    console.log('🔍 [useGameStateHandlers] Starting lineup players:', {
+      count: startingLineupPlayers.length,
+      players: startingLineupPlayers.map(p => p.fullName)
+    });
+    console.log('🔍 [useGameStateHandlers] Local player reports:', localPlayerReports);
+    
+    const reportValidation = validateReportCompleteness(startingLineupPlayers, localPlayerReports);
+    console.log('🔍 [useGameStateHandlers] Report validation result:', reportValidation);
+    
+    if (!reportValidation.isValid) {
       errors.push(`❌ Missing Reports:\n${reportValidation.message}`);
     }
 
@@ -188,7 +205,18 @@ export function useGameStateHandlers({
           ...(existingGameInCache || {}),
           ...updatedGameData,
         });
-        console.log('✅ [useGameStateHandlers] Global cache updated');
+        console.log('✅ [useGameStateHandlers] Global game cache updated');
+      }
+
+      // Update gameRosters in cache (CRITICAL for navigation without refresh)
+      if (result.data?.gameRosters && Array.isArray(result.data.gameRosters)) {
+        updateGameRostersInCache(result.data.gameRosters, gameId);
+        console.log('✅ [useGameStateHandlers] GameRosters cache updated:', {
+          gameId,
+          rostersCount: result.data.gameRosters.length
+        });
+      } else {
+        console.warn('⚠️ [useGameStateHandlers] No gameRosters in response, cache not updated');
       }
 
       toast({
@@ -322,7 +350,9 @@ export function useGameStateHandlers({
    * Validates Played game and shows confirmation for finalization
    */
   const handleSubmitFinalReport = async () => {
+    console.log('🔍 [useGameStateHandlers] handleSubmitFinalReport called');
     const validation = validatePlayedStatus();
+    console.log('🔍 [useGameStateHandlers] Validation result:', validation);
     
     if (validation.hasErrors) {
       showConfirmation({
@@ -349,6 +379,7 @@ export function useGameStateHandlers({
     
     confirmMessage += "You can still edit the report later if needed.";
     
+    console.log('✅ [useGameStateHandlers] Opening final report dialog');
     setShowFinalReportDialog(true);
   };
 
@@ -410,6 +441,9 @@ export function useGameStateHandlers({
       // Update local state
       setIsReadOnly(true);
       setGame((prev) => ({ ...prev, status: "Done" }));
+
+      // Close the dialog
+      setShowFinalReportDialog(false);
 
       toast({
         title: "Success",

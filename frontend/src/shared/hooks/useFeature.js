@@ -40,14 +40,17 @@ export const useFeature = (featureName, teamId = null) => {
   return useMemo(() => {
     // If config not loaded, return false (safe default)
     if (!organizationConfig) {
+      console.log(`🔍 [useFeature] "${featureName}": organizationConfig not loaded, returning false`);
       return false;
     }
 
     // Get global feature value
     const globalEnabled = organizationConfig.features?.[featureName] || false;
+    console.log(`🔍 [useFeature] "${featureName}": globalEnabled = ${globalEnabled}, features =`, organizationConfig.features);
 
     // If no teamId provided, return global value
     if (!teamId) {
+      console.log(`🔍 [useFeature] "${featureName}": No teamId, returning global value: ${globalEnabled}`);
       return globalEnabled;
     }
 

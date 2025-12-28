@@ -126,10 +126,10 @@ export default function TacticalBoard({
                   top: `${posData.y}%`,
                 }}
                 onClick={(e) => {
-                  if (!isOccupied && isScheduled && !isReadOnly) {
+                  if (isScheduled && !isReadOnly) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('🎯 Empty position clicked:', { posId, posData });
+                    console.log('🎯 Position clicked:', { posId, posData, isOccupied });
                     onPositionClick?.(posId, posData);
                   }
                 }}
@@ -156,14 +156,16 @@ export default function TacticalBoard({
                 {/* Position Circle */}
                 {isOccupied ? (
                   <div
-                    className={`relative group ${(isPlayed || isDone) ? "cursor-pointer" : ""}`}
-                    onClick={() => {
+                    className={`relative group ${(isPlayed || isDone || (isScheduled && !isReadOnly)) ? "cursor-pointer" : ""}`}
+                    onClick={(e) => {
                       // Allow clicking when played or done (to view reports) - works in both edit and read-only mode
                       if (isPlayed || isDone) {
                         onPlayerClick(player);
                       }
+                      // For scheduled games, clicking should trigger the outer onClick (position selection)
+                      // No need to stopPropagation for scheduled - let it bubble to open player selection
                     }}
-                    title={(isPlayed || isDone) ? `Click to view ${player.fullName}'s report` : ""}
+                    title={(isPlayed || isDone) ? `Click to view ${player.fullName}'s report` : (isScheduled && !isReadOnly) ? `Click to reassign position` : ""}
                   >
                     <div
                       style={{ 

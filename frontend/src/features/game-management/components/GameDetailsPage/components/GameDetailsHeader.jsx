@@ -149,7 +149,7 @@ export default function GameDetailsHeader({
                       MVP
                     </div>
                     <div className="text-xs text-white whitespace-nowrap">
-                      {matchStats.topRated}
+                      {matchStats.topRated.name} ({matchStats.topRated.rating})
                     </div>
                   </div>
                 )}
@@ -228,9 +228,9 @@ export default function GameDetailsHeader({
             {isPlayed && !isDone && (
               <Button
                 onClick={handleSubmitFinalReport}
-                disabled={isSaving || missingReportsCount > 0 || !finalScore.ourScore === null || !teamSummary.defenseSummary}
+                disabled={isSaving || missingReportsCount > 0}
                 className={`
-                  ${missingReportsCount > 0 || !finalScore.ourScore === null || !teamSummary.defenseSummary
+                  ${missingReportsCount > 0
                     ? "bg-slate-700 text-slate-400"
                     : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/30"
                   }

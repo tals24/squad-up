@@ -38,6 +38,13 @@ export default function MatchAnalysisSidebar({
   onDeleteDifficultyAssessment,
   isDifficultyAssessmentEnabled,
 }) {
+  console.log('🔍 [MatchAnalysisSidebar] Props:', {
+    isDifficultyAssessmentEnabled,
+    hasDifficultyAssessment: !!difficultyAssessment,
+    hasGame: !!game,
+    hasHandlers: !!(onSaveDifficultyAssessment && onDeleteDifficultyAssessment)
+  });
+  
   return (
     <div 
       className="w-[336px] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 space-y-4 overflow-y-auto p-4"
@@ -80,15 +87,20 @@ export default function MatchAnalysisSidebar({
       )}
 
       {/* Difficulty Assessment - Below AI Match Preview */}
-      {isDifficultyAssessmentEnabled && (
-        <DifficultyAssessmentCard
-          game={game}
-          assessment={difficultyAssessment}
-          onSave={onSaveDifficultyAssessment}
-          onDelete={onDeleteDifficultyAssessment}
-          isScheduled={isScheduled}
-          isDone={isDone}
-        />
+      {isDifficultyAssessmentEnabled ? (
+        <>
+          {console.log('🔍 [MatchAnalysisSidebar] Rendering DifficultyAssessmentCard')}
+          <DifficultyAssessmentCard
+            game={game}
+            assessment={difficultyAssessment}
+            onSave={onSaveDifficultyAssessment}
+            onDelete={onDeleteDifficultyAssessment}
+            isScheduled={isScheduled}
+            isDone={isDone}
+          />
+        </>
+      ) : (
+        console.log('🔍 [MatchAnalysisSidebar] NOT rendering DifficultyAssessmentCard - isDifficultyAssessmentEnabled:', isDifficultyAssessmentEnabled)
       )}
 
       {/* Extra Time Section - First component, one line */}

@@ -79,7 +79,14 @@ export function useReportDraftManager({
       if (draft.teamSummary) {
         setTeamSummary(prev => {
           const merged = { ...prev, ...draft.teamSummary };
-          console.log('✅ [useReportDraftManager] Merged teamSummary:', { prev, draft: draft.teamSummary, merged });
+          console.log('✅ [useReportDraftManager] Merged teamSummary:', { 
+            prev, 
+            draft: draft.teamSummary, 
+            merged,
+            defenseSummaryInDraft: draft.teamSummary.defenseSummary,
+            defenseSummaryInMerged: merged.defenseSummary,
+            allDraftKeys: Object.keys(draft.teamSummary)
+          });
           return merged;
         });
       }
@@ -118,7 +125,13 @@ export function useReportDraftManager({
           console.log('✅ [useReportDraftManager] Merged playerMatchStats:', {
             prevCount: Object.keys(prev).length,
             draftCount: Object.keys(draft.playerMatchStats).length,
-            mergedCount: Object.keys(merged).length
+            mergedCount: Object.keys(merged).length,
+            draftSample: Object.keys(draft.playerMatchStats).length > 0 
+              ? draft.playerMatchStats[Object.keys(draft.playerMatchStats)[0]] 
+              : null,
+            mergedSample: Object.keys(merged).length > 0 
+              ? merged[Object.keys(merged)[0]] 
+              : null
           });
           return merged;
         });
@@ -172,6 +185,13 @@ export function useReportDraftManager({
       }
       
       const hasTeamSummary = data.teamSummary && Object.values(data.teamSummary).some(v => v && v.trim());
+      if (data.teamSummary) {
+        console.log('🔍 [useReportDraftManager] TeamSummary autosave check:', {
+          teamSummary: data.teamSummary,
+          values: Object.values(data.teamSummary),
+          hasTeamSummary
+        });
+      }
       const hasFinalScore = data.finalScore && (data.finalScore.ourScore > 0 || data.finalScore.opponentScore > 0);
       const hasMatchDuration = data.matchDuration && (
         data.matchDuration.regularTime !== 90 || 
