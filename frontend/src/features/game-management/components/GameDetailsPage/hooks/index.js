@@ -7,4 +7,5 @@
  */
 
 export { useGameDetailsData } from './useGameDetailsData';
+export { useLineupDraftManager } from './useLineupDraftManager';
 

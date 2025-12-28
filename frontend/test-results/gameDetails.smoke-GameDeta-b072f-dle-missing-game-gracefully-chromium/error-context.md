@@ -1,8 +1,0 @@
-# Page snapshot
-
-```yaml
-- generic [ref=e3]:
-  - img [ref=e5]
-  - button "Open Tanstack query devtools" [ref=e53] [cursor=pointer]:
-    - img [ref=e54]
-```
