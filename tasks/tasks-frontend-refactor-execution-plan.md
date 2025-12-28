@@ -33,7 +33,7 @@ Update the file after completing each sub-task, not just after completing an ent
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
+- [x] 0.0 Create feature branch
   - [x] 0.1 Create and checkout a new branch for this work (e.g., `git checkout -b refactor/frontend-alignment-plan`)
   - [x] 0.2 Push branch to remote and open a draft PR describing scope + "no behavior change" policy
 
