@@ -30,7 +30,7 @@ import {
 } from "./modules";
 
 // Import custom hooks
-import { useGameDetailsData, useLineupDraftManager, useReportDraftManager } from "./hooks";
+import { useGameDetailsData, useLineupDraftManager, useReportDraftManager, usePlayerGrouping } from "./hooks";
 
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
@@ -115,6 +115,20 @@ export default function GameDetails() {
     setLocalPlayerReports,
     localPlayerMatchStats,
     setLocalPlayerMatchStats,
+  });
+
+  // Custom hook: Player grouping and categorization
+  const {
+    playersOnPitch,
+    benchPlayers,
+    squadPlayers,
+    activeGamePlayers,
+    startingLineupMap,
+    squadPlayersMap,
+  } = usePlayerGrouping({
+    formation,
+    gamePlayers,
+    localRosterStatuses,
   });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
@@ -586,55 +600,7 @@ export default function GameDetails() {
     setLocalRosterStatuses((prev) => ({ ...prev, [playerId]: newStatus }));
   };
 
-  // Helper: Players grouped by status
-  const playersOnPitch = useMemo(() => {
-    return Object.values(formation).filter((player) => player !== null);
-  }, [formation]);
-
-  const benchPlayers = useMemo(() => {
-    return gamePlayers.filter((player) => {
-      const status = getPlayerStatus(player._id);
-      return status === "Bench";
-    });
-  }, [gamePlayers, localRosterStatuses]);
-
-  const squadPlayers = useMemo(() => {
-    return gamePlayers.filter((player) => {
-      const status = getPlayerStatus(player._id);
-      const isOnPitch = playersOnPitch.some((p) => p._id === player._id);
-      const isBench = status === "Bench";
-      return !isOnPitch && !isBench;
-    });
-  }, [gamePlayers, playersOnPitch, localRosterStatuses]);
-
-  // Active game players (lineup + bench) - only these can score/assist
-  const activeGamePlayers = useMemo(() => {
-    return [...playersOnPitch, ...benchPlayers];
-  }, [playersOnPitch, benchPlayers]);
-
-  // Build starting lineup map for game state reconstruction
-  const startingLineupMap = useMemo(() => {
-    const map = {};
-    gamePlayers.forEach(player => {
-      const status = getPlayerStatus(player._id);
-      if (status === 'Starting Lineup') {
-        map[player._id] = true;
-      }
-    });
-    return map;
-  }, [gamePlayers, localRosterStatuses]);
-
-  // Build squad players map for game state reconstruction
-  const squadPlayersMap = useMemo(() => {
-    const map = {};
-    gamePlayers.forEach(player => {
-      const status = getPlayerStatus(player._id);
-      if (status === 'Starting Lineup' || status === 'Bench') {
-        map[player._id] = status;
-      }
-    });
-    return map;
-  }, [gamePlayers, localRosterStatuses]);
+  // ✅ OLD PLAYER GROUPING REMOVED - Now handled by usePlayerGrouping hook
 
   // Helper: Check if player has report
   const hasReport = (playerId) => {

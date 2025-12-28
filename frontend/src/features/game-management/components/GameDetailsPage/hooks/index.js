@@ -9,4 +9,5 @@
 export { useGameDetailsData } from './useGameDetailsData';
 export { useLineupDraftManager } from './useLineupDraftManager';
 export { useReportDraftManager } from './useReportDraftManager';
+export { usePlayerGrouping } from './usePlayerGrouping';
 
