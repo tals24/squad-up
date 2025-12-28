@@ -245,11 +245,50 @@ export function useLineupDraftManager({
           statuses[playerId] = roster.status;
         });
         
-        console.log('✅ [useLineupDraftManager] Loaded from gameRosters:', {
-          playerCount: Object.keys(statuses).length,
-          playerStatuses: statuses,
-          WARNING: 'NOTE: gameRosters does NOT include formation data! Formation will be auto-built.'
-        });
+        // FIX: Extract formation from gameRosters (all rosters have same formation, so take first)
+        const firstRoster = rosterForGame[0];
+        const hasFormationData = firstRoster.formation && firstRoster.formationType;
+        
+        if (hasFormationData) {
+          console.log('✅ [useLineupDraftManager] Formation found in gameRosters!', {
+            formationType: firstRoster.formationType,
+            formationPositions: Object.keys(firstRoster.formation || {}).length,
+            formation: firstRoster.formation
+          });
+          
+          // Restore formation type
+          setFormationType(firstRoster.formationType);
+          
+          // Restore formation (reconstruct the position-to-player mapping)
+          const restoredFormation = {};
+          Object.entries(firstRoster.formation).forEach(([positionId, playerId]) => {
+            if (playerId) {
+              const player = gamePlayers.find(p => p._id === playerId);
+              if (player) {
+                restoredFormation[positionId] = player;
+                console.log(`✅ Position ${positionId} restored: { playerId: "${playerId}", playerName: "${player.fullName}" }`);
+              } else {
+                console.warn(`❌ MISSING PLAYER for position ${positionId}: playerId="${playerId}" not found in gamePlayers`);
+              }
+            }
+          });
+          
+          setFormation(restoredFormation);
+          setManualFormationMode(true);
+          
+          console.log('✅ [useLineupDraftManager] Loaded from gameRosters with formation:', {
+            playerCount: Object.keys(statuses).length,
+            playerStatuses: statuses,
+            formationType: firstRoster.formationType,
+            formationRestored: Object.keys(restoredFormation).length
+          });
+        } else {
+          console.log('✅ [useLineupDraftManager] Loaded from gameRosters (no formation):', {
+            playerCount: Object.keys(statuses).length,
+            playerStatuses: statuses,
+            WARNING: 'NOTE: No formation data in gameRosters. Formation will be auto-built.'
+          });
+        }
         
         setLocalRosterStatuses(statuses);
         console.log('🔍 [useLineupDraftManager] === DRAFT LOADING END (gameRosters path) ===');
