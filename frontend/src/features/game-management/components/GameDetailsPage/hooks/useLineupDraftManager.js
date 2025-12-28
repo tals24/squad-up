@@ -248,7 +248,7 @@ export function useLineupDraftManager({
         console.log('✅ [useLineupDraftManager] Loaded from gameRosters:', {
           playerCount: Object.keys(statuses).length,
           playerStatuses: statuses,
-          ⚠️: 'NOTE: gameRosters does NOT include formation data! Formation will be auto-built.'
+          WARNING: 'NOTE: gameRosters does NOT include formation data! Formation will be auto-built.'
         });
         
         setLocalRosterStatuses(statuses);
