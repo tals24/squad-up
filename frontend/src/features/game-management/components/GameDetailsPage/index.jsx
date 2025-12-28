@@ -124,6 +124,10 @@ export default function GameDetails() {
         setFinalScore={setFinalScore}
         matchDuration={matchDuration}
         setMatchDuration={setMatchDuration}
+        teamSummary={teamSummary}
+        missingReportsCount={0}
+        playerReports={localPlayerReports}
+        matchStats={{}}
         isSaving={isSaving}
         isScheduled={isScheduled}
         isPlayed={isPlayed}
@@ -248,6 +252,8 @@ export default function GameDetails() {
           },
           finalReport: {
             isOpen: gameStateHandlers.showFinalReportDialog,
+            finalScore,
+            teamSummary,
             onConfirm: gameStateHandlers.handleConfirmFinalSubmission,
             onClose: () => gameStateHandlers.setShowFinalReportDialog(false),
           },
