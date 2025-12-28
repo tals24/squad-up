@@ -68,6 +68,9 @@ export default function GameDetails() {
   const [formation, setFormation] = useState({});
   const [manualFormationMode, setManualFormationMode] = useState(false);
 
+  // Get current formation positions (MUST be before hooks that use it)
+  const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
+
   // Finalizing game state (needed by lineup draft manager for autosave guard)
   const [isFinalizingGame, setIsFinalizingGame] = useState(false);
 
@@ -117,49 +120,6 @@ export default function GameDetails() {
     setLocalPlayerMatchStats,
   });
 
-  // Custom hook: Player grouping and categorization
-  const {
-    playersOnPitch,
-    benchPlayers,
-    squadPlayers,
-    activeGamePlayers,
-    startingLineupMap,
-    squadPlayersMap,
-  } = usePlayerGrouping({
-    formation,
-    gamePlayers,
-    localRosterStatuses,
-  });
-
-  // Custom hook: Formation auto-build (when NOT in manual mode)
-  useFormationAutoBuild({
-    positions,
-    gamePlayers,
-    localRosterStatuses,
-    formation,
-    setFormation,
-    manualFormationMode,
-    setManualFormationMode,
-  });
-
-  // Custom hook: Tactical board drag & drop
-  const {
-    isDragging,
-    draggedPlayer,
-    handleDragStart,
-    handleDragEnd,
-    handlePositionDrop,
-    handleRemovePlayerFromPosition,
-  } = useTacticalBoardDragDrop({
-    positions,
-    formation,
-    setFormation,
-    updatePlayerStatus,
-    setManualFormationMode,
-    showConfirmation,
-    validatePlayerPosition,
-  });
-  
   // Player stats pre-fetched for Played games (for instant dialog display)
   const [teamStats, setTeamStats] = useState({});
   const [isLoadingTeamStats, setIsLoadingTeamStats] = useState(false);
@@ -213,9 +173,7 @@ export default function GameDetails() {
   });
   const [pendingAction, setPendingAction] = useState(null);
   // ✅ pendingPlayerPosition removed - unused state
-
-  // Get current formation positions
-  const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
+  // ✅ positions moved up - now declared before hooks that use it
 
   // Check if difficulty assessment feature is enabled
   const isDifficultyAssessmentEnabled = useFeature('gameDifficultyAssessmentEnabled', game?.team);
@@ -607,6 +565,51 @@ export default function GameDetails() {
     setConfirmationConfig(config);
     setShowConfirmationModal(true);
   };
+
+  // ✅ Custom hooks that depend on helper functions (MUST be after helpers are defined)
+  
+  // Custom hook: Player grouping and categorization
+  const {
+    playersOnPitch,
+    benchPlayers,
+    squadPlayers,
+    activeGamePlayers,
+    startingLineupMap,
+    squadPlayersMap,
+  } = usePlayerGrouping({
+    formation,
+    gamePlayers,
+    localRosterStatuses,
+  });
+
+  // Custom hook: Formation auto-build (when NOT in manual mode)
+  useFormationAutoBuild({
+    positions,
+    gamePlayers,
+    localRosterStatuses,
+    formation,
+    setFormation,
+    manualFormationMode,
+    setManualFormationMode,
+  });
+
+  // Custom hook: Tactical board drag & drop
+  const {
+    isDragging,
+    draggedPlayer,
+    handleDragStart,
+    handleDragEnd,
+    handlePositionDrop,
+    handleRemovePlayerFromPosition,
+  } = useTacticalBoardDragDrop({
+    positions,
+    formation,
+    setFormation,
+    updatePlayerStatus,
+    setManualFormationMode,
+    showConfirmation,
+    validatePlayerPosition,
+  });
 
   const handleConfirmation = () => {
     if (confirmationConfig.onConfirm) {
