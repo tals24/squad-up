@@ -54,6 +54,43 @@ export default function GameDetails() {
   };
   const updatePlayerStatus = (playerId, newStatus) => setLocalRosterStatuses(prev => ({ ...prev, [playerId]: newStatus }));
 
+  // Compute match stats from goals and reports
+  const matchStats = useMemo(() => {
+    const scorerMap = new Map();
+    const assisterMap = new Map();
+    let topRated = null;
+    let maxRating = 0;
+
+    (goals || []).forEach((goal) => {
+      if (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) return;
+      if (goal.scorerId && goal.scorerId._id) {
+        const scorerId = goal.scorerId._id;
+        const scorerName = goal.scorerId.fullName || goal.scorerId.name || 'Unknown';
+        scorerMap.set(scorerId, { name: scorerName, count: (scorerMap.get(scorerId)?.count || 0) + 1 });
+      }
+      if (goal.assisterId && goal.assisterId._id) {
+        const assisterId = goal.assisterId._id;
+        const assisterName = goal.assisterId.fullName || goal.assisterId.name || 'Unknown';
+        assisterMap.set(assisterId, { name: assisterName, count: (assisterMap.get(assisterId)?.count || 0) + 1 });
+      }
+    });
+
+    Object.entries(localPlayerReports).forEach(([playerId, report]) => {
+      const avgRating = ((report.rating_physical || 0) + (report.rating_technical || 0) + (report.rating_tactical || 0) + (report.rating_mental || 0)) / 4;
+      if (avgRating > maxRating) {
+        maxRating = avgRating;
+        const player = gamePlayers.find(p => p._id === playerId);
+        if (player) topRated = { name: player.fullName, rating: avgRating.toFixed(1) };
+      }
+    });
+
+    return {
+      scorers: Array.from(scorerMap.entries()).map(([id, data]) => ({ id, ...data })),
+      assists: Array.from(assisterMap.entries()).map(([id, data]) => ({ id, ...data })),
+      topRated
+    };
+  }, [goals, localPlayerReports, gamePlayers]);
+
   // Dialog & entity state hooks
   const dialogState = useDialogState();
   const { showConfirmation, showConfirmationModal, setShowConfirmationModal, confirmationConfig } = dialogState;
@@ -127,7 +164,7 @@ export default function GameDetails() {
         teamSummary={teamSummary}
         missingReportsCount={0}
         playerReports={localPlayerReports}
-        matchStats={{}}
+        matchStats={matchStats}
         isSaving={isSaving}
         isScheduled={isScheduled}
         isPlayed={isPlayed}
