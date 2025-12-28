@@ -88,10 +88,10 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 2.6.2 Extract formation auto-build logic and ensure manual mode behavior stays identical ✅
     - [x] 2.6.3 Extract drag/drop handlers and out-of-position confirmation logic ✅
     - [x] 2.6.4 Verify: same DnD UX + tests green ✅
-  - [ ] 2.7 PR set F — Normalize API calls in the pilot (remove hardcoded URLs)
-    - [ ] 2.7.1 Replace `fetch('http://localhost:3001/...')` in the pilot with `src/shared/api/client.js` usage
-    - [ ] 2.7.2 Preserve auth header behavior and response parsing behavior
-    - [ ] 2.7.3 Verify network requests still hit the same backend routes and behavior is unchanged
+  - [x] 2.7 PR set F — Normalize API calls in the pilot (remove hardcoded URLs) ✅
+    - [x] 2.7.1 Replace `fetch('http://localhost:3001/...')` in the pilot with `src/shared/api/client.js` usage ✅
+    - [x] 2.7.2 Preserve auth header behavior and response parsing behavior ✅
+    - [x] 2.7.3 Verify network requests still hit the same backend routes and behavior is unchanged ✅
   - [ ] 2.8 Cutover PR — Make `GameDetailsPage/index.jsx` a thin container
     - [ ] 2.8.1 Ensure `index.jsx` is primarily: id parsing → hooks → module composition
     - [ ] 2.8.2 Target: `index.jsx` ≤ 250 lines
