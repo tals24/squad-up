@@ -12,12 +12,13 @@ import { apiClient } from '@/shared/api/client';
  * @param {string} params.gameId - Game ID
  * @param {Object} params.game - Game object
  * @param {Array} params.gamePlayers - All team players
- * @param {Function} params.getPlayerStatus - Get player roster status
  * @param {Object} params.localPlayerReports - Player reports state
  * @param {Function} params.setLocalPlayerReports - Set player reports
  * @param {Object} params.localPlayerMatchStats - Player match stats
  * @param {Function} params.setLocalPlayerMatchStats - Set match stats
+ * @param {Object} params.selectedPlayer - Currently selected player
  * @param {Function} params.setSelectedPlayer - Set selected player for dialog
+ * @param {Object} params.playerPerfData - Performance data for dialog
  * @param {Function} params.setPlayerPerfData - Set performance data
  * @param {Function} params.setShowPlayerPerfDialog - Show/hide dialog
  * @param {Function} params.setSelectedSummaryType - Set summary type
@@ -26,8 +27,7 @@ import { apiClient } from '@/shared/api/client';
  * @param {Object} params.teamSummary - Team summary object
  * @param {Function} params.setTeamSummary - Set team summary
  * @param {Function} params.needsReport - Check if player needs report
- * @param {Function} params.showConfirmation - Show confirmation dialog
- * @param {Function} params.setShowConfirmationModal - Set confirmation visibility
+ * @param {Function} params.toast - Toast notification function
  * 
  * @returns {Object} Report handlers
  */
@@ -35,12 +35,13 @@ export function useReportHandlers({
   gameId,
   game,
   gamePlayers,
-  getPlayerStatus,
   localPlayerReports,
   setLocalPlayerReports,
   localPlayerMatchStats,
   setLocalPlayerMatchStats,
+  selectedPlayer,
   setSelectedPlayer,
+  playerPerfData,
   setPlayerPerfData,
   setShowPlayerPerfDialog,
   setSelectedSummaryType,
@@ -49,8 +50,7 @@ export function useReportHandlers({
   teamSummary,
   setTeamSummary,
   needsReport,
-  showConfirmation,
-  setShowConfirmationModal,
+  toast,
 }) {
   
   /**
@@ -62,6 +62,18 @@ export function useReportHandlers({
     const playerStats = teamStats[player._id] || {};
     const playerMatchStat = localPlayerMatchStats[player._id] || {};
     
+    // Debug logging for "Done" games
+    if (game?.status === 'Done') {
+      console.log('🔍 [useReportHandlers] Opening dialog for Done game:', {
+        playerId: player._id,
+        playerName: player.fullName,
+        existingReport,
+        hasMinutesPlayed: existingReport.minutesPlayed !== undefined,
+        hasGoals: existingReport.goals !== undefined,
+        hasAssists: existingReport.assists !== undefined,
+      });
+    }
+    
     const playerPerfDataToSet = {
       // User-editable fields
       rating_physical: existingReport.rating_physical || 3,
@@ -69,7 +81,7 @@ export function useReportHandlers({
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
       notes: existingReport.notes || "",
-      // Stats from PlayerMatchStat (draftable)
+      // Stats from PlayerMatchStat (draftable) - nested structure
       stats: {
         fouls: {
           committed: playerMatchStat.foulsCommitted || 0,
@@ -82,6 +94,15 @@ export function useReportHandlers({
       assists: existingReport.assists || 0,
     };
     
+    console.log('🔍 [useReportHandlers] Stats check:', {
+      playerId: player._id,
+      playerName: player.fullName,
+      hasLocalPlayerMatchStats: Object.keys(localPlayerMatchStats).length > 0,
+      playerMatchStatKeys: Object.keys(playerMatchStat),
+      playerMatchStat,
+      gameStatus: game?.status
+    });
+    
     setPlayerPerfData(playerPerfDataToSet);
     setShowPlayerPerfDialog(true);
   };
@@ -90,28 +111,96 @@ export function useReportHandlers({
    * Save individual player performance report
    */
   const handleSavePerformanceReport = async () => {
-    // Implementation moved from main component
-    // This would be the full save logic
+    if (!selectedPlayer) return;
+
+    // Save ratings and notes to localPlayerReports
+    setLocalPlayerReports((prev) => ({
+      ...prev,
+      [selectedPlayer._id]: {
+        rating_physical: playerPerfData.rating_physical,
+        rating_technical: playerPerfData.rating_technical,
+        rating_tactical: playerPerfData.rating_tactical,
+        rating_mental: playerPerfData.rating_mental,
+        notes: playerPerfData.notes || null,
+      },
+    }));
+
+    // Save stats to localPlayerMatchStats (will be autosaved to draft)
+    setLocalPlayerMatchStats((prev) => ({
+      ...prev,
+      [selectedPlayer._id]: playerPerfData.stats || {},
+    }));
+
+    try {
+      // Build payload: ONLY user-editable fields
+      const reportPayload = {
+        playerId: selectedPlayer._id,
+        rating_physical: playerPerfData.rating_physical,
+        rating_technical: playerPerfData.rating_technical,
+        rating_tactical: playerPerfData.rating_tactical,
+        rating_mental: playerPerfData.rating_mental,
+        notes: playerPerfData.notes || null,
+      };
+      
+      // DO NOT send: minutesPlayed, goals, assists (server calculates)
+      // DO NOT send: foulsCommitted, foulsReceived (saved to draft, will be saved on final submission)
+
+      try {
+        await apiClient.post(`/api/game-reports/batch`, {
+          gameId,
+          reports: [reportPayload],
+        });
+      } catch (error) {
+        console.error('[useReportHandlers] Failed to save performance report:', error.message || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('[useReportHandlers] Error saving performance report:', error);
+    }
+
     setShowPlayerPerfDialog(false);
+    setSelectedPlayer(null);
   };
 
   /**
    * Auto-fill missing reports with default values
    */
   const handleAutoFillRemaining = () => {
+    if (!gamePlayers || gamePlayers.length === 0) return;
+    if (game?.status !== 'Played') return;
+
+    // Identify players without reports
+    const playersWithoutReports = gamePlayers.filter(
+      player => !localPlayerReports[player._id]
+    );
+
+    if (playersWithoutReports.length === 0) {
+      toast({
+        title: "No players to fill",
+        description: "All players already have reports.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Create default reports for missing players
     const updates = {};
-    gamePlayers.forEach((player) => {
-      if (needsReport(player._id)) {
-        updates[player._id] = {
-          rating_physical: 3,
-          rating_technical: 3,
-          rating_tactical: 3,
-          rating_mental: 3,
-          notes: "",
-        };
-      }
+    playersWithoutReports.forEach((player) => {
+      updates[player._id] = {
+        rating_physical: 3,
+        rating_technical: 3,
+        rating_tactical: 3,
+        rating_mental: 3,
+        notes: "",
+      };
     });
+    
     setLocalPlayerReports((prev) => ({ ...prev, ...updates }));
+    
+    toast({
+      title: "Reports auto-filled",
+      description: `Created default reports for ${playersWithoutReports.length} player(s).`,
+      variant: "default",
+    });
   };
 
   /**

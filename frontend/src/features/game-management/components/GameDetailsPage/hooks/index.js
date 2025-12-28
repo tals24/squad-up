@@ -13,4 +13,10 @@ export { usePlayerGrouping } from './usePlayerGrouping';
 export { useFormationAutoBuild } from './useFormationAutoBuild';
 export { useTacticalBoardDragDrop } from './useTacticalBoardDragDrop';
 export { useGameStateHandlers } from './useGameStateHandlers';
+export { useReportHandlers } from './useReportHandlers';
+export { useGoalsHandlers } from './useGoalsHandlers';
+export { useSubstitutionsHandlers } from './useSubstitutionsHandlers';
+export { useCardsHandlers } from './useCardsHandlers';
+export { useFormationHandlers } from './useFormationHandlers';
+export { useDifficultyHandlers } from './useDifficultyHandlers';
 
