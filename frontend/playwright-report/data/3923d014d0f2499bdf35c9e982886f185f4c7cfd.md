@@ -281,83 +281,81 @@
             - generic [ref=e314]:
               - img [ref=e316]
               - generic [ref=e324]:
-                - generic [ref=e325]:
-                  - generic [ref=e326]: "23"
-                  - button "×" [ref=e327] [cursor=pointer]
+                - generic [ref=e326]: "23"
                 - generic:
                   - generic: Tal Mizrahi
-              - generic [ref=e329]:
-                - generic [ref=e331]: "4"
+              - generic [ref=e328]:
+                - generic [ref=e330]: "4"
                 - generic:
                   - generic: Yoni Katz
-              - generic [ref=e333]:
-                - generic [ref=e335]: "1"
+              - generic [ref=e332]:
+                - generic [ref=e334]: "1"
                 - generic:
                   - generic: Idan Cohen
-              - generic [ref=e336] [cursor=pointer]:
-                - generic [ref=e338]: CB
+              - generic [ref=e335] [cursor=pointer]:
+                - generic [ref=e337]: CB
                 - generic: Click to assign
-              - generic [ref=e339] [cursor=pointer]:
-                - generic [ref=e341]: RB
+              - generic [ref=e338] [cursor=pointer]:
+                - generic [ref=e340]: RB
                 - generic: Click to assign
-              - generic [ref=e343]:
-                - generic [ref=e345]: "7"
+              - generic [ref=e342]:
+                - generic [ref=e344]: "7"
                 - generic:
                   - generic: Itai Saban
-              - generic [ref=e347]:
-                - generic [ref=e349]: "17"
+              - generic [ref=e346]:
+                - generic [ref=e348]: "17"
                 - generic:
                   - generic: Niv Peretz
-              - generic [ref=e350] [cursor=pointer]:
-                - generic [ref=e352]: CM
+              - generic [ref=e349] [cursor=pointer]:
+                - generic [ref=e351]: CM
                 - generic: Click to assign
-              - generic [ref=e354]:
-                - generic [ref=e356]: "14"
+              - generic [ref=e353]:
+                - generic [ref=e355]: "14"
                 - generic:
                   - generic: Yuval Dahan
-              - generic [ref=e358]:
-                - generic [ref=e360]: "9"
+              - generic [ref=e357]:
+                - generic [ref=e359]: "9"
                 - generic:
                   - generic: Daniel Levy
-              - generic [ref=e362]:
-                - generic [ref=e364]: "11"
+              - generic [ref=e361]:
+                - generic [ref=e363]: "11"
                 - generic:
                   - generic: Shon Avraham
-          - generic [ref=e365]:
-            - generic [ref=e366]:
-              - generic [ref=e368]:
-                - img [ref=e369]
+          - generic [ref=e364]:
+            - generic [ref=e365]:
+              - generic [ref=e367]:
+                - img [ref=e368]
                 - text: AI Match Preview
-              - generic [ref=e371]:
-                - paragraph [ref=e372]: The AI will provide preparation data and insights for the upcoming match.
-                - paragraph [ref=e373]: (This component will be implemented in a future step, showing prepare to game data)
-            - generic [ref=e374]:
-              - generic [ref=e377]:
-                - img [ref=e378]
+              - generic [ref=e370]:
+                - paragraph [ref=e371]: The AI will provide preparation data and insights for the upcoming match.
+                - paragraph [ref=e372]: (This component will be implemented in a future step, showing prepare to game data)
+            - generic [ref=e373]:
+              - generic [ref=e376]:
+                - img [ref=e377]
                 - text: Difficulty Assessment
-              - generic [ref=e381]:
-                - generic [ref=e382]:
-                  - generic [ref=e383]:
-                    - generic [ref=e384]:
-                      - generic [ref=e385]: Opponent Strength
-                      - generic [ref=e386]: Not Set
-                    - slider [ref=e387] [cursor=pointer]: "3"
-                  - generic [ref=e388]:
-                    - generic [ref=e389]:
-                      - generic [ref=e390]: Match Importance
-                      - generic [ref=e391]: Not Set
-                    - slider [ref=e392] [cursor=pointer]: "3"
-                  - generic [ref=e393]:
-                    - generic [ref=e394]:
-                      - generic [ref=e395]: External Conditions
-                      - generic [ref=e396]: Not Set
-                    - slider [ref=e397] [cursor=pointer]: "3"
-                - generic [ref=e398]:
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - generic [ref=e382]:
+                    - generic [ref=e383]:
+                      - generic [ref=e384]: Opponent Strength
+                      - generic [ref=e385]: Not Set
+                    - slider [ref=e386] [cursor=pointer]: "3"
+                  - generic [ref=e387]:
+                    - generic [ref=e388]:
+                      - generic [ref=e389]: Match Importance
+                      - generic [ref=e390]: Not Set
+                    - slider [ref=e391] [cursor=pointer]: "3"
+                  - generic [ref=e392]:
+                    - generic [ref=e393]:
+                      - generic [ref=e394]: External Conditions
+                      - generic [ref=e395]: Not Set
+                    - slider [ref=e396] [cursor=pointer]: "3"
+                - generic [ref=e397]:
                   - button "Save Assessment" [disabled]:
                     - img
                     - text: Save Assessment
-  - generic [ref=e401]:
-    - img [ref=e403]
-    - button "Open Tanstack query devtools" [ref=e451] [cursor=pointer]:
-      - img [ref=e452]
+  - generic [ref=e400]:
+    - img [ref=e402]
+    - button "Open Tanstack query devtools" [ref=e450] [cursor=pointer]:
+      - img [ref=e451]
 ```

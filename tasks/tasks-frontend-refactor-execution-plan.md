@@ -69,11 +69,11 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 2.2.1 Create `GameDetailsPage/modules/` and extract top-level layout sections as wrappers (no logic changes)
     - [x] 2.2.2 Ensure all props passed through unchanged (same values, same handlers)
     - [x] 2.2.3 Verify: E2E smoke + integration tests green
-  - [ ] 2.3 PR set B — Extract “data loading” hook (preserve current behavior)
-    - [ ] 2.3.1 Extract the “fetch game directly + fallback to DataProvider” logic into `useGameDetailsData(gameId, games, ...)`
-    - [ ] 2.3.2 Preserve semantics: `isFetchingGame`, `isReadOnly`, matchDuration init, finalScore init, teamSummary init
-    - [ ] 2.3.3 Keep network behavior the same for now (still uses the same endpoints)
-    - [ ] 2.3.4 Verify: tests green + manual smoke checklist unchanged
+  - [x] 2.3 PR set B — Extract "data loading" hook (preserve current behavior)
+    - [x] 2.3.1 Extract the "fetch game directly + fallback to DataProvider" logic into `useGameDetailsData(gameId, games, ...)`
+    - [x] 2.3.2 Preserve semantics: `isFetchingGame`, `isReadOnly`, matchDuration init, finalScore init, teamSummary init
+    - [x] 2.3.3 Keep network behavior the same for now (still uses the same endpoints)
+    - [x] 2.3.4 Verify: tests green + manual smoke checklist unchanged
   - [ ] 2.4 PR set C — Extract lineup draft load + autosave hook (Scheduled games)
     - [ ] 2.4.1 Extract draft load precedence logic (draft first, then gameRosters, then default)
     - [ ] 2.4.2 Extract autosave debounce logic (2.5s) and “skip while finalizing” guard

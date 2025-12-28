@@ -30,6 +30,9 @@ import {
   DialogsModule
 } from "./modules";
 
+// Import custom hooks
+import { useGameDetailsData } from "./hooks";
+
 // Import API functions
 import { fetchGoals, createGoal, updateGoal, deleteGoal } from "../../api/goalsApi";
 import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from "../../api/substitutionsApi";
@@ -45,30 +48,31 @@ export default function GameDetails() {
   const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
   const { toast } = useToast();
 
-  // Main state
-  const [game, setGame] = useState(null);
-  const [gamePlayers, setGamePlayers] = useState([]);
+  // Custom hook: Game data loading + initialization
+  const {
+    game,
+    gamePlayers,
+    isFetchingGame,
+    matchDuration,
+    finalScore,
+    teamSummary,
+    isReadOnly,
+    setGame,
+    setMatchDuration,
+    setFinalScore,
+    setTeamSummary,
+  } = useGameDetailsData(gameId, { games, players, teams });
+
+  // Roster & formation state
   const [localRosterStatuses, setLocalRosterStatuses] = useState({});
   const [formationType, setFormationType] = useState("1-4-4-2");
   const [formation, setFormation] = useState({});
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [localPlayerMatchStats, setLocalPlayerMatchStats] = useState({}); // Fouls and other match stats
-  const [finalScore, setFinalScore] = useState({ ourScore: 0, opponentScore: 0 });
   
   // Player stats pre-fetched for Played games (for instant dialog display)
   const [teamStats, setTeamStats] = useState({});
   const [isLoadingTeamStats, setIsLoadingTeamStats] = useState(false);
-  const [matchDuration, setMatchDuration] = useState({
-    regularTime: 90,
-    firstHalfExtraTime: 0,
-    secondHalfExtraTime: 0
-  });
-  const [teamSummary, setTeamSummary] = useState({
-    defenseSummary: "",
-    midfieldSummary: "",
-    attackSummary: "",
-    generalSummary: "",
-  });
   
   // Goals state
   const [goals, setGoals] = useState([]);
@@ -93,7 +97,6 @@ export default function GameDetails() {
   
   // UI state
   const [isSaving, setIsSaving] = useState(false);
-  const [isReadOnly, setIsReadOnly] = useState(false);
   const [showPlayerPerfDialog, setShowPlayerPerfDialog] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [playerPerfData, setPlayerPerfData] = useState({});
@@ -127,9 +130,6 @@ export default function GameDetails() {
   const [isAutosaving, setIsAutosaving] = useState(false);
   const [autosaveError, setAutosaveError] = useState(null);
 
-  // Local loading state for game fetch
-  const [isFetchingGame, setIsFetchingGame] = useState(true);
-
   // Finalizing game state (for blocking modal)
   const [isFinalizingGame, setIsFinalizingGame] = useState(false);
 
@@ -138,154 +138,6 @@ export default function GameDetails() {
 
   // Check if difficulty assessment feature is enabled
   const isDifficultyAssessmentEnabled = useFeature('gameDifficultyAssessmentEnabled', game?.team);
-
-  // Load game data (with direct fetch to ensure latest draft data)
-  useEffect(() => {
-    if (!gameId) {
-      setIsFetchingGame(false);
-      return;
-    }
-
-    // Fetch game directly to ensure we have latest data including lineupDraft
-    const fetchGameDirectly = async () => {
-      setIsFetchingGame(true); // Set loading state at the start
-      try {
-        const response = await fetch(`http://localhost:3001/api/games/${gameId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const fetchedGame = result.data;
-          
-          if (fetchedGame) {
-            console.log('🔍 [GameDetails] Fetched game directly:', {
-              gameId: fetchedGame._id,
-              status: fetchedGame.status,
-              hasLineupDraft: !!fetchedGame.lineupDraft,
-              lineupDraft: fetchedGame.lineupDraft
-            });
-
-            // Initialize match duration from game data FIRST (before setting game)
-            const gameMatchDuration = fetchedGame.matchDuration || {};
-            const loadedMatchDuration = {
-              regularTime: gameMatchDuration.regularTime || 90,
-              firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
-              secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
-            };
-            
-            setMatchDuration(loadedMatchDuration);
-            
-            // Set game object, ensuring matchDuration is included
-            setGame({
-              ...fetchedGame,
-              matchDuration: loadedMatchDuration
-            });
-            setIsReadOnly(fetchedGame.status === "Done");
-            
-            // Initialize score from game data if available
-            if (fetchedGame.ourScore !== null && fetchedGame.ourScore !== undefined) {
-              setFinalScore({
-                ourScore: fetchedGame.ourScore || 0,
-                opponentScore: fetchedGame.opponentScore || 0,
-              });
-            } else {
-              setFinalScore({
-                ourScore: 0,
-                opponentScore: 0,
-              });
-            }
-            
-            if (fetchedGame.defenseSummary || fetchedGame.midfieldSummary || fetchedGame.attackSummary || fetchedGame.generalSummary) {
-              setTeamSummary({
-                defenseSummary: fetchedGame.defenseSummary || "",
-                midfieldSummary: fetchedGame.midfieldSummary || "",
-                attackSummary: fetchedGame.attackSummary || "",
-                generalSummary: fetchedGame.generalSummary || "",
-              });
-            }
-            
-            return; // Successfully loaded from direct fetch
-          }
-        }
-
-        // Fallback: Use games array from DataProvider if direct fetch fails
-        if (!games || games.length === 0) {
-          return;
-        }
-
-        const foundGame = games.find((g) => g._id === gameId);
-        if (foundGame) {
-          // 🔍 DEBUG: Log backend game data
-          console.log('🔍 [GameDetails] Backend game data:', {
-            gameId: foundGame._id,
-            status: foundGame.status,
-            matchDuration: foundGame.matchDuration,
-            hasMatchDuration: !!foundGame.matchDuration,
-            matchDurationType: typeof foundGame.matchDuration,
-            matchDurationKeys: foundGame.matchDuration ? Object.keys(foundGame.matchDuration) : null,
-            hasLineupDraft: !!foundGame.lineupDraft,
-            lineupDraft: foundGame.lineupDraft,
-            lineupDraftType: typeof foundGame.lineupDraft
-          });
-          
-          // Initialize match duration from game data FIRST (before setting game)
-          // This ensures we have the correct matchDuration before game object is set
-          const gameMatchDuration = foundGame.matchDuration || {};
-          const loadedMatchDuration = {
-            regularTime: gameMatchDuration.regularTime || 90,
-            firstHalfExtraTime: gameMatchDuration.firstHalfExtraTime || 0,
-            secondHalfExtraTime: gameMatchDuration.secondHalfExtraTime || 0,
-          };
-          
-          // 🔍 DEBUG: Log loaded matchDuration
-          console.log('🔍 [GameDetails] Loaded matchDuration state:', loadedMatchDuration);
-          console.log('🔍 [GameDetails] Calculated total:', loadedMatchDuration.regularTime + loadedMatchDuration.firstHalfExtraTime + loadedMatchDuration.secondHalfExtraTime);
-          
-          setMatchDuration(loadedMatchDuration);
-          
-          // Set game object, ensuring matchDuration is included
-          setGame({
-            ...foundGame,
-            matchDuration: loadedMatchDuration
-          });
-          setIsReadOnly(foundGame.status === "Done");
-          
-          // Initialize score from game data if available, otherwise will be calculated from goals
-          if (foundGame.ourScore !== null && foundGame.ourScore !== undefined) {
-            setFinalScore({
-              ourScore: foundGame.ourScore || 0,
-              opponentScore: foundGame.opponentScore || 0,
-            });
-          } else {
-            // If no score stored, initialize to 0-0 (will be calculated from goals)
-            setFinalScore({
-              ourScore: 0,
-              opponentScore: 0,
-            });
-          }
-          
-          if (foundGame.defenseSummary || foundGame.midfieldSummary || foundGame.attackSummary || foundGame.generalSummary) {
-            setTeamSummary({
-              defenseSummary: foundGame.defenseSummary || "",
-              midfieldSummary: foundGame.midfieldSummary || "",
-              attackSummary: foundGame.attackSummary || "",
-              generalSummary: foundGame.generalSummary || "",
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching game directly:', error);
-      } finally {
-        // Always set loading to false after fetch completes (success or failure)
-        setIsFetchingGame(false);
-      }
-    };
-
-    fetchGameDirectly();
-  }, [gameId, games]);
 
   // Load difficulty assessment
   useEffect(() => {
@@ -304,24 +156,6 @@ export default function GameDetails() {
 
     loadDifficultyAssessment();
   }, [gameId, isDifficultyAssessmentEnabled]);
-
-  // Load team players
-  useEffect(() => {
-    if (!game || !players || players.length === 0) return;
-
-    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
-    const teamId = typeof teamObj === "object" ? teamObj._id : teamObj;
-
-    if (!teamId) return;
-
-    const teamPlayers = players.filter((player) => {
-      const playerTeamObj = player.team || player.Team || player.teamId || player.TeamId;
-      const playerTeamId = typeof playerTeamObj === "object" ? playerTeamObj._id : playerTeamObj;
-      return playerTeamId === teamId;
-    });
-
-    setGamePlayers(teamPlayers);
-  }, [game, players]);
 
   // Create efficient lookup map for player data
   const playerMap = useMemo(() => {
