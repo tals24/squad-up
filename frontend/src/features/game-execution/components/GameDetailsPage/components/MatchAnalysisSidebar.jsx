@@ -62,12 +62,15 @@ export default function MatchAnalysisSidebar({
 
     return substitutions.map((sub, index) => {
       // Count our goals and opponent goals up to this substitution minute
+      // Handle both isOpponentGoal (boolean) and goalCategory (string) for compatibility
       const ourGoalsBeforeThis = goals.filter(g => 
-        g.minute <= sub.minute && !g.isOpponentGoal
+        g.minute <= sub.minute && 
+        (g.goalCategory === 'TeamGoal' || (!g.isOpponentGoal && g.goalCategory !== 'OpponentGoal'))
       ).length;
       
       const opponentGoalsBeforeThis = goals.filter(g => 
-        g.minute <= sub.minute && g.isOpponentGoal
+        g.minute <= sub.minute && 
+        (g.goalCategory === 'OpponentGoal' || g.isOpponentGoal)
       ).length;
 
       // Determine match state
