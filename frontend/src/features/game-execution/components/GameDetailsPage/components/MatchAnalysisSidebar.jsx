@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
@@ -44,6 +44,38 @@ export default function MatchAnalysisSidebar({
     hasGame: !!game,
     hasHandlers: !!(onSaveDifficultyAssessment && onDeleteDifficultyAssessment)
   });
+
+  /**
+   * Recalculate matchState for all substitutions based on current goals
+   * This ensures matchState is always accurate even when goals are added/edited after substitution
+   */
+  const substitutionsWithRecalculatedMatchState = useMemo(() => {
+    return substitutions.map(sub => {
+      // Count our goals and opponent goals up to this substitution minute
+      const ourGoalsBeforeThis = goals.filter(g => 
+        g.minute <= sub.minute && !g.isOpponentGoal
+      ).length;
+      
+      const opponentGoalsBeforeThis = goals.filter(g => 
+        g.minute <= sub.minute && g.isOpponentGoal
+      ).length;
+
+      // Determine match state
+      let matchState;
+      if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
+        matchState = 'winning';
+      } else if (ourGoalsBeforeThis < opponentGoalsBeforeThis) {
+        matchState = 'losing';
+      } else {
+        matchState = 'drawing';
+      }
+
+      return {
+        ...sub,
+        matchState
+      };
+    });
+  }, [substitutions, goals]);
   
   return (
     <div 
@@ -168,13 +200,13 @@ export default function MatchAnalysisSidebar({
             </div>
           </CardHeader>
           <CardContent>
-            {substitutions.length > 0 ? (
+            {substitutionsWithRecalculatedMatchState.length > 0 ? (
               <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
               }}>
                 <TooltipProvider>
-                  {substitutions
+                  {substitutionsWithRecalculatedMatchState
                     .sort((a, b) => (a.minute || 0) - (b.minute || 0))
                     .map((sub) => {
                       const playerOutName = sub.playerOutId?.fullName || sub.playerOutId?.name || 'Unknown';
