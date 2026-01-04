@@ -98,14 +98,14 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 2.8.3 Verify: all tests green, smoke green, no regressions on manual checklist (Manually verified)
 
 - [ ] 3.0 Phase 2 — Restructure: introduce `src/pages/` and split `game-management` by domain (incremental cutovers)
-  - [ ] 3.1 Introduce `src/pages/` without breaking routes
+  - [x] 3.1 Introduce `src/pages/` without breaking routes
     - [x] 3.1.1 Create `frontend/src/pages/` and add a thin page for the pilot route (compose the feature component)
     - [x] 3.1.2 Update routing (`frontend/src/app/router/*`) to point to pages (keep URLs identical)
-    - [ ] 3.1.3 Verify: routing works + tests green
-  - [ ] 3.2 Plan domain split for `game-management` (no “big bang”)
-    - [ ] 3.2.1 Create a migration mapping doc: what becomes game-creation vs game-execution vs game-analysis
-    - [ ] 3.2.2 Identify shared modules that must remain in `shared/` vs stay feature-local
-    - [ ] 3.2.3 Define incremental cutover order (which folders move first)
+    - [x] 3.1.3 Verify: routing works + tests green
+  - [x] 3.2 Plan domain split for `game-management` (no "big bang")
+    - [x] 3.2.1 Create a migration mapping doc: what becomes game-creation vs game-execution vs game-analysis
+    - [x] 3.2.2 Identify shared modules that must remain in `shared/` vs stay feature-local
+    - [x] 3.2.3 Define incremental cutover order (which folders move first)
   - [ ] 3.3 Execute domain split incrementally
     - [ ] 3.3.1 Create new feature folders with canonical template (api/components/hooks/schemas/utils/index.js)
     - [ ] 3.3.2 Move code in small PRs, keeping public exports stable via `index.js`
