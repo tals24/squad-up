@@ -6,13 +6,18 @@
 import { lazy } from 'react';
 
 // ============================================================================
-// LAZY-LOADED FEATURE COMPONENTS
-// Each feature is loaded on-demand when user navigates to it
+// LAZY-LOADED PAGE COMPONENTS
+// Each page is loaded on-demand when user navigates to it
 // This reduces initial bundle size from ~500KB to ~150KB (70% reduction)
+// 
+// NOTE: Pages are thin wrappers that compose feature components.
+// We're migrating incrementally from features/* to pages/* (Phase 2).
 // ============================================================================
 
-// Game Management (largest feature - ~200KB)
-const GameDetailsPage = lazy(() => import('@/features/game-management/components/GameDetailsPage'));
+// Game Management Pages (Phase 2 migration in progress)
+const GameDetailsPage = lazy(() => import('@/pages/GameDetailsPage'));
+
+// Game Management Features (TODO: migrate to pages/)
 const GamesSchedulePage = lazy(() => import('@/features/game-management/components/GamesSchedulePage'));
 const AddGamePage = lazy(() => import('@/features/game-management/components/AddGamePage'));
 

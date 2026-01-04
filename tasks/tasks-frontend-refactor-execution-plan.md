@@ -99,8 +99,8 @@ Update the file after completing each sub-task, not just after completing an ent
 
 - [ ] 3.0 Phase 2 — Restructure: introduce `src/pages/` and split `game-management` by domain (incremental cutovers)
   - [ ] 3.1 Introduce `src/pages/` without breaking routes
-    - [ ] 3.1.1 Create `frontend/src/pages/` and add a thin page for the pilot route (compose the feature component)
-    - [ ] 3.1.2 Update routing (`frontend/src/app/router/*`) to point to pages (keep URLs identical)
+    - [x] 3.1.1 Create `frontend/src/pages/` and add a thin page for the pilot route (compose the feature component)
+    - [x] 3.1.2 Update routing (`frontend/src/app/router/*`) to point to pages (keep URLs identical)
     - [ ] 3.1.3 Verify: routing works + tests green
   - [ ] 3.2 Plan domain split for `game-management` (no “big bang”)
     - [ ] 3.2.1 Create a migration mapping doc: what becomes game-creation vs game-execution vs game-analysis
