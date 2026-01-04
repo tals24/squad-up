@@ -7,11 +7,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tantml:tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { DataProvider } from '@/app/providers/DataProvider';
-import GamesSchedulePage from '@/features/game-management/components/GamesSchedulePage';
-import * as gameApi from '@/features/game-management/api/gameApi';
+import GamesSchedulePage from '@/features/game-scheduling/components/GamesSchedulePage';
+import * as gameSchedulingApi from '@/features/game-scheduling/api';
+import * as sharedGameApi from '@/shared/api/gameApi';
 
-// Mock API
-jest.mock('@/features/game-management/api/gameApi');
+// Mock APIs
+jest.mock('@/features/game-scheduling/api');
+jest.mock('@/shared/api/gameApi');
 
 // Test wrapper with all providers
 const AllProviders = ({ children }) => {
@@ -38,7 +40,7 @@ describe('Game Creation Flow', () => {
     jest.clearAllMocks();
     
     // Mock initial games list
-    gameApi.getGames.mockResolvedValue({
+    sharedGameApi.getGames.mockResolvedValue({
       success: true,
       data: [
         { _id: '1', opponent: 'Team A', date: '2024-01-01', status: 'Scheduled' },
@@ -64,13 +66,13 @@ describe('Game Creation Flow', () => {
       status: 'Scheduled',
     };
 
-    gameApi.createGame.mockResolvedValue({
+    gameSchedulingApi.createGame.mockResolvedValue({
       success: true,
       data: newGame,
     });
 
     // Mock updated games list
-    gameApi.getGames.mockResolvedValue({
+    sharedGameApi.getGames.mockResolvedValue({
       success: true,
       data: [
         { _id: '1', opponent: 'Team A', date: '2024-01-01', status: 'Scheduled' },
@@ -100,7 +102,7 @@ describe('Game Creation Flow', () => {
     });
 
     // Verify API was called correctly
-    expect(gameApi.createGame).toHaveBeenCalledWith(
+    expect(gameSchedulingApi.createGame).toHaveBeenCalledWith(
       expect.objectContaining({
         opponent: 'Real Madrid',
         date: '2024-01-10',
@@ -116,7 +118,7 @@ describe('Game Creation Flow', () => {
     });
 
     // Mock API failure
-    gameApi.createGame.mockRejectedValue(new Error('Failed to create game'));
+    gameSchedulingApi.createGame.mockRejectedValue(new Error('Failed to create game'));
 
     // Try to create game
     fireEvent.click(screen.getByText(/add game/i));

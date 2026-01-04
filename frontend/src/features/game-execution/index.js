@@ -8,17 +8,11 @@
  * Statuses: Scheduled → Played → Done
  */
 
-// Page Components (will be added during migration)
-// export { default as GameDetailsPage } from './components/GameDetailsPage';
+// Page Components
+export { default as GameDetailsPage } from './components/GameDetailsPage';
 
-// API Functions (will be added during migration)
-// export * from './api/gameExecutionApi';
-// export * from './api/goalsApi';
-// export * from './api/cardsApi';
-// export * from './api/substitutionsApi';
-// export * from './api/timelineApi';
-// export * from './api/playerMatchStatsApi';
-// export * from './api/playerStatsApi';
+// API Functions
+export * from './api';
 
-// Utilities (will be added during migration)
-// export * from './utils';
+// Utilities
+export * from './utils';

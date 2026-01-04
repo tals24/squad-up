@@ -13,7 +13,7 @@
  */
 
 import React from 'react';
-import GameDetails from '@/features/game-management/components/GameDetailsPage';
+import GameDetails from '@/features/game-execution/components/GameDetailsPage';
 
 /**
  * GameDetailsPage - Route-level wrapper

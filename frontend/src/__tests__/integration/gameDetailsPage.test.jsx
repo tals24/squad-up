@@ -10,8 +10,8 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { DataProvider } from '@/app/providers/DataProvider';
-import GameDetailsPage from '@/features/game-management/components/GameDetailsPage';
-import * as gameApi from '@/features/game-management/api/gameApi';
+import GameDetailsPage from '@/features/game-execution/components/GameDetailsPage';
+import * as gameApi from '@/shared/api/gameApi';
 
 // Mock API modules
 jest.mock('@/features/game-management/api/gameApi');
