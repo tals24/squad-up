@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/primitives/dialog";
-import { Button } from "@/shared/ui/primitives/button";
+import { BaseDialog } from "@/shared/ui/composed";
 import { Textarea } from "@/shared/ui/primitives/textarea";
 import { Shield, Zap, Target, FileText } from "lucide-react";
 
@@ -82,48 +76,38 @@ export default function TeamSummaryDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
-            <Icon className={`w-5 h-5 ${config.iconColor}`} />
-            {config.title}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-2 block">
-              {config.label} Performance
-            </label>
-            <Textarea
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder={config.placeholder}
-              className="min-h-[120px] bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
-              disabled={isSaving}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSaving}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white"
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={config.title}
+      titleIcon={<Icon className={config.iconColor} />}
+      size="sm"
+      actions={{
+        cancel: {
+          label: "Cancel",
+          onClick: handleCancel,
+          disabled: isSaving,
+        },
+        confirm: {
+          label: "Save",
+          onClick: handleSave,
+          disabled: isSaving,
+          loading: isSaving,
+        },
+      }}
+    >
+      <div>
+        <label className="text-sm font-medium text-slate-300 mb-2 block">
+          {config.label} Performance
+        </label>
+        <Textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={config.placeholder}
+          className="min-h-[120px] bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+          disabled={isSaving}
+        />
+      </div>
+    </BaseDialog>
   );
 }

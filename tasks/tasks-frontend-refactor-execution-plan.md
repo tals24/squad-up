@@ -116,10 +116,10 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 4.1 Standardize shared dialog base location
     - [x] 4.1.1 Decide and document the standard location (recommended: `frontend/src/shared/ui/composed/`)
     - [x] 4.1.2 Create a reusable base dialog wrapper and API (title/body/footer/actions/loading)
-  - [ ] 4.2 Migrate at least 2 dialogs to the shared base
-    - [ ] 4.2.1 Migrate Goal dialog or Card dialog first (pick the simplest)
-    - [ ] 4.2.2 Migrate one additional dialog (Substitution or Confirmation)
-    - [ ] 4.2.3 Verify: behavior and styling unchanged, tests green
+  - [x] 4.2 Migrate at least 2 dialogs to the shared base
+    - [x] 4.2.1 Migrate Goal dialog or Card dialog first (pick the simplest)
+    - [x] 4.2.2 Migrate one additional dialog (Substitution or Confirmation)
+    - [x] 4.2.3 Verify: behavior and styling unchanged, tests green
   - [ ] 4.3 Consolidate shared form patterns (only where repeated)
     - [ ] 4.3.1 Identify duplicated form field patterns across dialogs/features
     - [ ] 4.3.2 Introduce shared form primitives (if justified) and migrate incrementally
