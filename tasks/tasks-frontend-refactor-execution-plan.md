@@ -112,7 +112,7 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 3.3.3 Update imports using `@/` alias (no fragile relative chains)
     - [x] 3.3.4 Verify: no cross-feature imports, tests green after each move
 
-- [ ] 4.0 Phase 3 — Shared abstractions: dialog base + shared patterns adoption
+- [x] 4.0 Phase 3 — Shared abstractions: dialog base + shared patterns adoption
   - [x] 4.1 Standardize shared dialog base location
     - [x] 4.1.1 Decide and document the standard location (recommended: `frontend/src/shared/ui/composed/`)
     - [x] 4.1.2 Create a reusable base dialog wrapper and API (title/body/footer/actions/loading)
@@ -120,9 +120,9 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 4.2.1 Migrate Goal dialog or Card dialog first (pick the simplest)
     - [x] 4.2.2 Migrate one additional dialog (Substitution or Confirmation)
     - [x] 4.2.3 Verify: behavior and styling unchanged, tests green
-  - [ ] 4.3 Consolidate shared form patterns (only where repeated)
-    - [ ] 4.3.1 Identify duplicated form field patterns across dialogs/features
-    - [ ] 4.3.2 Introduce shared form primitives (if justified) and migrate incrementally
+  - [x] 4.3 Consolidate shared form patterns (only where repeated)
+    - [x] 4.3.1 Identify duplicated form field patterns across dialogs/features
+    - [x] 4.3.2 Introduce shared form primitives (if justified) and migrate incrementally
 
 - [ ] 5.0 Tooling enforcement rollout: staged ESLint `max-lines` + import boundary enforcement (non-breaking first)
   - [ ] 5.1 Add `max-lines` as warning (Stage 1)
