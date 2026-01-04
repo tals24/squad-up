@@ -174,11 +174,11 @@ export default function SubstitutionDialog({
             label={
               <span className="flex items-center gap-2">
                 <ArrowDown className="w-4 h-4 text-red-400" />
-                Out
+                Out <span className="text-red-400">*</span>
               </span>
             }
             htmlFor="playerOut"
-            required={true}
+            required={false}
             error={errors.playerOutId}
           >
             <PlayerSelect
@@ -204,11 +204,11 @@ export default function SubstitutionDialog({
             label={
               <span className="flex items-center gap-2">
                 <ArrowUp className="w-4 h-4 text-green-400" />
-                In
+                In <span className="text-red-400">*</span>
               </span>
             }
             htmlFor="playerIn"
-            required={true}
+            required={false}
             error={errors.playerInId}
           >
             <PlayerSelect
