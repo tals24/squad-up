@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Target, X, Plus, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/primitives/dialog";
-import { Button } from "@/shared/ui/primitives/button";
+import { Target } from "lucide-react";
+import { BaseDialog } from "@/shared/ui/composed";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
 import {
@@ -204,24 +196,45 @@ export default function GoalDialog({
 
   const isOwnGoal = goalData.goalType === 'own-goal';
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl text-cyan-400">
-            <Target className="w-6 h-6" />
-            {isReadOnly ? 'View Goal' : goal ? 'Edit Goal' : 'Add Goal'}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {isReadOnly
-              ? 'View goal details'
-              : goal
-              ? 'Update goal information and relationships'
-              : 'Record goals for your team or track opponent goals'}
-          </DialogDescription>
-        </DialogHeader>
+  // Prepare dialog configuration
+  const title = isReadOnly ? 'View Goal' : goal ? 'Edit Goal' : 'Add Goal';
+  const description = isReadOnly
+    ? 'View goal details'
+    : goal
+    ? 'Update goal information and relationships'
+    : 'Record goals for your team or track opponent goals';
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+  // Dynamic save handler based on active tab
+  const handleSaveClick = activeTab === 'team' ? handleSave : handleSaveOpponentGoal;
+  const saveButtonLabel = activeTab === 'team' ? 'Save Goal' : 'Save Opponent Goal';
+
+  return (
+    <BaseDialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title={title}
+      titleIcon={<Target className="text-cyan-400" />}
+      description={description}
+      size="lg"
+      isLoading={isSaving}
+      isReadOnly={isReadOnly}
+      error={errors.submit}
+      errors={errors}
+      actions={
+        isReadOnly
+          ? { cancel: { label: 'Close', onClick: onClose } }
+          : {
+              cancel: { label: 'Cancel', onClick: onClose, disabled: isSaving },
+              confirm: {
+                label: saveButtonLabel,
+                onClick: handleSaveClick,
+                disabled: isSaving,
+                loading: isSaving
+              }
+            }
+      }
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800">
             <TabsTrigger value="team" disabled={!!goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) || isReadOnly}>Team Goal</TabsTrigger>
             <TabsTrigger value="opponent" disabled={!!goal && goal.goalCategory !== 'OpponentGoal' && !goal.isOpponentGoal || isReadOnly}>Opponent Goal</TabsTrigger>
@@ -333,12 +346,6 @@ export default function GoalDialog({
               </SelectContent>
             </Select>
           </div>
-
-          {errors.submit && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">{errors.submit}</p>
-            </div>
-          )}
           </TabsContent>
 
           {/* Opponent Goal Tab */}
@@ -381,37 +388,9 @@ export default function GoalDialog({
                 </SelectContent>
               </Select>
             </div>
-
-            {errors.submit && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-400 text-sm">{errors.submit}</p>
-              </div>
-            )}
           </TabsContent>
         </Tabs>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="border-slate-700 text-slate-300"
-          >
-            {isReadOnly ? 'Close' : 'Cancel'}
-          </Button>
-          {!isReadOnly && (
-            <Button
-              onClick={activeTab === 'team' ? handleSave : handleSaveOpponentGoal}
-              disabled={isSaving}
-              className={activeTab === 'team' 
-                ? "bg-gradient-to-r from-cyan-500 to-blue-500" 
-                : "bg-gradient-to-r from-red-500 to-orange-500"}
-            >
-              {isSaving ? 'Saving...' : activeTab === 'team' ? 'Save Goal' : 'Save Opponent Goal'}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }
 

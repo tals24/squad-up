@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRightLeft, X, ArrowDown, ArrowUp } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/primitives/dialog";
+import { ArrowRightLeft, ArrowDown, ArrowUp } from "lucide-react";
+import { BaseDialog } from "@/shared/ui/composed";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
@@ -140,24 +133,41 @@ export default function SubstitutionDialog({
     return `#${kitNumber} ${name}`;
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl text-cyan-400">
-            <ArrowRightLeft className="w-6 h-6" />
-            {isReadOnly ? 'View Substitution' : substitution ? 'Edit Substitution' : 'Add Substitution'}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {isReadOnly
-              ? 'View substitution details'
-              : substitution
-              ? 'Update substitution information'
-              : 'Record a player substitution with context'}
-          </DialogDescription>
-        </DialogHeader>
+  // Prepare dialog configuration
+  const title = isReadOnly ? 'View Substitution' : substitution ? 'Edit Substitution' : 'Add Substitution';
+  const description = isReadOnly
+    ? 'View substitution details'
+    : substitution
+    ? 'Update substitution information'
+    : 'Record a player substitution with context';
 
-        <div className="space-y-4">
+  return (
+    <BaseDialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title={title}
+      titleIcon={<ArrowRightLeft className="text-cyan-400" />}
+      description={description}
+      size="lg"
+      isLoading={isSaving}
+      isReadOnly={isReadOnly}
+      error={errors.submit}
+      errors={errors}
+      actions={
+        isReadOnly
+          ? { cancel: { label: 'Close', onClick: onClose } }
+          : {
+              cancel: { label: 'Cancel', onClick: onClose, disabled: isSaving },
+              confirm: {
+                label: 'Save Substitution',
+                onClick: handleSave,
+                disabled: isSaving,
+                loading: isSaving
+              }
+            }
+      }
+    >
+      <div className="space-y-4">
           {/* Player Out */}
           <div className="space-y-2">
             <Label htmlFor="playerOut" className="text-slate-300 flex items-center gap-2">
@@ -296,34 +306,8 @@ export default function SubstitutionDialog({
             />
             <p className="text-xs text-slate-500">{subData.tacticalNote.length}/500 characters</p>
           </div>
-
-          {errors.submit && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">{errors.submit}</p>
-            </div>
-          )}
         </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="border-slate-700 text-slate-300"
-          >
-            {isReadOnly ? 'Close' : 'Cancel'}
-          </Button>
-          {!isReadOnly && (
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500"
-            >
-              {isSaving ? 'Saving...' : 'Save Substitution'}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }
 

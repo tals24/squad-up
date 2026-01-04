@@ -1,14 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Button } from "@/shared/ui/primitives/button";
+import { BaseDialog } from "@/shared/ui/composed";
 import { Input } from "@/shared/ui/primitives/input";
 import { Textarea } from "@/shared/ui/primitives/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/ui/primitives/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
 import {
   Select,
@@ -18,9 +11,10 @@ import {
   SelectValue,
 } from "@/shared/ui/primitives/select";
 import { Badge } from "@/shared/ui/primitives/badge";
-import { AlertCircle, FileText, BarChart3, Info } from "lucide-react";
+import { AlertCircle, FileText, BarChart3 } from "lucide-react";
 import { FeatureGuard } from "@/app/router/guards/FeatureGuard";
 import { DetailedStatsSection } from "../features/DetailedStatsSection";
+import { Button } from "@/shared/ui/primitives/button";
 
 import { calculateTotalMatchDuration } from "../../../../utils/minutesValidation";
 export default function PlayerPerformanceDialog({ 
@@ -167,21 +161,34 @@ export default function PlayerPerformanceDialog({
   if (!player) return null;
 
   return (
-    <Dialog open={open && !!player} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center font-bold text-white">
-              {player.kitNumber || "?"}
-            </div>
-            <div>
-              <div className="text-lg font-bold">{player.fullName}</div>
-              <div className="text-sm text-slate-400">{player.position}</div>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+    <BaseDialog
+      open={open && !!player}
+      onOpenChange={onOpenChange}
+      title="Player Performance Report"
+      size="lg"
+      isReadOnly={isReadOnly}
+      error={errorMessage}
+      actions={
+        isReadOnly
+          ? { cancel: { label: 'Close', onClick: () => onOpenChange(false) } }
+          : {
+              cancel: { label: 'Cancel', onClick: () => onOpenChange(false) },
+              confirm: { label: 'Save Report', onClick: handleSaveClick }
+            }
+      }
+    >
+      {/* Player Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center font-bold text-white">
+          {player.kitNumber || "?"}
+        </div>
+        <div>
+          <div className="text-lg font-bold text-white">{player.fullName}</div>
+          <div className="text-sm text-slate-400">{player.position}</div>
+        </div>
+      </div>
 
-        <Tabs defaultValue="performance" className="mt-4">
+      <Tabs defaultValue="performance" className="mt-2">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800">
             <TabsTrigger value="performance" className="data-[state=active]:bg-slate-700">
               <FileText className="w-4 h-4 mr-2" />
@@ -471,32 +478,7 @@ export default function PlayerPerformanceDialog({
             </FeatureGuard>
           </TabsContent>
         </Tabs>
-
-        {errorMessage && (
-          <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-            <p className="text-red-400 text-sm">{errorMessage}</p>
-          </div>
-        )}
-
-        <DialogFooter className="mt-4">
-          {isReadOnly ? (
-            <Button onClick={() => onOpenChange(false)} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
-              Close
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-400">
-                Cancel
-              </Button>
-              <Button onClick={handleSaveClick} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">
-                Save Report
-              </Button>
-            </>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }
 

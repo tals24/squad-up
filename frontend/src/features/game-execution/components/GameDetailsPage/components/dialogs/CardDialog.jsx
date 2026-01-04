@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ShieldAlert, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/primitives/dialog";
-import { Button } from "@/shared/ui/primitives/button";
+import { ShieldAlert, AlertCircle } from "lucide-react";
+import { BaseDialog } from "@/shared/ui/composed";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
 import {
@@ -20,7 +12,6 @@ import {
 } from "@/shared/ui/primitives/select";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/primitives/radio-group";
 import { Textarea } from "@/shared/ui/primitives/textarea";
-import { AlertCircle } from "lucide-react";
 import { 
   canReceiveCard, 
   getAvailableCardOptions, 
@@ -237,24 +228,45 @@ export default function CardDialog({
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl text-yellow-400">
-            <ShieldAlert className="w-6 h-6" />
-            {isReadOnly ? 'View Card' : card ? 'Edit Card' : 'Add Card'}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {isReadOnly
-              ? 'View card details'
-              : card
-              ? 'Update card information'
-              : 'Record a disciplinary card (Yellow, Red, or Second Yellow)'}
-          </DialogDescription>
-        </DialogHeader>
+  // Prepare dialog configuration
+  const title = isReadOnly ? 'View Card' : card ? 'Edit Card' : 'Add Card';
+  const description = isReadOnly
+    ? 'View card details'
+    : card
+    ? 'Update card information'
+    : 'Record a disciplinary card (Yellow, Red, or Second Yellow)';
+  
+  const isConfirmDisabled = isSaving || 
+    (availableOptions.isSentOff && !card) || 
+    (!!validationError && !card);
 
-        <div className="space-y-4 mt-4">
+  return (
+    <BaseDialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title={title}
+      titleIcon={<ShieldAlert className="text-yellow-400" />}
+      description={description}
+      size="lg"
+      isLoading={isSaving}
+      isReadOnly={isReadOnly}
+      error={errors.submit}
+      errors={errors}
+      actions={
+        isReadOnly
+          ? { cancel: { label: 'Close', onClick: onClose } }
+          : {
+              cancel: { label: 'Cancel', onClick: onClose, disabled: isSaving },
+              confirm: {
+                label: card ? 'Update Card' : 'Add Card',
+                onClick: handleSave,
+                disabled: isConfirmDisabled,
+                loading: isSaving
+              }
+            }
+      }
+    >
+      <div className="space-y-4">
           {/* Player */}
           <div className="space-y-2">
             <Label htmlFor="player" className="text-slate-300">Player *</Label>
@@ -398,35 +410,8 @@ export default function CardDialog({
             </p>
             {errors.reason && <p className="text-red-400 text-sm">{errors.reason}</p>}
           </div>
-
-          {errors.submit && (
-            <div className="p-3 bg-red-900/20 border border-red-500/50 rounded text-red-400 text-sm">
-              {errors.submit}
-            </div>
-          )}
         </div>
-
-        <DialogFooter className="mt-6">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isSaving}
-            className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-          >
-            {isReadOnly ? 'Close' : 'Cancel'}
-          </Button>
-          {!isReadOnly && (
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || (availableOptions.isSentOff && !card) || (!!validationError && !card)}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? 'Saving...' : card ? 'Update Card' : 'Add Card'}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </BaseDialog>
   );
 }
 
