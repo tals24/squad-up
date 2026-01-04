@@ -204,12 +204,19 @@ export function useLineupDraftManager({
     }
 
     // 🔍 DEBUG: Log why draft wasn't loaded
-    if (game.status === 'Scheduled' || game.status === 'Played') {
-      console.error(`⚠️ [useLineupDraftManager] ${game.status} game but NO DRAFT found:`, {
+    if (game.status === 'Scheduled') {
+      console.error(`⚠️ [useLineupDraftManager] Scheduled game but NO LINEUP DRAFT found:`, {
         hasLineupDraft: !!game.lineupDraft,
         lineupDraft: game.lineupDraft,
         fallingBackTo: 'gameRosters or default',
-        WARNING: `This might indicate draft was not saved or cleared! Formation data may be lost.`
+        WARNING: `This might indicate lineup draft was not saved or cleared! Formation data may be lost.`
+      });
+    } else if (game.status === 'Played') {
+      console.log('📝 [useLineupDraftManager] Played game with no lineup draft (expected, uses gameRosters):', {
+        gameStatus: game.status,
+        hasLineupDraft: !!game.lineupDraft,
+        decision: 'Fall back to gameRosters (Played games use finalized rosters)',
+        note: 'Lineup drafts are only for Scheduled games. Report drafts are managed separately.'
       });
     } else {
       console.log('📝 [useLineupDraftManager] Done/other game, draft loading skipped (expected):', {

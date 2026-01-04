@@ -277,7 +277,7 @@ export default function GameDetails() {
             startingLineup: startingLineupMap,
             squadPlayers: squadPlayersMap,
             onSave: goalsHandlers.handleSaveGoal,
-            onSaveOpponent: goalsHandlers.handleSaveOpponentGoal,
+            onSaveOpponentGoal: goalsHandlers.handleSaveOpponentGoal,
             onClose: () => { dialogState.setShowGoalDialog(false); dialogState.setSelectedGoal(null); },
           },
           substitution: {

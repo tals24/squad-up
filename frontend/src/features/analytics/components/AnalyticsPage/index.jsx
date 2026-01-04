@@ -136,7 +136,7 @@ export default function Analytics() {
   const analytics = calculateAnalytics();
   const { filteredTeams } = getFilteredData();
 
-  if (isLoading) {
+  if (isDataLoading) {
     return <PageLoader message="Loading analytics data..." />;
   }
 
