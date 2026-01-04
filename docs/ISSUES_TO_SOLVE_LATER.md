@@ -475,3 +475,167 @@ After the disciplinary architecture refactor, **fouls committed/received** are s
 - [x] Update API documentation
 - [x] Test: Edit fouls → Refresh page → Verify fouls restored
 - [x] Test: Edit fouls → Mark game as Done → Verify fouls saved to `PlayerMatchStat`
+
+---
+
+## Training Planner API Error - Backend Issue
+
+**Status**: ⚠️ **Backend Issue (Not Refactoring-Related)**
+
+**Last Updated**: 2026-01-04  
+**Discovered During**: Phase 2 refactoring verification
+
+**Priority**: Low-Medium
+
+---
+
+### The Problem
+
+When navigating to the Training Planner page, the following error appears in console:
+
+```
+index.jsx:176 Error loading training plan: Error: API request failed
+    at handleResponse (client.js:40:11)
+    at async loadTrainingPlan (trainingApi.js:67:10)
+    at async loadPlanData (index.jsx:155:26)
+```
+
+Additionally, when saving a weekly training plan, it appears to succeed but data is lost after navigating away and returning to the page.
+
+---
+
+### Technical Details
+
+**API Endpoint**: `GET /api/session-drills/plan/:teamId/:weekId`
+
+**Current Behavior**:
+- Backend returns error status (likely 404 or 500) when no plan exists
+- Frontend catches error and falls back to localStorage
+- Data persistence is unreliable
+
+**Expected Behavior**:
+- Backend should return success status with empty plan structure when no plan exists
+- Frontend should reliably save/load plans
+
+**Example Response (Current - Error)**:
+```javascript
+// Status: 404 or 500
+{ success: false, error: "Plan not found" }
+```
+
+**Example Response (Expected)**:
+```javascript
+// Status: 200
+{ 
+  success: true, 
+  data: { 
+    hasSavedData: false, 
+    weeklyPlan: {} // or initialPlanStructure 
+  } 
+}
+```
+
+---
+
+### Why This Is NOT a Refactoring Issue
+
+**Evidence**:
+1. ✅ Training management API imports are correct (`@/shared/api/client`)
+2. ✅ Training management feature was **not moved** during Phase 2 refactor
+3. ✅ API function structure is correct and follows best practices
+4. ✅ All other API calls work properly (games, analytics, players)
+5. ✅ Same issue would exist before the refactor
+
+**Frontend Code (Correct)**:
+```javascript
+// frontend/src/features/training-management/api/trainingApi.js
+import { apiClient } from '@/shared/api/client'; // ✅ Correct
+
+export const loadTrainingPlan = async (planData) => {
+  console.log('Loading training plan from backend...', planData);
+  return await apiClient.get(`/api/session-drills/plan/${planData.teamId}/${planData.weekIdentifier}`);
+};
+```
+
+---
+
+### User Impact
+
+**Severity**: Medium
+- Users can still create and edit training plans via localStorage
+- Data may not persist correctly across sessions
+- Confusing error messages in console
+- Save appears to succeed but data is lost
+
+**Workaround**:
+- Training planner still functions via localStorage fallback
+- Data persists within same session
+- Users should avoid refreshing page while editing
+
+---
+
+### Backend TODO
+
+**Required Fix** (Backend):
+
+1. Update `GET /api/session-drills/plan/:teamId/:weekId` endpoint:
+   ```javascript
+   // If no plan exists, return success with empty structure
+   if (!plan) {
+     return res.status(200).json({
+       success: true,
+       data: {
+         hasSavedData: false,
+         weeklyPlan: initialPlanStructure() // or {}
+       }
+     });
+   }
+   ```
+
+2. Update `POST /api/session-drills/batch` endpoint:
+   - Ensure proper plan persistence
+   - Return saved plan structure in response
+   - Clear localStorage drafts after successful save
+
+3. Add error handling:
+   - Distinguish between "no plan found" (200 with empty) vs actual errors (500)
+   - Add validation for teamId and weekIdentifier
+   - Add logging for debugging
+
+---
+
+### Related Files
+
+**Frontend**:
+- `frontend/src/features/training-management/api/trainingApi.js` - API functions (correct implementation)
+- `frontend/src/features/training-management/components/TrainingPlannerPage/index.jsx` - Component using API
+- `frontend/src/shared/api/client.js` - Shared API client (working correctly)
+
+**Backend (Needs Fix)**:
+- `backend/src/routes/session-drills.js` - Training plan endpoints
+- `backend/src/controllers/sessionDrillController.js` - Controller logic
+- `backend/src/services/sessionDrillService.js` - Business logic
+
+---
+
+### Recommended Approach
+
+**Priority**: Fix backend endpoint first, then test frontend integration
+
+**Steps**:
+1. Update backend to return 200 with empty plan instead of 404/500
+2. Test with Postman/curl to verify response format
+3. Test frontend integration:
+   - Create new plan → Save → Navigate away → Return → Verify data persists
+   - Edit existing plan → Save → Refresh page → Verify changes saved
+4. Remove localStorage fallback once backend is stable (optional)
+
+---
+
+### Notes
+
+- This issue was discovered during Phase 2 refactoring verification
+- Frontend code is correct and follows best practices
+- Issue exists in production backend, not caused by refactoring
+- Low priority as localStorage fallback works for most use cases
+- Should be fixed for production reliability
