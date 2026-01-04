@@ -113,9 +113,9 @@ Update the file after completing each sub-task, not just after completing an ent
     - [x] 3.3.4 Verify: no cross-feature imports, tests green after each move
 
 - [ ] 4.0 Phase 3 — Shared abstractions: dialog base + shared patterns adoption
-  - [ ] 4.1 Standardize shared dialog base location
-    - [ ] 4.1.1 Decide and document the standard location (recommended: `frontend/src/shared/ui/composed/`)
-    - [ ] 4.1.2 Create a reusable base dialog wrapper and API (title/body/footer/actions/loading)
+  - [x] 4.1 Standardize shared dialog base location
+    - [x] 4.1.1 Decide and document the standard location (recommended: `frontend/src/shared/ui/composed/`)
+    - [x] 4.1.2 Create a reusable base dialog wrapper and API (title/body/footer/actions/loading)
   - [ ] 4.2 Migrate at least 2 dialogs to the shared base
     - [ ] 4.2.1 Migrate Goal dialog or Card dialog first (pick the simplest)
     - [ ] 4.2.2 Migrate one additional dialog (Substitution or Confirmation)
