@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRightLeft, ArrowDown, ArrowUp } from "lucide-react";
 import { BaseDialog } from "@/shared/ui/composed";
+import { FormField, PlayerSelect } from "@/shared/ui/form";
 import { Button } from "@/shared/ui/primitives/button";
 import { Input } from "@/shared/ui/primitives/input";
 import { Label } from "@/shared/ui/primitives/label";
@@ -169,70 +170,72 @@ export default function SubstitutionDialog({
     >
       <div className="space-y-4">
           {/* Player Out */}
-          <div className="space-y-2">
-            <Label htmlFor="playerOut" className="text-slate-300 flex items-center gap-2">
-              <ArrowDown className="w-4 h-4 text-red-400" />
-              Out *
-            </Label>
-            <Select
-              value={subData.playerOutId || ''}
-              onValueChange={(value) => {
+          <FormField
+            label={
+              <span className="flex items-center gap-2">
+                <ArrowDown className="w-4 h-4 text-red-400" />
+                Out
+              </span>
+            }
+            htmlFor="playerOut"
+            required={true}
+            error={errors.playerOutId}
+          >
+            <PlayerSelect
+              id="playerOut"
+              players={playersOnPitch}
+              value={subData.playerOutId}
+              onChange={(value) => {
                 setSubData(prev => ({ ...prev, playerOutId: value }));
-                // Clear error when user selects a value
                 if (errors.playerOutId) {
                   setErrors(prev => ({ ...prev, playerOutId: undefined }));
                 }
               }}
               disabled={isReadOnly}
-            >
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                <SelectValue placeholder="Select player leaving..." />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                {playersOnPitch.map(player => (
-                  <SelectItem key={player._id} value={player._id} className="text-white">
-                    {getPlayerDisplay(player)} {player.position ? `- ${player.position}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.playerOutId && <p className="text-red-400 text-sm">{errors.playerOutId}</p>}
-          </div>
+              placeholder="Select player leaving..."
+              showPosition={true}
+              formatPlayer={(player) => getPlayerDisplay(player)}
+              required={false}
+            />
+          </FormField>
 
           {/* Player In */}
-          <div className="space-y-2">
-            <Label htmlFor="playerIn" className="text-slate-300 flex items-center gap-2">
-              <ArrowUp className="w-4 h-4 text-green-400" />
-              In *
-            </Label>
-            <Select
-              value={subData.playerInId || ''}
-              onValueChange={(value) => {
+          <FormField
+            label={
+              <span className="flex items-center gap-2">
+                <ArrowUp className="w-4 h-4 text-green-400" />
+                In
+              </span>
+            }
+            htmlFor="playerIn"
+            required={true}
+            error={errors.playerInId}
+          >
+            <PlayerSelect
+              id="playerIn"
+              players={benchPlayers}
+              value={subData.playerInId}
+              onChange={(value) => {
                 setSubData(prev => ({ ...prev, playerInId: value }));
-                // Clear error when user selects a value
                 if (errors.playerInId) {
                   setErrors(prev => ({ ...prev, playerInId: undefined }));
                 }
               }}
               disabled={isReadOnly}
-            >
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                <SelectValue placeholder="Select player entering..." />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                {benchPlayers.map(player => (
-                  <SelectItem key={player._id} value={player._id} className="text-white">
-                    {getPlayerDisplay(player)} {player.position ? `- ${player.position}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.playerInId && <p className="text-red-400 text-sm">{errors.playerInId}</p>}
-          </div>
+              placeholder="Select player entering..."
+              showPosition={true}
+              formatPlayer={(player) => getPlayerDisplay(player)}
+              required={false}
+            />
+          </FormField>
 
           {/* Minute */}
-          <div className="space-y-2">
-            <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
+          <FormField
+            label="Minute"
+            htmlFor="minute"
+            required={true}
+            error={errors.minute}
+          >
             <div className="flex gap-2">
               <Input
                 id="minute"
@@ -242,7 +245,6 @@ export default function SubstitutionDialog({
                 value={subData.minute || ''}
                 onChange={(e) => {
                   setSubData(prev => ({ ...prev, minute: parseInt(e.target.value) }));
-                  // Clear error when user types
                   if (errors.minute) {
                     setErrors(prev => ({ ...prev, minute: undefined }));
                   }
@@ -268,12 +270,13 @@ export default function SubstitutionDialog({
                 </div>
               )}
             </div>
-            {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
-          </div>
+          </FormField>
 
           {/* Reason */}
-          <div className="space-y-2">
-            <Label htmlFor="reason" className="text-slate-300">Reason</Label>
+          <FormField
+            label="Reason"
+            htmlFor="reason"
+          >
             <Select
               value={subData.reason}
               onValueChange={(value) => setSubData(prev => ({ ...prev, reason: value }))}
@@ -290,11 +293,14 @@ export default function SubstitutionDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
           {/* Tactical Note */}
-          <div className="space-y-2">
-            <Label htmlFor="tacticalNote" className="text-slate-300">Tactical Note (Optional)</Label>
+          <FormField
+            label="Tactical Note (Optional)"
+            htmlFor="tacticalNote"
+            hint={`${subData.tacticalNote.length}/500 characters`}
+          >
             <Textarea
               id="tacticalNote"
               value={subData.tacticalNote}
@@ -304,8 +310,7 @@ export default function SubstitutionDialog({
               placeholder="Brief explanation of the substitution reasoning..."
               maxLength={500}
             />
-            <p className="text-xs text-slate-500">{subData.tacticalNote.length}/500 characters</p>
-          </div>
+          </FormField>
         </div>
     </BaseDialog>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Target } from "lucide-react";
 import { BaseDialog } from "@/shared/ui/composed";
-import { Input } from "@/shared/ui/primitives/input";
+import { FormField, MinuteInput, PlayerSelect } from "@/shared/ui/form";
 import { Label } from "@/shared/ui/primitives/label";
 import {
   Select,
@@ -243,71 +243,44 @@ export default function GoalDialog({
           {/* Team Goal Tab */}
           <TabsContent value="team" className="space-y-4 mt-4">
           {/* Minute */}
-          <div className="space-y-2">
-            <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
-            <Input
-              id="minute"
-              type="number"
-              min="1"
-              max={matchDuration}
-              value={goalData.minute || ''}
-              onChange={(e) => setGoalData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
-              disabled={isReadOnly}
-              className="bg-slate-800 border-slate-700 text-white"
-              placeholder={`1-${matchDuration}`}
-            />
-            {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
-          </div>
+          <MinuteInput
+            value={goalData.minute}
+            onChange={(value) => setGoalData(prev => ({ ...prev, minute: value }))}
+            matchDuration={matchDuration}
+            disabled={isReadOnly}
+            error={errors.minute}
+          />
 
           {/* Scorer - Hidden for Own Goals */}
           {!isOwnGoal && (
-            <div className="space-y-2">
-              <Label htmlFor="scorer" className="text-slate-300">Scorer *</Label>
-              <Select
-                value={goalData.scorerId || ''}
-                onValueChange={(value) => setGoalData(prev => ({ ...prev, scorerId: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue placeholder="Select scorer..." />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {gamePlayers.map(player => (
-                    <SelectItem key={player._id} value={player._id} className="text-white">
-                      #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.scorerId && <p className="text-red-400 text-sm">{errors.scorerId}</p>}
-            </div>
+            <PlayerSelect
+              id="scorer"
+              label="Scorer"
+              required={true}
+              players={gamePlayers}
+              value={goalData.scorerId}
+              onChange={(value) => setGoalData(prev => ({ ...prev, scorerId: value }))}
+              disabled={isReadOnly}
+              error={errors.scorerId}
+              placeholder="Select scorer..."
+            />
           )}
 
           {/* Assister - Hidden for Own Goals */}
           {!isOwnGoal && (
-            <div className="space-y-2">
-              <Label htmlFor="assister" className="text-slate-300">Assisted By (Optional)</Label>
-              <Select
-                value={goalData.assistedById || 'none'}
-                onValueChange={(value) => setGoalData(prev => ({ ...prev, assistedById: value === 'none' ? null : value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue placeholder="Select assister or unassisted..." />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="none" className="text-slate-400">Unassisted</SelectItem>
-                  {gamePlayers
-                    .filter(p => p._id !== goalData.scorerId)
-                    .map(player => (
-                      <SelectItem key={player._id} value={player._id} className="text-white">
-                        #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              {errors.assistedById && <p className="text-red-400 text-sm">{errors.assistedById}</p>}
-            </div>
+            <PlayerSelect
+              id="assister"
+              label="Assisted By (Optional)"
+              required={false}
+              players={gamePlayers.filter(p => p._id !== goalData.scorerId)}
+              value={goalData.assistedById}
+              onChange={(value) => setGoalData(prev => ({ ...prev, assistedById: value === 'none' ? null : value }))}
+              disabled={isReadOnly}
+              error={errors.assistedById}
+              placeholder="Select assister or unassisted..."
+              allowNone={true}
+              noneLabel="Unassisted"
+            />
           )}
 
           {/* Goal Involvement - Feature Flag Protected */}
@@ -327,8 +300,10 @@ export default function GoalDialog({
           )}
 
           {/* Goal Type */}
-          <div className="space-y-2">
-            <Label htmlFor="goalType" className="text-slate-300">Goal Type</Label>
+          <FormField
+            label="Goal Type"
+            htmlFor="goalType"
+          >
             <Select
               value={goalData.goalType}
               onValueChange={(value) => setGoalData(prev => ({ ...prev, goalType: value }))}
@@ -345,32 +320,25 @@ export default function GoalDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
           </TabsContent>
 
           {/* Opponent Goal Tab */}
           <TabsContent value="opponent" className="space-y-4 mt-4">
-
-
             {/* Minute */}
-            <div className="space-y-2">
-              <Label htmlFor="opponentMinute" className="text-slate-300">Minute *</Label>
-              <Input
-                id="opponentMinute"
-                type="number"
-                min="1"
-                max={matchDuration}
-                value={opponentGoalData.minute || ''}
-                onChange={(e) => setOpponentGoalData(prev => ({ ...prev, minute: parseInt(e.target.value) }))}
-                className="bg-slate-800 border-slate-700 text-white"
-                placeholder={`1-${matchDuration}`}
-              />
-              {errors.opponentMinute && <p className="text-red-400 text-sm">{errors.opponentMinute}</p>}
-            </div>
+            <MinuteInput
+              id="opponentMinute"
+              value={opponentGoalData.minute}
+              onChange={(value) => setOpponentGoalData(prev => ({ ...prev, minute: value }))}
+              matchDuration={matchDuration}
+              error={errors.opponentMinute}
+            />
 
             {/* Goal Type */}
-            <div className="space-y-2">
-              <Label htmlFor="opponentGoalType" className="text-slate-300">Goal Type</Label>
+            <FormField
+              label="Goal Type"
+              htmlFor="opponentGoalType"
+            >
               <Select
                 value={opponentGoalData.goalType}
                 onValueChange={(value) => setOpponentGoalData(prev => ({ ...prev, goalType: value }))}
@@ -387,7 +355,7 @@ export default function GoalDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </TabsContent>
         </Tabs>
     </BaseDialog>
