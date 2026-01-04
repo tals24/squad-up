@@ -19,10 +19,10 @@
 
 // Game Management Pages
 export { default as GameDetailsPage } from './GameDetailsPage';
+export { default as GamesSchedulePage } from './GamesSchedulePage';
+export { default as AddGamePage } from './AddGamePage';
 
 // TODO: Migrate other pages from features/* as part of Phase 2
-// - GamesSchedulePage
-// - AddGamePage
 // - PlayersPage
 // - PlayerDetailPage
 // - AddPlayerPage

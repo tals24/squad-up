@@ -14,12 +14,10 @@ import { lazy } from 'react';
 // We're migrating incrementally from features/* to pages/* (Phase 2).
 // ============================================================================
 
-// Game Management Pages (Phase 2 migration in progress)
+// Game Management Pages (Phase 2 migration: game-scheduling feature complete!)
 const GameDetailsPage = lazy(() => import('@/pages/GameDetailsPage'));
-
-// Game Management Features (TODO: migrate to pages/)
-const GamesSchedulePage = lazy(() => import('@/features/game-management/components/GamesSchedulePage'));
-const AddGamePage = lazy(() => import('@/features/game-management/components/AddGamePage'));
+const GamesSchedulePage = lazy(() => import('@/pages/GamesSchedulePage'));
+const AddGamePage = lazy(() => import('@/pages/AddGamePage'));
 
 // Player Management
 const PlayersPage = lazy(() => import('@/features/player-management/components/PlayersPage'));

@@ -8,6 +8,10 @@ export { User, jwtAuthService } from './auth';
 // Data Aggregation
 export { fetchAllTables } from './dataApi';
 
-// NOTE: All other API functions have been migrated to feature-specific APIs
-// Import from @/features/{feature-name}/api instead
+// Games (Core read operations)
+export { getGames, getGame, getGameById } from './gameApi';
+
+// NOTE: Game write operations (create/update/delete) are in feature-specific APIs
+// - game-scheduling: createGame, updateGame, deleteGame, transitionToScheduled
+// - game-execution: startGame, submitFinalReport, etc (via apiClient directly in hooks)
 

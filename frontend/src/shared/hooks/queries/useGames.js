@@ -4,13 +4,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getGames, 
-  getGame, 
-  createGame, 
-  updateGame, 
-  deleteGame 
-} from '@/features/game-management/api/gameApi';
+import { getGames, getGame } from '@/shared/api';
+import { createGame, updateGame, deleteGame } from '@/features/game-scheduling/api';
 
 // Query Keys - Centralized for consistency
 export const gameKeys = {

@@ -9,7 +9,7 @@ import {
   Target
 } from "lucide-react";
 import { getTeams } from "@/features/team-management/api";
-import { createGame } from "@/features/game-management/api";
+import { createGame } from "@/features/game-scheduling/api";
 import { getSeasonFromDate } from "@/shared/utils/date/seasonUtils";
 import GenericAddPage from "@/shared/components/GenericAddPage";
 import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";

@@ -1,21 +1,19 @@
 /**
  * Game Management Feature - Public API
  * 
- * This barrel export defines the public interface of the game-management feature.
- * Other features and parts of the app should only import from this file.
+ * ⚠️ DEPRECATED: This feature is being split into domain-specific features:
+ * - game-scheduling: GamesSchedulePage, AddGamePage (migrated!)
+ * - game-execution: GameDetailsPage (in progress)
+ * 
+ * TODO: After Phase C is complete, this file will be deleted.
  */
 
-// Page Components
+// Page Components (remaining to be migrated)
 export { default as GameDetailsPage } from './components/GameDetailsPage';
-export { default as GamesSchedulePage } from './components/GamesSchedulePage';
-export { default as AddGamePage } from './components/AddGamePage';
 
-// API Functions
+// API Functions (deprecated - use shared/api or feature-specific APIs)
 export * from './api/gameApi';
 
 // Utilities
 export * from './utils';
-
-// Re-export specific components if needed by other features
-// (Currently keeping them internal to the feature)
 
