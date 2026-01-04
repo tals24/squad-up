@@ -50,7 +50,17 @@ export default function MatchAnalysisSidebar({
    * This ensures matchState is always accurate even when goals are added/edited after substitution
    */
   const substitutionsWithRecalculatedMatchState = useMemo(() => {
-    return substitutions.map(sub => {
+    console.log('🔄 [MatchAnalysisSidebar] Recalculating matchState for substitutions:', {
+      substitutionsCount: substitutions.length,
+      goalsCount: goals.length,
+      goals: goals.map(g => ({
+        minute: g.minute,
+        isOpponentGoal: g.isOpponentGoal,
+        goalCategory: g.goalCategory
+      }))
+    });
+
+    return substitutions.map((sub, index) => {
       // Count our goals and opponent goals up to this substitution minute
       const ourGoalsBeforeThis = goals.filter(g => 
         g.minute <= sub.minute && !g.isOpponentGoal
@@ -69,6 +79,17 @@ export default function MatchAnalysisSidebar({
       } else {
         matchState = 'drawing';
       }
+
+      console.log(`🔍 [MatchAnalysisSidebar] Sub #${index + 1} at minute ${sub.minute}:`, {
+        originalMatchState: sub.matchState,
+        recalculatedMatchState: matchState,
+        ourGoals: ourGoalsBeforeThis,
+        opponentGoals: opponentGoalsBeforeThis,
+        goalsUpToThisMinute: goals.filter(g => g.minute <= sub.minute).map(g => ({
+          minute: g.minute,
+          isOpponentGoal: g.isOpponentGoal
+        }))
+      });
 
       return {
         ...sub,
