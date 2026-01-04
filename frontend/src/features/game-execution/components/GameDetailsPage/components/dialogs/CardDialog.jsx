@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ShieldAlert, AlertCircle } from "lucide-react";
 import { BaseDialog } from "@/shared/ui/composed";
-import { Input } from "@/shared/ui/primitives/input";
+import { FormField, MinuteInput, PlayerSelect } from "@/shared/ui/form";
 import { Label } from "@/shared/ui/primitives/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/primitives/select";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/primitives/radio-group";
 import { Textarea } from "@/shared/ui/primitives/textarea";
 import { 
@@ -268,26 +261,17 @@ export default function CardDialog({
     >
       <div className="space-y-4">
           {/* Player */}
-          <div className="space-y-2">
-            <Label htmlFor="player" className="text-slate-300">Player *</Label>
-            <Select
-              value={cardData.playerId || ''}
-              onValueChange={(value) => setCardData(prev => ({ ...prev, playerId: value }))}
-              disabled={isReadOnly}
-            >
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                <SelectValue placeholder="Select player..." />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                {gamePlayers.map(player => (
-                  <SelectItem key={player._id} value={player._id} className="text-white">
-                    #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.playerId && <p className="text-red-400 text-sm">{errors.playerId}</p>}
-          </div>
+          <PlayerSelect
+            id="player"
+            label="Player"
+            required={true}
+            players={gamePlayers}
+            value={cardData.playerId}
+            onChange={(value) => setCardData(prev => ({ ...prev, playerId: value }))}
+            disabled={isReadOnly}
+            error={errors.playerId}
+            placeholder="Select player..."
+          />
 
           {/* Card Type */}
           <div className="space-y-2">
@@ -373,28 +357,22 @@ export default function CardDialog({
           </div>
 
           {/* Minute */}
-          <div className="space-y-2">
-            <Label htmlFor="minute" className="text-slate-300">Minute *</Label>
-            <Input
-              id="minute"
-              type="number"
-              min="1"
-              max={matchDuration}
-              value={cardData.minute || ''}
-              onChange={(e) => setCardData(prev => ({ ...prev, minute: parseInt(e.target.value) || null }))}
-              disabled={isReadOnly}
-              className="bg-slate-800 border-slate-700 text-white"
-              placeholder={`1-${matchDuration}`}
-            />
-            <p className="text-xs text-slate-500">
-              Critical: This minute is used for timeline ordering and minutes calculation
-            </p>
-            {errors.minute && <p className="text-red-400 text-sm">{errors.minute}</p>}
-          </div>
+          <MinuteInput
+            value={cardData.minute}
+            onChange={(value) => setCardData(prev => ({ ...prev, minute: value }))}
+            matchDuration={matchDuration}
+            disabled={isReadOnly}
+            error={errors.minute}
+            hint="Critical: This minute is used for timeline ordering and minutes calculation"
+          />
 
           {/* Reason */}
-          <div className="space-y-2">
-            <Label htmlFor="reason" className="text-slate-300">Reason (Optional)</Label>
+          <FormField
+            label="Reason (Optional)"
+            htmlFor="reason"
+            error={errors.reason}
+            hint={`${cardData.reason.length}/200 characters`}
+          >
             <Textarea
               id="reason"
               value={cardData.reason}
@@ -405,11 +383,7 @@ export default function CardDialog({
               maxLength={200}
               rows={3}
             />
-            <p className="text-xs text-slate-500">
-              {cardData.reason.length}/200 characters
-            </p>
-            {errors.reason && <p className="text-red-400 text-sm">{errors.reason}</p>}
-          </div>
+          </FormField>
         </div>
     </BaseDialog>
   );
