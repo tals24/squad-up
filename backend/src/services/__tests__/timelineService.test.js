@@ -10,7 +10,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const { getMatchTimeline } = require('../timelineService');
+const { getMatchTimeline } = require('../games/utils/gameEventsAggregator');
 const Card = require('../../models/Card');
 const Goal = require('../../models/Goal');
 const { TeamGoal, OpponentGoal } = require('../../models/Goal');

@@ -33,10 +33,28 @@ const gameRosterSchema = new mongoose.Schema({
   playedInGame: {
     type: Boolean,
     default: false
+  },
+  
+  // Player's jersey number at the time of the game
+  playerNumber: {
+    type: Number,
+    default: null
+  },
+  
+  // Formation data (position-to-player mapping)
+  // e.g., { gk: "playerId1", lb: "playerId2", rm: "playerId3", ... }
+  // Stored in ALL roster records for redundancy (all have same formation)
+  formation: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  
+  // Formation type (e.g., "1-4-4-2", "1-4-3-3")
+  formationType: {
+    type: String,
+    default: null
   }
   
-  // ✅ Removed denormalized fields: gameTitle, playerName, rosterEntry
-  // Frontend now performs lookups from gamePlayers and game state
 }, {
   timestamps: true
 });
@@ -51,7 +69,6 @@ gameRosterSchema.index({ playedInGame: 1 });
 // Compound index to ensure unique player per game
 gameRosterSchema.index({ game: 1, player: 1 }, { unique: true });
 
-// ✅ Removed pre-save hook - no longer needed without denormalized fields
 
 module.exports = mongoose.model('GameRoster', gameRosterSchema);
 

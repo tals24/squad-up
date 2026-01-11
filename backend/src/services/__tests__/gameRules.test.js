@@ -6,13 +6,13 @@ const {
   validateGoalEligibility,
   validateSubstitutionEligibility,
   validateCardEligibility
-} = require('../gameRules');
+} = require('../games/utils/gameRules');
 
 // Mock dependencies
-jest.mock('../timelineService');
+jest.mock('../games/utils/gameEventsAggregator');
 jest.mock('../../models/GameRoster');
 
-const { getMatchTimeline } = require('../timelineService');
+const { getMatchTimeline } = require('../games/utils/gameEventsAggregator');
 const GameRoster = require('../../models/GameRoster');
 
 describe('Game Rules Engine', () => {

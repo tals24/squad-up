@@ -12,7 +12,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const { calculatePlayerMinutes } = require('../minutesCalculation');
+const { calculatePlayerMinutes } = require('../games/utils/minutesCalculation');
 const Game = require('../../models/Game');
 const GameRoster = require('../../models/GameRoster');
 const Player = require('../../models/Player');

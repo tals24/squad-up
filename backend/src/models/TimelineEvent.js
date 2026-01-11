@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const timelineEventSchema = new mongoose.Schema({
-  // Primary Key (equivalent to EventID formula in Airtable)
+  // Primary Key
   eventID: {
     type: String,
     unique: true,
