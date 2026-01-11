@@ -1540,6 +1540,287 @@ const substitutionsWithRecalculatedMatchState = useMemo(() => {
 
 ---
 
+## 📐 COMPONENT DECOMPOSITION METHODOLOGY
+
+This section documents the systematic approach used to decompose the monolithic `GameDetailsPage` (1,946 lines) into a maintainable, testable architecture.
+
+### Decomposition Strategy
+
+**Philosophy:** Break large components into focused units without changing behavior.
+
+**Key Principles:**
+1. ✅ **No Behavior Changes** - Refactor preserves exact functionality
+2. ✅ **Extract in Phases** - Small, verifiable changes
+3. ✅ **Test After Each Change** - All tests must stay green
+4. ✅ **Stable Boundaries** - Extract along natural responsibility lines
+
+---
+
+### Step 1: Responsibilities Inventory
+
+**Before decomposition, analyze what the component does:**
+
+**Primary Responsibilities** (keep in container):
+- Route param parsing (get ID from URL)
+- Hook orchestration
+- UI composition
+
+**Secondary Responsibilities** (extract):
+- Data loading and API calls
+- Draft management (lineup/report autosave)
+- Player grouping and organization
+- Formation auto-assignment
+- Drag-and-drop logic
+- Event handlers (goals, cards, subs)
+- Validation logic
+- State transitions
+
+---
+
+### Step 2: State Analysis
+
+**Categorize all state variables:**
+
+**Data State** (40+ variables):
+- Game, team, players, rosters
+- Goals, cards, substitutions
+- Reports, drafts, timeline
+- Difficulty assessment
+
+**UI State** (15+ variables):
+- Dialog open/close flags
+- Loading indicators per entity
+- Selected player/position
+- Drag-and-drop active state
+
+**Derived State** (10+ computed values):
+- Player grouping (bench/field/unavailable)
+- Formation assignments
+- Match statistics
+- Report counts
+
+---
+
+### Step 3: Extract Custom Hooks
+
+**Pattern:** Business logic → Custom hooks, UI logic → Components
+
+**Hook Categories:**
+
+**Data Hooks:**
+```javascript
+// hooks/useGameDetailsData.js
+export function useGameDetailsData(gameId) {
+  // Load game, handle fallbacks
+  return { game, isLoading, error };
+}
+```
+
+**Logic Hooks:**
+```javascript
+// hooks/useLineupDraftManager.js
+export function useLineupDraftManager(gameId, status, roster) {
+  // Load draft, autosave with debounce
+  return { draft, isSaving };
+}
+```
+
+**Handler Hooks:**
+```javascript
+// hooks/useGoalsHandlers.js
+export function useGoalsHandlers(gameId) {
+  const handleSaveGoal = async (goalData) => { /* ... */ };
+  return { handleSaveGoal, isLoading };
+}
+```
+
+---
+
+### Step 4: Create UI Modules
+
+**Pattern:** Group related UI elements into modules for composition
+
+**Example:**
+```javascript
+// modules/GameHeaderModule.jsx
+export function GameHeaderModule({
+  game,
+  finalScore,
+  onStartGame,
+  onSubmitFinal,
+}) {
+  return (
+    <GameDetailsHeader
+      game={game}
+      finalScore={finalScore}
+      onStartGame={onStartGame}
+      onSubmitFinal={onSubmitFinal}
+    />
+  );
+}
+```
+
+**Benefits:**
+- Clearer component hierarchy
+- Easy to reorder sections
+- Props are explicit
+- Can add module-specific logic later
+
+---
+
+### Step 5: Refactor Container
+
+**Final container is thin orchestration:**
+
+```javascript
+// GameDetailsPage/index.jsx (375 lines, down from 1,946)
+export default function GameDetailsPage() {
+  const { gameId } = useParams();
+  
+  // Data hooks
+  const { game, isLoading } = useGameDetailsData(gameId);
+  const { draft, isSaving } = useLineupDraftManager(gameId, game.Status, roster);
+  const { players } = usePlayerGrouping(roster, lineup);
+  
+  // Handler hooks
+  const { handleSaveGoal } = useGoalsHandlers(gameId);
+  const { handleSaveSub } = useSubstitutionsHandlers(gameId);
+  
+  // UI state hooks
+  const { dialogs, openDialog, closeDialog } = useDialogState();
+  
+  if (isLoading) return <LoadingState />;
+  
+  return (
+    <div className="game-details">
+      <GameHeaderModule
+        game={game}
+        onSubmitFinal={handleSubmitFinal}
+      />
+      <TacticalBoardModule
+        players={players}
+        onDrop={handleDrop}
+      />
+      <MatchAnalysisModule
+        timeline={timeline}
+        onAddGoal={handleSaveGoal}
+      />
+      <DialogsModule
+        dialogs={dialogs}
+        onClose={closeDialog}
+      />
+    </div>
+  );
+}
+```
+
+---
+
+### Step 6: Extraction Priority
+
+**Order matters! Extract in this sequence:**
+
+1. **UI Modules** (lowest risk) - Just composition, no logic changes
+2. **Data Hooks** (low risk) - Well-defined boundaries
+3. **Draft Hooks** (medium risk) - Complex autosave logic
+4. **Handler Hooks** (medium risk) - Event handling
+5. **State Derivation** (higher risk) - Complex calculations
+
+**After each extraction:**
+- ✅ Run all tests
+- ✅ Manual smoke test
+- ✅ Verify no behavior changes
+- ✅ Commit immediately
+
+---
+
+### Results: GameDetailsPage Decomposition
+
+**Before:**
+- 1 file: `index.jsx` (1,946 lines)
+- All logic inline
+- Difficult to test
+- Hard to understand
+
+**After:**
+- 1 container: `index.jsx` (375 lines) - 81% reduction
+- 15 custom hooks (logic)
+- 5 UI modules (composition)
+- 20+ sub-components (UI)
+
+**Benefits:**
+- ✅ **Testability** - Hooks testable in isolation
+- ✅ **Reusability** - Hooks reusable in other components
+- ✅ **Readability** - Each file has single responsibility
+- ✅ **Maintainability** - Changes localized to specific files
+
+---
+
+### Key Insights
+
+**1. Hook Extraction Pattern**
+
+Every large component can be decomposed following this pattern:
+- **Data hooks** - Load and manage server state
+- **Logic hooks** - Business logic and calculations
+- **Handler hooks** - Event handlers with API calls
+- **UI hooks** - Dialog/modal state management
+
+**2. Autosave Pattern**
+
+Create a generic `useAutosave` hook:
+```javascript
+const { isSaving } = useAutosave({
+  data: formData,
+  saveFn: saveToApi,
+  delay: 2500,
+  shouldSkip: conditions,
+});
+```
+
+**3. Dialog State Pattern**
+
+Centralize dialog state management:
+```javascript
+const { dialogs, openDialog, closeDialog } = useDialogState([
+  'goal', 'card', 'substitution', 'performance', 'teamSummary'
+]);
+```
+
+**4. Derived State Pattern**
+
+Use `useMemo` for expensive calculations:
+```javascript
+const playersOnField = useMemo(() => 
+  roster.filter(p => p.status === 'starting' && !p.ejected),
+  [roster]
+);
+```
+
+---
+
+### Lessons Learned
+
+**Do:**
+- ✅ Extract in small, verifiable steps
+- ✅ Keep tests green after every change
+- ✅ Use barrel exports (`index.js`) for clean imports
+- ✅ Document hook APIs with JSDoc
+- ✅ Test hooks independently
+
+**Don't:**
+- ❌ Extract multiple responsibilities at once
+- ❌ Change behavior during refactoring
+- ❌ Skip testing after each step
+- ❌ Create circular dependencies between hooks
+- ❌ Mix UI and business logic in same hook
+
+---
+
+This methodology was successfully applied to decompose the largest component in the codebase and can be replicated for other large components (e.g., `TacticBoardPage` - 1466 lines).
+
+---
+
 ## 🛠️ DEVELOPMENT WORKFLOW
 
 ### Setup
