@@ -1,13 +1,13 @@
 /**
  * SquadUp Theme Components
- * 
+ *
  * Modern, consistent UI components built on our centralized theme system.
  * These components replace all existing implementations with a unified approach.
  */
 
 import React from 'react';
-import { cn } from "@/shared/lib/utils";
-import { theme } from "@/shared/lib/theme";
+import { cn } from '@/shared/lib/utils';
+import { theme } from '@/shared/lib/theme';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
 
@@ -68,49 +68,38 @@ const buttonVariants = cva(
   }
 );
 
-export const Button = React.forwardRef(({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}, ref) => {
-  const Comp = asChild ? Slot : 'button';
-  return (
-    <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
-      ref={ref}
-      {...props}
-    />
-  );
-});
+export const Button = React.forwardRef(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
+    return (
+      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+    );
+  }
+);
 
 Button.displayName = 'Button';
 
 // Icon Button variant
-export const IconButton = React.forwardRef(({
-  className,
-  variant = 'ghost',
-  size = 'md',
-  ...props
-}, ref) => {
-  const sizeClasses = {
-    xs: 'h-8 w-8',
-    sm: 'h-9 w-9', 
-    md: 'h-10 w-10',
-    lg: 'h-11 w-11',
-    xl: 'h-12 w-12',
-  };
+export const IconButton = React.forwardRef(
+  ({ className, variant = 'ghost', size = 'md', ...props }, ref) => {
+    const sizeClasses = {
+      xs: 'h-8 w-8',
+      sm: 'h-9 w-9',
+      md: 'h-10 w-10',
+      lg: 'h-11 w-11',
+      xl: 'h-12 w-12',
+    };
 
-  return (
-    <Button
-      ref={ref}
-      variant={variant}
-      className={cn('p-0', sizeClasses[size], className)}
-      {...props}
-    />
-  );
-});
+    return (
+      <Button
+        ref={ref}
+        variant={variant}
+        className={cn('p-0', sizeClasses[size], className)}
+        {...props}
+      />
+    );
+  }
+);
 
 IconButton.displayName = 'IconButton';
 
@@ -148,38 +137,30 @@ const inputVariants = cva(
   }
 );
 
-export const Input = React.forwardRef(({
-  className,
-  variant,
-  size,
-  type = 'text',
-  ...props
-}, ref) => {
-  return (
-    <input
-      type={type}
-      className={cn(inputVariants({ variant, size, className }))}
-      ref={ref}
-      {...props}
-    />
-  );
-});
+export const Input = React.forwardRef(
+  ({ className, variant, size, type = 'text', ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(inputVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
 
 Input.displayName = 'Input';
 
 // Textarea Component
-export const Textarea = React.forwardRef(({
-  className,
-  variant = 'default',
-  ...props
-}, ref) => {
+export const Textarea = React.forwardRef(({ className, variant = 'default', ...props }, ref) => {
   return (
     <textarea
       className={cn(
         `flex min-h-[80px] w-full rounded-lg border px-3 py-2 text-sm transition-colors
          placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 
          focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-vertical`,
-        variant === 'error' 
+        variant === 'error'
           ? 'border-error-500 focus-visible:border-error-500 focus-visible:ring-error-500'
           : 'border-neutral-300 bg-white focus-visible:border-primary-500 focus-visible:ring-primary-500',
         className
@@ -196,51 +177,35 @@ Textarea.displayName = 'Textarea';
 // CARD COMPONENTS
 // ===========================================
 
-const cardVariants = cva(
-  'rounded-xl border bg-white text-neutral-950 shadow-sm',
-  {
-    variants: {
-      variant: {
-        default: 'border-neutral-200',
-        elevated: 'border-neutral-200 shadow-lg',
-        outline: 'border-neutral-300',
-        ghost: 'border-transparent shadow-none',
-      },
-      padding: {
-        none: '',
-        sm: 'p-4',
-        md: 'p-6',
-        lg: 'p-8',
-      },
+const cardVariants = cva('rounded-xl border bg-white text-neutral-950 shadow-sm', {
+  variants: {
+    variant: {
+      default: 'border-neutral-200',
+      elevated: 'border-neutral-200 shadow-lg',
+      outline: 'border-neutral-300',
+      ghost: 'border-transparent shadow-none',
     },
-    defaultVariants: {
-      variant: 'default',
-      padding: 'none',
+    padding: {
+      none: '',
+      sm: 'p-4',
+      md: 'p-6',
+      lg: 'p-8',
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+    padding: 'none',
+  },
+});
 
-export const Card = React.forwardRef(({
-  className,
-  variant,
-  padding,
-  ...props
-}, ref) => (
-  <div
-    ref={ref}
-    className={cn(cardVariants({ variant, padding, className }))}
-    {...props}
-  />
+export const Card = React.forwardRef(({ className, variant, padding, ...props }, ref) => (
+  <div ref={ref} className={cn(cardVariants({ variant, padding, className }))} {...props} />
 ));
 
 Card.displayName = 'Card';
 
 export const CardHeader = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('flex flex-col space-y-1.5 p-6', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
 ));
 
 CardHeader.displayName = 'CardHeader';
@@ -258,11 +223,7 @@ export const CardTitle = React.forwardRef(({ className, children, ...props }, re
 CardTitle.displayName = 'CardTitle';
 
 export const CardDescription = React.forwardRef(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn('text-sm text-neutral-500', className)}
-    {...props}
-  />
+  <p ref={ref} className={cn('text-sm text-neutral-500', className)} {...props} />
 ));
 
 CardDescription.displayName = 'CardDescription';
@@ -274,11 +235,7 @@ export const CardContent = React.forwardRef(({ className, ...props }, ref) => (
 CardContent.displayName = 'CardContent';
 
 export const CardFooter = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('flex items-center p-6 pt-0', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />
 ));
 
 CardFooter.displayName = 'CardFooter';
@@ -313,19 +270,8 @@ const badgeVariants = cva(
   }
 );
 
-export const Badge = React.forwardRef(({
-  className,
-  variant,
-  size,
-  ...props
-}, ref) => {
-  return (
-    <div
-      ref={ref}
-      className={cn(badgeVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
+export const Badge = React.forwardRef(({ className, variant, size, ...props }, ref) => {
+  return <div ref={ref} className={cn(badgeVariants({ variant, size }), className)} {...props} />;
 });
 
 Badge.displayName = 'Badge';
@@ -334,35 +280,23 @@ Badge.displayName = 'Badge';
 // ALERT COMPONENTS
 // ===========================================
 
-const alertVariants = cva(
-  'relative w-full rounded-lg border p-4',
-  {
-    variants: {
-      variant: {
-        default: 'bg-white border-neutral-200 text-neutral-900',
-        success: 'bg-success-50 border-success-200 text-success-800',
-        warning: 'bg-warning-50 border-warning-200 text-warning-800',
-        error: 'bg-error-50 border-error-200 text-error-800',
-        info: 'bg-info-50 border-info-200 text-info-800',
-      },
+const alertVariants = cva('relative w-full rounded-lg border p-4', {
+  variants: {
+    variant: {
+      default: 'bg-white border-neutral-200 text-neutral-900',
+      success: 'bg-success-50 border-success-200 text-success-800',
+      warning: 'bg-warning-50 border-warning-200 text-warning-800',
+      error: 'bg-error-50 border-error-200 text-error-800',
+      info: 'bg-info-50 border-info-200 text-info-800',
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
-export const Alert = React.forwardRef(({
-  className,
-  variant,
-  ...props
-}, ref) => (
-  <div
-    ref={ref}
-    role="alert"
-    className={cn(alertVariants({ variant }), className)}
-    {...props}
-  />
+export const Alert = React.forwardRef(({ className, variant, ...props }, ref) => (
+  <div ref={ref} role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
 ));
 
 Alert.displayName = 'Alert';
@@ -378,11 +312,7 @@ export const AlertTitle = React.forwardRef(({ className, ...props }, ref) => (
 AlertTitle.displayName = 'AlertTitle';
 
 export const AlertDescription = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('text-sm [&_p]:leading-relaxed', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('text-sm [&_p]:leading-relaxed', className)} {...props} />
 ));
 
 AlertDescription.displayName = 'AlertDescription';
@@ -407,22 +337,13 @@ const headingVariants = cva('font-semibold text-neutral-900', {
   },
 });
 
-export const Heading = React.forwardRef(({
-  className,
-  level = 1,
-  asChild = false,
-  ...props
-}, ref) => {
-  const Comp = asChild ? Slot : `h${level}`;
-  
-  return (
-    <Comp
-      ref={ref}
-      className={cn(headingVariants({ level }), className)}
-      {...props}
-    />
-  );
-});
+export const Heading = React.forwardRef(
+  ({ className, level = 1, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : `h${level}`;
+
+    return <Comp ref={ref} className={cn(headingVariants({ level }), className)} {...props} />;
+  }
+);
 
 Heading.displayName = 'Heading';
 
@@ -441,21 +362,10 @@ const textVariants = cva('', {
   },
 });
 
-export const Text = React.forwardRef(({
-  className,
-  variant,
-  asChild = false,
-  ...props
-}, ref) => {
+export const Text = React.forwardRef(({ className, variant, asChild = false, ...props }, ref) => {
   const Comp = asChild ? Slot : 'p';
-  
-  return (
-    <Comp
-      ref={ref}
-      className={cn(textVariants({ variant }), className)}
-      {...props}
-    />
-  );
+
+  return <Comp ref={ref} className={cn(textVariants({ variant }), className)} {...props} />;
 });
 
 Text.displayName = 'Text';
@@ -464,14 +374,10 @@ Text.displayName = 'Text';
 // LAYOUT COMPONENTS
 // ===========================================
 
-export const Container = React.forwardRef(({
-  className,
-  size = 'lg',
-  ...props
-}, ref) => {
+export const Container = React.forwardRef(({ className, size = 'lg', ...props }, ref) => {
   const sizeClasses = {
     sm: 'max-w-2xl',
-    md: 'max-w-4xl', 
+    md: 'max-w-4xl',
     lg: 'max-w-6xl',
     xl: 'max-w-7xl',
     full: 'max-w-full',
@@ -488,11 +394,7 @@ export const Container = React.forwardRef(({
 
 Container.displayName = 'Container';
 
-export const Section = React.forwardRef(({
-  className,
-  padding = 'md',
-  ...props
-}, ref) => {
+export const Section = React.forwardRef(({ className, padding = 'md', ...props }, ref) => {
   const paddingClasses = {
     none: 'py-0',
     sm: 'py-8',
@@ -501,13 +403,7 @@ export const Section = React.forwardRef(({
     xl: 'py-20',
   };
 
-  return (
-    <section
-      ref={ref}
-      className={cn(paddingClasses[padding], className)}
-      {...props}
-    />
-  );
+  return <section ref={ref} className={cn(paddingClasses[padding], className)} {...props} />;
 });
 
 Section.displayName = 'Section';
@@ -517,81 +413,62 @@ Section.displayName = 'Section';
 // ===========================================
 
 export const FormContainer = React.forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('space-y-6', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('space-y-6', className)} {...props} />
 ));
 
 FormContainer.displayName = 'FormContainer';
 
-export const FormSection = React.forwardRef(({ 
-  className, 
-  title, 
-  description,
-  children,
-  ...props 
-}, ref) => (
-  <div ref={ref} className={cn('space-y-4', className)} {...props}>
-    {(title || description) && (
-      <div className="space-y-1">
-        {title && (
-          <Heading level={4} className="text-lg font-medium text-neutral-900">
-            {title}
-          </Heading>
-        )}
-        {description && (
-          <Text variant="small" className="text-neutral-600">
-            {description}
-          </Text>
-        )}
-      </div>
-    )}
-    {children}
-  </div>
-));
+export const FormSection = React.forwardRef(
+  ({ className, title, description, children, ...props }, ref) => (
+    <div ref={ref} className={cn('space-y-4', className)} {...props}>
+      {(title || description) && (
+        <div className="space-y-1">
+          {title && (
+            <Heading level={4} className="text-lg font-medium text-neutral-900">
+              {title}
+            </Heading>
+          )}
+          {description && (
+            <Text variant="small" className="text-neutral-600">
+              {description}
+            </Text>
+          )}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+);
 
 FormSection.displayName = 'FormSection';
 
-export const FormField = React.forwardRef(({
-  className,
-  label,
-  error,
-  helpText,
-  required,
-  children,
-  ...props
-}, ref) => (
-  <div ref={ref} className={cn('space-y-2', className)} {...props}>
-    {label && (
-      <label className="text-sm font-medium text-neutral-700">
-        {label}
-        {required && <span className="text-error-500 ml-1">*</span>}
-      </label>
-    )}
-    {children}
-    {helpText && (
-      <Text variant="small" className="text-neutral-500">
-        {helpText}
-      </Text>
-    )}
-    {error && (
-      <Text variant="small" className="text-error-600">
-        {error}
-      </Text>
-    )}
-  </div>
-));
+export const FormField = React.forwardRef(
+  ({ className, label, error, helpText, required, children, ...props }, ref) => (
+    <div ref={ref} className={cn('space-y-2', className)} {...props}>
+      {label && (
+        <label className="text-sm font-medium text-neutral-700">
+          {label}
+          {required && <span className="text-error-500 ml-1">*</span>}
+        </label>
+      )}
+      {children}
+      {helpText && (
+        <Text variant="small" className="text-neutral-500">
+          {helpText}
+        </Text>
+      )}
+      {error && (
+        <Text variant="small" className="text-error-600">
+          {error}
+        </Text>
+      )}
+    </div>
+  )
+);
 
 FormField.displayName = 'FormField';
 
-export const FormGrid = React.forwardRef(({
-  className,
-  cols = 1,
-  gap = 'md',
-  ...props
-}, ref) => {
+export const FormGrid = React.forwardRef(({ className, cols = 1, gap = 'md', ...props }, ref) => {
   const colClasses = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 md:grid-cols-2',
@@ -662,10 +539,4 @@ export { Checkbox } from './checkbox';
 export { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 // Custom Select components (keeping existing implementation)
-export {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './select';
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';

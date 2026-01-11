@@ -1,6 +1,6 @@
 /**
  * Shared Game API
- * 
+ *
  * Core game data fetching operations used across multiple features.
  * Write operations (create/update/delete) are domain-specific and live in feature APIs.
  */

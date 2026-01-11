@@ -4,19 +4,19 @@ import { Button } from './button';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const FormContainer = ({ 
-  title, 
-  subtitle, 
-  children, 
-  onSave, 
-  onCancel, 
+const FormContainer = ({
+  title,
+  subtitle,
+  children,
+  onSave,
+  onCancel,
   isLoading = false,
   isSaving = false,
-  saveText = "Save",
-  cancelText = "Cancel",
+  saveText = 'Save',
+  cancelText = 'Cancel',
   showBackButton = true,
-  backUrl = "/",
-  className = ""
+  backUrl = '/',
+  className = '',
 }) => {
   return (
     <div className={`form-container ${className}`}>
@@ -33,13 +33,16 @@ const FormContainer = ({
           <h1 className="form-title">{title}</h1>
           {subtitle && <p className="form-subtitle">{subtitle}</p>}
         </div>
-        
+
         <div className="card">
           <div className="card-content">
             <form onSubmit={onSave}>
               {children}
-              
-              <div className="flex justify-end gap-4 mt-8 pt-6" style={{ borderTop: '1px solid rgba(79, 183, 179, 0.2)' }}>
+
+              <div
+                className="flex justify-end gap-4 mt-8 pt-6"
+                style={{ borderTop: '1px solid rgba(79, 183, 179, 0.2)' }}
+              >
                 <Button
                   type="button"
                   onClick={onCancel}
@@ -48,11 +51,7 @@ const FormContainer = ({
                 >
                   {cancelText}
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSaving || isLoading}
-                  className="btn btn-primary"
-                >
+                <Button type="submit" disabled={isSaving || isLoading} className="btn btn-primary">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -74,28 +73,28 @@ const FormContainer = ({
   );
 };
 
-const FormField = ({ 
-  label, 
-  name, 
-  type = "text", 
-  value, 
-  onChange, 
-  placeholder, 
+const FormField = ({
+  label,
+  name,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
   required = false,
   error,
   helpText,
-  className = "",
-  ...props 
+  className = '',
+  ...props
 }) => {
   const inputId = `field-${name}`;
-  
+
   return (
     <div className={`form-group ${className}`}>
       <label htmlFor={inputId} className="form-label">
         {label}
         {required && <span className="text-error-500 ml-1">*</span>}
       </label>
-      
+
       {type === 'textarea' ? (
         <textarea
           id={inputId}
@@ -133,31 +132,25 @@ const FormField = ({
           {...props}
         />
       )}
-      
-      {helpText && (
-        <p className="text-sm mt-1 text-neutral-600">{helpText}</p>
-      )}
-      
-      {error && (
-        <p className="text-sm mt-1 text-error-600">{error}</p>
-      )}
+
+      {helpText && <p className="text-sm mt-1 text-neutral-600">{helpText}</p>}
+
+      {error && <p className="text-sm mt-1 text-error-600">{error}</p>}
     </div>
   );
 };
 
-const FormGrid = ({ children, columns = 2, className = "" }) => {
-  return (
-    <div className={`form-grid grid-cols-${columns} ${className}`}>
-      {children}
-    </div>
-  );
+const FormGrid = ({ children, columns = 2, className = '' }) => {
+  return <div className={`form-grid grid-cols-${columns} ${className}`}>{children}</div>;
 };
 
-const FormSection = ({ title, children, className = "" }) => {
+const FormSection = ({ title, children, className = '' }) => {
   return (
     <div className={`mb-6 ${className}`}>
       {title && (
-        <h3 className="text-h4 mb-4" style={{ color: 'var(--color-text-light)' }}>{title}</h3>
+        <h3 className="text-h4 mb-4" style={{ color: 'var(--color-text-light)' }}>
+          {title}
+        </h3>
       )}
       {children}
     </div>

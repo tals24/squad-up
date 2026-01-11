@@ -1,16 +1,16 @@
-import React from "react";
-import { BaseDialog } from "@/shared/ui/composed";
-import { Trophy } from "lucide-react";
+import React from 'react';
+import { BaseDialog } from '@/shared/ui/composed';
+import { Trophy } from 'lucide-react';
 
-export default function FinalReportDialog({ 
-  open, 
-  onOpenChange, 
-  finalScore, 
-  teamSummary, 
-  onConfirm, 
-  isSaving 
+export default function FinalReportDialog({
+  open,
+  onOpenChange,
+  finalScore,
+  teamSummary,
+  onConfirm,
+  isSaving,
 }) {
-  const isValid = 
+  const isValid =
     finalScore.ourScore !== null &&
     finalScore.opponentScore !== null &&
     teamSummary.defenseSummary &&
@@ -25,15 +25,15 @@ export default function FinalReportDialog({
       title="Submit & Lock Final Report"
       titleIcon={<Trophy className="text-yellow-400" />}
       size="lg"
-      error={!isValid ? "Please ensure all fields are filled before submitting." : null}
+      error={!isValid ? 'Please ensure all fields are filled before submitting.' : null}
       actions={{
         cancel: {
-          label: "Cancel",
+          label: 'Cancel',
           onClick: () => onOpenChange(false),
           disabled: isSaving,
         },
         confirm: {
-          label: "Submit & Lock",
+          label: 'Submit & Lock',
           onClick: onConfirm,
           disabled: !isValid || isSaving,
           loading: isSaving,
@@ -81,4 +81,3 @@ export default function FinalReportDialog({
     </BaseDialog>
   );
 }
-

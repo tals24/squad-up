@@ -1,7 +1,7 @@
 /**
  * React Query Provider
  * Configures and provides React Query client to the entire app
- * 
+ *
  * Benefits:
  * - Automatic caching of API responses
  * - Background data synchronization
@@ -15,7 +15,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 /**
  * Query Client Configuration
- * 
+ *
  * Cache Strategy:
  * - staleTime: 5 minutes - Data considered fresh for 5 min (no refetch)
  * - cacheTime: 10 minutes - Unused data kept in cache for 10 min
@@ -49,16 +49,10 @@ export function QueryProvider({ children }) {
     <QueryClientProvider client={queryClient}>
       {children}
       {/* DevTools only in development */}
-      {import.meta.env.DEV && (
-        <ReactQueryDevtools 
-          initialIsOpen={false} 
-          position="bottom-right"
-        />
-      )}
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />}
     </QueryClientProvider>
   );
 }
 
 export { queryClient };
 export default QueryProvider;
-

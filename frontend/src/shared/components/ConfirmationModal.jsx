@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,16 +6,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/primitives/dialog";
-import { Button } from "@/shared/ui/primitives/button";
-import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+} from '@/shared/ui/primitives/dialog';
+import { Button } from '@/shared/ui/primitives/button';
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 /**
  * Generic Confirmation Modal Component
- * 
+ *
  * A reusable confirmation popup that can be used throughout the application
  * for various confirmation scenarios (warnings, confirmations, etc.)
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.isOpen - Whether the modal is open
  * @param {function} props.onClose - Function to call when modal is closed
@@ -34,13 +34,13 @@ export default function ConfirmationModal({
   onClose,
   title,
   message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
   onConfirm,
   onCancel,
-  type = "warning",
+  type = 'warning',
   isLoading = false,
-  confirmVariant = "default",
+  confirmVariant = 'default',
 }) {
   const handleConfirm = () => {
     if (onConfirm) {
@@ -58,11 +58,11 @@ export default function ConfirmationModal({
 
   const getIcon = () => {
     switch (type) {
-      case "warning":
+      case 'warning':
         return <AlertTriangle className="w-6 h-6 text-yellow-500" />;
-      case "info":
+      case 'info':
         return <Info className="w-6 h-6 text-blue-500" />;
-      case "success":
+      case 'success':
         return <CheckCircle className="w-6 h-6 text-green-500" />;
       default:
         return <AlertTriangle className="w-6 h-6 text-yellow-500" />;
@@ -70,10 +70,10 @@ export default function ConfirmationModal({
   };
 
   const getConfirmButtonVariant = () => {
-    if (confirmVariant === "destructive") {
-      return "destructive";
+    if (confirmVariant === 'destructive') {
+      return 'destructive';
     }
-    return "default";
+    return 'default';
   };
 
   return (
@@ -84,11 +84,9 @@ export default function ConfirmationModal({
             {getIcon()}
             {title}
           </DialogTitle>
-          <DialogDescription className="text-slate-400 mt-2">
-            {message}
-          </DialogDescription>
+          <DialogDescription className="text-slate-400 mt-2">{message}</DialogDescription>
         </DialogHeader>
-        
+
         <DialogFooter className="flex gap-2 sm:justify-end">
           {cancelText && (
             <Button
@@ -105,12 +103,12 @@ export default function ConfirmationModal({
             onClick={handleConfirm}
             disabled={isLoading}
             className={
-              confirmVariant === "destructive"
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-cyan-600 hover:bg-cyan-700 text-white"
+              confirmVariant === 'destructive'
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-cyan-600 hover:bg-cyan-700 text-white'
             }
           >
-            {isLoading ? "Loading..." : confirmText}
+            {isLoading ? 'Loading...' : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

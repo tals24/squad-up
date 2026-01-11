@@ -1,8 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Trophy, Calendar, Target, TrendingUp } from 'lucide-react';
-import { AnimatedCard, StaggerContainer, StaggerItem } from '@/shared/ui/primitives/animated-components';
-import { Card, CardContent, CardHeader, CardTitle, Grid, Heading, Text } from '@/shared/ui/primitives/design-system-components';
+import {
+  AnimatedCard,
+  StaggerContainer,
+  StaggerItem,
+} from '@/shared/ui/primitives/animated-components';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Grid,
+  Heading,
+  Text,
+} from '@/shared/ui/primitives/design-system-components';
 import { createPageUrl } from '@/shared/utils';
 
 function getPlayerAge(dateOfBirth) {
@@ -21,7 +33,7 @@ export default function PlayerGrid({ players, teams }) {
   const getTeamName = (team) => {
     if (!team) return 'No Team';
     if (typeof team === 'object' && team.teamName) return team.teamName;
-    const teamObj = teams.find(t => t._id === team);
+    const teamObj = teams.find((t) => t._id === team);
     return teamObj?.teamName || 'Unknown Team';
   };
 
@@ -32,7 +44,9 @@ export default function PlayerGrid({ players, teams }) {
           <Card className="shadow-2xl border-slate-700 bg-slate-800/70">
             <CardContent className="p-12 text-center">
               <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <Heading level={3} className="mb-2 text-slate-100">No Players Found</Heading>
+              <Heading level={3} className="mb-2 text-slate-100">
+                No Players Found
+              </Heading>
               <Text className="text-slate-400 mb-6">
                 Try adjusting your filters to see more players.
               </Text>
@@ -49,8 +63,8 @@ export default function PlayerGrid({ players, teams }) {
         {players.map((player) => (
           <StaggerItem key={player._id}>
             <Link to={createPageUrl(`Player?id=${player._id}`)}>
-              <AnimatedCard 
-                interactive 
+              <AnimatedCard
+                interactive
                 className="h-full bg-slate-800/70 border-slate-700 hover:bg-slate-800/90 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 group"
               >
                 <CardHeader className="pb-4">
@@ -69,11 +83,13 @@ export default function PlayerGrid({ players, teams }) {
                           }}
                         />
                       ) : null}
-                      <div 
-                        className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-cyan-500 shadow-lg" 
+                      <div
+                        className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center border-2 border-cyan-500 shadow-lg"
                         style={{ display: player.profileImage ? 'none' : 'flex' }}
                       >
-                        <span className="text-white font-bold text-xl">{player.fullName?.charAt(0) || 'P'}</span>
+                        <span className="text-white font-bold text-xl">
+                          {player.fullName?.charAt(0) || 'P'}
+                        </span>
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-800">
                         <Trophy className="w-3 h-3 text-cyan-400" />
@@ -109,7 +125,9 @@ export default function PlayerGrid({ players, teams }) {
                   {player.dateOfBirth && (
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                       <Calendar className="w-4 h-4 text-cyan-400" />
-                      <span className="text-slate-300">{new Date(player.dateOfBirth).toLocaleDateString()}</span>
+                      <span className="text-slate-300">
+                        {new Date(player.dateOfBirth).toLocaleDateString()}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 border-t border-slate-700 group-hover:border-slate-600 transition-colors">
@@ -128,5 +146,3 @@ export default function PlayerGrid({ players, teams }) {
     </StaggerContainer>
   );
 }
-
-

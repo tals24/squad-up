@@ -1,8 +1,8 @@
 /**
  * Critical Test Suite: End-to-End Critical Flows
- * 
+ *
  * Tests E2E-001 and E2E-002 from CRITICAL_TEST_SUITE_DRAFT_AUTOSAVE.md
- * 
+ *
  * These tests verify real-world scenarios where data loss occurs:
  * - Interrupted session (data persistence)
  * - Partial draft recovery (merge on reload)
@@ -23,14 +23,14 @@ Object.defineProperty(window, 'localStorage', {
     setItem: jest.fn(),
     removeItem: jest.fn(),
   },
-  writable: true
+  writable: true,
 });
 
 // Mock useSearchParams
 const mockSearchParams = new URLSearchParams('id=test-game-123');
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useSearchParams: () => [mockSearchParams]
+  useSearchParams: () => [mockSearchParams],
 }));
 
 // Mock useData hook
@@ -46,7 +46,7 @@ const mockGame = {
   midfieldSummary: null,
   attackSummary: null,
   generalSummary: null,
-  reportDraft: null
+  reportDraft: null,
 };
 
 const mockUseData = {
@@ -58,36 +58,40 @@ const mockUseData = {
   refreshData: jest.fn(),
   isLoading: false,
   error: null,
-  updateGameInCache: jest.fn()
+  updateGameInCache: jest.fn(),
 };
 
 jest.mock('@/app/providers/DataProvider', () => ({
-  useData: () => mockUseData
+  useData: () => mockUseData,
 }));
 
 // Mock child components
-jest.mock('../components/GameDetailsHeader', () => () => <div data-testid="game-header">Header</div>);
+jest.mock('../components/GameDetailsHeader', () => () => (
+  <div data-testid="game-header">Header</div>
+));
 jest.mock('../components/TacticalBoard', () => () => <div data-testid="tactical-board">Board</div>);
-jest.mock('../components/MatchAnalysisSidebar', () => () => <div data-testid="match-sidebar">Sidebar</div>);
+jest.mock('../components/MatchAnalysisSidebar', () => () => (
+  <div data-testid="match-sidebar">Sidebar</div>
+));
 
 describe('Critical E2E Tests: Data Loss Prevention', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
-    
+
     // Reset mock game
     mockGame.status = 'Played';
     mockGame.reportDraft = null;
     mockGame.defenseSummary = null;
     mockGame.midfieldSummary = null;
-    
+
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
         success: true,
         message: 'Draft saved successfully',
-        data: { draftSaved: true }
-      })
+        data: { draftSaved: true },
+      }),
     });
   });
 
@@ -105,14 +109,14 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
 
       // Simulate: User fills Defense Summary
       const defenseSummary = 'Test defense summary';
-      
+
       // Mock autosave API call
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          data: { draftSaved: true }
-        })
+          data: { draftSaved: true },
+        }),
       });
 
       // Wait for initialization period to end (1000ms) + debounce (2500ms)
@@ -142,19 +146,19 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       // Simulate: Draft saved to backend
       mockGame.reportDraft = {
         teamSummary: {
-          defenseSummary: defenseSummary
-        }
+          defenseSummary: defenseSummary,
+        },
       };
 
       // Simulate: User fills Midfield Summary
       const midfieldSummary = 'Test midfield summary';
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           success: true,
-          data: { draftSaved: true }
-        })
+          data: { draftSaved: true },
+        }),
       });
 
       act(() => {
@@ -171,8 +175,8 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       mockGame.reportDraft = {
         teamSummary: {
           defenseSummary: defenseSummary,
-          midfieldSummary: midfieldSummary
-        }
+          midfieldSummary: midfieldSummary,
+        },
       };
 
       // Simulate: Browser closed and reopened
@@ -212,7 +216,7 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       const savedData = {
         defenseSummary: 'Saved defense',
         midfieldSummary: 'Saved midfield',
-        attackSummary: 'Saved attack'
+        attackSummary: 'Saved attack',
       };
 
       mockGame.defenseSummary = savedData.defenseSummary;
@@ -222,8 +226,8 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       // Simulate: User edits only Defense Summary (creates partial draft)
       const draftData = {
         teamSummary: {
-          defenseSummary: 'Draft defense'
-        }
+          defenseSummary: 'Draft defense',
+        },
       };
 
       // Mock autosave
@@ -231,8 +235,8 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
         ok: true,
         json: async () => ({
           success: true,
-          data: { draftSaved: true }
-        })
+          data: { draftSaved: true },
+        }),
       });
 
       // Wait for initialization period to end (1000ms) + debounce (2500ms)
@@ -259,8 +263,8 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
         teamSummary: {
           defenseSummary: draftData.teamSummary.defenseSummary, // From draft
           midfieldSummary: savedData.midfieldSummary, // From saved (not in draft)
-          attackSummary: savedData.attackSummary // From saved (not in draft)
-        }
+          attackSummary: savedData.attackSummary, // From saved (not in draft)
+        },
       };
 
       // Verify merge result
@@ -273,7 +277,7 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       // Setup: Game with saved data
       const savedData = {
         defenseSummary: 'Saved defense',
-        midfieldSummary: 'Saved midfield'
+        midfieldSummary: 'Saved midfield',
       };
 
       mockGame.defenseSummary = savedData.defenseSummary;
@@ -285,8 +289,8 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       const loadedData = {
         teamSummary: {
           defenseSummary: savedData.defenseSummary,
-          midfieldSummary: savedData.midfieldSummary
-        }
+          midfieldSummary: savedData.midfieldSummary,
+        },
       };
 
       expect(loadedData.teamSummary.defenseSummary).toBe('Saved defense');
@@ -299,19 +303,18 @@ describe('Critical E2E Tests: Data Loss Prevention', () => {
       mockGame.midfieldSummary = null;
       mockGame.reportDraft = {
         teamSummary: {
-          defenseSummary: 'Draft defense'
-        }
+          defenseSummary: 'Draft defense',
+        },
       };
 
       // Simulate: Page load with draft but no saved data
       const loadedData = {
         teamSummary: {
-          defenseSummary: mockGame.reportDraft.teamSummary.defenseSummary
-        }
+          defenseSummary: mockGame.reportDraft.teamSummary.defenseSummary,
+        },
       };
 
       expect(loadedData.teamSummary.defenseSummary).toBe('Draft defense');
     });
   });
 });
-

@@ -56,4 +56,3 @@ export const safeIsPast = (dateString) => {
     return false;
   }
 };
-

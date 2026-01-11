@@ -13,10 +13,10 @@ import { cn } from '@/shared/lib';
 
 /**
  * BaseDialog Component
- * 
+ *
  * Reusable base dialog with common patterns for all feature dialogs.
  * Provides consistent styling, loading states, error handling, and footer actions.
- * 
+ *
  * @example
  * ```jsx
  * <BaseDialog
@@ -48,31 +48,31 @@ export default function BaseDialog({
   // Dialog State
   open = false,
   onOpenChange,
-  
+
   // Header
   title,
   titleIcon,
   description,
-  
+
   // Content
   children,
-  
+
   // Footer Actions
   actions,
-  
+
   // States
   isLoading = false,
   isReadOnly = false,
-  loadingMessage = "Processing...",
-  
+  loadingMessage = 'Processing...',
+
   // Errors
   error = null, // Global error
   errors = {}, // Field-level errors
-  
+
   // Styling
   className,
   size = 'lg',
-  
+
   // Advanced
   hideCloseButton = false,
   preventOutsideClick = false,
@@ -102,10 +102,7 @@ export default function BaseDialog({
   const hasFieldErrors = Object.keys(errors).length > 0;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={preventOutsideClick ? undefined : onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={preventOutsideClick ? undefined : onOpenChange}>
       <DialogContent
         className={cn(
           sizeClasses[size],
@@ -113,9 +110,7 @@ export default function BaseDialog({
           'bg-slate-900 border-slate-700 text-white',
           className
         )}
-        onInteractOutside={
-          preventOutsideClick ? (e) => e.preventDefault() : undefined
-        }
+        onInteractOutside={preventOutsideClick ? (e) => e.preventDefault() : undefined}
       >
         {/* Loading Overlay */}
         {isLoading && (
@@ -134,9 +129,7 @@ export default function BaseDialog({
             {title}
           </DialogTitle>
           {description && (
-            <DialogDescription className="text-slate-400">
-              {description}
-            </DialogDescription>
+            <DialogDescription className="text-slate-400">{description}</DialogDescription>
           )}
         </DialogHeader>
 
@@ -169,9 +162,7 @@ export default function BaseDialog({
         )}
 
         {/* Content */}
-        <div className="space-y-4">
-          {children}
-        </div>
+        <div className="space-y-4">{children}</div>
 
         {/* Footer */}
         {(actions?.cancel || actions?.confirm || actions?.custom) && (
@@ -203,9 +194,7 @@ export default function BaseDialog({
                     : 'bg-cyan-600 hover:bg-cyan-700'
                 )}
               >
-                {confirmAction.loading && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
+                {confirmAction.loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {confirmAction.label}
               </Button>
             )}

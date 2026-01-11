@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { 
+import React, { useState, useEffect } from 'react';
+import {
   Wifi,
   WifiOff,
   CheckCircle,
@@ -10,12 +10,12 @@ import {
   Users,
   Trophy,
   Clock,
-  Settings
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { DataCard, StandardButton } from "@/shared/ui/primitives/design-system-components";
+  Settings,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import { Badge } from '@/shared/ui/primitives/badge';
+import { DataCard, StandardButton } from '@/shared/ui/primitives/design-system-components';
 
 export default function DatabaseSyncSection() {
   const [connectionStatus, setConnectionStatus] = useState('checking');
@@ -32,17 +32,17 @@ export default function DatabaseSyncSection() {
     setIsLoading(true);
     setError(null);
     setConnectionStatus('checking');
-    
+
     try {
       // Test MongoDB connection
       const response = await fetch('/api/data/all', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setConnectionStatus('connected');
@@ -53,38 +53,46 @@ export default function DatabaseSyncSection() {
         setError('MongoDB connection failed');
       }
     } catch (connectionError) {
-      console.error("Connection test failed:", connectionError);
+      console.error('Connection test failed:', connectionError);
       setConnectionStatus('error');
       setError('Failed to connect to MongoDB. Please check your database connection.');
     }
-    
+
     setIsLoading(false);
   };
 
   const getStatusColor = () => {
     switch (connectionStatus) {
-      case 'connected': return 'text-green-400';
-      case 'error': return 'text-red-400';
-      case 'checking': return 'text-yellow-400';
-      default: return 'text-slate-400';
+      case 'connected':
+        return 'text-green-400';
+      case 'error':
+        return 'text-red-400';
+      case 'checking':
+        return 'text-yellow-400';
+      default:
+        return 'text-slate-400';
     }
   };
 
   const getStatusIcon = () => {
     switch (connectionStatus) {
-      case 'connected': return <CheckCircle className="w-6 h-6 text-green-400" />;
-      case 'error': return <AlertCircle className="w-6 h-6 text-red-400" />;
-      case 'checking': return <Loader2 className="w-6 h-6 text-yellow-400 animate-spin" />;
-      default: return <WifiOff className="w-6 h-6 text-slate-400" />;
+      case 'connected':
+        return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error':
+        return <AlertCircle className="w-6 h-6 text-red-400" />;
+      case 'checking':
+        return <Loader2 className="w-6 h-6 text-yellow-400 animate-spin" />;
+      default:
+        return <WifiOff className="w-6 h-6 text-slate-400" />;
     }
   };
 
   const getTableIcon = (tableName) => {
     const icons = {
-      'Users': Users,
-      'Teams': Trophy,
-      'Players': Users,
-      'TimelineEvents': Database
+      Users: Users,
+      Teams: Trophy,
+      Players: Users,
+      TimelineEvents: Database,
     };
     return icons[tableName] || Database;
   };
@@ -98,8 +106,8 @@ export default function DatabaseSyncSection() {
         headerClassName="flex items-center justify-between"
       >
         <div className="flex items-center justify-end mb-4">
-          <StandardButton 
-            onClick={checkConnection} 
+          <StandardButton
+            onClick={checkConnection}
             disabled={isLoading}
             variant="outline"
             icon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
@@ -123,8 +131,8 @@ export default function DatabaseSyncSection() {
               </p>
             </div>
           </div>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`
               ${connectionStatus === 'connected' ? 'bg-success/10 text-success border-green-500/30' : ''}
               ${connectionStatus === 'error' ? 'bg-error/10 text-error border-red-500/30' : ''}
@@ -136,7 +144,7 @@ export default function DatabaseSyncSection() {
             {connectionStatus === 'checking' && 'Checking'}
           </Badge>
         </div>
-        
+
         {lastSync && (
           <div className="flex items-center gap-2 mt-4 text-sm text-slate-400">
             <Clock className="w-4 h-4" />
@@ -159,8 +167,8 @@ export default function DatabaseSyncSection() {
               {tables.map((table) => {
                 const IconComponent = getTableIcon(table.name);
                 return (
-                  <div 
-                    key={table.id} 
+                  <div
+                    key={table.id}
                     className="flex items-center gap-4 p-4 rounded-xl bg-bg-primary/50 border border-border-custom hover:shadow-md transition-all duration-200"
                   >
                     <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -172,7 +180,10 @@ export default function DatabaseSyncSection() {
                         <p className="text-sm text-text-secondary mt-1">{table.description}</p>
                       )}
                     </div>
-                    <Badge variant="outline" className="bg-success/10 text-success border-green-500/30">
+                    <Badge
+                      variant="outline"
+                      className="bg-success/10 text-success border-green-500/30"
+                    >
                       Active
                     </Badge>
                   </div>
@@ -203,11 +214,14 @@ export default function DatabaseSyncSection() {
                   <p className="text-sm text-text-secondary">MongoDB connection configured</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-accent-primary/10 text-accent-primary border-blue-500/30">
+              <Badge
+                variant="outline"
+                className="bg-accent-primary/10 text-accent-primary border-blue-500/30"
+              >
                 Set
               </Badge>
             </div>
-            
+
             <div className="flex items-center justify-between p-4 rounded-xl bg-bg-primary/50 border border-border-custom">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
@@ -215,15 +229,20 @@ export default function DatabaseSyncSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-text-primary">Database Name</h4>
-                  <p className="text-sm text-text-secondary">MongoDB database identifier configured</p>
+                  <p className="text-sm text-text-secondary">
+                    MongoDB database identifier configured
+                  </p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-accent-secondary/10 text-accent-secondary border-purple-500/30">
+              <Badge
+                variant="outline"
+                className="bg-accent-secondary/10 text-accent-secondary border-purple-500/30"
+              >
                 Set
               </Badge>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-bg-primary/50 rounded-xl border border-border-custom">
             <h4 className="font-semibold text-text-primary mb-2">Expected Collections</h4>
             <p className="text-sm text-text-secondary mb-3">
@@ -245,4 +264,3 @@ export default function DatabaseSyncSection() {
     </div>
   );
 }
-

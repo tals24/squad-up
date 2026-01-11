@@ -1,34 +1,58 @@
-import React, { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useData } from "@/app/providers/DataProvider";
-import { useToast } from "@/shared/ui/primitives/use-toast";
-import { useFeature } from "@/shared/hooks";
-import { formations } from "./formations";
-import { ConfirmationModal } from "@/shared/components";
-import PageLoader from "@/shared/components/PageLoader";
-import { validatePlayerPosition } from "../../utils/squadValidation";
+import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useData } from '@/app/providers/DataProvider';
+import { useToast } from '@/shared/ui/primitives/use-toast';
+import { useFeature } from '@/shared/hooks';
+import { formations } from './formations';
+import { ConfirmationModal } from '@/shared/components';
+import PageLoader from '@/shared/components/PageLoader';
+import { validatePlayerPosition } from '../../utils/squadValidation';
 import {
-  GameHeaderModule, RosterSidebarModule, TacticalBoardModule,
-  MatchAnalysisModule, DialogsModule
-} from "./modules";
+  GameHeaderModule,
+  RosterSidebarModule,
+  TacticalBoardModule,
+  MatchAnalysisModule,
+  DialogsModule,
+} from './modules';
 import {
-  useGameDetailsData, useLineupDraftManager, useReportDraftManager,
-  usePlayerGrouping, useFormationAutoBuild, useTacticalBoardDragDrop,
-  useGameStateHandlers, useReportHandlers, useGoalsHandlers,
-  useSubstitutionsHandlers, useCardsHandlers, useFormationHandlers,
-  useDifficultyHandlers, useDialogState, useEntityLoading,
-} from "./hooks";
+  useGameDetailsData,
+  useLineupDraftManager,
+  useReportDraftManager,
+  usePlayerGrouping,
+  useFormationAutoBuild,
+  useTacticalBoardDragDrop,
+  useGameStateHandlers,
+  useReportHandlers,
+  useGoalsHandlers,
+  useSubstitutionsHandlers,
+  useCardsHandlers,
+  useFormationHandlers,
+  useDifficultyHandlers,
+  useDialogState,
+  useEntityLoading,
+} from './hooks';
 
 export default function GameDetails() {
   const [searchParams] = useSearchParams();
-  const gameId = searchParams.get("id");
-  const { games, players, teams, gameRosters, gameReports, refreshData, isLoading, error, updateGameInCache, updateGameRostersInCache } = useData();
+  const gameId = searchParams.get('id');
+  const {
+    games,
+    players,
+    teams,
+    gameRosters,
+    gameReports,
+    refreshData,
+    isLoading,
+    error,
+    updateGameInCache,
+    updateGameRostersInCache,
+  } = useData();
   const { toast } = useToast();
-  const isDifficultyAssessmentEnabled = useFeature("gameDifficultyAssessmentEnabled");
+  const isDifficultyAssessmentEnabled = useFeature('gameDifficultyAssessmentEnabled');
   console.log('🔍 [GameDetailsPage] isDifficultyAssessmentEnabled:', isDifficultyAssessmentEnabled);
 
   // Formation state (required early for hooks)
-  const [formationType, setFormationType] = useState("1-4-4-2");
+  const [formationType, setFormationType] = useState('1-4-4-2');
   const [formation, setFormation] = useState({});
   const [manualFormationMode, setManualFormationMode] = useState(false);
   const positions = useMemo(() => formations[formationType]?.positions || {}, [formationType]);
@@ -36,38 +60,106 @@ export default function GameDetails() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Data loading hooks
-  const { game, gamePlayers, isFetchingGame, matchDuration, finalScore, teamSummary, isReadOnly, setGame, setMatchDuration, setFinalScore, setTeamSummary, setIsReadOnly } = useGameDetailsData(gameId, { games, players, teams });
-  const { localRosterStatuses, setLocalRosterStatuses, isAutosaving, autosaveError } = useLineupDraftManager({ gameId, game, gamePlayers, gameRosters, isFinalizingGame, formation, setFormation, formationType, setFormationType, manualFormationMode, setManualFormationMode });
+  const {
+    game,
+    gamePlayers,
+    isFetchingGame,
+    matchDuration,
+    finalScore,
+    teamSummary,
+    isReadOnly,
+    setGame,
+    setMatchDuration,
+    setFinalScore,
+    setTeamSummary,
+    setIsReadOnly,
+  } = useGameDetailsData(gameId, { games, players, teams });
+  const { localRosterStatuses, setLocalRosterStatuses, isAutosaving, autosaveError } =
+    useLineupDraftManager({
+      gameId,
+      game,
+      gamePlayers,
+      gameRosters,
+      isFinalizingGame,
+      formation,
+      setFormation,
+      formationType,
+      setFormationType,
+      manualFormationMode,
+      setManualFormationMode,
+    });
   const [localPlayerReports, setLocalPlayerReports] = useState({});
   const [localPlayerMatchStats, setLocalPlayerMatchStats] = useState({});
-  const { isAutosavingReport, reportAutosaveError } = useReportDraftManager({ gameId, game, isFinalizingGame, teamSummary, setTeamSummary, finalScore, setFinalScore, matchDuration, setMatchDuration, localPlayerReports, setLocalPlayerReports, localPlayerMatchStats, setLocalPlayerMatchStats });
-  const { playersOnPitch, benchPlayers, squadPlayers, activeGamePlayers, startingLineupMap, squadPlayersMap } = usePlayerGrouping({ formation, gamePlayers, localRosterStatuses });
+  const { isAutosavingReport, reportAutosaveError } = useReportDraftManager({
+    gameId,
+    game,
+    isFinalizingGame,
+    teamSummary,
+    setTeamSummary,
+    finalScore,
+    setFinalScore,
+    matchDuration,
+    setMatchDuration,
+    localPlayerReports,
+    setLocalPlayerReports,
+    localPlayerMatchStats,
+    setLocalPlayerMatchStats,
+  });
+  const {
+    playersOnPitch,
+    benchPlayers,
+    squadPlayers,
+    activeGamePlayers,
+    startingLineupMap,
+    squadPlayersMap,
+  } = usePlayerGrouping({ formation, gamePlayers, localRosterStatuses });
 
   // Helper functions
-  const getPlayerStatus = (playerId) => localRosterStatuses[playerId] || "Not in Squad";
+  const getPlayerStatus = (playerId) => localRosterStatuses[playerId] || 'Not in Squad';
   const hasReport = (playerId) => {
     const report = localPlayerReports[playerId];
-    return report && (report.rating_physical || report.rating_technical || report.rating_tactical || report.rating_mental);
+    return (
+      report &&
+      (report.rating_physical ||
+        report.rating_technical ||
+        report.rating_tactical ||
+        report.rating_mental)
+    );
   };
   const needsReport = (playerId) => {
     const status = getPlayerStatus(playerId);
-    return (status === "Starting Lineup" || status === "Bench") && !hasReport(playerId);
+    return (status === 'Starting Lineup' || status === 'Bench') && !hasReport(playerId);
   };
-  const updatePlayerStatus = (playerId, newStatus) => setLocalRosterStatuses(prev => ({ ...prev, [playerId]: newStatus }));
+  const updatePlayerStatus = (playerId, newStatus) =>
+    setLocalRosterStatuses((prev) => ({ ...prev, [playerId]: newStatus }));
 
   // Calculate missing reports count for active players (Starting Lineup + Bench)
   const missingReportsCount = useMemo(() => {
     if (!gamePlayers || gamePlayers.length === 0) return 0;
-    return gamePlayers.filter(player => {
+    return gamePlayers.filter((player) => {
       const status = getPlayerStatus(player._id);
-      return (status === "Starting Lineup" || status === "Bench") && !hasReport(player._id);
+      return (status === 'Starting Lineup' || status === 'Bench') && !hasReport(player._id);
     }).length;
   }, [gamePlayers, localRosterStatuses, localPlayerReports]);
 
   // Dialog & entity state hooks
   const dialogState = useDialogState();
-  const { showConfirmation, showConfirmationModal, setShowConfirmationModal, confirmationConfig } = dialogState;
-  const { goals, setGoals, substitutions, setSubstitutions, cards, setCards, difficultyAssessment, setDifficultyAssessment, teamStats, timeline, setTimeline, refreshTeamStats } = useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled });
+  const { showConfirmation, showConfirmationModal, setShowConfirmationModal, confirmationConfig } =
+    dialogState;
+  const {
+    goals,
+    setGoals,
+    substitutions,
+    setSubstitutions,
+    cards,
+    setCards,
+    difficultyAssessment,
+    setDifficultyAssessment,
+    teamStats,
+    timeline,
+    setTimeline,
+    refreshTeamStats,
+  } = useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled });
 
   // Compute match stats from goals and reports (AFTER goals is defined)
   const matchStats = useMemo(() => {
@@ -81,20 +173,31 @@ export default function GameDetails() {
       if (goal.scorerId && goal.scorerId._id) {
         const scorerId = goal.scorerId._id;
         const scorerName = goal.scorerId.fullName || goal.scorerId.name || 'Unknown';
-        scorerMap.set(scorerId, { name: scorerName, count: (scorerMap.get(scorerId)?.count || 0) + 1 });
+        scorerMap.set(scorerId, {
+          name: scorerName,
+          count: (scorerMap.get(scorerId)?.count || 0) + 1,
+        });
       }
       if (goal.assisterId && goal.assisterId._id) {
         const assisterId = goal.assisterId._id;
         const assisterName = goal.assisterId.fullName || goal.assisterId.name || 'Unknown';
-        assisterMap.set(assisterId, { name: assisterName, count: (assisterMap.get(assisterId)?.count || 0) + 1 });
+        assisterMap.set(assisterId, {
+          name: assisterName,
+          count: (assisterMap.get(assisterId)?.count || 0) + 1,
+        });
       }
     });
 
     Object.entries(localPlayerReports).forEach(([playerId, report]) => {
-      const avgRating = ((report.rating_physical || 0) + (report.rating_technical || 0) + (report.rating_tactical || 0) + (report.rating_mental || 0)) / 4;
+      const avgRating =
+        ((report.rating_physical || 0) +
+          (report.rating_technical || 0) +
+          (report.rating_tactical || 0) +
+          (report.rating_mental || 0)) /
+        4;
       if (avgRating > maxRating) {
         maxRating = avgRating;
-        const player = gamePlayers.find(p => p._id === playerId);
+        const player = gamePlayers.find((p) => p._id === playerId);
         if (player) topRated = { name: player.fullName, rating: avgRating.toFixed(1) };
       }
     });
@@ -102,42 +205,125 @@ export default function GameDetails() {
     return {
       scorers: Array.from(scorerMap.entries()).map(([id, data]) => ({ id, ...data })),
       assists: Array.from(assisterMap.entries()).map(([id, data]) => ({ id, ...data })),
-      topRated
+      topRated,
     };
   }, [goals, localPlayerReports, gamePlayers]);
 
   // Formation & DnD hooks
-  useFormationAutoBuild({ positions, gamePlayers, localRosterStatuses, formation, setFormation, manualFormationMode, setManualFormationMode });
-  const dndHandlers = useTacticalBoardDragDrop({ positions, formation, setFormation, updatePlayerStatus, setManualFormationMode, showConfirmation, validatePlayerPosition });
+  useFormationAutoBuild({
+    positions,
+    gamePlayers,
+    localRosterStatuses,
+    formation,
+    setFormation,
+    manualFormationMode,
+    setManualFormationMode,
+  });
+  const dndHandlers = useTacticalBoardDragDrop({
+    positions,
+    formation,
+    setFormation,
+    updatePlayerStatus,
+    setManualFormationMode,
+    showConfirmation,
+    validatePlayerPosition,
+  });
 
   // All handler hooks
   const gameStateHandlers = useGameStateHandlers({
-    gameId, game, formation, formationType, gamePlayers, benchPlayers, localRosterStatuses, getPlayerStatus, finalScore, matchDuration, teamSummary,
-    localPlayerReports, localPlayerMatchStats, difficultyAssessment, isDifficultyAssessmentEnabled, games, updateGameInCache, updateGameRostersInCache, refreshData,
-    setGame, setIsReadOnly, setIsFinalizingGame, setIsSaving, showConfirmation, setShowConfirmationModal, setPendingAction: dialogState.setPendingAction, toast
+    gameId,
+    game,
+    formation,
+    formationType,
+    gamePlayers,
+    benchPlayers,
+    localRosterStatuses,
+    getPlayerStatus,
+    finalScore,
+    matchDuration,
+    teamSummary,
+    localPlayerReports,
+    localPlayerMatchStats,
+    difficultyAssessment,
+    isDifficultyAssessmentEnabled,
+    games,
+    updateGameInCache,
+    updateGameRostersInCache,
+    refreshData,
+    setGame,
+    setIsReadOnly,
+    setIsFinalizingGame,
+    setIsSaving,
+    showConfirmation,
+    setShowConfirmationModal,
+    setPendingAction: dialogState.setPendingAction,
+    toast,
   });
   const reportHandlers = useReportHandlers({
-    gameId, game, gamePlayers, localPlayerReports, setLocalPlayerReports, localPlayerMatchStats, setLocalPlayerMatchStats, teamStats, teamSummary, setTeamSummary, needsReport, toast,
-    selectedPlayer: dialogState.selectedPlayer, setSelectedPlayer: dialogState.setSelectedPlayer, playerPerfData: dialogState.playerPerfData,
-    setPlayerPerfData: dialogState.setPlayerPerfData, setShowPlayerPerfDialog: dialogState.setShowPlayerPerfDialog,
-    setSelectedSummaryType: dialogState.setSelectedSummaryType, setShowTeamSummaryDialog: dialogState.setShowTeamSummaryDialog
+    gameId,
+    game,
+    gamePlayers,
+    localPlayerReports,
+    setLocalPlayerReports,
+    localPlayerMatchStats,
+    setLocalPlayerMatchStats,
+    teamStats,
+    teamSummary,
+    setTeamSummary,
+    needsReport,
+    toast,
+    selectedPlayer: dialogState.selectedPlayer,
+    setSelectedPlayer: dialogState.setSelectedPlayer,
+    playerPerfData: dialogState.playerPerfData,
+    setPlayerPerfData: dialogState.setPlayerPerfData,
+    setShowPlayerPerfDialog: dialogState.setShowPlayerPerfDialog,
+    setSelectedSummaryType: dialogState.setSelectedSummaryType,
+    setShowTeamSummaryDialog: dialogState.setShowTeamSummaryDialog,
   });
   const goalsHandlers = useGoalsHandlers({
-    gameId, goals, setGoals, finalScore, setFinalScore, setTimeline, refreshTeamStats,
-    selectedGoal: dialogState.selectedGoal, setSelectedGoal: dialogState.setSelectedGoal, setShowGoalDialog: dialogState.setShowGoalDialog
+    gameId,
+    goals,
+    setGoals,
+    finalScore,
+    setFinalScore,
+    setTimeline,
+    refreshTeamStats,
+    selectedGoal: dialogState.selectedGoal,
+    setSelectedGoal: dialogState.setSelectedGoal,
+    setShowGoalDialog: dialogState.setShowGoalDialog,
   });
   const subsHandlers = useSubstitutionsHandlers({
-    gameId, substitutions, setSubstitutions, setTimeline, refreshTeamStats, goals,
-    selectedSubstitution: dialogState.selectedSubstitution, setSelectedSubstitution: dialogState.setSelectedSubstitution, setShowSubstitutionDialog: dialogState.setShowSubstitutionDialog
+    gameId,
+    substitutions,
+    setSubstitutions,
+    setTimeline,
+    refreshTeamStats,
+    goals,
+    selectedSubstitution: dialogState.selectedSubstitution,
+    setSelectedSubstitution: dialogState.setSelectedSubstitution,
+    setShowSubstitutionDialog: dialogState.setShowSubstitutionDialog,
   });
   const cardsHandlers = useCardsHandlers({
-    gameId, cards, setCards, setTimeline, refreshTeamStats,
-    selectedCard: dialogState.selectedCard, setSelectedCard: dialogState.setSelectedCard, setShowCardDialog: dialogState.setShowCardDialog
+    gameId,
+    cards,
+    setCards,
+    setTimeline,
+    refreshTeamStats,
+    selectedCard: dialogState.selectedCard,
+    setSelectedCard: dialogState.setSelectedCard,
+    setShowCardDialog: dialogState.setShowCardDialog,
   });
   const formationHandlers = useFormationHandlers({
-    formation, setFormation, formationType, setFormationType, setManualFormationMode, updatePlayerStatus,
-    selectedPosition: dialogState.selectedPosition, setSelectedPosition: dialogState.setSelectedPosition,
-    setSelectedPositionData: dialogState.setSelectedPositionData, setShowPlayerSelectionDialog: dialogState.setShowPlayerSelectionDialog
+    formation,
+    setFormation,
+    formationType,
+    setFormationType,
+    setManualFormationMode,
+    updatePlayerStatus,
+    selectedPosition: dialogState.selectedPosition,
+    setSelectedPosition: dialogState.setSelectedPosition,
+    setSelectedPositionData: dialogState.setSelectedPositionData,
+    setShowPlayerSelectionDialog: dialogState.setShowPlayerSelectionDialog,
   });
   const difficultyHandlers = useDifficultyHandlers({ gameId, setDifficultyAssessment, toast });
 
@@ -148,9 +334,9 @@ export default function GameDetails() {
 
   // Render: Module composition
   // Computed status flags for readability
-  const isScheduled = game?.status === "Scheduled";
-  const isPlayed = game?.status === "Played";
-  const isDone = game?.status === "Done";
+  const isScheduled = game?.status === 'Scheduled';
+  const isPlayed = game?.status === 'Played';
+  const isDone = game?.status === 'Done';
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -164,7 +350,7 @@ export default function GameDetails() {
           </div>
         </div>
       )}
-      
+
       {/* Header - Full Width */}
       <GameHeaderModule
         game={game}
@@ -185,7 +371,7 @@ export default function GameDetails() {
         handleSubmitFinalReport={gameStateHandlers.handleSubmitFinalReport}
         handleEditReport={gameStateHandlers.handleEditReport}
       />
-      
+
       {/* Main Content - 3 Column Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Game Day Roster */}
@@ -204,7 +390,7 @@ export default function GameDetails() {
           isPlayed={isPlayed}
           isDone={isDone}
         />
-        
+
         {/* Center - Tactical Board */}
         <TacticalBoardModule
           tacticalBoardProps={{
@@ -232,7 +418,7 @@ export default function GameDetails() {
             disabled: isDone,
           }}
         />
-        
+
         {/* Right Sidebar - Match Analysis */}
         <MatchAnalysisModule
           isScheduled={isScheduled}
@@ -262,7 +448,7 @@ export default function GameDetails() {
           isDifficultyAssessmentEnabled={isDifficultyAssessmentEnabled}
         />
       </div>
-      
+
       <DialogsModule
         dialogs={{
           goal: {
@@ -278,7 +464,10 @@ export default function GameDetails() {
             squadPlayers: squadPlayersMap,
             onSave: goalsHandlers.handleSaveGoal,
             onSaveOpponentGoal: goalsHandlers.handleSaveOpponentGoal,
-            onClose: () => { dialogState.setShowGoalDialog(false); dialogState.setSelectedGoal(null); },
+            onClose: () => {
+              dialogState.setShowGoalDialog(false);
+              dialogState.setSelectedGoal(null);
+            },
           },
           substitution: {
             isOpen: dialogState.showSubstitutionDialog,
@@ -292,7 +481,10 @@ export default function GameDetails() {
             startingLineup: startingLineupMap,
             squadPlayers: squadPlayersMap,
             onSave: subsHandlers.handleSaveSubstitution,
-            onClose: () => { dialogState.setShowSubstitutionDialog(false); dialogState.setSelectedSubstitution(null); },
+            onClose: () => {
+              dialogState.setShowSubstitutionDialog(false);
+              dialogState.setSelectedSubstitution(null);
+            },
           },
           card: {
             isOpen: dialogState.showCardDialog,
@@ -303,7 +495,10 @@ export default function GameDetails() {
             isReadOnly: isDone,
             game,
             onSave: cardsHandlers.handleSaveCard,
-            onClose: () => { dialogState.setShowCardDialog(false); dialogState.setSelectedCard(null); },
+            onClose: () => {
+              dialogState.setShowCardDialog(false);
+              dialogState.setSelectedCard(null);
+            },
           },
           playerPerformance: {
             open: dialogState.showPlayerPerfDialog,
@@ -312,19 +507,30 @@ export default function GameDetails() {
             data: dialogState.playerPerfData,
             onDataChange: dialogState.setPlayerPerfData,
             isReadOnly: isDone,
-            isStarting: dialogState.selectedPlayer ? getPlayerStatus(dialogState.selectedPlayer._id) === "Starting Lineup" : false,
+            isStarting: dialogState.selectedPlayer
+              ? getPlayerStatus(dialogState.selectedPlayer._id) === 'Starting Lineup'
+              : false,
             game,
             matchDuration: matchDuration?.minutes || 90,
             substitutions,
             playerReports: localPlayerReports,
-            onAddSubstitution: () => { /* TODO: handle add substitution from player dialog */ },
+            onAddSubstitution: () => {
+              /* TODO: handle add substitution from player dialog */
+            },
             goals,
             timeline,
             cards,
             // Add calculated stats for read-only display (API returns 'minutes', not 'minutesPlayed')
-            initialMinutes: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.minutes || teamStats[dialogState.selectedPlayer._id]?.minutesPlayed || 0),
-            initialGoals: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.goals || 0),
-            initialAssists: dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.assists || 0),
+            initialMinutes:
+              dialogState.selectedPlayer &&
+              (teamStats[dialogState.selectedPlayer._id]?.minutes ||
+                teamStats[dialogState.selectedPlayer._id]?.minutesPlayed ||
+                0),
+            initialGoals:
+              dialogState.selectedPlayer && (teamStats[dialogState.selectedPlayer._id]?.goals || 0),
+            initialAssists:
+              dialogState.selectedPlayer &&
+              (teamStats[dialogState.selectedPlayer._id]?.assists || 0),
             onSave: reportHandlers.handleSavePerformanceReport,
             onClose: () => dialogState.setShowPlayerPerfDialog(false),
           },
@@ -332,7 +538,7 @@ export default function GameDetails() {
             open: dialogState.showTeamSummaryDialog,
             onOpenChange: dialogState.setShowTeamSummaryDialog,
             summaryType: dialogState.selectedSummaryType,
-            currentValue: teamSummary[`${dialogState.selectedSummaryType}Summary`] || "",
+            currentValue: teamSummary[`${dialogState.selectedSummaryType}Summary`] || '',
             onSave: reportHandlers.handleTeamSummarySave,
           },
           playerSelection: {
@@ -371,4 +577,3 @@ export default function GameDetails() {
     </div>
   );
 }
-

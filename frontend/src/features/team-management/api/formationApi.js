@@ -29,4 +29,3 @@ export const deleteFormation = async (formationId) => {
 export const createTimelineEvent = async (eventData) => {
   return await apiClient.post('/api/timeline-events', eventData);
 };
-

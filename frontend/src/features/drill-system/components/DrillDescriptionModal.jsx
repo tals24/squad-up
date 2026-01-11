@@ -6,7 +6,6 @@ import { Textarea } from '@/shared/ui/primitives/textarea';
 import { Label } from '@/shared/ui/primitives/label';
 
 export default function DrillDescriptionModal({ isOpen, onClose, description, drillName }) {
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -19,7 +18,7 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, dr
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
             onClick={onClose}
           />
-          
+
           {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: -20 }}
@@ -41,7 +40,7 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, dr
                   <X className="w-5 h-5" />
                 </Button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="drill-description" className="text-slate-100 font-medium">
@@ -55,7 +54,7 @@ export default function DrillDescriptionModal({ isOpen, onClose, description, dr
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end mt-6">
                 <Button
                   variant="outline"

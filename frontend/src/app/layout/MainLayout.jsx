@@ -1,8 +1,6 @@
-
-
-import React, { useState, useEffect, createContext, useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { createPageUrl } from "@/shared/utils";
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/shared/utils';
 import {
   Users,
   User,
@@ -20,9 +18,9 @@ import {
   Sun,
   Moon,
   ListChecks,
-  ChevronRight
-} from "lucide-react";
-import { ThemeProvider, ThemeToggle } from "@/app/providers/ThemeProvider";
+  ChevronRight,
+} from 'lucide-react';
+import { ThemeProvider, ThemeToggle } from '@/app/providers/ThemeProvider';
 import {
   Sidebar,
   SidebarContent,
@@ -36,12 +34,12 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
-} from "@/shared/ui/primitives/sidebar";
-import { User as UserEntity } from "@/shared/api";
-import { Button } from "@/shared/ui/primitives/design-system-components";
+} from '@/shared/ui/primitives/sidebar';
+import { User as UserEntity } from '@/shared/api';
+import { Button } from '@/shared/ui/primitives/design-system-components';
 // Removed airtableSync - now using MongoDB backend
-import { DataProvider } from "@/app/providers/DataProvider";
-import PageLoader from "@/shared/components/PageLoader";
+import { DataProvider } from '@/app/providers/DataProvider';
+import PageLoader from '@/shared/components/PageLoader';
 // Removed LoginModal - now using dedicated Login page
 
 // Note: ThemeProvider is now imported from ThemeContext
@@ -65,12 +63,12 @@ export default function Layout({ children, currentPageName }) {
     setIsLoading(true);
     setDebugInfo(null);
     setAuthError(null);
-    
+
     try {
       // First check if we have a token in localStorage
       const token = localStorage.getItem('authToken');
       const userData = localStorage.getItem('user');
-      
+
       if (!token || !userData) {
         console.log('🔴 No auth token or user data found, redirecting to login');
         setIsAuthorized(false);
@@ -82,7 +80,7 @@ export default function Layout({ children, currentPageName }) {
       try {
         const user = await UserEntity.verifyToken();
         console.log('🟢 JWT user authenticated:', user);
-        
+
         if (user) {
           setCurrentUser(user);
           setUserRole(user.role || 'Admin'); // Use actual role from token
@@ -92,12 +90,12 @@ export default function Layout({ children, currentPageName }) {
         }
       } catch (verifyError) {
         console.log('🔴 Token verification failed, trying fallback user data');
-        
+
         // Fallback: use stored user data if token verification fails temporarily
         try {
           const parsedUser = JSON.parse(userData);
           console.log('🟡 Using stored user data as fallback:', parsedUser);
-          
+
           setCurrentUser(parsedUser);
           setUserRole(parsedUser.role || 'Admin');
           setIsAuthorized(true);
@@ -107,12 +105,11 @@ export default function Layout({ children, currentPageName }) {
           console.log('🔴 Failed to parse stored user data');
         }
       }
-      
+
       // If all attempts fail, redirect to login
       setIsAuthorized(false);
       window.location.href = '/Login';
       return;
-      
     } catch (error) {
       console.log('🔴 Authentication error:', error);
       setIsAuthorized(false);
@@ -133,31 +130,61 @@ export default function Layout({ children, currentPageName }) {
 
   const getRoleIcon = (role) => {
     switch (role) {
-      case 'Department Manager': return Crown;
-      case 'Division Manager': return Shield;
-      case 'Coach': return UserCheck;
-      case 'Admin': return Crown;
-      default: return User;
+      case 'Department Manager':
+        return Crown;
+      case 'Division Manager':
+        return Shield;
+      case 'Coach':
+        return UserCheck;
+      case 'Admin':
+        return Crown;
+      default:
+        return User;
     }
   };
 
   const navigationItems = [
-    { title: "Dashboard", url: createPageUrl("Dashboard"), icon: Trophy, color: "text-cyan-400" },
-    { title: "My Players", url: createPageUrl("Players"), icon: Users, color: "text-blue-400" },
-    { title: "Games Schedule", url: createPageUrl("GamesSchedule"), icon: Calendar, color: "text-green-400" },
-    { title: "Training Planner", url: createPageUrl("TrainingPlanner"), icon: ListChecks, color: "text-purple-400" },
-    { title: "Drill Library", url: createPageUrl("DrillLibrary"), icon: ClipboardList, color: "text-orange-400" },
-    { title: "Tactic Board", url: createPageUrl("TacticBoard"), icon: Target, color: "text-red-400" },
-    { title: "Analytics", url: createPageUrl("Analytics"), icon: TrendingUp, color: "text-yellow-400" },
-    { title: "Settings", url: createPageUrl("Settings"), icon: Settings, color: "text-slate-400" },
+    { title: 'Dashboard', url: createPageUrl('Dashboard'), icon: Trophy, color: 'text-cyan-400' },
+    { title: 'My Players', url: createPageUrl('Players'), icon: Users, color: 'text-blue-400' },
+    {
+      title: 'Games Schedule',
+      url: createPageUrl('GamesSchedule'),
+      icon: Calendar,
+      color: 'text-green-400',
+    },
+    {
+      title: 'Training Planner',
+      url: createPageUrl('TrainingPlanner'),
+      icon: ListChecks,
+      color: 'text-purple-400',
+    },
+    {
+      title: 'Drill Library',
+      url: createPageUrl('DrillLibrary'),
+      icon: ClipboardList,
+      color: 'text-orange-400',
+    },
+    {
+      title: 'Tactic Board',
+      url: createPageUrl('TacticBoard'),
+      icon: Target,
+      color: 'text-red-400',
+    },
+    {
+      title: 'Analytics',
+      url: createPageUrl('Analytics'),
+      icon: TrendingUp,
+      color: 'text-yellow-400',
+    },
+    { title: 'Settings', url: createPageUrl('Settings'), icon: Settings, color: 'text-slate-400' },
   ];
 
   const quickActions = [
-    { title: "Add Player", url: createPageUrl("AddPlayer"), icon: Users },
-    { title: "Add Team", url: createPageUrl("AddTeam"), icon: Trophy },
-    { title: "Add Game", url: createPageUrl("AddGame"), icon: Calendar },
-    { title: "Add Report", url: createPageUrl("AddReport"), icon: TrendingUp },
-    { title: "Add User", url: createPageUrl("AddUser"), icon: User },
+    { title: 'Add Player', url: createPageUrl('AddPlayer'), icon: Users },
+    { title: 'Add Team', url: createPageUrl('AddTeam'), icon: Trophy },
+    { title: 'Add Game', url: createPageUrl('AddGame'), icon: Calendar },
+    { title: 'Add Report', url: createPageUrl('AddReport'), icon: TrendingUp },
+    { title: 'Add User', url: createPageUrl('AddUser'), icon: User },
   ];
 
   if (isLoading) {
@@ -176,15 +203,14 @@ export default function Layout({ children, currentPageName }) {
               {isLoading ? 'Checking Authentication...' : 'Please Sign In'}
             </h1>
             <p className="text-slate-400 text-lg mb-8">
-              {isLoading 
-                ? 'Verifying your credentials...' 
-                : 'Sign in to access your account and continue.'
-              }
+              {isLoading
+                ? 'Verifying your credentials...'
+                : 'Sign in to access your account and continue.'}
             </p>
             {!isLoading && (
               <div className="flex flex-col gap-3">
-                <Button 
-                  onClick={() => window.location.href = '/Login'} 
+                <Button
+                  onClick={() => (window.location.href = '/Login')}
                   className="bg-cyan-500 hover:bg-cyan-600 text-white"
                 >
                   Sign In
@@ -211,12 +237,10 @@ export default function Layout({ children, currentPageName }) {
   }
 
   // Check if current page is DrillDesigner to render full-screen
-  if (currentPageName === "DrillDesigner") {
+  if (currentPageName === 'DrillDesigner') {
     return (
       <ThemeProvider>
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <DataProvider>{children}</DataProvider>
       </ThemeProvider>
     );
   }
@@ -231,7 +255,9 @@ export default function Layout({ children, currentPageName }) {
               sidebarCollapsed ? 'w-16' : 'w-72'
             } group hover:w-72`}
             style={{
-              boxShadow: sidebarCollapsed ? 'inset -2px 0 8px rgba(6, 182, 212, 0.1)' : 'inset -2px 0 8px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.1)'
+              boxShadow: sidebarCollapsed
+                ? 'inset -2px 0 8px rgba(6, 182, 212, 0.1)'
+                : 'inset -2px 0 8px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.1)',
             }}
             onMouseEnter={() => setSidebarCollapsed(false)}
             onMouseLeave={() => setSidebarCollapsed(true)}
@@ -247,9 +273,13 @@ export default function Layout({ children, currentPageName }) {
                   {/* Scanning Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse"></div>
                 </div>
-                <div className={`transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}>
+                <div
+                  className={`transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}
+                >
                   <h2 className="font-bold text-xl text-white whitespace-nowrap">SquadUp</h2>
-                  <p className="text-xs text-cyan-400 font-medium whitespace-nowrap">Youth Soccer Club</p>
+                  <p className="text-xs text-cyan-400 font-medium whitespace-nowrap">
+                    Youth Soccer Club
+                  </p>
                 </div>
               </div>
             </div>
@@ -257,7 +287,9 @@ export default function Layout({ children, currentPageName }) {
             {/* Navigation */}
             <div className="p-3 space-y-6">
               <div>
-                <div className={`text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'} group-hover:opacity-100`}>
+                <div
+                  className={`text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'} group-hover:opacity-100`}
+                >
                   Navigation
                 </div>
                 <div className="space-y-1">
@@ -271,7 +303,7 @@ export default function Layout({ children, currentPageName }) {
                           : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50'
                       }`}
                       style={{
-                        animationDelay: `${index * 50}ms`
+                        animationDelay: `${index * 50}ms`,
                       }}
                     >
                       {/* Active indicator */}
@@ -280,23 +312,33 @@ export default function Layout({ children, currentPageName }) {
                       )}
 
                       <div className="relative">
-                        <item.icon className={`w-5 h-5 ${item.color} transition-all duration-300`} />
+                        <item.icon
+                          className={`w-5 h-5 ${item.color} transition-all duration-300`}
+                        />
                         {/* Glow effect on hover */}
-                        <item.icon className={`w-5 h-5 ${item.color} absolute inset-0 opacity-0 group-hover/item:opacity-50 blur-sm transition-all duration-300`} />
+                        <item.icon
+                          className={`w-5 h-5 ${item.color} absolute inset-0 opacity-0 group-hover/item:opacity-50 blur-sm transition-all duration-300`}
+                        />
                       </div>
 
-                      <span className={`font-medium whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}>
+                      <span
+                        className={`font-medium whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}
+                      >
                         {item.title}
                       </span>
 
-                      <ChevronRight className={`w-4 h-4 ml-auto opacity-0 group-hover/item:opacity-100 transition-all duration-300 ${sidebarCollapsed ? 'hidden' : ''} group-hover:block`} />
+                      <ChevronRight
+                        className={`w-4 h-4 ml-auto opacity-0 group-hover/item:opacity-100 transition-all duration-300 ${sidebarCollapsed ? 'hidden' : ''} group-hover:block`}
+                      />
                     </Link>
                   ))}
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <div className={`transition-all duration-300 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'} group-hover:opacity-100`}>
+              <div
+                className={`transition-all duration-300 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'} group-hover:opacity-100`}
+              >
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2">
                   Quick Actions
                 </div>
@@ -307,7 +349,7 @@ export default function Layout({ children, currentPageName }) {
                       to={item.url}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800/30 transition-all duration-300 group/item"
                       style={{
-                        animationDelay: `${(navigationItems.length + index) * 50}ms`
+                        animationDelay: `${(navigationItems.length + index) * 50}ms`,
                       }}
                     >
                       <item.icon className="w-4 h-4" />
@@ -326,12 +368,16 @@ export default function Layout({ children, currentPageName }) {
                     {currentUser?.full_name?.charAt(0) || 'U'}
                   </span>
                 </div>
-                <div className={`flex-1 min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}>
+                <div
+                  className={`flex-1 min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'} group-hover:opacity-100 group-hover:w-auto overflow-hidden`}
+                >
                   <p className="font-semibold text-white text-sm truncate whitespace-nowrap">
                     {currentUser?.full_name}
                   </p>
                   <div className="flex items-center gap-1">
-                    {React.createElement(getRoleIcon(userRole), { className: "w-3 h-3 text-cyan-400" })}
+                    {React.createElement(getRoleIcon(userRole), {
+                      className: 'w-3 h-3 text-cyan-400',
+                    })}
                     <p className="text-xs text-cyan-400 truncate font-medium whitespace-nowrap">
                       {userRole || 'Coach'}
                     </p>
@@ -339,9 +385,9 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </div>
               <div className="space-y-2">
-                <ThemeToggle 
-                  variant="outline" 
-                  size="sm" 
+                <ThemeToggle
+                  variant="outline"
+                  size="sm"
                   showLabel={!sidebarCollapsed}
                   className={`w-full border-slate-600 text-slate-300 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/10 hover:text-cyan-400 hover:border-cyan-500/50 transition-all duration-300 ${sidebarCollapsed ? 'px-3' : ''}`}
                 />
@@ -352,7 +398,9 @@ export default function Layout({ children, currentPageName }) {
                   className={`w-full border-slate-600 text-slate-300 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-pink-500/10 hover:text-red-400 hover:border-red-500/50 transition-all duration-300 ${sidebarCollapsed ? 'px-3' : ''}`}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  <span className={`transition-all duration-300 ${sidebarCollapsed ? 'hidden' : 'inline'} group-hover:inline`}>
+                  <span
+                    className={`transition-all duration-300 ${sidebarCollapsed ? 'hidden' : 'inline'} group-hover:inline`}
+                  >
                     Sign Out
                   </span>
                 </Button>
@@ -374,15 +422,11 @@ export default function Layout({ children, currentPageName }) {
             </header>
 
             <div className="flex-1 overflow-auto bg-slate-900">
-              <DataProvider>
-                {children}
-              </DataProvider>
+              <DataProvider>{children}</DataProvider>
             </div>
           </main>
         </div>
-
       </SidebarProvider>
     </ThemeProvider>
   );
 }
-

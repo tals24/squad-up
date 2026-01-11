@@ -1,7 +1,7 @@
 /**
  * useGames Hook Tests
  * Tests for React Query game hooks
- * 
+ *
  * Note: These tests are examples. Run them with:
  * npm test -- useGames.test.js
  */
@@ -28,9 +28,7 @@ const createWrapper = () => {
   });
 
   return ({ children }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
 
@@ -135,4 +133,3 @@ describe('useGames Hook', () => {
     });
   });
 });
-

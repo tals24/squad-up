@@ -1,23 +1,19 @@
-import React from "react";
-import { Button } from "@/shared/ui/primitives/button";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { Zap } from "lucide-react";
+import React from 'react';
+import { Button } from '@/shared/ui/primitives/button';
+import { Badge } from '@/shared/ui/primitives/badge';
+import { Zap } from 'lucide-react';
 
 /**
  * AutoFillReportsButton Component
- * 
+ *
  * Button that allows coaches to quickly apply default reports to all players
  * who don't yet have a report in the draft.
- * 
+ *
  * @param {number} remainingCount - Number of players without reports
  * @param {Function} onAutoFill - Handler function to execute auto-fill
  * @param {boolean} disabled - Whether the button should be disabled
  */
-export default function AutoFillReportsButton({ 
-  remainingCount, 
-  onAutoFill, 
-  disabled = false 
-}) {
+export default function AutoFillReportsButton({ remainingCount, onAutoFill, disabled = false }) {
   if (remainingCount === 0) {
     return null; // Hide button if no remaining players
   }
@@ -31,14 +27,10 @@ export default function AutoFillReportsButton({
       >
         <Zap className="w-4 h-4" />
         <span>Auto-Fill Reports</span>
-        <Badge 
-          variant="secondary" 
-          className="bg-slate-700 text-white border-slate-600 ml-1"
-        >
+        <Badge variant="secondary" className="bg-slate-700 text-white border-slate-600 ml-1">
           {remainingCount}
         </Badge>
       </Button>
     </div>
   );
 }
-

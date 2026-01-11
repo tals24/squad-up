@@ -4,12 +4,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getPlayers, 
-  getPlayerById, 
-  createPlayer, 
-  updatePlayer, 
-  deletePlayer 
+import {
+  getPlayers,
+  getPlayerById,
+  createPlayer,
+  updatePlayer,
+  deletePlayer,
 } from '@/features/player-management/api/playerApi';
 
 // Query Keys
@@ -23,7 +23,7 @@ export const playerKeys = {
 
 /**
  * Fetch all players with caching
- * 
+ *
  * @returns {Object} { data, isLoading, error, refetch }
  */
 export function usePlayers() {
@@ -42,7 +42,7 @@ export function usePlayers() {
 
 /**
  * Fetch single player by ID
- * 
+ *
  * @param {string} playerId - Player ID
  * @returns {Object} { data, isLoading, error }
  */
@@ -103,4 +103,3 @@ export function useDeletePlayer() {
     },
   });
 }
-

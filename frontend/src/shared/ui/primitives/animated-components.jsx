@@ -1,14 +1,14 @@
 /**
  * SquadUp Animated Components
- * 
+ *
  * Enhanced UI components with Framer Motion animations, micro-interactions,
  * and improved accessibility for Phase 3 of the design system.
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from "@/shared/lib/utils";
-import { theme } from "@/shared/lib/theme";
+import { cn } from '@/shared/lib/utils';
+import { theme } from '@/shared/lib/theme';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
 import { Loader2, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
@@ -68,59 +68,55 @@ const buttonVariants = cva(
   }
 );
 
-export const AnimatedButton = React.forwardRef(({
-  className,
-  variant,
-  size,
-  asChild = false,
-  loading = false,
-  children,
-  disabled,
-  ...props
-}, ref) => {
-  const Comp = asChild ? Slot : motion.button;
-  const isDisabled = disabled || loading;
+export const AnimatedButton = React.forwardRef(
+  (
+    { className, variant, size, asChild = false, loading = false, children, disabled, ...props },
+    ref
+  ) => {
+    const Comp = asChild ? Slot : motion.button;
+    const isDisabled = disabled || loading;
 
-  return (
-    <Comp
-      ref={ref}
-      className={cn(buttonVariants({ variant, size }), className)}
-      disabled={isDisabled}
-      initial="initial"
-      whileHover={!isDisabled ? "hover" : undefined}
-      whileTap={!isDisabled ? "tap" : undefined}
-      whileFocus="focus"
-      variants={theme.animations.buttonVariants}
-      aria-disabled={isDisabled}
-      {...props}
-    >
-      <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.15 }}
-          >
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </motion.div>
-        ) : (
-          <motion.span
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex items-center gap-2"
-          >
-            {children}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </Comp>
-  );
-});
+    return (
+      <Comp
+        ref={ref}
+        className={cn(buttonVariants({ variant, size }), className)}
+        disabled={isDisabled}
+        initial="initial"
+        whileHover={!isDisabled ? 'hover' : undefined}
+        whileTap={!isDisabled ? 'tap' : undefined}
+        whileFocus="focus"
+        variants={theme.animations.buttonVariants}
+        aria-disabled={isDisabled}
+        {...props}
+      >
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </motion.div>
+          ) : (
+            <motion.span
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-2"
+            >
+              {children}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </Comp>
+    );
+  }
+);
 
 AnimatedButton.displayName = 'AnimatedButton';
 
@@ -158,40 +154,38 @@ const cardVariants = cva(
   }
 );
 
-export const AnimatedCard = React.forwardRef(({
-  className,
-  variant,
-  padding,
-  interactive = false,
-  children,
-  onClick,
-  ...props
-}, ref) => {
-  const isInteractive = interactive || !!onClick;
+export const AnimatedCard = React.forwardRef(
+  ({ className, variant, padding, interactive = false, children, onClick, ...props }, ref) => {
+    const isInteractive = interactive || !!onClick;
 
-  return (
-    <motion.div
-      ref={ref}
-      className={cn(cardVariants({ variant, padding, interactive: isInteractive }), className)}
-      onClick={onClick}
-      initial="initial"
-      whileHover={isInteractive ? "hover" : undefined}
-      whileTap={isInteractive ? "tap" : undefined}
-      variants={theme.animations.cardVariants}
-      tabIndex={isInteractive ? 0 : undefined}
-      role={isInteractive ? "button" : undefined}
-      onKeyDown={isInteractive ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.(e);
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(cardVariants({ variant, padding, interactive: isInteractive }), className)}
+        onClick={onClick}
+        initial="initial"
+        whileHover={isInteractive ? 'hover' : undefined}
+        whileTap={isInteractive ? 'tap' : undefined}
+        variants={theme.animations.cardVariants}
+        tabIndex={isInteractive ? 0 : undefined}
+        role={isInteractive ? 'button' : undefined}
+        onKeyDown={
+          isInteractive
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onClick?.(e);
+                }
+              }
+            : undefined
         }
-      } : undefined}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-});
+        {...props}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+);
 
 AnimatedCard.displayName = 'AnimatedCard';
 
@@ -208,8 +202,10 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: 'border-neutral-300 hover:border-neutral-400 focus:border-primary-500',
-        error: 'border-error-500 hover:border-error-600 focus:border-error-500 focus:ring-error-500',
-        success: 'border-success-500 hover:border-success-600 focus:border-success-500 focus:ring-success-500',
+        error:
+          'border-error-500 hover:border-error-600 focus:border-error-500 focus:ring-error-500',
+        success:
+          'border-success-500 hover:border-success-600 focus:border-success-500 focus:ring-success-500',
       },
       size: {
         sm: 'h-8 px-2 text-xs',
@@ -224,27 +220,23 @@ const inputVariants = cva(
   }
 );
 
-export const AnimatedInput = React.forwardRef(({
-  className,
-  variant,
-  size,
-  error,
-  ...props
-}, ref) => {
-  const inputVariant = error ? 'error' : variant;
+export const AnimatedInput = React.forwardRef(
+  ({ className, variant, size, error, ...props }, ref) => {
+    const inputVariant = error ? 'error' : variant;
 
-  return (
-    <motion.input
-      ref={ref}
-      className={cn(inputVariants({ variant: inputVariant, size }), className)}
-      initial="initial"
-      whileFocus="focus"
-      variants={theme.animations.focusVariants}
-      aria-invalid={error ? 'true' : undefined}
-      {...props}
-    />
-  );
-});
+    return (
+      <motion.input
+        ref={ref}
+        className={cn(inputVariants({ variant: inputVariant, size }), className)}
+        initial="initial"
+        whileFocus="focus"
+        variants={theme.animations.focusVariants}
+        aria-invalid={error ? 'true' : undefined}
+        {...props}
+      />
+    );
+  }
+);
 
 AnimatedInput.displayName = 'AnimatedInput';
 
@@ -252,11 +244,7 @@ AnimatedInput.displayName = 'AnimatedInput';
 // LOADING SPINNER COMPONENT
 // ===========================================
 
-export const LoadingSpinner = React.forwardRef(({
-  className,
-  size = 'md',
-  ...props
-}, ref) => {
+export const LoadingSpinner = React.forwardRef(({ className, size = 'md', ...props }, ref) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
@@ -265,13 +253,12 @@ export const LoadingSpinner = React.forwardRef(({
   };
 
   return (
-    <motion.div
-      ref={ref}
-      className={cn('flex items-center justify-center', className)}
-      {...props}
-    >
+    <motion.div ref={ref} className={cn('flex items-center justify-center', className)} {...props}>
       <motion.div
-        className={cn('border-2 border-primary-200 border-t-primary-500 rounded-full', sizeClasses[size])}
+        className={cn(
+          'border-2 border-primary-200 border-t-primary-500 rounded-full',
+          sizeClasses[size]
+        )}
         variants={theme.animations.spinnerVariants}
         animate="animate"
       />
@@ -285,23 +272,20 @@ LoadingSpinner.displayName = 'LoadingSpinner';
 // ANIMATED ALERT COMPONENT
 // ===========================================
 
-const alertVariants = cva(
-  `relative w-full rounded-lg border p-4 transition-all duration-200`,
-  {
-    variants: {
-      variant: {
-        default: 'bg-neutral-50 border-neutral-200 text-neutral-900',
-        destructive: 'bg-error-50 border-error-200 text-error-900',
-        success: 'bg-success-50 border-success-200 text-success-900',
-        warning: 'bg-warning-50 border-warning-200 text-warning-900',
-        info: 'bg-info-50 border-info-200 text-info-900',
-      },
+const alertVariants = cva(`relative w-full rounded-lg border p-4 transition-all duration-200`, {
+  variants: {
+    variant: {
+      default: 'bg-neutral-50 border-neutral-200 text-neutral-900',
+      destructive: 'bg-error-50 border-error-200 text-error-900',
+      success: 'bg-success-50 border-success-200 text-success-900',
+      warning: 'bg-warning-50 border-warning-200 text-warning-900',
+      info: 'bg-info-50 border-info-200 text-info-900',
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 const alertIcons = {
   default: Info,
@@ -311,63 +295,58 @@ const alertIcons = {
   info: Info,
 };
 
-export const AnimatedAlert = React.forwardRef(({
-  className,
-  variant = 'default',
-  title,
-  children,
-  icon: CustomIcon,
-  ...props
-}, ref) => {
-  const Icon = CustomIcon || alertIcons[variant];
+export const AnimatedAlert = React.forwardRef(
+  ({ className, variant = 'default', title, children, icon: CustomIcon, ...props }, ref) => {
+    const Icon = CustomIcon || alertIcons[variant];
 
-  return (
-    <motion.div
-      ref={ref}
-      className={cn(alertVariants({ variant }), className)}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3, ease: [0.4, 0.0, 0.2, 1] }}
-      role="alert"
-      {...props}
-    >
-      <div className="flex items-start gap-3">
-        {Icon && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.2 }}
-          >
-            <Icon className="h-5 w-5 flex-shrink-0" />
-          </motion.div>
-        )}
-        <div className="flex-1 space-y-1">
-          {title && (
-            <motion.h5
-              className="font-medium leading-none tracking-tight"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15, duration: 0.2 }}
-            >
-              {title}
-            </motion.h5>
-          )}
-          {children && (
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(alertVariants({ variant }), className)}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3, ease: [0.4, 0.0, 0.2, 1] }}
+        role="alert"
+        {...props}
+      >
+        <div className="flex items-start gap-3">
+          {Icon && (
             <motion.div
-              className="text-sm opacity-90"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.2 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.2 }}
             >
-              {children}
+              <Icon className="h-5 w-5 flex-shrink-0" />
             </motion.div>
           )}
+          <div className="flex-1 space-y-1">
+            {title && (
+              <motion.h5
+                className="font-medium leading-none tracking-tight"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15, duration: 0.2 }}
+              >
+                {title}
+              </motion.h5>
+            )}
+            {children && (
+              <motion.div
+                className="text-sm opacity-90"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.2 }}
+              >
+                {children}
+              </motion.div>
+            )}
+          </div>
         </div>
-      </div>
-    </motion.div>
-  );
-});
+      </motion.div>
+    );
+  }
+);
 
 AnimatedAlert.displayName = 'AnimatedAlert';
 
@@ -410,11 +389,7 @@ export const StaggerContainer = ({ children, className, ...props }) => {
 
 export const StaggerItem = ({ children, className, ...props }) => {
   return (
-    <motion.div
-      className={className}
-      variants={theme.animations.staggerItem}
-      {...props}
-    >
+    <motion.div className={className} variants={theme.animations.staggerItem} {...props}>
       {children}
     </motion.div>
   );
@@ -424,18 +399,11 @@ export const StaggerItem = ({ children, className, ...props }) => {
 // ANIMATED MODAL/DIALOG WRAPPER
 // ===========================================
 
-export const AnimatedModalContent = React.forwardRef(({
-  className,
-  children,
-  ...props
-}, ref) => {
+export const AnimatedModalContent = React.forwardRef(({ className, children, ...props }, ref) => {
   return (
     <motion.div
       ref={ref}
-      className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center p-4',
-        className
-      )}
+      className={cn('fixed inset-0 z-50 flex items-center justify-center p-4', className)}
       initial="initial"
       animate="enter"
       exit="exit"
@@ -463,7 +431,7 @@ export const FocusTrap = ({ children, active = true }) => {
     const focusableElements = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -492,7 +460,7 @@ export const FocusTrap = ({ children, active = true }) => {
 
     container.addEventListener('keydown', handleTabKey);
     container.addEventListener('keydown', handleEscapeKey);
-    
+
     // Focus first element
     firstElement?.focus();
 
@@ -502,9 +470,5 @@ export const FocusTrap = ({ children, active = true }) => {
     };
   }, [active]);
 
-  return (
-    <div ref={containerRef}>
-      {children}
-    </div>
-  );
+  return <div ref={containerRef}>{children}</div>;
 };

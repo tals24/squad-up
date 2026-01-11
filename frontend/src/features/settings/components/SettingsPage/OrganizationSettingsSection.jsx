@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { 
+import React, { useState, useEffect } from 'react';
+import {
   Settings,
   Save,
   Loader2,
@@ -9,18 +9,22 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
-  TrendingUp
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { Switch } from "@/shared/ui/primitives/switch";
-import { Label } from "@/shared/ui/primitives/label";
-import { Checkbox } from "@/shared/ui/primitives/checkbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/primitives/collapsible";
-import { useData } from "@/app/providers/DataProvider";
-import { useUserRole } from "@/shared/hooks/useUserRole";
-import { User } from "@/shared/api";
-import { DataCard, StandardButton } from "@/shared/ui/primitives/design-system-components";
+  TrendingUp,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
+import { Badge } from '@/shared/ui/primitives/badge';
+import { Switch } from '@/shared/ui/primitives/switch';
+import { Label } from '@/shared/ui/primitives/label';
+import { Checkbox } from '@/shared/ui/primitives/checkbox';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/shared/ui/primitives/collapsible';
+import { useData } from '@/app/providers/DataProvider';
+import { useUserRole } from '@/shared/hooks/useUserRole';
+import { User } from '@/shared/api';
+import { DataCard, StandardButton } from '@/shared/ui/primitives/design-system-components';
 
 const AGE_GROUPS = ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'];
 
@@ -40,100 +44,106 @@ export default function OrganizationSettingsSection() {
   const { isAdmin } = useUserRole({
     currentUser,
     users,
-    teams
+    teams,
   });
 
   // Initialize local config from fetched config
   useEffect(() => {
     if (organizationConfig) {
       // Deep clone and ensure all override values are preserved (including false)
-      const overrides = (organizationConfig.ageGroupOverrides || []).map(override => {
+      const overrides = (organizationConfig.ageGroupOverrides || []).map((override) => {
         const cleanedOverride = { ageGroup: override.ageGroup };
         // Explicitly copy all feature override fields, preserving false values
         // Use 'in' operator to check if property exists, even if value is false
-        ['positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled', 'gameDifficultyAssessmentEnabled'].forEach(feature => {
+        [
+          'positionSpecificMetricsEnabled',
+          'detailedDisciplinaryEnabled',
+          'goalInvolvementEnabled',
+          'gameDifficultyAssessmentEnabled',
+        ].forEach((feature) => {
           if (feature in override) {
             cleanedOverride[feature] = override[feature];
           }
         });
         return cleanedOverride;
       });
-      
+
       setLocalConfig({
         features: { ...organizationConfig.features },
-        ageGroupOverrides: overrides
+        ageGroupOverrides: overrides,
       });
     }
   }, [organizationConfig]);
 
   // Handle global feature toggle
   const handleGlobalFeatureToggle = (featureName, enabled) => {
-    setLocalConfig(prev => ({
+    setLocalConfig((prev) => ({
       ...prev,
       features: {
         ...prev.features,
-        [featureName]: enabled
-      }
+        [featureName]: enabled,
+      },
     }));
   };
 
   // Handle age group override toggle
   const handleAgeGroupOverrideToggle = (ageGroup, featureName, enabled) => {
-    setLocalConfig(prev => {
+    setLocalConfig((prev) => {
       const overrides = [...(prev.ageGroupOverrides || [])];
-      const existingIndex = overrides.findIndex(o => o.ageGroup === ageGroup);
-      
+      const existingIndex = overrides.findIndex((o) => o.ageGroup === ageGroup);
+
       if (existingIndex >= 0) {
         // Update existing override
         overrides[existingIndex] = {
           ...overrides[existingIndex],
-          [featureName]: enabled
+          [featureName]: enabled,
         };
       } else {
         // Create new override
         overrides.push({
           ageGroup,
-          [featureName]: enabled
+          [featureName]: enabled,
         });
       }
-      
+
       return {
         ...prev,
-        ageGroupOverrides: overrides
+        ageGroupOverrides: overrides,
       };
     });
   };
 
   // Get age group override value (or null if not set)
   const getAgeGroupOverride = (ageGroup, featureName) => {
-    const override = localConfig?.ageGroupOverrides?.find(
-      o => o.ageGroup === ageGroup
-    );
+    const override = localConfig?.ageGroupOverrides?.find((o) => o.ageGroup === ageGroup);
     return override?.[featureName] ?? null;
   };
 
   // Reset age group override to use global setting
   const handleResetOverride = (ageGroup, featureName) => {
-    setLocalConfig(prev => {
+    setLocalConfig((prev) => {
       const overrides = [...(prev.ageGroupOverrides || [])];
-      const existingIndex = overrides.findIndex(o => o.ageGroup === ageGroup);
-      
+      const existingIndex = overrides.findIndex((o) => o.ageGroup === ageGroup);
+
       if (existingIndex >= 0) {
         // Remove the specific feature override
         delete overrides[existingIndex][featureName];
-        
+
         // If no features left in this override, remove the entire override
         const remainingFeatures = Object.keys(overrides[existingIndex]).filter(
-          key => key !== 'ageGroup' && overrides[existingIndex][key] !== null && overrides[existingIndex][key] !== undefined
+          (key) =>
+            key !== 'ageGroup' &&
+            overrides[existingIndex][key] !== null &&
+            overrides[existingIndex][key] !== undefined
         );
         if (remainingFeatures.length === 0) {
           overrides.splice(existingIndex, 1);
         }
       }
-      
+
       return {
         ...prev,
-        ageGroupOverrides: overrides
+        ageGroupOverrides: overrides,
       };
     });
   };
@@ -141,23 +151,23 @@ export default function OrganizationSettingsSection() {
   // Get age groups that have overrides for a specific feature
   const getAgeGroupsWithOverride = (featureName) => {
     if (!localConfig?.ageGroupOverrides) return [];
-    
+
     return localConfig.ageGroupOverrides
-      .filter(override => {
+      .filter((override) => {
         // Check if the feature override exists and is explicitly set
         // Both true and false are valid override values (null/undefined means no override)
         const value = override[featureName];
         return value !== null && value !== undefined && typeof value === 'boolean';
       })
-      .map(override => override.ageGroup);
+      .map((override) => override.ageGroup);
   };
 
   // Handle age group override selection (add/remove from override list)
   const handleAgeGroupOverrideSelect = (featureName, ageGroup, selected) => {
-    setLocalConfig(prev => {
+    setLocalConfig((prev) => {
       const overrides = [...(prev.ageGroupOverrides || [])];
-      const existingIndex = overrides.findIndex(o => o.ageGroup === ageGroup);
-      
+      const existingIndex = overrides.findIndex((o) => o.ageGroup === ageGroup);
+
       if (selected) {
         // Add override - initialize with current global value
         const initialValue = prev.features[featureName];
@@ -165,33 +175,36 @@ export default function OrganizationSettingsSection() {
           // Update existing override
           overrides[existingIndex] = {
             ...overrides[existingIndex],
-            [featureName]: initialValue
+            [featureName]: initialValue,
           };
         } else {
           // Create new override
           overrides.push({
             ageGroup,
-            [featureName]: initialValue
+            [featureName]: initialValue,
           });
         }
       } else {
         // Remove override
         if (existingIndex >= 0) {
           delete overrides[existingIndex][featureName];
-          
+
           // If no features left in this override, remove the entire override
           const remainingFeatures = Object.keys(overrides[existingIndex]).filter(
-            key => key !== 'ageGroup' && overrides[existingIndex][key] !== null && overrides[existingIndex][key] !== undefined
+            (key) =>
+              key !== 'ageGroup' &&
+              overrides[existingIndex][key] !== null &&
+              overrides[existingIndex][key] !== undefined
           );
           if (remainingFeatures.length === 0) {
             overrides.splice(existingIndex, 1);
           }
         }
       }
-      
+
       return {
         ...prev,
-        ageGroupOverrides: overrides
+        ageGroupOverrides: overrides,
       };
     });
   };
@@ -199,59 +212,72 @@ export default function OrganizationSettingsSection() {
   // Save configuration
   const handleSave = async () => {
     if (!isAdmin) return;
-    
+
     // Validate: Check if any changes were made
-    if (organizationConfig && JSON.stringify(localConfig) === JSON.stringify({
-      features: organizationConfig.features,
-      ageGroupOverrides: organizationConfig.ageGroupOverrides
-    })) {
+    if (
+      organizationConfig &&
+      JSON.stringify(localConfig) ===
+        JSON.stringify({
+          features: organizationConfig.features,
+          ageGroupOverrides: organizationConfig.ageGroupOverrides,
+        })
+    ) {
       setSaveMessage({ type: 'info', text: 'No changes to save' });
       setTimeout(() => setSaveMessage(null), 2000);
       return;
     }
-    
+
     // Optional: Warn if all features are disabled
-    const hasAnyFeatureEnabled = Object.values(localConfig.features).some(v => v === true);
+    const hasAnyFeatureEnabled = Object.values(localConfig.features).some((v) => v === true);
     if (!hasAnyFeatureEnabled) {
       if (!window.confirm('All features are disabled. Are you sure you want to continue?')) {
         return;
       }
     }
-    
+
     setIsSaving(true);
     setSaveMessage(null);
-    
+
     try {
       // Ensure all override values are explicitly included (even false)
-      const overridesToSave = localConfig.ageGroupOverrides.map(override => {
+      const overridesToSave = localConfig.ageGroupOverrides.map((override) => {
         const cleanedOverride = { ageGroup: override.ageGroup };
         // Explicitly include all feature fields that are set (including false)
-        ['positionSpecificMetricsEnabled', 'detailedDisciplinaryEnabled', 'goalInvolvementEnabled', 'gameDifficultyAssessmentEnabled'].forEach(feature => {
-          if (override.hasOwnProperty(feature) && override[feature] !== null && override[feature] !== undefined) {
+        [
+          'positionSpecificMetricsEnabled',
+          'detailedDisciplinaryEnabled',
+          'goalInvolvementEnabled',
+          'gameDifficultyAssessmentEnabled',
+        ].forEach((feature) => {
+          if (
+            override.hasOwnProperty(feature) &&
+            override[feature] !== null &&
+            override[feature] !== undefined
+          ) {
             cleanedOverride[feature] = override[feature];
           }
         });
         return cleanedOverride;
       });
-      
+
       const response = await fetch('http://localhost:3001/api/organizations/default/config', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify({
           features: localConfig.features,
-          ageGroupOverrides: overridesToSave
-        })
+          ageGroupOverrides: overridesToSave,
+        }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to save configuration');
-      
+
       const result = await response.json();
       setSaveMessage({ type: 'success', text: 'Configuration saved successfully' });
       await refreshConfig(); // Refresh from server
-      
+
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Save config error:', error);
@@ -288,7 +314,7 @@ export default function OrganizationSettingsSection() {
       positionSpecificMetricsEnabled: BarChart3,
       detailedDisciplinaryEnabled: Shield,
       goalInvolvementEnabled: Zap,
-      gameDifficultyAssessmentEnabled: TrendingUp
+      gameDifficultyAssessmentEnabled: TrendingUp,
     };
     return icons[featureName] || Settings;
   };
@@ -298,7 +324,7 @@ export default function OrganizationSettingsSection() {
       positionSpecificMetricsEnabled: 'from-blue-500 to-cyan-500',
       detailedDisciplinaryEnabled: 'from-purple-500 to-pink-500',
       goalInvolvementEnabled: 'from-green-500 to-emerald-500',
-      gameDifficultyAssessmentEnabled: 'from-purple-600 to-indigo-600'
+      gameDifficultyAssessmentEnabled: 'from-purple-600 to-indigo-600',
     };
     return colors[featureName] || 'from-slate-500 to-slate-600';
   };
@@ -308,7 +334,7 @@ export default function OrganizationSettingsSection() {
       positionSpecificMetricsEnabled: 'border-blue-500/50 hover:border-blue-500/70',
       detailedDisciplinaryEnabled: 'border-purple-500/50 hover:border-purple-500/70',
       goalInvolvementEnabled: 'border-green-500/50 hover:border-green-500/70',
-      gameDifficultyAssessmentEnabled: 'border-purple-600/50 hover:border-purple-600/70'
+      gameDifficultyAssessmentEnabled: 'border-purple-600/50 hover:border-purple-600/70',
     };
     return borderColors[featureName] || 'border-border-custom';
   };
@@ -317,13 +343,15 @@ export default function OrganizationSettingsSection() {
     <div className="space-y-6">
       {/* Status Message */}
       {saveMessage && (
-        <div className={`flex items-center gap-3 p-4 rounded-xl border ${
-          saveMessage.type === 'success' 
-            ? 'bg-success/10 border-green-500/30 text-success' 
-            : saveMessage.type === 'info'
-            ? 'bg-accent-primary/10 border-blue-500/30 text-accent-primary'
-            : 'bg-error/10 border-red-500/30 text-error'
-        }`}>
+        <div
+          className={`flex items-center gap-3 p-4 rounded-xl border ${
+            saveMessage.type === 'success'
+              ? 'bg-success/10 border-green-500/30 text-success'
+              : saveMessage.type === 'info'
+                ? 'bg-accent-primary/10 border-blue-500/30 text-accent-primary'
+                : 'bg-error/10 border-red-500/30 text-error'
+          }`}
+        >
           {saveMessage.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />
           ) : saveMessage.type === 'error' ? (
@@ -343,25 +371,31 @@ export default function OrganizationSettingsSection() {
       >
         <div className="space-y-4">
           {/* Position-Specific Metrics */}
-          <div className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('positionSpecificMetricsEnabled')} hover:shadow-md transition-all duration-200`}>
+          <div
+            className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('positionSpecificMetricsEnabled')} hover:shadow-md transition-all duration-200`}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
-                <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('positionSpecificMetricsEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('positionSpecificMetricsEnabled')} rounded-xl flex items-center justify-center shadow-lg`}
+                >
                   <BarChart3 className="w-6 h-6 text-text-primary" />
                 </div>
                 <div className="flex-1">
-                  <Label className="font-bold text-lg text-text-primary">Position-Specific Metrics</Label>
+                  <Label className="font-bold text-lg text-text-primary">
+                    Position-Specific Metrics
+                  </Label>
                   <p className="text-sm text-text-secondary mt-1">
                     Enable position-specific metrics for all teams (can be overridden per age group)
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`${
-                    localConfig.features.positionSpecificMetricsEnabled 
-                      ? 'bg-success/10 text-success border-green-500/30' 
+                    localConfig.features.positionSpecificMetricsEnabled
+                      ? 'bg-success/10 text-success border-green-500/30'
                       : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
                   }`}
                 >
@@ -369,11 +403,13 @@ export default function OrganizationSettingsSection() {
                 </Badge>
                 <Switch
                   checked={localConfig.features.positionSpecificMetricsEnabled}
-                  onCheckedChange={(checked) => handleGlobalFeatureToggle('positionSpecificMetricsEnabled', checked)}
+                  onCheckedChange={(checked) =>
+                    handleGlobalFeatureToggle('positionSpecificMetricsEnabled', checked)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Age Group Overrides */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors w-full">
@@ -381,7 +417,10 @@ export default function OrganizationSettingsSection() {
                 <span>Override for specific age groups</span>
                 {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length > 0 && (
                   <Badge variant="outline" className="ml-auto text-xs">
-                    {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length} override{getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length !== 1 ? 's' : ''}
+                    {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length} override
+                    {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length !== 1
+                      ? 's'
+                      : ''}
                   </Badge>
                 )}
               </CollapsibleTrigger>
@@ -392,18 +431,26 @@ export default function OrganizationSettingsSection() {
                     Select age groups to override:
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {AGE_GROUPS.map(ageGroup => {
-                      const hasOverride = getAgeGroupsWithOverride('positionSpecificMetricsEnabled').includes(ageGroup);
+                    {AGE_GROUPS.map((ageGroup) => {
+                      const hasOverride = getAgeGroupsWithOverride(
+                        'positionSpecificMetricsEnabled'
+                      ).includes(ageGroup);
                       return (
                         <div key={ageGroup} className="flex items-center gap-2">
                           <Checkbox
                             id={`positionMetrics-${ageGroup}`}
                             checked={hasOverride}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideSelect('positionSpecificMetricsEnabled', ageGroup, checked)}
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideSelect(
+                                'positionSpecificMetricsEnabled',
+                                ageGroup,
+                                checked
+                              )
+                            }
                             className="border-slate-600 data-[state=checked]:bg-accent-primary data-[state=checked]:border-accent-primary"
                           />
-                          <Label 
-                            htmlFor={`positionMetrics-${ageGroup}`} 
+                          <Label
+                            htmlFor={`positionMetrics-${ageGroup}`}
                             className="text-sm text-text-primary cursor-pointer font-normal"
                           >
                             {ageGroup}
@@ -413,31 +460,47 @@ export default function OrganizationSettingsSection() {
                     })}
                   </div>
                 </div>
-                
+
                 {/* Override Controls for Selected Age Groups */}
                 {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-text-primary block">
                       Override settings:
                     </Label>
-                    {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').map(ageGroup => (
-                      <div key={ageGroup} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    {getAgeGroupsWithOverride('positionSpecificMetricsEnabled').map((ageGroup) => (
+                      <div
+                        key={ageGroup}
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                      >
                         <Label className="text-text-primary font-semibold">{ageGroup}</Label>
                         <div className="flex items-center gap-2">
-                          <StandardButton 
+                          <StandardButton
                             variant="outline"
                             size="sm"
-                            onClick={() => handleResetOverride(ageGroup, 'positionSpecificMetricsEnabled')}
+                            onClick={() =>
+                              handleResetOverride(ageGroup, 'positionSpecificMetricsEnabled')
+                            }
                             className="text-xs h-7 px-2"
                           >
                             Reset
                           </StandardButton>
                           <span className="text-xs text-text-secondary min-w-[80px] text-right">
-                            {getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') ? 'On' : 'Off'}
+                            {getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled')
+                              ? 'On'
+                              : 'Off'}
                           </span>
                           <Switch
-                            checked={getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') ?? false}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'positionSpecificMetricsEnabled', checked)}
+                            checked={
+                              getAgeGroupOverride(ageGroup, 'positionSpecificMetricsEnabled') ??
+                              false
+                            }
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideToggle(
+                                ageGroup,
+                                'positionSpecificMetricsEnabled',
+                                checked
+                              )
+                            }
                           />
                         </div>
                       </div>
@@ -449,25 +512,30 @@ export default function OrganizationSettingsSection() {
           </div>
 
           {/* Detailed Tracking */}
-          <div className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('detailedDisciplinaryEnabled')} hover:shadow-md transition-all duration-200`}>
+          <div
+            className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('detailedDisciplinaryEnabled')} hover:shadow-md transition-all duration-200`}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
-                <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('detailedDisciplinaryEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('detailedDisciplinaryEnabled')} rounded-xl flex items-center justify-center shadow-lg`}
+                >
                   <Shield className="w-6 h-6 text-text-primary" />
                 </div>
                 <div className="flex-1">
                   <Label className="font-bold text-lg text-text-primary">Detailed Tracking</Label>
                   <p className="text-sm text-text-secondary mt-1">
-                    Track detailed match statistics including fouls, shooting, passing, and duels using 1-5 ratings
+                    Track detailed match statistics including fouls, shooting, passing, and duels
+                    using 1-5 ratings
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`${
-                    localConfig.features.detailedDisciplinaryEnabled 
-                      ? 'bg-success/10 text-success border-green-500/30' 
+                    localConfig.features.detailedDisciplinaryEnabled
+                      ? 'bg-success/10 text-success border-green-500/30'
                       : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
                   }`}
                 >
@@ -475,11 +543,13 @@ export default function OrganizationSettingsSection() {
                 </Badge>
                 <Switch
                   checked={localConfig.features.detailedDisciplinaryEnabled}
-                  onCheckedChange={(checked) => handleGlobalFeatureToggle('detailedDisciplinaryEnabled', checked)}
+                  onCheckedChange={(checked) =>
+                    handleGlobalFeatureToggle('detailedDisciplinaryEnabled', checked)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Age Group Overrides */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors w-full">
@@ -487,7 +557,10 @@ export default function OrganizationSettingsSection() {
                 <span>Override for specific age groups</span>
                 {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length > 0 && (
                   <Badge variant="outline" className="ml-auto text-xs">
-                    {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length} override{getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length !== 1 ? 's' : ''}
+                    {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length} override
+                    {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length !== 1
+                      ? 's'
+                      : ''}
                   </Badge>
                 )}
               </CollapsibleTrigger>
@@ -498,18 +571,26 @@ export default function OrganizationSettingsSection() {
                     Select age groups to override:
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {AGE_GROUPS.map(ageGroup => {
-                      const hasOverride = getAgeGroupsWithOverride('detailedDisciplinaryEnabled').includes(ageGroup);
+                    {AGE_GROUPS.map((ageGroup) => {
+                      const hasOverride = getAgeGroupsWithOverride(
+                        'detailedDisciplinaryEnabled'
+                      ).includes(ageGroup);
                       return (
                         <div key={ageGroup} className="flex items-center gap-2">
                           <Checkbox
                             id={`disciplinary-${ageGroup}`}
                             checked={hasOverride}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideSelect('detailedDisciplinaryEnabled', ageGroup, checked)}
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideSelect(
+                                'detailedDisciplinaryEnabled',
+                                ageGroup,
+                                checked
+                              )
+                            }
                             className="border-slate-600 data-[state=checked]:bg-accent-primary data-[state=checked]:border-accent-primary"
                           />
-                          <Label 
-                            htmlFor={`disciplinary-${ageGroup}`} 
+                          <Label
+                            htmlFor={`disciplinary-${ageGroup}`}
                             className="text-sm text-text-primary cursor-pointer font-normal"
                           >
                             {ageGroup}
@@ -519,31 +600,46 @@ export default function OrganizationSettingsSection() {
                     })}
                   </div>
                 </div>
-                
+
                 {/* Override Controls for Selected Age Groups */}
                 {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-text-primary block">
                       Override settings:
                     </Label>
-                    {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').map(ageGroup => (
-                      <div key={ageGroup} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    {getAgeGroupsWithOverride('detailedDisciplinaryEnabled').map((ageGroup) => (
+                      <div
+                        key={ageGroup}
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                      >
                         <Label className="text-text-primary font-semibold">{ageGroup}</Label>
                         <div className="flex items-center gap-2">
-                          <StandardButton 
+                          <StandardButton
                             variant="outline"
                             size="sm"
-                            onClick={() => handleResetOverride(ageGroup, 'detailedDisciplinaryEnabled')}
+                            onClick={() =>
+                              handleResetOverride(ageGroup, 'detailedDisciplinaryEnabled')
+                            }
                             className="text-xs h-7 px-2"
                           >
                             Reset
                           </StandardButton>
                           <span className="text-xs text-text-secondary min-w-[80px] text-right">
-                            {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') ? 'On' : 'Off'}
+                            {getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled')
+                              ? 'On'
+                              : 'Off'}
                           </span>
                           <Switch
-                            checked={getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') ?? false}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'detailedDisciplinaryEnabled', checked)}
+                            checked={
+                              getAgeGroupOverride(ageGroup, 'detailedDisciplinaryEnabled') ?? false
+                            }
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideToggle(
+                                ageGroup,
+                                'detailedDisciplinaryEnabled',
+                                checked
+                              )
+                            }
                           />
                         </div>
                       </div>
@@ -555,25 +651,31 @@ export default function OrganizationSettingsSection() {
           </div>
 
           {/* Goal Involvement Tracking */}
-          <div className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('goalInvolvementEnabled')} hover:shadow-md transition-all duration-200`}>
+          <div
+            className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('goalInvolvementEnabled')} hover:shadow-md transition-all duration-200`}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
-                <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('goalInvolvementEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('goalInvolvementEnabled')} rounded-xl flex items-center justify-center shadow-lg`}
+                >
                   <Zap className="w-6 h-6 text-text-primary" />
                 </div>
                 <div className="flex-1">
-                  <Label className="font-bold text-lg text-text-primary">Goal Involvement Tracking</Label>
+                  <Label className="font-bold text-lg text-text-primary">
+                    Goal Involvement Tracking
+                  </Label>
                   <p className="text-sm text-text-secondary mt-1">
                     Track indirect goal contributors (pre-assists, etc.)
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`${
-                    localConfig.features.goalInvolvementEnabled 
-                      ? 'bg-success/10 text-success border-green-500/30' 
+                    localConfig.features.goalInvolvementEnabled
+                      ? 'bg-success/10 text-success border-green-500/30'
                       : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
                   }`}
                 >
@@ -581,11 +683,13 @@ export default function OrganizationSettingsSection() {
                 </Badge>
                 <Switch
                   checked={localConfig.features.goalInvolvementEnabled}
-                  onCheckedChange={(checked) => handleGlobalFeatureToggle('goalInvolvementEnabled', checked)}
+                  onCheckedChange={(checked) =>
+                    handleGlobalFeatureToggle('goalInvolvementEnabled', checked)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Age Group Overrides */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors w-full">
@@ -593,7 +697,8 @@ export default function OrganizationSettingsSection() {
                 <span>Override for specific age groups</span>
                 {getAgeGroupsWithOverride('goalInvolvementEnabled').length > 0 && (
                   <Badge variant="outline" className="ml-auto text-xs">
-                    {getAgeGroupsWithOverride('goalInvolvementEnabled').length} override{getAgeGroupsWithOverride('goalInvolvementEnabled').length !== 1 ? 's' : ''}
+                    {getAgeGroupsWithOverride('goalInvolvementEnabled').length} override
+                    {getAgeGroupsWithOverride('goalInvolvementEnabled').length !== 1 ? 's' : ''}
                   </Badge>
                 )}
               </CollapsibleTrigger>
@@ -604,18 +709,25 @@ export default function OrganizationSettingsSection() {
                     Select age groups to override:
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {AGE_GROUPS.map(ageGroup => {
-                      const hasOverride = getAgeGroupsWithOverride('goalInvolvementEnabled').includes(ageGroup);
+                    {AGE_GROUPS.map((ageGroup) => {
+                      const hasOverride =
+                        getAgeGroupsWithOverride('goalInvolvementEnabled').includes(ageGroup);
                       return (
                         <div key={ageGroup} className="flex items-center gap-2">
                           <Checkbox
                             id={`goalInvolvement-${ageGroup}`}
                             checked={hasOverride}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideSelect('goalInvolvementEnabled', ageGroup, checked)}
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideSelect(
+                                'goalInvolvementEnabled',
+                                ageGroup,
+                                checked
+                              )
+                            }
                             className="border-slate-600 data-[state=checked]:bg-accent-primary data-[state=checked]:border-accent-primary"
                           />
-                          <Label 
-                            htmlFor={`goalInvolvement-${ageGroup}`} 
+                          <Label
+                            htmlFor={`goalInvolvement-${ageGroup}`}
                             className="text-sm text-text-primary cursor-pointer font-normal"
                           >
                             {ageGroup}
@@ -625,18 +737,21 @@ export default function OrganizationSettingsSection() {
                     })}
                   </div>
                 </div>
-                
+
                 {/* Override Controls for Selected Age Groups */}
                 {getAgeGroupsWithOverride('goalInvolvementEnabled').length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-text-primary block">
                       Override settings:
                     </Label>
-                    {getAgeGroupsWithOverride('goalInvolvementEnabled').map(ageGroup => (
-                      <div key={ageGroup} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    {getAgeGroupsWithOverride('goalInvolvementEnabled').map((ageGroup) => (
+                      <div
+                        key={ageGroup}
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                      >
                         <Label className="text-text-primary font-semibold">{ageGroup}</Label>
                         <div className="flex items-center gap-2">
-                          <StandardButton 
+                          <StandardButton
                             variant="outline"
                             size="sm"
                             onClick={() => handleResetOverride(ageGroup, 'goalInvolvementEnabled')}
@@ -648,8 +763,16 @@ export default function OrganizationSettingsSection() {
                             {getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') ? 'On' : 'Off'}
                           </span>
                           <Switch
-                            checked={getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') ?? false}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'goalInvolvementEnabled', checked)}
+                            checked={
+                              getAgeGroupOverride(ageGroup, 'goalInvolvementEnabled') ?? false
+                            }
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideToggle(
+                                ageGroup,
+                                'goalInvolvementEnabled',
+                                checked
+                              )
+                            }
                           />
                         </div>
                       </div>
@@ -661,25 +784,32 @@ export default function OrganizationSettingsSection() {
           </div>
 
           {/* Game Difficulty Assessment */}
-          <div className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('gameDifficultyAssessmentEnabled')} hover:shadow-md transition-all duration-200`}>
+          <div
+            className={`p-4 rounded-xl bg-bg-primary/50 border ${getFeatureBorderColor('gameDifficultyAssessmentEnabled')} hover:shadow-md transition-all duration-200`}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
-                <div className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('gameDifficultyAssessmentEnabled')} rounded-xl flex items-center justify-center shadow-lg`}>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-r ${getFeatureColor('gameDifficultyAssessmentEnabled')} rounded-xl flex items-center justify-center shadow-lg`}
+                >
                   <TrendingUp className="w-6 h-6 text-text-primary" />
                 </div>
                 <div className="flex-1">
-                  <Label className="font-bold text-lg text-text-primary">Game Difficulty Assessment</Label>
+                  <Label className="font-bold text-lg text-text-primary">
+                    Game Difficulty Assessment
+                  </Label>
                   <p className="text-sm text-text-secondary mt-1">
-                    Enable pre-game difficulty assessment using opponent strength, match importance, and external conditions
+                    Enable pre-game difficulty assessment using opponent strength, match importance,
+                    and external conditions
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={`${
-                    localConfig.features.gameDifficultyAssessmentEnabled 
-                      ? 'bg-success/10 text-success border-green-500/30' 
+                    localConfig.features.gameDifficultyAssessmentEnabled
+                      ? 'bg-success/10 text-success border-green-500/30'
                       : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
                   }`}
                 >
@@ -687,11 +817,13 @@ export default function OrganizationSettingsSection() {
                 </Badge>
                 <Switch
                   checked={localConfig.features.gameDifficultyAssessmentEnabled}
-                  onCheckedChange={(checked) => handleGlobalFeatureToggle('gameDifficultyAssessmentEnabled', checked)}
+                  onCheckedChange={(checked) =>
+                    handleGlobalFeatureToggle('gameDifficultyAssessmentEnabled', checked)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Age Group Overrides */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors w-full">
@@ -699,7 +831,10 @@ export default function OrganizationSettingsSection() {
                 <span>Override for specific age groups</span>
                 {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length > 0 && (
                   <Badge variant="outline" className="ml-auto text-xs">
-                    {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length} override{getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length !== 1 ? 's' : ''}
+                    {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length} override
+                    {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length !== 1
+                      ? 's'
+                      : ''}
                   </Badge>
                 )}
               </CollapsibleTrigger>
@@ -710,18 +845,26 @@ export default function OrganizationSettingsSection() {
                     Select age groups to override:
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {AGE_GROUPS.map(ageGroup => {
-                      const hasOverride = getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').includes(ageGroup);
+                    {AGE_GROUPS.map((ageGroup) => {
+                      const hasOverride = getAgeGroupsWithOverride(
+                        'gameDifficultyAssessmentEnabled'
+                      ).includes(ageGroup);
                       return (
                         <div key={ageGroup} className="flex items-center gap-2">
                           <Checkbox
                             id={`difficultyAssessment-${ageGroup}`}
                             checked={hasOverride}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideSelect('gameDifficultyAssessmentEnabled', ageGroup, checked)}
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideSelect(
+                                'gameDifficultyAssessmentEnabled',
+                                ageGroup,
+                                checked
+                              )
+                            }
                             className="border-slate-600 data-[state=checked]:bg-accent-primary data-[state=checked]:border-accent-primary"
                           />
-                          <Label 
-                            htmlFor={`difficultyAssessment-${ageGroup}`} 
+                          <Label
+                            htmlFor={`difficultyAssessment-${ageGroup}`}
                             className="text-sm text-text-primary cursor-pointer font-normal"
                           >
                             {ageGroup}
@@ -731,31 +874,47 @@ export default function OrganizationSettingsSection() {
                     })}
                   </div>
                 </div>
-                
+
                 {/* Override Controls for Selected Age Groups */}
                 {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-text-primary block">
                       Override settings:
                     </Label>
-                    {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').map(ageGroup => (
-                      <div key={ageGroup} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                    {getAgeGroupsWithOverride('gameDifficultyAssessmentEnabled').map((ageGroup) => (
+                      <div
+                        key={ageGroup}
+                        className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700"
+                      >
                         <Label className="text-text-primary font-semibold">{ageGroup}</Label>
                         <div className="flex items-center gap-2">
-                          <StandardButton 
+                          <StandardButton
                             variant="outline"
                             size="sm"
-                            onClick={() => handleResetOverride(ageGroup, 'gameDifficultyAssessmentEnabled')}
+                            onClick={() =>
+                              handleResetOverride(ageGroup, 'gameDifficultyAssessmentEnabled')
+                            }
                             className="text-xs h-7 px-2"
                           >
                             Reset
                           </StandardButton>
                           <span className="text-xs text-text-secondary min-w-[80px] text-right">
-                            {getAgeGroupOverride(ageGroup, 'gameDifficultyAssessmentEnabled') ? 'On' : 'Off'}
+                            {getAgeGroupOverride(ageGroup, 'gameDifficultyAssessmentEnabled')
+                              ? 'On'
+                              : 'Off'}
                           </span>
                           <Switch
-                            checked={getAgeGroupOverride(ageGroup, 'gameDifficultyAssessmentEnabled') ?? false}
-                            onCheckedChange={(checked) => handleAgeGroupOverrideToggle(ageGroup, 'gameDifficultyAssessmentEnabled', checked)}
+                            checked={
+                              getAgeGroupOverride(ageGroup, 'gameDifficultyAssessmentEnabled') ??
+                              false
+                            }
+                            onCheckedChange={(checked) =>
+                              handleAgeGroupOverrideToggle(
+                                ageGroup,
+                                'gameDifficultyAssessmentEnabled',
+                                checked
+                              )
+                            }
                           />
                         </div>
                       </div>
@@ -770,10 +929,12 @@ export default function OrganizationSettingsSection() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <StandardButton 
-          onClick={handleSave} 
+        <StandardButton
+          onClick={handleSave}
           disabled={isSaving}
-          icon={isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          icon={
+            isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />
+          }
         >
           {isSaving ? 'Saving...' : 'Save Configuration'}
         </StandardButton>

@@ -2,34 +2,34 @@ import React from 'react';
 import DrillCanvas from '../DrillCanvas';
 import { Loader2 } from 'lucide-react';
 
-export default function DrillDesignerCanvas({ 
-  initialElements, 
-  onElementsChange, 
-  isLoading, 
+export default function DrillDesignerCanvas({
+  initialElements,
+  onElementsChange,
+  isLoading,
   isReadOnly,
-  activeTool 
+  activeTool,
 }) {
   // Handle drag and drop from toolbar
   const handleDrop = (e) => {
     e.preventDefault();
     const shapeType = e.dataTransfer.getData('shape/type');
     const fromToolbar = e.dataTransfer.getData('fromToolbar');
-    
+
     if (shapeType && fromToolbar === 'true') {
       const canvas = e.currentTarget;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       const newElement = {
         id: Date.now(),
         type: shapeType,
         x,
         y,
         radius: shapeType === 'cone-yellow' ? 25 : 20,
-        number: null
+        number: null,
       };
-      
+
       const newElements = [...(initialElements || []), newElement];
       onElementsChange?.(newElements);
     }

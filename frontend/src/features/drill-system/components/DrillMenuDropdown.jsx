@@ -8,7 +8,13 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/primitives/dropdown-menu';
 
-const DrillMenuDropdown = ({ drill, onViewDetails, onRemove, className = "", showRemove = true }) => {
+const DrillMenuDropdown = ({
+  drill,
+  onViewDetails,
+  onRemove,
+  className = '',
+  showRemove = true,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleViewDetails = () => {
@@ -32,8 +38,8 @@ const DrillMenuDropdown = ({ drill, onViewDetails, onRemove, className = "", sho
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end" 
+      <DropdownMenuContent
+        align="end"
         className="w-48 bg-slate-800 border-slate-600 shadow-xl"
         side="left"
       >

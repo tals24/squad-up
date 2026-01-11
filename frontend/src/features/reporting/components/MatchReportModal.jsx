@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Trophy, Users, Target, TrendingUp, Download, Save, Edit, BarChart3, PieChart } from 'lucide-react';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge, Textarea } from '@/shared/ui/primitives/design-system-components';
+import {
+  X,
+  FileText,
+  Trophy,
+  Users,
+  Target,
+  TrendingUp,
+  Download,
+  Save,
+  Edit,
+  BarChart3,
+  PieChart,
+} from 'lucide-react';
+import {
+  Button,
+  Input,
+  Label,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+  Textarea,
+} from '@/shared/ui/primitives/design-system-components';
 
-const MatchReportModal = ({ 
-  isOpen, 
-  onClose, 
-  game, 
-  gameRoster, 
-  formation,
-  onSave 
-}) => {
+const MatchReportModal = ({ isOpen, onClose, game, gameRoster, formation, onSave }) => {
   const [report, setReport] = useState({
     matchSummary: '',
     keyMoments: [],
@@ -17,13 +32,13 @@ const MatchReportModal = ({
       overall: '',
       strengths: [],
       weaknesses: [],
-      improvements: []
+      improvements: [],
     },
     individualHighlights: [],
     tacticalAnalysis: {
       formation: '',
       effectiveness: '',
-      adjustments: []
+      adjustments: [],
     },
     statistics: {
       possession: 50,
@@ -34,9 +49,9 @@ const MatchReportModal = ({
       tackles: 0,
       fouls: 0,
       corners: 0,
-      offsides: 0
+      offsides: 0,
     },
-    recommendations: []
+    recommendations: [],
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -56,13 +71,13 @@ const MatchReportModal = ({
           overall: '',
           strengths: [],
           weaknesses: [],
-          improvements: []
+          improvements: [],
         },
         individualHighlights: [],
         tacticalAnalysis: {
           formation: formation?.length > 0 ? 'Custom Formation' : 'No Formation Set',
           effectiveness: '',
-          adjustments: []
+          adjustments: [],
         },
         statistics: {
           possession: 50,
@@ -73,9 +88,9 @@ const MatchReportModal = ({
           tackles: 0,
           fouls: 0,
           corners: 0,
-          offsides: 0
+          offsides: 0,
         },
-        recommendations: []
+        recommendations: [],
       });
     }
   }, [isOpen, game, formation]);
@@ -85,8 +100,8 @@ const MatchReportModal = ({
     try {
       console.log('🎮 Saving match report:', report);
       // TODO: Save report data to API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       onSave?.(report);
       setIsEditing(false);
     } catch (error) {
@@ -97,59 +112,74 @@ const MatchReportModal = ({
   };
 
   const handleInputChange = (section, field, value) => {
-    setReport(prev => ({
+    setReport((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handleArrayInputChange = (section, field, index, value) => {
-    setReport(prev => ({
+    setReport((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: prev[section][field].map((item, i) => i === index ? value : item)
-      }
+        [field]: prev[section][field].map((item, i) => (i === index ? value : item)),
+      },
     }));
   };
 
   const addArrayItem = (section, field) => {
-    setReport(prev => ({
+    setReport((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: [...prev[section][field], '']
-      }
+        [field]: [...prev[section][field], ''],
+      },
     }));
   };
 
   const removeArrayItem = (section, field, index) => {
-    setReport(prev => ({
+    setReport((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: prev[section][field].filter((_, i) => i !== index)
-      }
+        [field]: prev[section][field].filter((_, i) => i !== index),
+      },
     }));
   };
 
   const getTeamStats = () => {
-    const startingPlayers = gameRoster.filter(roster => roster.status === 'Starting Lineup');
-    const totalGoals = startingPlayers.reduce((sum, roster) => sum + (roster.performance?.goals || 0), 0);
-    const totalAssists = startingPlayers.reduce((sum, roster) => sum + (roster.performance?.assists || 0), 0);
-    const totalPasses = startingPlayers.reduce((sum, roster) => sum + (roster.performance?.passes || 0), 0);
-    const totalTackles = startingPlayers.reduce((sum, roster) => sum + (roster.performance?.tackles || 0), 0);
-    
+    const startingPlayers = gameRoster.filter((roster) => roster.status === 'Starting Lineup');
+    const totalGoals = startingPlayers.reduce(
+      (sum, roster) => sum + (roster.performance?.goals || 0),
+      0
+    );
+    const totalAssists = startingPlayers.reduce(
+      (sum, roster) => sum + (roster.performance?.assists || 0),
+      0
+    );
+    const totalPasses = startingPlayers.reduce(
+      (sum, roster) => sum + (roster.performance?.passes || 0),
+      0
+    );
+    const totalTackles = startingPlayers.reduce(
+      (sum, roster) => sum + (roster.performance?.tackles || 0),
+      0
+    );
+
     return {
       totalGoals,
       totalAssists,
       totalPasses,
       totalTackles,
-      averageRating: startingPlayers.length > 0 ? 
-        startingPlayers.reduce((sum, roster) => sum + (roster.performance?.rating || 0), 0) / startingPlayers.length : 0
+      averageRating:
+        startingPlayers.length > 0
+          ? startingPlayers.reduce((sum, roster) => sum + (roster.performance?.rating || 0), 0) /
+            startingPlayers.length
+          : 0,
     };
   };
 
@@ -164,7 +194,7 @@ const MatchReportModal = ({
     { id: 'summary', label: 'Summary', icon: FileText },
     { id: 'performance', label: 'Performance', icon: TrendingUp },
     { id: 'tactics', label: 'Tactics', icon: Target },
-    { id: 'statistics', label: 'Statistics', icon: BarChart3 }
+    { id: 'statistics', label: 'Statistics', icon: BarChart3 },
   ];
 
   return (
@@ -249,7 +279,9 @@ const MatchReportModal = ({
                     {isEditing ? (
                       <Textarea
                         value={report.matchSummary}
-                        onChange={(e) => setReport(prev => ({ ...prev, matchSummary: e.target.value }))}
+                        onChange={(e) =>
+                          setReport((prev) => ({ ...prev, matchSummary: e.target.value }))
+                        }
                         className="w-full h-32 bg-slate-600 border border-slate-500 rounded-lg p-3 text-white placeholder-slate-400 resize-none"
                         placeholder="Describe the overall match, key events, and final outcome..."
                       />
@@ -272,7 +304,9 @@ const MatchReportModal = ({
                           <div key={index} className="flex items-center gap-2">
                             <Input
                               value={moment}
-                              onChange={(e) => handleArrayInputChange('keyMoments', index, e.target.value)}
+                              onChange={(e) =>
+                                handleArrayInputChange('keyMoments', index, e.target.value)
+                              }
                               className="bg-slate-600 border-slate-500 text-white"
                               placeholder="Describe a key moment..."
                             />
@@ -322,25 +356,33 @@ const MatchReportModal = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-cyan-400 mb-1">{teamStats.totalGoals}</div>
+                      <div className="text-2xl font-bold text-cyan-400 mb-1">
+                        {teamStats.totalGoals}
+                      </div>
                       <div className="text-sm text-slate-400">Goals</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-green-400 mb-1">{teamStats.totalAssists}</div>
+                      <div className="text-2xl font-bold text-green-400 mb-1">
+                        {teamStats.totalAssists}
+                      </div>
                       <div className="text-sm text-slate-400">Assists</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-yellow-400 mb-1">{teamStats.totalPasses}</div>
+                      <div className="text-2xl font-bold text-yellow-400 mb-1">
+                        {teamStats.totalPasses}
+                      </div>
                       <div className="text-sm text-slate-400">Passes</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-purple-400 mb-1">{teamStats.averageRating.toFixed(1)}</div>
+                      <div className="text-2xl font-bold text-purple-400 mb-1">
+                        {teamStats.averageRating.toFixed(1)}
+                      </div>
                       <div className="text-sm text-slate-400">Avg Rating</div>
                     </CardContent>
                   </Card>
@@ -356,7 +398,9 @@ const MatchReportModal = ({
                       {isEditing ? (
                         <Textarea
                           value={report.teamPerformance.overall}
-                          onChange={(e) => handleInputChange('teamPerformance', 'overall', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('teamPerformance', 'overall', e.target.value)
+                          }
                           className="w-full h-24 bg-slate-600 border border-slate-500 rounded-lg p-3 text-white placeholder-slate-400 resize-none"
                           placeholder="Overall team performance assessment..."
                         />
@@ -376,12 +420,21 @@ const MatchReportModal = ({
                               <div key={index} className="flex items-center gap-2">
                                 <Input
                                   value={strength}
-                                  onChange={(e) => handleArrayInputChange('teamPerformance', 'strengths', index, e.target.value)}
+                                  onChange={(e) =>
+                                    handleArrayInputChange(
+                                      'teamPerformance',
+                                      'strengths',
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
                                   className="bg-slate-600 border-slate-500 text-white"
                                   placeholder="Team strength..."
                                 />
                                 <Button
-                                  onClick={() => removeArrayItem('teamPerformance', 'strengths', index)}
+                                  onClick={() =>
+                                    removeArrayItem('teamPerformance', 'strengths', index)
+                                  }
                                   size="sm"
                                   variant="outline"
                                   className="border-red-500/50 text-red-400 hover:bg-red-500/20"
@@ -423,12 +476,21 @@ const MatchReportModal = ({
                               <div key={index} className="flex items-center gap-2">
                                 <Input
                                   value={improvement}
-                                  onChange={(e) => handleArrayInputChange('teamPerformance', 'improvements', index, e.target.value)}
+                                  onChange={(e) =>
+                                    handleArrayInputChange(
+                                      'teamPerformance',
+                                      'improvements',
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
                                   className="bg-slate-600 border-slate-500 text-white"
                                   placeholder="Area for improvement..."
                                 />
                                 <Button
-                                  onClick={() => removeArrayItem('teamPerformance', 'improvements', index)}
+                                  onClick={() =>
+                                    removeArrayItem('teamPerformance', 'improvements', index)
+                                  }
                                   size="sm"
                                   variant="outline"
                                   className="border-red-500/50 text-red-400 hover:bg-red-500/20"
@@ -485,7 +547,9 @@ const MatchReportModal = ({
                       {isEditing ? (
                         <Textarea
                           value={report.tacticalAnalysis.effectiveness}
-                          onChange={(e) => handleInputChange('tacticalAnalysis', 'effectiveness', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('tacticalAnalysis', 'effectiveness', e.target.value)
+                          }
                           className="w-full h-24 bg-slate-600 border border-slate-500 rounded-lg p-3 text-white placeholder-slate-400 resize-none"
                           placeholder="How effective was the formation? What worked well?"
                         />
@@ -504,12 +568,21 @@ const MatchReportModal = ({
                             <div key={index} className="flex items-center gap-2">
                               <Input
                                 value={adjustment}
-                                onChange={(e) => handleArrayInputChange('tacticalAnalysis', 'adjustments', index, e.target.value)}
+                                onChange={(e) =>
+                                  handleArrayInputChange(
+                                    'tacticalAnalysis',
+                                    'adjustments',
+                                    index,
+                                    e.target.value
+                                  )
+                                }
                                 className="bg-slate-600 border-slate-500 text-white"
                                 placeholder="Tactical adjustment made..."
                               />
                               <Button
-                                onClick={() => removeArrayItem('tacticalAnalysis', 'adjustments', index)}
+                                onClick={() =>
+                                  removeArrayItem('tacticalAnalysis', 'adjustments', index)
+                                }
                                 size="sm"
                                 variant="outline"
                                 className="border-red-500/50 text-red-400 hover:bg-red-500/20"
@@ -553,25 +626,33 @@ const MatchReportModal = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-cyan-400 mb-1">{report.statistics.possession}%</div>
+                      <div className="text-2xl font-bold text-cyan-400 mb-1">
+                        {report.statistics.possession}%
+                      </div>
                       <div className="text-sm text-slate-400">Possession</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-green-400 mb-1">{report.statistics.shots}</div>
+                      <div className="text-2xl font-bold text-green-400 mb-1">
+                        {report.statistics.shots}
+                      </div>
                       <div className="text-sm text-slate-400">Shots</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-yellow-400 mb-1">{report.statistics.passAccuracy}%</div>
+                      <div className="text-2xl font-bold text-yellow-400 mb-1">
+                        {report.statistics.passAccuracy}%
+                      </div>
                       <div className="text-sm text-slate-400">Pass Accuracy</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-red-400 mb-1">{report.statistics.tackles}</div>
+                      <div className="text-2xl font-bold text-red-400 mb-1">
+                        {report.statistics.tackles}
+                      </div>
                       <div className="text-sm text-slate-400">Tackles</div>
                     </CardContent>
                   </Card>
@@ -586,17 +667,21 @@ const MatchReportModal = ({
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {Object.entries(report.statistics).map(([key, value]) => (
                           <div key={key}>
-                            <Label className="text-slate-300 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                            <Label className="text-slate-300 capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </Label>
                             <Input
                               type="number"
                               value={value}
-                              onChange={(e) => setReport(prev => ({
-                                ...prev,
-                                statistics: {
-                                  ...prev.statistics,
-                                  [key]: parseInt(e.target.value) || 0
-                                }
-                              }))}
+                              onChange={(e) =>
+                                setReport((prev) => ({
+                                  ...prev,
+                                  statistics: {
+                                    ...prev.statistics,
+                                    [key]: parseInt(e.target.value) || 0,
+                                  },
+                                }))
+                              }
                               className="bg-slate-600 border-slate-500 text-white"
                               min="0"
                             />
@@ -608,7 +693,9 @@ const MatchReportModal = ({
                         {Object.entries(report.statistics).map(([key, value]) => (
                           <div key={key} className="text-center p-3 bg-slate-600/50 rounded-lg">
                             <div className="text-lg font-bold text-white">{value}</div>
-                            <div className="text-sm text-slate-400 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                            <div className="text-sm text-slate-400 capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </div>
                           </div>
                         ))}
                       </div>

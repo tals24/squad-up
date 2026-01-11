@@ -1,17 +1,17 @@
 /**
  * SquadUp Theme Context
- * 
+ *
  * React context for managing dark mode state and theme switching
  * with persistence and system preference detection.
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  getStoredTheme, 
-  setStoredTheme, 
-  getSystemTheme, 
-  getResolvedTheme, 
-  applyTheme 
+import {
+  getStoredTheme,
+  setStoredTheme,
+  getSystemTheme,
+  getResolvedTheme,
+  applyTheme,
 } from '@/lib/dark-mode';
 
 // ===========================================
@@ -57,7 +57,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'system' }) => {
     if (!isClient) return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleChange = () => {
       if (mode === 'system') {
         const newResolvedTheme = getSystemTheme();
@@ -101,11 +101,7 @@ export const ThemeProvider = ({ children, defaultTheme = 'system' }) => {
     toggleTheme,
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 // ===========================================
@@ -127,7 +123,7 @@ export const ThemeToggle = ({ variant = 'ghost', size = 'md', showLabel = false 
 
   const labels = {
     light: 'Light',
-    dark: 'Dark',  
+    dark: 'Dark',
     system: 'System',
   };
 
@@ -159,11 +155,7 @@ export const ThemeToggle = ({ variant = 'ghost', size = 'md', showLabel = false 
       >
         <CurrentIcon className="h-4 w-4" />
       </motion.div>
-      {showLabel && (
-        <span className="ml-2">
-          {labels[mode]}
-        </span>
-      )}
+      {showLabel && <span className="ml-2">{labels[mode]}</span>}
     </AnimatedButton>
   );
 };
@@ -172,7 +164,13 @@ export const ThemeToggle = ({ variant = 'ghost', size = 'md', showLabel = false 
 // THEME SELECTOR DROPDOWN
 // ===========================================
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/primitives/design-system-components';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/design-system-components';
 
 export const ThemeSelector = ({ className }) => {
   const { mode, setMode } = useTheme();

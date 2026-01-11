@@ -2,22 +2,30 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { Card, CardContent } from '@/shared/ui/primitives/card';
 import { Input } from '@/shared/ui/primitives/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/primitives/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/select';
 
 /**
  * SearchFilter Component
  * Provides consistent search and filter functionality across pages
  */
-const SearchFilter = ({ 
-  searchValue, 
-  onSearchChange, 
-  placeholder = "Search...",
+const SearchFilter = ({
+  searchValue,
+  onSearchChange,
+  placeholder = 'Search...',
   filters = [],
-  className = "",
-  children // For additional custom filter elements
+  className = '',
+  children, // For additional custom filter elements
 }) => {
   return (
-    <Card className={`shadow-2xl border border-slate-700 bg-slate-800/70 backdrop-blur-sm ${className}`}>
+    <Card
+      className={`shadow-2xl border border-slate-700 bg-slate-800/70 backdrop-blur-sm ${className}`}
+    >
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search Input */}
@@ -30,7 +38,7 @@ const SearchFilter = ({
               className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400 focus:border-cyan-400 focus:ring-cyan-400/20"
             />
           </div>
-          
+
           {/* Filter Selects */}
           {filters.map((filter, index) => (
             <Select key={index} value={filter.value} onValueChange={filter.onChange}>
@@ -38,9 +46,9 @@ const SearchFilter = ({
                 <SelectValue placeholder={filter.placeholder} />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600 text-white">
-                {filter.options.map(option => (
-                  <SelectItem 
-                    key={option.value} 
+                {filter.options.map((option) => (
+                  <SelectItem
+                    key={option.value}
                     value={option.value}
                     className="text-white focus:bg-slate-700 hover:bg-slate-700"
                   >
@@ -50,7 +58,7 @@ const SearchFilter = ({
               </SelectContent>
             </Select>
           ))}
-          
+
           {/* Custom children for additional filters */}
           {children}
         </div>

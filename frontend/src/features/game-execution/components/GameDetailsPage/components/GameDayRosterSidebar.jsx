@@ -1,7 +1,7 @@
-import React from "react";
-import { Users } from "lucide-react";
-import { Badge } from "@/shared/ui/primitives/badge";
-import PlayerCard from "./PlayerCard";
+import React from 'react';
+import { Users } from 'lucide-react';
+import { Badge } from '@/shared/ui/primitives/badge';
+import PlayerCard from './PlayerCard';
 
 export default function GameDayRosterSidebar({
   playersOnPitch,
@@ -26,15 +26,17 @@ export default function GameDayRosterSidebar({
           Game Day Roster
         </h2>
         {isScheduled && (
-          <p className="text-xs text-slate-400 mt-1">Drag players to the formation or click to assign</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Drag players to the formation or click to assign
+          </p>
         )}
       </div>
 
-      <div 
+      <div
         className="flex-1 overflow-y-auto p-4 space-y-6"
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+          scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent',
         }}
       >
         {/* Players on Pitch */}
@@ -42,7 +44,12 @@ export default function GameDayRosterSidebar({
           <div>
             <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center justify-between">
               <span>Players on Pitch</span>
-              <Badge variant="secondary" className="text-xs bg-green-600/20 text-green-400 border-green-600/30">{playersOnPitch.length}</Badge>
+              <Badge
+                variant="secondary"
+                className="text-xs bg-green-600/20 text-green-400 border-green-600/30"
+              >
+                {playersOnPitch.length}
+              </Badge>
             </h3>
             <div className="space-y-2">
               {playersOnPitch.map((player) => (
@@ -68,7 +75,12 @@ export default function GameDayRosterSidebar({
           <div>
             <h3 className="text-sm font-semibold text-green-400 mb-2 flex items-center justify-between">
               <span>Bench</span>
-              <Badge variant="secondary" className="text-xs bg-green-600/20 text-green-400 border-green-600/30">{benchPlayers.length}</Badge>
+              <Badge
+                variant="secondary"
+                className="text-xs bg-green-600/20 text-green-400 border-green-600/30"
+              >
+                {benchPlayers.length}
+              </Badge>
             </h3>
             <div className="space-y-2">
               {benchPlayers.map((player) => (
@@ -97,7 +109,12 @@ export default function GameDayRosterSidebar({
           <div>
             <h3 className="text-sm font-semibold text-slate-400 mb-2 flex items-center justify-between">
               <span>Squad Players</span>
-              <Badge variant="secondary" className="text-xs bg-slate-600/20 text-slate-400 border-slate-600/30">{squadPlayers.length}</Badge>
+              <Badge
+                variant="secondary"
+                className="text-xs bg-slate-600/20 text-slate-400 border-slate-600/30"
+              >
+                {squadPlayers.length}
+              </Badge>
             </h3>
             <div className="space-y-2">
               {squadPlayers.map((player) => (
@@ -124,4 +141,3 @@ export default function GameDayRosterSidebar({
     </div>
   );
 }
-

@@ -19,7 +19,7 @@ export function useAutosave({
   debounceMs = 2500,
   onSuccess,
   onError,
-  shouldSkip
+  shouldSkip,
 }) {
   const [isAutosaving, setIsAutosaving] = useState(false);
   const [autosaveError, setAutosaveError] = useState(null);
@@ -43,7 +43,9 @@ export function useAutosave({
       initializationTimeoutRef.current = setTimeout(() => {
         initializationTimeoutRef.current = null;
       }, 1000);
-      console.log('🔍 [useAutosave] Initial mount, syncing previousDataRef with initial data. Initialization period: 1000ms');
+      console.log(
+        '🔍 [useAutosave] Initial mount, syncing previousDataRef with initial data. Initialization period: 1000ms'
+      );
       return;
     }
 
@@ -51,7 +53,9 @@ export function useAutosave({
     if (initializationTimeoutRef.current !== null) {
       const currentDataString = JSON.stringify(data);
       previousDataRef.current = currentDataString;
-      console.log('🔍 [useAutosave] During initialization period, syncing previousDataRef silently (draft/saved data loading)');
+      console.log(
+        '🔍 [useAutosave] During initialization period, syncing previousDataRef silently (draft/saved data loading)'
+      );
       return;
     }
 
@@ -85,10 +89,10 @@ export function useAutosave({
       console.log('🔍 [useAutosave] Current:', currentDataString?.substring(0, 100));
       return;
     }
-    
+
     console.log('✅ [useAutosave] Data changed, scheduling autosave in', debounceMs, 'ms');
     console.log('📋 [useAutosave] Changed data:', JSON.stringify(data, null, 2));
-    
+
     // Store the data we're about to save (for comparison after save)
     const dataToSave = currentDataString;
 
@@ -110,7 +114,7 @@ export function useAutosave({
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
           body: JSON.stringify(data),
         });
@@ -122,12 +126,12 @@ export function useAutosave({
 
         const result = await response.json();
         console.log('✅ Draft autosaved successfully:', result);
-        
+
         // Only update previousDataRef AFTER successful save
         previousDataRef.current = dataToSave;
         setLastSavedAt(new Date());
         setIsAutosaving(false);
-        
+
         if (onSuccess) {
           onSuccess(result);
         }
@@ -135,7 +139,7 @@ export function useAutosave({
         console.error('❌ Error autosaving draft:', error);
         setAutosaveError(error.message);
         setIsAutosaving(false);
-        
+
         // Don't update previousDataRef on error - allow retry
         if (onError) {
           onError(error);
@@ -158,9 +162,6 @@ export function useAutosave({
   return {
     isAutosaving,
     autosaveError,
-    lastSavedAt
+    lastSavedAt,
   };
 }
-
-
-

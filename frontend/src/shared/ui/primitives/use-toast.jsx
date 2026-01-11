@@ -1,14 +1,14 @@
 // Inspired by react-hot-toast library
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext } from 'react';
 
 const TOAST_LIMIT = 20;
 const TOAST_REMOVE_DELAY = 100; // Reduced delay for faster removal
 
 const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
+  ADD_TOAST: 'ADD_TOAST',
+  UPDATE_TOAST: 'UPDATE_TOAST',
+  DISMISS_TOAST: 'DISMISS_TOAST',
+  REMOVE_TOAST: 'REMOVE_TOAST',
 };
 
 let count = 0;
@@ -55,9 +55,7 @@ export const reducer = (state, action) => {
     case actionTypes.UPDATE_TOAST:
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
-        ),
+        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       };
 
     case actionTypes.DISMISS_TOAST: {
@@ -120,8 +118,7 @@ function toast({ ...props }) {
       toast: { ...props, id },
     });
 
-  const dismiss = () =>
-    dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
 
   dispatch({
     type: actionTypes.ADD_TOAST,
@@ -162,4 +159,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast }; 
+export { useToast, toast };

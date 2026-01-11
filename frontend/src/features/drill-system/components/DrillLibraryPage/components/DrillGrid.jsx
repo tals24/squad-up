@@ -1,5 +1,5 @@
-import React from "react";
-import { Tag, Users, Eye, ClipboardList } from "lucide-react";
+import React from 'react';
+import { Tag, Users, Eye, ClipboardList } from 'lucide-react';
 import { getCategoryColor, getAgeColor } from '@/shared/utils';
 
 export default function DrillGrid({ drills, onDrillClick }) {
@@ -37,19 +37,29 @@ export default function DrillGrid({ drills, onDrillClick }) {
               {drill.drillName || drill.DrillName}
             </h3>
             <p className="text-slate-400 text-sm mb-4 h-10 overflow-hidden">
-              {drill.description || drill.DrillDescription || drill.Description || drill.Instructions || drill.Details || "No description available."}
+              {drill.description ||
+                drill.DrillDescription ||
+                drill.Description ||
+                drill.Instructions ||
+                drill.Details ||
+                'No description available.'}
             </p>
             <div className="flex flex-wrap gap-2">
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(drill.category || drill.Category)}`}>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(drill.category || drill.Category)}`}
+              >
                 <Tag className="w-3 h-3 mr-1" /> {drill.category || drill.Category}
               </span>
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getAgeColor()}`}>
-                <Users className="w-3 h-3 mr-1" /> {displayAgeGroups(drill.targetAgeGroup || drill.TargetAgeGroup)}
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getAgeColor()}`}
+              >
+                <Users className="w-3 h-3 mr-1" />{' '}
+                {displayAgeGroups(drill.targetAgeGroup || drill.TargetAgeGroup)}
               </span>
             </div>
           </div>
           <div className="p-6 border-t border-slate-700">
-            <button 
+            <button
               className="w-full bg-slate-700 hover:bg-cyan-600 text-slate-100 hover:text-white px-4 py-2 rounded-lg border border-slate-600 hover:border-cyan-500 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
               onClick={(e) => {
                 e.stopPropagation();

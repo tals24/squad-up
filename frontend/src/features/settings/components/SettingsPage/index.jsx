@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { Settings as SettingsIcon } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
-import { PageLayout, PageHeader } from "@/shared/ui/primitives/design-system-components";
-import DatabaseSyncSection from "./DatabaseSyncSection";
-import OrganizationSettingsSection from "./OrganizationSettingsSection";
+import React, { useState } from 'react';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/primitives/tabs';
+import { PageLayout, PageHeader } from '@/shared/ui/primitives/design-system-components';
+import DatabaseSyncSection from './DatabaseSyncSection';
+import OrganizationSettingsSection from './OrganizationSettingsSection';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("database");
+  const [activeTab, setActiveTab] = useState('database');
 
   return (
     <PageLayout maxWidth="max-w-6xl">
@@ -20,25 +20,25 @@ export default function SettingsPage() {
       {/* Tabbed Interface */}
       <Tabs defaultValue="database" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4 mb-8 bg-slate-800/50 p-1 rounded-xl">
-          <TabsTrigger 
+          <TabsTrigger
             value="database"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/10"
           >
             Database & Sync
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="organization"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/10"
           >
             Organization Settings
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="user"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/10"
           >
             User Preferences
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="team"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-blue-500/10 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/10"
           >
@@ -81,4 +81,3 @@ export default function SettingsPage() {
     </PageLayout>
   );
 }
-

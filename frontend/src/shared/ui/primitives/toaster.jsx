@@ -1,4 +1,4 @@
-import { useToast } from "@/shared/ui/primitives/use-toast";
+import { useToast } from '@/shared/ui/primitives/use-toast';
 import {
   Toast,
   ToastClose,
@@ -6,7 +6,7 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/shared/ui/primitives/toast";
+} from '@/shared/ui/primitives/toast';
 
 export function Toaster() {
   const { toasts, dismiss } = useToast();
@@ -29,9 +29,7 @@ export function Toaster() {
             <Toast key={id} {...props} open={open} onOpenChange={onOpenChange}>
               <div className="grid gap-1">
                 {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
+                {description && <ToastDescription>{description}</ToastDescription>}
               </div>
               {action}
               <ToastClose onClick={handleClose} />
@@ -41,4 +39,4 @@ export function Toaster() {
       <ToastViewport />
     </ToastProvider>
   );
-} 
+}

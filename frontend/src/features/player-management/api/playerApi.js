@@ -40,4 +40,3 @@ export const updatePlayer = async (playerId, playerData) => {
 export const deletePlayer = async (playerId) => {
   return await apiClient.delete(`/api/players/${playerId}`);
 };
-

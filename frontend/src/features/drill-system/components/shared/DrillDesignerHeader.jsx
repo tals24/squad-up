@@ -2,12 +2,7 @@ import React from 'react';
 import { Target, Eye, Edit3, Plus } from 'lucide-react';
 import { getModeDisplayText, getModeColorClasses } from '@/features/drill-system/utils';
 
-export default function DrillDesignerHeader({ 
-  drillName, 
-  mode, 
-  isReadOnly, 
-  isLoading 
-}) {
+export default function DrillDesignerHeader({ drillName, mode, isReadOnly, isLoading }) {
   const modeText = getModeDisplayText(mode, isReadOnly);
   const modeColorClasses = getModeColorClasses(mode, isReadOnly);
 
@@ -47,15 +42,13 @@ export default function DrillDesignerHeader({
                   {drillName || 'Drill Designer'}
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${modeColorClasses}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${modeColorClasses}`}
+                  >
                     {getModeIcon()}
                     {modeText}
                   </span>
-                  {isReadOnly && (
-                    <span className="text-xs text-slate-400">
-                      Read-only mode
-                    </span>
-                  )}
+                  {isReadOnly && <span className="text-xs text-slate-400">Read-only mode</span>}
                 </div>
               </div>
             </div>
@@ -65,4 +58,3 @@ export default function DrillDesignerHeader({
     </div>
   );
 }
-

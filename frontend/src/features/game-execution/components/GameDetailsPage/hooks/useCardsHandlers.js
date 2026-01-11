@@ -3,13 +3,13 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useCardsHandlers
- * 
+ *
  * Manages all card-related CRUD operations:
  * - Add new card (yellow/red)
  * - Edit existing card
  * - Delete card
  * - Update timeline and stats
- * 
+ *
  * @param {Object} params
  * @param {string} params.gameId - Game ID
  * @param {Array} params.cards - Current cards array
@@ -19,7 +19,7 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
  * @param {Function} params.setSelectedCard - Set selected card
  * @param {Function} params.setShowCardDialog - Show/hide dialog
  * @param {Function} params.refreshTeamStats - Refresh team stats after changes
- * 
+ *
  * @returns {Object} Card handlers
  */
 export function useCardsHandlers({
@@ -32,7 +32,6 @@ export function useCardsHandlers({
   setShowCardDialog,
   refreshTeamStats,
 }) {
-  
   /**
    * Open dialog to add new card
    */
@@ -46,12 +45,14 @@ export function useCardsHandlers({
    */
   const handleEditCard = (card) => {
     console.log('🔍 [useCardsHandlers] handleEditCard called:', {
-      card: card ? {
-        _id: card._id,
-        cardType: card.cardType,
-        playerId: card.playerId?._id || card.playerId,
-        minute: card.minute
-      } : null,
+      card: card
+        ? {
+            _id: card._id,
+            cardType: card.cardType,
+            playerId: card.playerId?._id || card.playerId,
+            minute: card.minute,
+          }
+        : null,
       cardsArrayLength: cards.length,
     });
     setSelectedCard(card);
@@ -68,7 +69,7 @@ export function useCardsHandlers({
 
     try {
       await deleteCard(gameId, cardId);
-      setCards(prevCards => prevCards.filter(c => c._id !== cardId));
+      setCards((prevCards) => prevCards.filter((c) => c._id !== cardId));
       // Refresh team stats if red card was deleted (affects minutes)
       refreshTeamStats();
     } catch (error) {
@@ -85,45 +86,51 @@ export function useCardsHandlers({
       console.log('🔍 [useCardsHandlers] handleSaveCard called:', {
         isEditing: !!selectedCard,
         selectedCardId: selectedCard?._id,
-        cardData
+        cardData,
       });
-      
+
       const wasEditing = !!selectedCard;
       const editingCardId = selectedCard?._id;
       const cardToUpdate = selectedCard; // Save reference before clearing
-      
+
       if (cardToUpdate) {
         // Update existing card
         const updatedCard = await updateCard(gameId, cardToUpdate._id, cardData);
         console.log('🔍 [useCardsHandlers] Card updated:', {
           oldCardId: cardToUpdate._id,
           updatedCardId: updatedCard._id,
-          updatedCard
+          updatedCard,
         });
-        setCards(prevCards => prevCards.map(c => c._id === updatedCard._id ? updatedCard : c));
+        setCards((prevCards) =>
+          prevCards.map((c) => (c._id === updatedCard._id ? updatedCard : c))
+        );
       } else {
         // Create new card
         const newCard = await createCard(gameId, cardData);
-        setCards(prevCards => [...prevCards, newCard]);
+        setCards((prevCards) => [...prevCards, newCard]);
       }
-      
+
       // Close dialog AFTER successful save to prevent re-render issues during card refresh
       setShowCardDialog(false);
       setSelectedCard(null);
-      
+
       // Refresh cards list (after dialog is closed)
       const updatedCards = await fetchCards(gameId);
       console.log('🔍 [useCardsHandlers] Cards refreshed:', {
         updatedCardsCount: updatedCards.length,
         wasEditing,
         editingCardId,
-        updatedCardExists: wasEditing ? updatedCards.find(c => c._id === editingCardId) ? 'YES' : 'NO' : 'N/A'
+        updatedCardExists: wasEditing
+          ? updatedCards.find((c) => c._id === editingCardId)
+            ? 'YES'
+            : 'NO'
+          : 'N/A',
       });
       setCards(updatedCards);
-      
+
       // Refresh team stats after card save (affects red card minutes)
       refreshTeamStats();
-      
+
       // Refresh timeline to update player states
       try {
         const timelineData = await fetchMatchTimeline(gameId);
@@ -144,4 +151,3 @@ export function useCardsHandlers({
     handleSaveCard,
   };
 }
-

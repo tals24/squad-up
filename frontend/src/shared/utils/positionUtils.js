@@ -9,12 +9,12 @@
  */
 export const getPositionBadgeClasses = (position) => {
   const styles = {
-    'Goalkeeper': 'text-purple-400 border-purple-400',
-    'Defender': 'text-blue-400 border-blue-400',
-    'Midfielder': 'text-green-400 border-green-400',
-    'Forward': 'text-red-400 border-red-400',
+    Goalkeeper: 'text-purple-400 border-purple-400',
+    Defender: 'text-blue-400 border-blue-400',
+    Midfielder: 'text-green-400 border-green-400',
+    Forward: 'text-red-400 border-red-400',
     'Wing-back': 'text-yellow-400 border-yellow-400',
-    'Striker': 'text-orange-400 border-orange-400'
+    Striker: 'text-orange-400 border-orange-400',
   };
   return styles[position] || 'text-gray-400 border-gray-400';
 };
@@ -26,12 +26,12 @@ export const getPositionBadgeClasses = (position) => {
  */
 export const getPositionBackgroundColor = (position) => {
   const colors = {
-    'Goalkeeper': 'bg-purple-500',
-    'Defender': 'bg-blue-500',
-    'Midfielder': 'bg-green-500',
-    'Forward': 'bg-red-500',
+    Goalkeeper: 'bg-purple-500',
+    Defender: 'bg-blue-500',
+    Midfielder: 'bg-green-500',
+    Forward: 'bg-red-500',
     'Wing-back': 'bg-yellow-500',
-    'Striker': 'bg-orange-500'
+    Striker: 'bg-orange-500',
   };
   return colors[position] || 'bg-gray-500';
 };
@@ -43,13 +43,12 @@ export const getPositionBackgroundColor = (position) => {
  */
 export const getPositionTextColor = (position) => {
   const colors = {
-    'Goalkeeper': 'text-purple-400',
-    'Defender': 'text-blue-400',
-    'Midfielder': 'text-green-400',
-    'Forward': 'text-red-400',
+    Goalkeeper: 'text-purple-400',
+    Defender: 'text-blue-400',
+    Midfielder: 'text-green-400',
+    Forward: 'text-red-400',
     'Wing-back': 'text-yellow-400',
-    'Striker': 'text-orange-400'
+    Striker: 'text-orange-400',
   };
   return colors[position] || 'text-gray-400';
 };
-

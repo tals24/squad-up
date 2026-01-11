@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { X, Target, Clock, Trophy, Zap, Shield, TrendingUp, Save, Edit } from 'lucide-react';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Badge } from '@/shared/ui/primitives/design-system-components';
+import {
+  Button,
+  Input,
+  Label,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Badge,
+} from '@/shared/ui/primitives/design-system-components';
 
-const PlayerPerformanceModal = ({ 
-  isOpen, 
-  onClose, 
-  player, 
-  gameId, 
-  onSave 
-}) => {
+const PlayerPerformanceModal = ({ isOpen, onClose, player, gameId, onSave }) => {
   const [performance, setPerformance] = useState({
     minutesPlayed: 0,
     goals: 0,
@@ -24,7 +27,7 @@ const PlayerPerformanceModal = ({
     interceptions: 0,
     clearances: 0,
     rating: 0,
-    notes: ''
+    notes: '',
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +54,7 @@ const PlayerPerformanceModal = ({
         interceptions: 0,
         clearances: 0,
         rating: 0,
-        notes: ''
+        notes: '',
       });
     }
   }, [isOpen, player]);
@@ -61,10 +64,10 @@ const PlayerPerformanceModal = ({
     try {
       // TODO: Save performance data to API
       console.log('🎮 Saving performance data:', performance);
-      
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       onSave?.(performance);
       setIsEditing(false);
     } catch (error) {
@@ -75,23 +78,29 @@ const PlayerPerformanceModal = ({
   };
 
   const handleInputChange = (field, value) => {
-    setPerformance(prev => ({
+    setPerformance((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const getPerformanceStats = () => {
-    const passAccuracy = performance.passes > 0 ? 
-      Math.round((performance.passesCompleted / performance.passes) * 100) : 0;
-    
-    const shotAccuracy = performance.shots > 0 ? 
-      Math.round((performance.shotsOnTarget / performance.shots) * 100) : 0;
+    const passAccuracy =
+      performance.passes > 0
+        ? Math.round((performance.passesCompleted / performance.passes) * 100)
+        : 0;
+
+    const shotAccuracy =
+      performance.shots > 0 ? Math.round((performance.shotsOnTarget / performance.shots) * 100) : 0;
 
     return {
       passAccuracy,
       shotAccuracy,
-      totalActions: performance.passes + performance.tackles + performance.interceptions + performance.clearances
+      totalActions:
+        performance.passes +
+        performance.tackles +
+        performance.interceptions +
+        performance.clearances,
     };
   };
 
@@ -111,14 +120,15 @@ const PlayerPerformanceModal = ({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                {kitNumber && (
-                  <span className="text-2xl font-bold text-cyan-400">{kitNumber}</span>
-                )}
+                {kitNumber && <span className="text-2xl font-bold text-cyan-400">{kitNumber}</span>}
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">{playerName}</h2>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-slate-700/50 text-slate-300 border-slate-600">
+                  <Badge
+                    variant="outline"
+                    className="bg-slate-700/50 text-slate-300 border-slate-600"
+                  >
                     {position}
                   </Badge>
                   <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500">
@@ -183,13 +193,17 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.minutesPlayed}
-                        onChange={(e) => handleInputChange('minutesPlayed', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('minutesPlayed', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                         max="90"
                       />
                     ) : (
-                      <div className="text-2xl font-bold text-white">{performance.minutesPlayed}'</div>
+                      <div className="text-2xl font-bold text-white">
+                        {performance.minutesPlayed}'
+                      </div>
                     )}
                   </div>
                   <div>
@@ -198,7 +212,9 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.rating}
-                        onChange={(e) => handleInputChange('rating', parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('rating', parseFloat(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                         max="10"
@@ -242,7 +258,9 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.assists}
-                        onChange={(e) => handleInputChange('assists', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('assists', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                       />
@@ -284,12 +302,16 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.passesCompleted}
-                        onChange={(e) => handleInputChange('passesCompleted', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('passesCompleted', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                       />
                     ) : (
-                      <div className="text-xl font-bold text-white">{performance.passesCompleted}</div>
+                      <div className="text-xl font-bold text-white">
+                        {performance.passesCompleted}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -316,7 +338,9 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.tackles}
-                        onChange={(e) => handleInputChange('tackles', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('tackles', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                       />
@@ -330,12 +354,16 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.interceptions}
-                        onChange={(e) => handleInputChange('interceptions', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('interceptions', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                       />
                     ) : (
-                      <div className="text-xl font-bold text-white">{performance.interceptions}</div>
+                      <div className="text-xl font-bold text-white">
+                        {performance.interceptions}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -345,7 +373,9 @@ const PlayerPerformanceModal = ({
                     <Input
                       type="number"
                       value={performance.clearances}
-                      onChange={(e) => handleInputChange('clearances', parseInt(e.target.value) || 0)}
+                      onChange={(e) =>
+                        handleInputChange('clearances', parseInt(e.target.value) || 0)
+                      }
                       className="bg-slate-600 border-slate-500 text-white"
                       min="0"
                     />
@@ -386,12 +416,16 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.shotsOnTarget}
-                        onChange={(e) => handleInputChange('shotsOnTarget', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('shotsOnTarget', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                       />
                     ) : (
-                      <div className="text-xl font-bold text-white">{performance.shotsOnTarget}</div>
+                      <div className="text-xl font-bold text-white">
+                        {performance.shotsOnTarget}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -418,13 +452,17 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.yellowCards}
-                        onChange={(e) => handleInputChange('yellowCards', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('yellowCards', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                         max="2"
                       />
                     ) : (
-                      <div className="text-xl font-bold text-yellow-400">{performance.yellowCards}</div>
+                      <div className="text-xl font-bold text-yellow-400">
+                        {performance.yellowCards}
+                      </div>
                     )}
                   </div>
                   <div>
@@ -433,7 +471,9 @@ const PlayerPerformanceModal = ({
                       <Input
                         type="number"
                         value={performance.redCards}
-                        onChange={(e) => handleInputChange('redCards', parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          handleInputChange('redCards', parseInt(e.target.value) || 0)
+                        }
                         className="bg-slate-600 border-slate-500 text-white"
                         min="0"
                         max="1"
@@ -475,9 +515,7 @@ const PlayerPerformanceModal = ({
                   placeholder="Add notes about the player's performance..."
                 />
               ) : (
-                <div className="text-slate-300">
-                  {performance.notes || 'No notes added yet'}
-                </div>
+                <div className="text-slate-300">{performance.notes || 'No notes added yet'}</div>
               )}
             </CardContent>
           </Card>

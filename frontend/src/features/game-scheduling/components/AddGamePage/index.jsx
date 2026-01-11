@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { User } from "@/shared/api";
-import {
-  Trophy,
-  Calendar,
-  MapPin,
-  Users,
-  Clock,
-  Target
-} from "lucide-react";
-import { getTeams } from "@/features/team-management/api";
-import { createGame } from "@/features/game-scheduling/api";
-import { getSeasonFromDate } from "@/shared/utils/date/seasonUtils";
-import GenericAddPage from "@/shared/components/GenericAddPage";
-import { TextInputField, SelectField, FormGrid } from "@/shared/components/FormFields";
+import React, { useState, useEffect } from 'react';
+import { User } from '@/shared/api';
+import { Trophy, Calendar, MapPin, Users, Clock, Target } from 'lucide-react';
+import { getTeams } from '@/features/team-management/api';
+import { createGame } from '@/features/game-scheduling/api';
+import { getSeasonFromDate } from '@/shared/utils/date/seasonUtils';
+import GenericAddPage from '@/shared/components/GenericAddPage';
+import { TextInputField, SelectField, FormGrid } from '@/shared/components/FormFields';
 
 export default function AddGame() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -20,13 +13,13 @@ export default function AddGame() {
   const [isLoading, setIsLoading] = useState(true);
 
   const initialFormData = {
-    Date: "",
-    Time: "",
-    Venue: "Home", // Changed from Location to Venue with default Home
-    Opponent: "",
-    Team: "",
-    GameType: "League",
-    Status: "Scheduled"
+    Date: '',
+    Time: '',
+    Venue: 'Home', // Changed from Location to Venue with default Home
+    Opponent: '',
+    Team: '',
+    GameType: 'League',
+    Status: 'Scheduled',
   };
 
   useEffect(() => {
@@ -37,7 +30,7 @@ export default function AddGame() {
     try {
       const user = await User.me();
       setCurrentUser(user);
-      
+
       // Load teams for team selection
       const teamsResponse = await getTeams();
       console.log('🔍 Teams response:', teamsResponse);
@@ -46,7 +39,7 @@ export default function AddGame() {
         setTeams(teamsResponse.data);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error('Error loading data:', error);
     }
     setIsLoading(false);
   };
@@ -54,19 +47,22 @@ export default function AddGame() {
   const handleSubmit = async (formData) => {
     try {
       // Combine date and time for the DateTime field
-      const gameDateTime = formData.Date && formData.Time 
-        ? `${formData.Date}T${formData.Time}:00.000Z`
-        : undefined;
+      const gameDateTime =
+        formData.Date && formData.Time ? `${formData.Date}T${formData.Time}:00.000Z` : undefined;
 
       // Find the selected team to get team name
       console.log('🔍 Looking for team with ID:', formData.Team);
-      console.log('🔍 Available teams:', teams.map(t => ({ id: t._id || t.id, name: t.teamName || t.TeamName || t.Name })));
-      
-      const selectedTeam = teams.find(team => (team._id || team.id) === formData.Team);
+      console.log(
+        '🔍 Available teams:',
+        teams.map((t) => ({ id: t._id || t.id, name: t.teamName || t.TeamName || t.Name }))
+      );
+
+      const selectedTeam = teams.find((team) => (team._id || team.id) === formData.Team);
       console.log('🔍 Selected team:', selectedTeam);
-      
-      const teamName = selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
-      
+
+      const teamName =
+        selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
+
       // Auto-detect season based on game date
       const season = getSeasonFromDate(gameDateTime);
 
@@ -76,11 +72,11 @@ export default function AddGame() {
         date: gameDateTime,
         location: formData.Venue || 'Home', // Changed from venue to location
         gameType: formData.GameType || 'League',
-        status: formData.Status || 'Scheduled'
+        status: formData.Status || 'Scheduled',
         // gameTitle is now calculated on the backend via virtual field
         // season is also calculated on the backend from team data
       };
-      
+
       console.log('🔍 Sending game data to backend:', gameData);
 
       const response = await createGame(gameData);
@@ -88,10 +84,10 @@ export default function AddGame() {
       if (response?.success) {
         return {
           success: true,
-          message: `${teamName} vs ${formData.Opponent} has been scheduled successfully for the ${season} season!`
+          message: `${teamName} vs ${formData.Opponent} has been scheduled successfully for the ${season} season!`,
         };
       } else {
-        throw new Error(response?.error || "Failed to save game");
+        throw new Error(response?.error || 'Failed to save game');
       }
     } catch (error) {
       throw new Error(error.message);
@@ -99,42 +95,40 @@ export default function AddGame() {
   };
 
   const isFormValid = (formData) => {
-    return formData.Date?.trim() && 
-           formData.Opponent?.trim() &&
-           formData.Team?.trim();
+    return formData.Date?.trim() && formData.Opponent?.trim() && formData.Team?.trim();
   };
 
   const gameTypeOptions = [
-    { value: "League", label: "League Match" },
-    { value: "Cup", label: "Cup Match" },
-    { value: "Friendly", label: "Friendly Match" },
-    { value: "Training", label: "Training Match" },
-    { value: "Tournament", label: "Tournament" }
+    { value: 'League', label: 'League Match' },
+    { value: 'Cup', label: 'Cup Match' },
+    { value: 'Friendly', label: 'Friendly Match' },
+    { value: 'Training', label: 'Training Match' },
+    { value: 'Tournament', label: 'Tournament' },
   ];
 
   const statusOptions = [
-    { value: "Scheduled", label: "Scheduled" },
-    { value: "Postponed", label: "Postponed" },
-    { value: "Cancelled", label: "Cancelled" }
+    { value: 'Scheduled', label: 'Scheduled' },
+    { value: 'Postponed', label: 'Postponed' },
+    { value: 'Cancelled', label: 'Cancelled' },
   ];
 
   const venueOptions = [
-    { value: "Home", label: "Home" },
-    { value: "Away", label: "Away" }
+    { value: 'Home', label: 'Home' },
+    { value: 'Away', label: 'Away' },
   ];
 
   // Create team options from loaded teams
   console.log('🔍 Teams array length:', teams.length);
   console.log('🔍 Teams array:', teams);
-  
-  const teamOptions = teams.map(team => {
+
+  const teamOptions = teams.map((team) => {
     console.log('🔍 Team object:', team);
     return {
       value: team._id || team.id, // Use _id for MongoDB
-      label: team.teamName || team.TeamName || team.Name
+      label: team.teamName || team.TeamName || team.Name,
     };
   });
-  
+
   console.log('🔍 Team options:', teamOptions);
 
   return (

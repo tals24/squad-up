@@ -5,13 +5,7 @@ import { Button } from '@/shared/ui/primitives/button';
  * EmptyState Component
  * Provides consistent empty state patterns across all pages
  */
-const EmptyState = ({ 
-  icon: Icon,
-  title,
-  message,
-  actionButton,
-  className = ""
-}) => {
+const EmptyState = ({ icon: Icon, title, message, actionButton, className = '' }) => {
   return (
     <div className={`text-center py-12 ${className}`}>
       {Icon && (
@@ -19,12 +13,8 @@ const EmptyState = ({
           <Icon className="w-8 h-8 text-slate-300" />
         </div>
       )}
-      {title && (
-        <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
-      )}
-      {message && (
-        <p className="text-slate-400 mb-6 max-w-md mx-auto">{message}</p>
-      )}
+      {title && <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>}
+      {message && <p className="text-slate-400 mb-6 max-w-md mx-auto">{message}</p>}
       {actionButton}
     </div>
   );

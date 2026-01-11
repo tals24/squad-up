@@ -55,4 +55,3 @@ export const deleteScoutReport = async (reportId) => {
 
 // Legacy alias for backward compatibility
 export const createReport = createScoutReport;
-

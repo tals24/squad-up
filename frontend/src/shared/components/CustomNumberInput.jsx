@@ -1,19 +1,27 @@
 import React from 'react';
-import { Input } from "@/shared/ui/primitives/input";
-import { Button } from "@/shared/ui/primitives/button";
-import { Plus, Minus } from "lucide-react";
+import { Input } from '@/shared/ui/primitives/input';
+import { Button } from '@/shared/ui/primitives/button';
+import { Plus, Minus } from 'lucide-react';
 
-const CustomNumberInput = ({ value, onChange, min = 0, max = 999, placeholder, className, disabled = false }) => {
+const CustomNumberInput = ({
+  value,
+  onChange,
+  min = 0,
+  max = 999,
+  placeholder,
+  className,
+  disabled = false,
+}) => {
   const handleValueChange = (newValue) => {
     // Create a synthetic event object that mimics a real input event
     const syntheticEvent = {
       target: {
-        value: String(newValue)
-      }
+        value: String(newValue),
+      },
     };
     onChange(syntheticEvent);
   };
-  
+
   const handleIncrement = () => {
     const numericValue = parseInt(value, 10) || 0;
     if (numericValue < max) {

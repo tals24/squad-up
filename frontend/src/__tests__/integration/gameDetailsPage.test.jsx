@@ -1,7 +1,7 @@
 /**
  * GameDetailsPage Integration Tests
  * Safety net for frontend refactor execution plan (Phase 0)
- * 
+ *
  * Purpose: Verify GameDetailsPage behavior for all three game states
  * Tests user interactions, state management, and API integrations
  */
@@ -29,9 +29,7 @@ const createTestWrapper = (initialRoute = '/game-details?id=game123') => {
   return ({ children }) => (
     <MemoryRouter initialEntries={[initialRoute]}>
       <QueryClientProvider client={queryClient}>
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <DataProvider>{children}</DataProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );
@@ -92,13 +90,13 @@ const mockPlayers = [
 describe('GameDetailsPage - Scheduled Status', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock API responses
     gameApi.getGameById.mockResolvedValue({
       success: true,
       data: mockScheduledGame,
     });
-    
+
     gameApi.getTeamPlayers.mockResolvedValue({
       success: true,
       data: mockPlayers,
@@ -118,9 +116,10 @@ describe('GameDetailsPage - Scheduled Status', () => {
     expect(screen.getByText(/Scheduled/i)).toBeInTheDocument();
 
     // Verify tactical board is visible
-    const tacticalBoard = screen.getByTestId('tactical-board') || 
-                          screen.getByRole('region', { name: /tactical board/i }) ||
-                          document.querySelector('.tactical-board');
+    const tacticalBoard =
+      screen.getByTestId('tactical-board') ||
+      screen.getByRole('region', { name: /tactical board/i }) ||
+      document.querySelector('.tactical-board');
     expect(tacticalBoard).toBeInTheDocument();
   });
 
@@ -180,7 +179,9 @@ describe('GameDetailsPage - Scheduled Status', () => {
 
     // Verify validation error appears
     await waitFor(() => {
-      const errorMessage = screen.getByText(/Invalid Starting Lineup|Must have exactly 11 players|Missing players/i);
+      const errorMessage = screen.getByText(
+        /Invalid Starting Lineup|Must have exactly 11 players|Missing players/i
+      );
       expect(errorMessage).toBeInTheDocument();
     });
 
@@ -337,10 +338,13 @@ describe('GameDetailsPage - Played Status', () => {
 
     // Verify API was called
     await waitFor(() => {
-      expect(gameApi.createGoal).toHaveBeenCalledWith('game456', expect.objectContaining({
-        scorer: 'p1',
-        minute: 23,
-      }));
+      expect(gameApi.createGoal).toHaveBeenCalledWith(
+        'game456',
+        expect.objectContaining({
+          scorer: 'p1',
+          minute: 23,
+        })
+      );
     });
 
     // Verify timeline refreshes
@@ -358,10 +362,11 @@ describe('GameDetailsPage - Played Status', () => {
     });
 
     // Click on a player card
-    const playerCard = screen.getByText(/John Doe/i).closest('[data-testid="player-card"]') ||
-                       screen.getByText(/John Doe/i).closest('.player-card') ||
-                       screen.getByText(/John Doe/i);
-    
+    const playerCard =
+      screen.getByText(/John Doe/i).closest('[data-testid="player-card"]') ||
+      screen.getByText(/John Doe/i).closest('.player-card') ||
+      screen.getByText(/John Doe/i);
+
     fireEvent.click(playerCard);
 
     // Verify performance dialog opens
@@ -439,7 +444,9 @@ describe('GameDetailsPage - Played Status', () => {
 
     // Verify validation error
     await waitFor(() => {
-      expect(screen.getByText(/All team summaries|Complete all summaries|Missing summaries/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/All team summaries|Complete all summaries|Missing summaries/i)
+      ).toBeInTheDocument();
     });
 
     // Verify submit API was NOT called
@@ -510,7 +517,7 @@ describe('GameDetailsPage - Done Status', () => {
 
     // Verify input fields are read-only
     const inputs = screen.getAllByRole('textbox');
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
       expect(input).toHaveAttribute('readonly', '');
       // OR: expect(input).toBeDisabled();
     });
@@ -584,4 +591,3 @@ describe('GameDetailsPage - Error Handling', () => {
     expect(screen.getByTestId('tactical-board')).toBeInTheDocument();
   });
 });
-

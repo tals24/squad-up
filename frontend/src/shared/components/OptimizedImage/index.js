@@ -4,4 +4,3 @@
 
 export { OptimizedImage, AvatarImage, CardImage } from './OptimizedImage';
 export { default } from './OptimizedImage';
-

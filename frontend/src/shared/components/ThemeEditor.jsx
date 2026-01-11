@@ -1,27 +1,27 @@
 /**
  * SquadUp Theme Editor
- * 
+ *
  * Advanced theme editor interface for creating custom themes,
  * with real-time preview and accessibility validation.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Palette, 
-  Save, 
-  Download, 
-  Upload, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
-  Copy, 
+import {
+  Palette,
+  Save,
+  Download,
+  Upload,
+  Eye,
+  EyeOff,
+  Trash2,
+  Copy,
   Check,
   AlertTriangle,
   Lightbulb,
-  Clock
+  Clock,
 } from 'lucide-react';
-import { cn } from "@/shared/lib/utils";
+import { cn } from '@/shared/lib/utils';
 import {
   Card,
   CardContent,
@@ -42,7 +42,7 @@ import {
   Container,
   Section,
 } from '@/shared/ui/primitives/design-system-components';
-import { 
+import {
   AdvancedCard,
   ChoreographedList,
   ScrollReveal,
@@ -53,12 +53,7 @@ import { ThemeManager, ThemeValidator, CustomTheme, ThemeSchedule } from '@/lib/
 // COLOR PICKER COMPONENT
 // ===========================================
 
-const ColorPicker = ({ 
-  label, 
-  value, 
-  onChange, 
-  className 
-}) => {
+const ColorPicker = ({ label, value, onChange, className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tempValue, setTempValue] = useState(value);
 
@@ -71,7 +66,7 @@ const ColorPicker = ({
     <div className={cn('space-y-2', className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <div className="flex items-center space-x-2">
-        <div 
+        <div
           className="w-8 h-8 rounded border-2 border-neutral-300 cursor-pointer hover:border-neutral-400 transition-colors"
           style={{ backgroundColor: value }}
           onClick={() => setIsOpen(!isOpen)}
@@ -99,11 +94,7 @@ const ColorPicker = ({
 // COLOR PALETTE EDITOR
 // ===========================================
 
-const ColorPaletteEditor = ({ 
-  colors, 
-  onChange, 
-  groupName 
-}) => {
+const ColorPaletteEditor = ({ colors, onChange, groupName }) => {
   const handleColorChange = (shade, newColor) => {
     onChange({
       ...colors,
@@ -120,7 +111,9 @@ const ColorPaletteEditor = ({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <Heading level={4} className="capitalize">{groupName} Colors</Heading>
+      <Heading level={4} className="capitalize">
+        {groupName} Colors
+      </Heading>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {shades.map((shade) => (
           <ColorPicker
@@ -173,26 +166,26 @@ const ThemePreview = ({ theme, isVisible }) => {
           </div>
 
           {/* Preview Content */}
-          <div className="flex-1 p-6 overflow-auto" style={{ backgroundColor: theme.colors.background.primary }}>
+          <div
+            className="flex-1 p-6 overflow-auto"
+            style={{ backgroundColor: theme.colors.background.primary }}
+          >
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Sample Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[1, 2, 3].map((i) => (
-                  <div 
+                  <div
                     key={i}
                     className="p-4 rounded-lg border shadow-sm bg-white"
                     style={{ borderColor: theme.colors.border.default }}
                   >
-                    <h3 
-                      className="font-semibold mb-2"
-                      style={{ color: theme.colors.text.primary }}
-                    >
+                    <h3 className="font-semibold mb-2" style={{ color: theme.colors.text.primary }}>
                       Sample Card {i}
                     </h3>
                     <p style={{ color: theme.colors.text.secondary }}>
                       This is how your theme looks in practice.
                     </p>
-                    <button 
+                    <button
                       className="mt-3 px-4 py-2 rounded text-white text-sm font-medium"
                       style={{ backgroundColor: theme.colors.primary['500'] }}
                     >
@@ -211,7 +204,8 @@ const ThemePreview = ({ theme, isVisible }) => {
                   Heading 2 Style
                 </h2>
                 <p style={{ color: theme.colors.text.secondary }} className="text-base">
-                  Body text appears in this color and demonstrates readability with your chosen palette.
+                  Body text appears in this color and demonstrates readability with your chosen
+                  palette.
                 </p>
                 <p style={{ color: theme.colors.text.tertiary }} className="text-sm">
                   Secondary text uses a more muted color for less important information.
@@ -305,7 +299,7 @@ export const ThemeEditor = () => {
 
   const handleThemeNameChange = (newName) => {
     if (!editingTheme) return;
-    
+
     setEditingTheme({
       ...editingTheme,
       name: newName,
@@ -339,7 +333,9 @@ export const ThemeEditor = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl mb-4">
                 <Palette className="w-8 h-8 text-white" />
               </div>
-              <Heading level={1} className="mb-2">Theme Editor</Heading>
+              <Heading level={1} className="mb-2">
+                Theme Editor
+              </Heading>
               <Text variant="large" className="text-neutral-600">
                 Create and customize themes for your SquadUp application
               </Text>
@@ -359,7 +355,10 @@ export const ThemeEditor = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <ChoreographedList layout="grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ChoreographedList
+                  layout="grid"
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
                   {themes.map((theme) => (
                     <AdvancedCard
                       key={theme.id}
@@ -402,7 +401,7 @@ export const ThemeEditor = () => {
                           </Button>
                           <Button
                             size="xs"
-                            variant={currentTheme?.id === theme.id ? "secondary" : "primary"}
+                            variant={currentTheme?.id === theme.id ? 'secondary' : 'primary'}
                             onClick={() => handleApplyTheme(theme.id)}
                             className="flex-1"
                           >
@@ -448,16 +447,17 @@ export const ThemeEditor = () => {
                           variant="outline"
                           onClick={() => setIsPreviewVisible(!isPreviewVisible)}
                         >
-                          {isPreviewVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {isPreviewVisible ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                           {isPreviewVisible ? 'Hide' : 'Preview'}
                         </Button>
                         <Button variant="outline" onClick={() => setEditingTheme(null)}>
                           Cancel
                         </Button>
-                        <Button 
-                          onClick={handleSave}
-                          disabled={validationErrors.length > 0}
-                        >
+                        <Button onClick={handleSave} disabled={validationErrors.length > 0}>
                           <Save className="w-4 h-4 mr-2" />
                           Save Theme
                         </Button>
@@ -533,7 +533,9 @@ export const ThemeEditor = () => {
                     {editingTheme.colors[activeColorGroup] && (
                       <ColorPaletteEditor
                         colors={editingTheme.colors[activeColorGroup]}
-                        onChange={(newColors) => handleColorGroupChange(activeColorGroup, newColors)}
+                        onChange={(newColors) =>
+                          handleColorGroupChange(activeColorGroup, newColors)
+                        }
                         groupName={activeColorGroup}
                       />
                     )}

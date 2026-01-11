@@ -1,8 +1,8 @@
 /**
  * Critical Test Suite: Spam Prevention (Hook Behavior)
- * 
+ *
  * Tests SP-001 and SP-002 from CRITICAL_TEST_SUITE_DRAFT_AUTOSAVE.md
- * 
+ *
  * These tests verify:
  * - Debounce prevents rapid API calls
  * - Change detection prevents unnecessary calls
@@ -21,7 +21,7 @@ Object.defineProperty(window, 'localStorage', {
     setItem: jest.fn(),
     removeItem: jest.fn(),
   },
-  writable: true
+  writable: true,
 });
 
 describe('Critical Hook Tests: Spam Prevention', () => {
@@ -30,7 +30,7 @@ describe('Critical Hook Tests: Spam Prevention', () => {
     jest.useFakeTimers();
     fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, message: 'Draft saved successfully' })
+      json: async () => ({ success: true, message: 'Draft saved successfully' }),
     });
   });
 
@@ -47,17 +47,18 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       const endpoint = 'http://localhost:3001/api/games/test123/draft';
       const initialData = {
         teamSummary: {
-          defenseSummary: 'Initial'
-        }
+          defenseSummary: 'Initial',
+        },
       };
 
       const { result, rerender } = renderHook(
-        ({ data }) => useAutosave({
-          data,
-          endpoint,
-          enabled: true,
-          debounceMs: 2500
-        }),
+        ({ data }) =>
+          useAutosave({
+            data,
+            endpoint,
+            enabled: true,
+            debounceMs: 2500,
+          }),
         { initialProps: { data: initialData } }
       );
 
@@ -71,9 +72,9 @@ describe('Critical Hook Tests: Spam Prevention', () => {
         rerender({
           data: {
             teamSummary: {
-              defenseSummary: `Change ${i}`
-            }
-          }
+              defenseSummary: `Change ${i}`,
+            },
+          },
         });
       }
 
@@ -93,9 +94,9 @@ describe('Critical Hook Tests: Spam Prevention', () => {
           method: 'PUT',
           body: JSON.stringify({
             teamSummary: {
-              defenseSummary: 'Change 5'
-            }
-          })
+              defenseSummary: 'Change 5',
+            },
+          }),
         })
       );
     });
@@ -103,12 +104,13 @@ describe('Critical Hook Tests: Spam Prevention', () => {
     it('should reset debounce timer on each change', async () => {
       const endpoint = 'http://localhost:3001/api/games/test123/draft';
       const { result, rerender } = renderHook(
-        ({ data }) => useAutosave({
-          data,
-          endpoint,
-          enabled: true,
-          debounceMs: 2500
-        }),
+        ({ data }) =>
+          useAutosave({
+            data,
+            endpoint,
+            enabled: true,
+            debounceMs: 2500,
+          }),
         { initialProps: { data: { teamSummary: { defenseSummary: 'Initial' } } } }
       );
 
@@ -139,9 +141,9 @@ describe('Critical Hook Tests: Spam Prevention', () => {
         expect.objectContaining({
           body: JSON.stringify({
             teamSummary: {
-              defenseSummary: 'Change 2'
-            }
-          })
+              defenseSummary: 'Change 2',
+            },
+          }),
         })
       );
     });
@@ -156,17 +158,18 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       const endpoint = 'http://localhost:3001/api/games/test123/draft';
       const data = {
         teamSummary: {
-          defenseSummary: 'Test summary'
-        }
+          defenseSummary: 'Test summary',
+        },
       };
 
       const { result, rerender } = renderHook(
-        ({ data }) => useAutosave({
-          data,
-          endpoint,
-          enabled: true,
-          debounceMs: 2500
-        }),
+        ({ data }) =>
+          useAutosave({
+            data,
+            endpoint,
+            enabled: true,
+            debounceMs: 2500,
+          }),
         { initialProps: { data } }
       );
 
@@ -201,17 +204,18 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       const endpoint = 'http://localhost:3001/api/games/test123/draft';
       const initialData = {
         teamSummary: {
-          defenseSummary: 'Test'
-        }
+          defenseSummary: 'Test',
+        },
       };
 
       const { result, rerender } = renderHook(
-        ({ data }) => useAutosave({
-          data,
-          endpoint,
-          enabled: true,
-          debounceMs: 2500
-        }),
+        ({ data }) =>
+          useAutosave({
+            data,
+            endpoint,
+            enabled: true,
+            debounceMs: 2500,
+          }),
         { initialProps: { data: initialData } }
       );
 
@@ -224,9 +228,9 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       rerender({
         data: {
           teamSummary: {
-            defenseSummary: 'Changed'
-          }
-        }
+            defenseSummary: 'Changed',
+          },
+        },
       });
 
       act(() => {
@@ -242,17 +246,18 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       const endpoint = 'http://localhost:3001/api/games/test123/draft';
       const data1 = {
         teamSummary: {
-          defenseSummary: 'Test'
-        }
+          defenseSummary: 'Test',
+        },
       };
 
       const { result, rerender } = renderHook(
-        ({ data }) => useAutosave({
-          data,
-          endpoint,
-          enabled: true,
-          debounceMs: 2500
-        }),
+        ({ data }) =>
+          useAutosave({
+            data,
+            endpoint,
+            enabled: true,
+            debounceMs: 2500,
+          }),
         { initialProps: { data: data1 } }
       );
 
@@ -274,8 +279,8 @@ describe('Critical Hook Tests: Spam Prevention', () => {
       // Create new object with same values (different reference)
       const data2 = {
         teamSummary: {
-          defenseSummary: 'Changed' // Same value
-        }
+          defenseSummary: 'Changed', // Same value
+        },
       };
 
       rerender({ data: data2 });
@@ -290,4 +295,3 @@ describe('Critical Hook Tests: Spam Prevention', () => {
     });
   });
 });
-

@@ -6,9 +6,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 export const fetchCards = async (gameId) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/cards`, {
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -25,9 +25,9 @@ export const fetchCards = async (gameId) => {
 export const fetchPlayerCards = async (gameId, playerId) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/cards/player/${playerId}`, {
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -45,10 +45,10 @@ export const createCard = async (gameId, cardData) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/cards`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(cardData)
+    body: JSON.stringify(cardData),
   });
 
   if (!response.ok) {
@@ -68,10 +68,10 @@ export const updateCard = async (gameId, cardId, cardData) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/cards/${cardId}`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(cardData)
+    body: JSON.stringify(cardData),
   });
 
   if (!response.ok) {
@@ -91,9 +91,9 @@ export const deleteCard = async (gameId, cardId) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/cards/${cardId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -103,4 +103,3 @@ export const deleteCard = async (gameId, cardId) => {
 
   return true;
 };
-

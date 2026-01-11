@@ -13,12 +13,12 @@ export const getSeasonFromDate = (date) => {
   const gameDate = new Date(date);
   const year = gameDate.getFullYear();
   const month = gameDate.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
-  
+
   // Season logic:
   // August (8) to December (12) → Current year/Next year
   // January (1) to May (5) → Previous year/Current year
   // June (6) to July (7) → Current year/Next year (transition period)
-  
+
   if (month >= 8) {
     // August to December: 2024/2025
     return `${year}/${year + 1}`;
@@ -47,10 +47,10 @@ export const getAvailableSeasons = () => {
   const currentSeason = getCurrentSeason();
   const currentYear = parseInt(currentSeason.split('/')[0]);
   const nextSeason = `${currentYear + 1}/${currentYear + 2}`;
-  
+
   return [
     { value: currentSeason, label: currentSeason },
-    { value: nextSeason, label: nextSeason }
+    { value: nextSeason, label: nextSeason },
   ];
 };
 
@@ -63,14 +63,14 @@ export const getAvailableSeasons = () => {
 export const isDateInSeason = (date, season) => {
   const seasonStart = season.split('/')[0];
   const seasonEnd = season.split('/')[1];
-  
+
   const gameDate = new Date(date);
   const gameYear = gameDate.getFullYear();
   const gameMonth = gameDate.getMonth() + 1;
-  
+
   const startYear = parseInt(seasonStart);
   const endYear = parseInt(seasonEnd);
-  
+
   // Check if date falls within the season range
   if (gameMonth >= 8) {
     // August to December: should be startYear/endYear

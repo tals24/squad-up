@@ -22,7 +22,7 @@ export function usePlayersData({
 
     // Team filter (supports populated object or id)
     if (selectedTeam && selectedTeam !== 'all') {
-      list = list.filter(p => {
+      list = list.filter((p) => {
         if (!p.team) return false;
         if (typeof p.team === 'object') return p.team._id === selectedTeam;
         return p.team === selectedTeam;
@@ -31,13 +31,13 @@ export function usePlayersData({
 
     // Position filter
     if (selectedPosition && selectedPosition !== 'all') {
-      list = list.filter(p => p.position === selectedPosition);
+      list = list.filter((p) => p.position === selectedPosition);
     }
 
     // Search by name
     if (searchTerm && searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
-      list = list.filter(p => (p.fullName || '').toLowerCase().includes(q));
+      list = list.filter((p) => (p.fullName || '').toLowerCase().includes(q));
     }
 
     return list;
@@ -57,10 +57,7 @@ export function usePlayersData({
     currentPage: page,
     hasPrev: page > 1,
     hasNext: page < totalPages,
-    nextPage: () => setCurrentPage(p => Math.min(totalPages, p + 1)),
-    prevPage: () => setCurrentPage(p => Math.max(1, p - 1)),
+    nextPage: () => setCurrentPage((p) => Math.min(totalPages, p + 1)),
+    prevPage: () => setCurrentPage((p) => Math.max(1, p - 1)),
   };
 }
-
-
-

@@ -5,12 +5,12 @@ import { Loader2 } from 'lucide-react';
  * LoadingState Component
  * Provides consistent loading patterns across all pages
  */
-const LoadingState = ({ 
-  message = "Loading...",
-  type = "page", // page, card, inline
-  className = ""
+const LoadingState = ({
+  message = 'Loading...',
+  type = 'page', // page, card, inline
+  className = '',
 }) => {
-  if (type === "page") {
+  if (type === 'page') {
     return (
       <div className={`min-h-screen bg-slate-900 flex items-center justify-center ${className}`}>
         <div className="text-center">
@@ -21,7 +21,7 @@ const LoadingState = ({
     );
   }
 
-  if (type === "card") {
+  if (type === 'card') {
     return (
       <div className={`p-8 text-center ${className}`}>
         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-cyan-400" />

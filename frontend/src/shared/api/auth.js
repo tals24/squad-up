@@ -23,4 +23,3 @@ export const User = {
 
 // Export jwtAuthService directly for modern usage
 export { jwtAuthService };
-

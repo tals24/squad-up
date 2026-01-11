@@ -3,19 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/shared/utils';
 import { DrillDesignerHeader, DrillDesignerToolbar, DrillDesignerCanvas } from '../shared';
 import DrillDescriptionModal from '../DrillDescriptionModal';
-import ConfirmationToast from "@/shared/components/ConfirmationToast";
+import ConfirmationToast from '@/shared/components/ConfirmationToast';
 import { useDrillLabData, useDrillLabHistory, useDrillLabMode } from '@/shared/hooks';
-import { postMessageToParent, navigateToLibrary, formatElementsForSave } from '@/features/drill-system/utils';
+import {
+  postMessageToParent,
+  navigateToLibrary,
+  formatElementsForSave,
+} from '@/features/drill-system/utils';
 
 export default function DrillDesigner() {
   const navigate = useNavigate();
   const mode = useDrillLabMode();
   const canvasRef = useRef(null);
-  
+
   // Detect where the user came from for dynamic back button
   const [backButtonConfig, setBackButtonConfig] = useState({
-    text: "Back to Library",
-    action: () => navigateToLibrary(navigate, createPageUrl)
+    text: 'Back to Library',
+    action: () => navigateToLibrary(navigate, createPageUrl),
   });
 
   // Detect referrer and set appropriate back button
@@ -23,24 +27,26 @@ export default function DrillDesigner() {
     const referrer = document.referrer;
     const currentUrl = window.location.href;
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     console.log('🔍 DrillLab Debug Info:');
     console.log('  - referrer:', referrer);
     console.log('  - currentUrl:', currentUrl);
     console.log('  - urlParams:', Object.fromEntries(urlParams.entries()));
     console.log('  - from param:', urlParams.get('from'));
-    
+
     // Check if we came from training planner (check URL params or referrer)
-    const isFromTrainingPlanner = referrer.includes('/TrainingPlanner') || 
-                                 referrer.includes('/training-planner') ||
-                                 currentUrl.includes('from=training-planner') ||
-                                 urlParams.get('from') === 'training-planner';
-    
-    const isFromDrillLibrary = referrer.includes('/DrillLibrary') || 
-                              referrer.includes('/drill-library') ||
-                              currentUrl.includes('from=drill-library') ||
-                              urlParams.get('from') === 'drill-library';
-    
+    const isFromTrainingPlanner =
+      referrer.includes('/TrainingPlanner') ||
+      referrer.includes('/training-planner') ||
+      currentUrl.includes('from=training-planner') ||
+      urlParams.get('from') === 'training-planner';
+
+    const isFromDrillLibrary =
+      referrer.includes('/DrillLibrary') ||
+      referrer.includes('/drill-library') ||
+      currentUrl.includes('from=drill-library') ||
+      urlParams.get('from') === 'drill-library';
+
     console.log('🔍 Detection Results:');
     console.log('  - isFromTrainingPlanner:', isFromTrainingPlanner);
     console.log('  - isFromDrillLibrary:', isFromDrillLibrary);
@@ -48,59 +54,52 @@ export default function DrillDesigner() {
     console.log('  - referrer includes /training-planner:', referrer.includes('/training-planner'));
     console.log('  - referrer includes /DrillLibrary:', referrer.includes('/DrillLibrary'));
     console.log('  - referrer includes /drill-library:', referrer.includes('/drill-library'));
-    
+
     // Force detection based on URL parameter if referrer is not reliable
     if (urlParams.get('from') === 'training-planner') {
       console.log('✅ Force setting back button to Training Planner (from URL param)');
       setBackButtonConfig({
-        text: "Back to Training Planner",
-        action: () => navigate('/TrainingPlanner')
+        text: 'Back to Training Planner',
+        action: () => navigate('/TrainingPlanner'),
       });
     } else if (urlParams.get('from') === 'drill-library') {
       console.log('✅ Force setting back button to Drill Library (from URL param)');
       setBackButtonConfig({
-        text: "Back to Drill Library",
-        action: () => navigate('/DrillLibrary')
+        text: 'Back to Drill Library',
+        action: () => navigate('/DrillLibrary'),
       });
     } else if (isFromTrainingPlanner) {
       console.log('✅ Setting back button to Training Planner (from referrer)');
       setBackButtonConfig({
-        text: "Back to Training Planner",
-        action: () => navigate('/TrainingPlanner')
+        text: 'Back to Training Planner',
+        action: () => navigate('/TrainingPlanner'),
       });
     } else if (isFromDrillLibrary) {
       console.log('✅ Setting back button to Drill Library (from referrer)');
       setBackButtonConfig({
-        text: "Back to Drill Library",
-        action: () => navigate('/DrillLibrary')
+        text: 'Back to Drill Library',
+        action: () => navigate('/DrillLibrary'),
       });
     } else {
       console.log('⚠️ Defaulting to Library (no source detected)');
       // Default to library
       setBackButtonConfig({
-        text: "Back to Library",
-        action: () => navigateToLibrary(navigate, createPageUrl)
+        text: 'Back to Library',
+        action: () => navigateToLibrary(navigate, createPageUrl),
       });
     }
   }, [navigate]);
-  
+
   // Data management
   const { drillData, setDrillData, isLoading, isSaving, error, saveDrill } = useDrillLabData(
-    mode.drillId, 
-    mode.mode, 
+    mode.drillId,
+    mode.mode,
     mode.searchParams
   );
-  
+
   // History management
-  const {
-    currentElements,
-    saveToHistory,
-    undo,
-    redo,
-    clear,
-    canUndo,
-    canRedo
-  } = useDrillLabHistory(drillData.layoutData || []);
+  const { currentElements, saveToHistory, undo, redo, clear, canUndo, canRedo } =
+    useDrillLabHistory(drillData.layoutData || []);
 
   // UI state
   const [activeTool, setActiveTool] = useState('select');
@@ -115,16 +114,16 @@ export default function DrillDesigner() {
       currentElements: currentElements?.length || 0,
       isLoading,
       mode: mode.mode,
-      isReadOnly: mode.isReadOnly
+      isReadOnly: mode.isReadOnly,
     });
   }, [drillData.layoutData, currentElements, isLoading, mode.mode, mode.isReadOnly]);
 
   // Update drill data when elements change (only for non-read-only mode)
   useEffect(() => {
     if (!mode.isReadOnly) {
-      setDrillData(prev => ({
+      setDrillData((prev) => ({
         ...prev,
-        layoutData: currentElements
+        layoutData: currentElements,
       }));
     }
   }, [currentElements, setDrillData, mode.isReadOnly]);
@@ -142,14 +141,14 @@ export default function DrillDesigner() {
     if (mode.isCreate) {
       // For create mode, post message to parent
       postMessageToParent('DRILL_LAB_SAVE', { elements: elementsToSave });
-      
+
       setConfirmationConfig({
         type: 'success',
         title: 'Draft Saved! 🎨',
-        message: 'Your drill design has been saved to the draft.'
+        message: 'Your drill design has been saved to the draft.',
       });
       setShowConfirmation(true);
-      
+
       // Close window after a short delay
       setTimeout(() => {
         if (window.opener) {
@@ -159,19 +158,19 @@ export default function DrillDesigner() {
     } else {
       // For edit mode, save to database
       const result = await saveDrill(elementsToSave);
-      
+
       if (result.success) {
         setConfirmationConfig({
-            type: 'success',
-            title: 'Tactic Board Saved! 🚀',
-            message: 'Your drill diagram has been successfully saved.'
+          type: 'success',
+          title: 'Tactic Board Saved! 🚀',
+          message: 'Your drill diagram has been successfully saved.',
         });
         setShowConfirmation(true);
       } else {
-         setConfirmationConfig({
-            type: 'error',
-            title: 'Save Failed',
-          message: result.error || 'Could not save the diagram. Please try again.'
+        setConfirmationConfig({
+          type: 'error',
+          title: 'Save Failed',
+          message: result.error || 'Could not save the diagram. Please try again.',
         });
         setShowConfirmation(true);
       }
@@ -240,7 +239,7 @@ export default function DrillDesigner() {
           onClear={handleClear}
           onBack={handleBack}
           onDescription={handleDescription}
-          activeTool={activeTool} 
+          activeTool={activeTool}
           onToolSelect={setActiveTool}
           isSaving={isSaving}
           isReadOnly={mode.isReadOnly}
@@ -267,7 +266,7 @@ export default function DrillDesigner() {
         description={drillData.description}
         drillName={drillData.name}
       />
-      
+
       <ConfirmationToast
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}

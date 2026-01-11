@@ -1,6 +1,6 @@
 /**
  * Game Result Utilities
- * 
+ *
  * Pure functions for calculating and displaying game results.
  * These utilities are used across multiple features (analytics, game-management).
  */
@@ -12,7 +12,7 @@
  */
 export const getGameResult = (game) => {
   if (!game.FinalScore_Display) return 'unknown';
-  const scores = game.FinalScore_Display.split('-').map(s => parseInt(s.trim()));
+  const scores = game.FinalScore_Display.split('-').map((s) => parseInt(s.trim()));
   if (scores.length !== 2 || isNaN(scores[0]) || isNaN(scores[1])) return 'unknown';
   if (scores[0] > scores[1]) return 'win';
   if (scores[0] < scores[1]) return 'loss';
@@ -25,11 +25,15 @@ export const getGameResult = (game) => {
  * @returns {string} - Tailwind CSS background color class
  */
 export const getResultColor = (result) => {
-  switch(result) {
-    case 'win': return 'bg-green-500';
-    case 'loss': return 'bg-red-500';
-    case 'draw': return 'bg-yellow-500';
-    default: return 'bg-gray-500';
+  switch (result) {
+    case 'win':
+      return 'bg-green-500';
+    case 'loss':
+      return 'bg-red-500';
+    case 'draw':
+      return 'bg-yellow-500';
+    default:
+      return 'bg-gray-500';
   }
 };
 
@@ -39,10 +43,14 @@ export const getResultColor = (result) => {
  * @returns {string} - Single character representation (W, L, D, ?)
  */
 export const getResultText = (result) => {
-  switch(result) {
-    case 'win': return 'W';
-    case 'loss': return 'L';
-    case 'draw': return 'D';
-    default: return '?';
+  switch (result) {
+    case 'win':
+      return 'W';
+    case 'loss':
+      return 'L';
+    case 'draw':
+      return 'D';
+    default:
+      return '?';
   }
 };

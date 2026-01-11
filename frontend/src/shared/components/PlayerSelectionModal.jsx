@@ -1,67 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/shared/ui/primitives/dialog";
-import { Button } from "@/shared/ui/primitives/button";
-import { Input } from "@/shared/ui/primitives/input";
-import { Label } from "@/shared/ui/primitives/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { Card, CardContent } from "@/shared/ui/primitives/card";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { Checkbox } from "@/shared/ui/primitives/checkbox";
-import { Search, Users, User, Target, Shield, Zap, TrendingUp } from "lucide-react";
+} from '@/shared/ui/primitives/dialog';
+import { Button } from '@/shared/ui/primitives/button';
+import { Input } from '@/shared/ui/primitives/input';
+import { Label } from '@/shared/ui/primitives/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/select';
+import { Card, CardContent } from '@/shared/ui/primitives/card';
+import { Badge } from '@/shared/ui/primitives/badge';
+import { Checkbox } from '@/shared/ui/primitives/checkbox';
+import { Search, Users, User, Target, Shield, Zap, TrendingUp } from 'lucide-react';
 
-const PlayerSelectionModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  gameId, 
+const PlayerSelectionModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  gameId,
   existingRoster = [],
-  teamPlayers = [] 
+  teamPlayers = [],
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlayers, setSelectedPlayers] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [positionFilter, setPositionFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [positionFilter, setPositionFilter] = useState('all');
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSearchTerm("");
+      setSearchTerm('');
       setSelectedPlayers([]);
-      setStatusFilter("all");
-      setPositionFilter("all");
+      setStatusFilter('all');
+      setPositionFilter('all');
     }
   }, [isOpen]);
 
   // Get existing player IDs in roster
-  const existingPlayerIds = existingRoster.map(roster => 
-    roster.player?._id || roster.player || roster.Player?.[0]
+  const existingPlayerIds = existingRoster.map(
+    (roster) => roster.player?._id || roster.player || roster.Player?.[0]
   );
 
   // Filter available players (not already in roster)
-  const availablePlayers = teamPlayers.filter(player => {
+  const availablePlayers = teamPlayers.filter((player) => {
     const playerId = player._id || player.id;
     return !existingPlayerIds.includes(playerId);
   });
 
   // Filter players based on search and filters
-  const filteredPlayers = availablePlayers.filter(player => {
+  const filteredPlayers = availablePlayers.filter((player) => {
     const fullName = player.fullName || player.FullName || '';
     const position = player.position || player.Position || '';
     const kitNumber = player.kitNumber || player.KitNumber || '';
-    
+
     // Search filter
-    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        kitNumber.toString().includes(searchTerm);
-    
+    const matchesSearch =
+      fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kitNumber.toString().includes(searchTerm);
+
     // Position filter
-    const matchesPosition = positionFilter === "all" || position === positionFilter;
-    
+    const matchesPosition = positionFilter === 'all' || position === positionFilter;
+
     return matchesSearch && matchesPosition;
   });
 
@@ -76,15 +83,13 @@ const PlayerSelectionModal = ({
   const positionOrder = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward', 'Other'];
 
   const handlePlayerToggle = (playerId) => {
-    setSelectedPlayers(prev => 
-      prev.includes(playerId) 
-        ? prev.filter(id => id !== playerId)
-        : [...prev, playerId]
+    setSelectedPlayers((prev) =>
+      prev.includes(playerId) ? prev.filter((id) => id !== playerId) : [...prev, playerId]
     );
   };
 
   const handleConfirm = () => {
-    const playersToAdd = filteredPlayers.filter(player => 
+    const playersToAdd = filteredPlayers.filter((player) =>
       selectedPlayers.includes(player._id || player.id)
     );
     onConfirm(playersToAdd);
@@ -146,7 +151,7 @@ const PlayerSelectionModal = ({
                 />
               </div>
             </div>
-            
+
             <div className="w-48">
               <Label className="text-slate-300">Position</Label>
               <Select value={positionFilter} onValueChange={setPositionFilter}>
@@ -175,7 +180,7 @@ const PlayerSelectionModal = ({
 
           {/* Players List */}
           <div className="max-h-96 overflow-y-auto space-y-4">
-            {positionOrder.map(position => {
+            {positionOrder.map((position) => {
               const players = playersByPosition[position] || [];
               if (players.length === 0) return null;
 
@@ -188,9 +193,9 @@ const PlayerSelectionModal = ({
                       {players.length}
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {players.map(player => {
+                    {players.map((player) => {
                       const playerId = player._id || player.id;
                       const isSelected = selectedPlayers.includes(playerId);
                       const fullName = player.fullName || player.FullName || 'Unknown';
@@ -198,23 +203,23 @@ const PlayerSelectionModal = ({
                       const age = player.age || player.Age || '';
 
                       return (
-                        <Card 
+                        <Card
                           key={playerId}
                           className={`cursor-pointer transition-all duration-200 ${
-                            isSelected 
-                              ? 'bg-cyan-500/20 border-cyan-500/50' 
+                            isSelected
+                              ? 'bg-cyan-500/20 border-cyan-500/50'
                               : 'bg-slate-700/50 border-slate-600 hover:bg-slate-700/70'
                           }`}
                           onClick={() => handlePlayerToggle(playerId)}
                         >
                           <CardContent className="p-3">
                             <div className="flex items-center gap-3">
-                              <Checkbox 
+                              <Checkbox
                                 checked={isSelected}
                                 onChange={() => handlePlayerToggle(playerId)}
                                 className="data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
                               />
-                              
+
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   {kitNumber && (
@@ -224,9 +229,7 @@ const PlayerSelectionModal = ({
                                   )}
                                   <p className="font-medium text-white truncate">{fullName}</p>
                                 </div>
-                                {age && (
-                                  <p className="text-xs text-slate-400">Age: {age}</p>
-                                )}
+                                {age && <p className="text-xs text-slate-400">Age: {age}</p>}
                               </div>
                             </div>
                           </CardContent>
@@ -243,7 +246,9 @@ const PlayerSelectionModal = ({
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-400">
-                {searchTerm ? 'No players found matching your search.' : 'All players are already in the roster.'}
+                {searchTerm
+                  ? 'No players found matching your search.'
+                  : 'All players are already in the roster.'}
               </p>
             </div>
           )}

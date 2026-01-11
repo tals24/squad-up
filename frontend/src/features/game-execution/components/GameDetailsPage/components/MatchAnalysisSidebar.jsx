@@ -1,15 +1,32 @@
-import React, { useMemo } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import { Input } from "@/shared/ui/primitives/input";
-import { Trophy, Zap, Star, Shield, Target, FileText, Check, AlertCircle, Plus, Edit, Trash2, Clock, ArrowRightLeft, ArrowUp, ArrowDown, ShieldAlert } from "lucide-react";
+import React, { useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import { Input } from '@/shared/ui/primitives/input';
+import {
+  Trophy,
+  Zap,
+  Star,
+  Shield,
+  Target,
+  FileText,
+  Check,
+  AlertCircle,
+  Plus,
+  Edit,
+  Trash2,
+  Clock,
+  ArrowRightLeft,
+  ArrowUp,
+  ArrowDown,
+  ShieldAlert,
+} from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/primitives/tooltip";
-import DifficultyAssessmentCard from "./DifficultyAssessmentCard";
+} from '@/shared/ui/primitives/tooltip';
+import DifficultyAssessmentCard from './DifficultyAssessmentCard';
 
 export default function MatchAnalysisSidebar({
   isScheduled,
@@ -42,7 +59,7 @@ export default function MatchAnalysisSidebar({
     isDifficultyAssessmentEnabled,
     hasDifficultyAssessment: !!difficultyAssessment,
     hasGame: !!game,
-    hasHandlers: !!(onSaveDifficultyAssessment && onDeleteDifficultyAssessment)
+    hasHandlers: !!(onSaveDifficultyAssessment && onDeleteDifficultyAssessment),
   });
 
   /**
@@ -53,24 +70,25 @@ export default function MatchAnalysisSidebar({
     console.log('🔄 [MatchAnalysisSidebar] Recalculating matchState for substitutions:', {
       substitutionsCount: substitutions.length,
       goalsCount: goals.length,
-      goals: goals.map(g => ({
+      goals: goals.map((g) => ({
         minute: g.minute,
         isOpponentGoal: g.isOpponentGoal,
-        goalCategory: g.goalCategory
-      }))
+        goalCategory: g.goalCategory,
+      })),
     });
 
     return substitutions.map((sub, index) => {
       // Count our goals and opponent goals up to this substitution minute
       // Handle both isOpponentGoal (boolean) and goalCategory (string) for compatibility
-      const ourGoalsBeforeThis = goals.filter(g => 
-        g.minute <= sub.minute && 
-        (g.goalCategory === 'TeamGoal' || (!g.isOpponentGoal && g.goalCategory !== 'OpponentGoal'))
+      const ourGoalsBeforeThis = goals.filter(
+        (g) =>
+          g.minute <= sub.minute &&
+          (g.goalCategory === 'TeamGoal' ||
+            (!g.isOpponentGoal && g.goalCategory !== 'OpponentGoal'))
       ).length;
-      
-      const opponentGoalsBeforeThis = goals.filter(g => 
-        g.minute <= sub.minute && 
-        (g.goalCategory === 'OpponentGoal' || g.isOpponentGoal)
+
+      const opponentGoalsBeforeThis = goals.filter(
+        (g) => g.minute <= sub.minute && (g.goalCategory === 'OpponentGoal' || g.isOpponentGoal)
       ).length;
 
       // Determine match state
@@ -88,25 +106,27 @@ export default function MatchAnalysisSidebar({
         recalculatedMatchState: matchState,
         ourGoals: ourGoalsBeforeThis,
         opponentGoals: opponentGoalsBeforeThis,
-        goalsUpToThisMinute: goals.filter(g => g.minute <= sub.minute).map(g => ({
-          minute: g.minute,
-          isOpponentGoal: g.isOpponentGoal
-        }))
+        goalsUpToThisMinute: goals
+          .filter((g) => g.minute <= sub.minute)
+          .map((g) => ({
+            minute: g.minute,
+            isOpponentGoal: g.isOpponentGoal,
+          })),
       });
 
       return {
         ...sub,
-        matchState
+        matchState,
       };
     });
   }, [substitutions, goals]);
-  
+
   return (
-    <div 
+    <div
       className="w-[336px] bg-slate-900/95 backdrop-blur-sm border-l border-slate-700/50 space-y-4 overflow-y-auto p-4"
       style={{
         scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
+        scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent',
       }}
     >
       {/* AI Summary - For Scheduled (future: prepare to game data) and Done (match summary) */}
@@ -125,13 +145,15 @@ export default function MatchAnalysisSidebar({
                   The AI will provide preparation data and insights for the upcoming match.
                 </p>
                 <p className="text-xs text-slate-500 mt-2 italic">
-                  (This component will be implemented in a future step, showing prepare to game data)
+                  (This component will be implemented in a future step, showing prepare to game
+                  data)
                 </p>
               </>
             ) : (
               <>
                 <p className="text-sm text-slate-400">
-                  The AI will analyze all player reports and team summaries to generate a concise, three-sentence summary of the match.
+                  The AI will analyze all player reports and team summaries to generate a concise,
+                  three-sentence summary of the match.
                 </p>
                 <p className="text-xs text-slate-500 mt-2 italic">
                   (This component will be implemented in a future step, integrating with an LLM)
@@ -156,7 +178,10 @@ export default function MatchAnalysisSidebar({
           />
         </>
       ) : (
-        console.log('🔍 [MatchAnalysisSidebar] NOT rendering DifficultyAssessmentCard - isDifficultyAssessmentEnabled:', isDifficultyAssessmentEnabled)
+        console.log(
+          '🔍 [MatchAnalysisSidebar] NOT rendering DifficultyAssessmentCard - isDifficultyAssessmentEnabled:',
+          isDifficultyAssessmentEnabled
+        )
       )}
 
       {/* Extra Time Section - First component, one line */}
@@ -173,9 +198,9 @@ export default function MatchAnalysisSidebar({
             value={matchDuration.firstHalfExtraTime || ''}
             onChange={(e) => {
               const value = parseInt(e.target.value) || 0;
-              setMatchDuration({ 
-                ...matchDuration, 
-                firstHalfExtraTime: value 
+              setMatchDuration({
+                ...matchDuration,
+                firstHalfExtraTime: value,
               });
             }}
             disabled={isDone}
@@ -191,9 +216,9 @@ export default function MatchAnalysisSidebar({
             value={matchDuration.secondHalfExtraTime || ''}
             onChange={(e) => {
               const value = parseInt(e.target.value) || 0;
-              setMatchDuration({ 
-                ...matchDuration, 
-                secondHalfExtraTime: value 
+              setMatchDuration({
+                ...matchDuration,
+                secondHalfExtraTime: value,
               });
             }}
             disabled={isDone}
@@ -225,19 +250,26 @@ export default function MatchAnalysisSidebar({
           </CardHeader>
           <CardContent>
             {substitutionsWithRecalculatedMatchState.length > 0 ? (
-              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
-              }}>
+              <div
+                className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent',
+                }}
+              >
                 <TooltipProvider>
                   {substitutionsWithRecalculatedMatchState
                     .sort((a, b) => (a.minute || 0) - (b.minute || 0))
                     .map((sub) => {
-                      const playerOutName = sub.playerOutId?.fullName || sub.playerOutId?.name || 'Unknown';
-                      const playerOutKit = sub.playerOutId?.kitNumber || sub.playerOutId?.jerseyNumber || '?';
-                      const playerInName = sub.playerInId?.fullName || sub.playerInId?.name || 'Unknown';
-                      const playerInKit = sub.playerInId?.kitNumber || sub.playerInId?.jerseyNumber || '?';
-                      
+                      const playerOutName =
+                        sub.playerOutId?.fullName || sub.playerOutId?.name || 'Unknown';
+                      const playerOutKit =
+                        sub.playerOutId?.kitNumber || sub.playerOutId?.jerseyNumber || '?';
+                      const playerInName =
+                        sub.playerInId?.fullName || sub.playerInId?.name || 'Unknown';
+                      const playerInKit =
+                        sub.playerInId?.kitNumber || sub.playerInId?.jerseyNumber || '?';
+
                       // Build tooltip content
                       const tooltipContent = (
                         <div className="space-y-1 text-xs">
@@ -251,7 +283,9 @@ export default function MatchAnalysisSidebar({
                             In: #{playerInKit} {playerInName}
                           </div>
                           {sub.reason && (
-                            <div className="text-slate-400">Reason: {sub.reason.replace('-', ' ')}</div>
+                            <div className="text-slate-400">
+                              Reason: {sub.reason.replace('-', ' ')}
+                            </div>
                           )}
                           {sub.matchState && (
                             <div className="text-slate-400">Match State: {sub.matchState}</div>
@@ -261,7 +295,7 @@ export default function MatchAnalysisSidebar({
                           )}
                         </div>
                       );
-                      
+
                       return (
                         <Tooltip key={sub._id}>
                           <TooltipTrigger asChild>
@@ -317,7 +351,10 @@ export default function MatchAnalysisSidebar({
                               )}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white max-w-xs">
+                          <TooltipContent
+                            side="right"
+                            className="bg-slate-800 border-slate-700 text-white max-w-xs"
+                          >
                             {tooltipContent}
                           </TooltipContent>
                         </Tooltip>
@@ -356,22 +393,31 @@ export default function MatchAnalysisSidebar({
           </CardHeader>
           <CardContent>
             {goals.length > 0 ? (
-              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
-              }}>
+              <div
+                className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent',
+                }}
+              >
                 <TooltipProvider>
                   {goals
                     .sort((a, b) => (a.minute || 0) - (b.minute || 0))
                     .map((goal) => {
-                      const isOpponentGoal = goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal;
-                      const scorerName = goal.scorerId?.fullName || goal.scorerId?.name || (goal.goalType === 'own-goal' ? 'Own Goal' : 'Unknown');
+                      const isOpponentGoal =
+                        goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal;
+                      const scorerName =
+                        goal.scorerId?.fullName ||
+                        goal.scorerId?.name ||
+                        (goal.goalType === 'own-goal' ? 'Own Goal' : 'Unknown');
                       const assisterName = goal.assistedById?.fullName || goal.assistedById?.name;
-                      
+
                       // Build tooltip content
                       const tooltipContent = (
                         <div className="space-y-1 text-xs">
-                          <div className="font-semibold">{isOpponentGoal ? 'Opponent Goal' : scorerName}</div>
+                          <div className="font-semibold">
+                            {isOpponentGoal ? 'Opponent Goal' : scorerName}
+                          </div>
                           {!isOpponentGoal && assisterName && (
                             <div className="text-slate-300">Assist: {assisterName}</div>
                           )}
@@ -380,7 +426,8 @@ export default function MatchAnalysisSidebar({
                           </div>
                           {goal.goalInvolvement && goal.goalInvolvement.length > 0 && (
                             <div className="text-slate-400">
-                              +{goal.goalInvolvement.length} contributor{goal.goalInvolvement.length > 1 ? 's' : ''}
+                              +{goal.goalInvolvement.length} contributor
+                              {goal.goalInvolvement.length > 1 ? 's' : ''}
                             </div>
                           )}
                           {goal.matchState && (
@@ -388,7 +435,7 @@ export default function MatchAnalysisSidebar({
                           )}
                         </div>
                       );
-                      
+
                       return (
                         <Tooltip key={goal._id}>
                           <TooltipTrigger asChild>
@@ -400,10 +447,12 @@ export default function MatchAnalysisSidebar({
                               }`}
                             >
                               {/* Goal Indicator Circle */}
-                              <div className={`
+                              <div
+                                className={`
                                 relative w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shrink-0
                                 ${isOpponentGoal ? 'bg-red-500' : 'bg-green-500'}
-                              `}>
+                              `}
+                              >
                                 {goal.goalNumber || goal.minute || '?'}
                               </div>
 
@@ -449,7 +498,10 @@ export default function MatchAnalysisSidebar({
                               )}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white max-w-xs">
+                          <TooltipContent
+                            side="right"
+                            className="bg-slate-800 border-slate-700 text-white max-w-xs"
+                          >
                             {tooltipContent}
                           </TooltipContent>
                         </Tooltip>
@@ -458,15 +510,12 @@ export default function MatchAnalysisSidebar({
                 </TooltipProvider>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 text-center py-4">
-                No goals recorded yet
-              </p>
+              <p className="text-sm text-slate-500 text-center py-4">No goals recorded yet</p>
             )}
           </CardContent>
         </Card>
       )}
 
-      
       {/* Cards Section - Only show for Played/Done */}
       {(isPlayed || isDone) && (
         <Card className="bg-slate-900/90 backdrop-blur-sm border-slate-700/50">
@@ -489,21 +538,30 @@ export default function MatchAnalysisSidebar({
           </CardHeader>
           <CardContent>
             {cards.length > 0 ? (
-              <div className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent'
-              }}>
+              <div
+                className="space-y-1.5 max-h-[calc(5*3.5rem)] overflow-y-auto"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(148, 163, 184, 0.2) transparent',
+                }}
+              >
                 <TooltipProvider>
                   {cards
                     .sort((a, b) => (a.minute || 0) - (b.minute || 0))
                     .map((card) => {
-                      const playerName = card.playerId?.fullName || card.playerId?.name || 'Unknown';
-                      const playerKit = card.playerId?.kitNumber || card.playerId?.jerseyNumber || '?';
-                      const cardTypeLabel = card.cardType === 'yellow' ? 'Yellow' : 
-                                          card.cardType === 'red' ? 'Red' : 'Second Yellow';
-                      const cardEmoji = card.cardType === 'yellow' ? '🟨' : 
-                                       card.cardType === 'red' ? '🟥' : '🟨🟥';
-                      
+                      const playerName =
+                        card.playerId?.fullName || card.playerId?.name || 'Unknown';
+                      const playerKit =
+                        card.playerId?.kitNumber || card.playerId?.jerseyNumber || '?';
+                      const cardTypeLabel =
+                        card.cardType === 'yellow'
+                          ? 'Yellow'
+                          : card.cardType === 'red'
+                            ? 'Red'
+                            : 'Second Yellow';
+                      const cardEmoji =
+                        card.cardType === 'yellow' ? '🟨' : card.cardType === 'red' ? '🟥' : '🟨🟥';
+
                       // Build tooltip content
                       const tooltipContent = (
                         <div className="space-y-1 text-xs">
@@ -511,15 +569,13 @@ export default function MatchAnalysisSidebar({
                           <div className="text-slate-300">
                             Player: #{playerKit} {playerName}
                           </div>
-                          <div className="text-slate-400">
-                            Minute: {card.minute}'
-                          </div>
+                          <div className="text-slate-400">Minute: {card.minute}'</div>
                           {card.reason && (
                             <div className="text-slate-400">Reason: {card.reason}</div>
                           )}
                         </div>
                       );
-                      
+
                       return (
                         <Tooltip key={card._id}>
                           <TooltipTrigger asChild>
@@ -573,7 +629,10 @@ export default function MatchAnalysisSidebar({
                               )}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white max-w-xs">
+                          <TooltipContent
+                            side="right"
+                            className="bg-slate-800 border-slate-700 text-white max-w-xs"
+                          >
                             {tooltipContent}
                           </TooltipContent>
                         </Tooltip>
@@ -582,9 +641,7 @@ export default function MatchAnalysisSidebar({
                 </TooltipProvider>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 text-center py-4">
-                No cards recorded yet
-              </p>
+              <p className="text-sm text-slate-500 text-center py-4">No cards recorded yet</p>
             )}
           </CardContent>
         </Card>
@@ -599,7 +656,7 @@ export default function MatchAnalysisSidebar({
           <CardContent className="space-y-3">
             {/* Defense Button */}
             <Button
-              onClick={() => onTeamSummaryClick("defense")}
+              onClick={() => onTeamSummaryClick('defense')}
               disabled={isDone}
               className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
             >
@@ -618,7 +675,7 @@ export default function MatchAnalysisSidebar({
 
             {/* Midfield Button */}
             <Button
-              onClick={() => onTeamSummaryClick("midfield")}
+              onClick={() => onTeamSummaryClick('midfield')}
               disabled={isDone}
               className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
             >
@@ -637,7 +694,7 @@ export default function MatchAnalysisSidebar({
 
             {/* Attack Button */}
             <Button
-              onClick={() => onTeamSummaryClick("attack")}
+              onClick={() => onTeamSummaryClick('attack')}
               disabled={isDone}
               className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
             >
@@ -656,7 +713,7 @@ export default function MatchAnalysisSidebar({
 
             {/* General Button */}
             <Button
-              onClick={() => onTeamSummaryClick("general")}
+              onClick={() => onTeamSummaryClick('general')}
               disabled={isDone}
               className="w-full justify-start gap-3 h-12 bg-slate-800 hover:bg-slate-700 border-slate-600 text-white"
             >
@@ -678,4 +735,3 @@ export default function MatchAnalysisSidebar({
     </div>
   );
 }
-

@@ -1,6 +1,10 @@
-import React from "react";
-import { Plus } from "lucide-react";
-import { PageHeader, SearchFilter, StandardButton } from "@/shared/ui/primitives/design-system-components";
+import React from 'react';
+import { Plus } from 'lucide-react';
+import {
+  PageHeader,
+  SearchFilter,
+  StandardButton,
+} from '@/shared/ui/primitives/design-system-components';
 
 export default function DrillLibraryHeader({
   searchTerm,
@@ -11,7 +15,7 @@ export default function DrillLibraryHeader({
   onAgeGroupChange,
   categories,
   ageGroups,
-  onOpenAddModal
+  onOpenAddModal,
 }) {
   return (
     <>
@@ -20,7 +24,7 @@ export default function DrillLibraryHeader({
         accentWord="Library"
         subtitle="Browse and manage training drills"
         actionButton={
-          <StandardButton 
+          <StandardButton
             onClick={onOpenAddModal}
             variant="primary"
             icon={<Plus className="w-5 h-5" />}
@@ -38,21 +42,21 @@ export default function DrillLibraryHeader({
           {
             value: categoryFilter,
             onChange: onCategoryChange,
-            placeholder: "All Categories",
+            placeholder: 'All Categories',
             options: [
-              { value: "all", label: "All Categories" },
-              ...categories.map(cat => ({ value: cat, label: cat }))
-            ]
+              { value: 'all', label: 'All Categories' },
+              ...categories.map((cat) => ({ value: cat, label: cat })),
+            ],
           },
           {
             value: ageGroupFilter,
             onChange: onAgeGroupChange,
-            placeholder: "All Age Groups",
+            placeholder: 'All Age Groups',
             options: [
-              { value: "all", label: "All Age Groups" },
-              ...ageGroups.map(age => ({ value: age, label: age }))
-            ]
-          }
+              { value: 'all', label: 'All Age Groups' },
+              ...ageGroups.map((age) => ({ value: age, label: age })),
+            ],
+          },
         ]}
       />
     </>

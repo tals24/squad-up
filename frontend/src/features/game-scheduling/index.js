@@ -1,9 +1,9 @@
 /**
  * Game Scheduling Feature - Public API
- * 
+ *
  * This feature handles pre-game planning: creating games, viewing schedules,
  * and transitioning games from Draft → Scheduled status.
- * 
+ *
  * User Journey: Pre-game planning phase
  */
 

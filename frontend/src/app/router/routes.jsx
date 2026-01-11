@@ -9,7 +9,7 @@ import { lazy } from 'react';
 // LAZY-LOADED PAGE COMPONENTS
 // Each page is loaded on-demand when user navigates to it
 // This reduces initial bundle size from ~500KB to ~150KB (70% reduction)
-// 
+//
 // NOTE: Pages are thin wrappers that compose feature components.
 // We're migrating incrementally from features/* to pages/* (Phase 2).
 // ============================================================================
@@ -21,15 +21,21 @@ const AddGamePage = lazy(() => import('@/pages/AddGamePage'));
 
 // Player Management
 const PlayersPage = lazy(() => import('@/features/player-management/components/PlayersPage'));
-const PlayerDetailPage = lazy(() => import('@/features/player-management/components/PlayerDetailPage'));
+const PlayerDetailPage = lazy(
+  () => import('@/features/player-management/components/PlayerDetailPage')
+);
 const AddPlayerPage = lazy(() => import('@/features/player-management/components/AddPlayerPage'));
 
 // Drill System
 const DrillLibraryPage = lazy(() => import('@/features/drill-system/components/DrillLibraryPage'));
-const DrillDesignerPage = lazy(() => import('@/features/drill-system/components/DrillDesignerPage'));
+const DrillDesignerPage = lazy(
+  () => import('@/features/drill-system/components/DrillDesignerPage')
+);
 
 // Training Management
-const TrainingPlannerPage = lazy(() => import('@/features/training-management/components/TrainingPlannerPage'));
+const TrainingPlannerPage = lazy(
+  () => import('@/features/training-management/components/TrainingPlannerPage')
+);
 
 // Analytics
 const DashboardPage = lazy(() => import('@/features/analytics/components/DashboardPage'));
@@ -42,7 +48,9 @@ const TacticBoardPage = lazy(() => import('@/features/team-management/components
 // User Management
 const LoginPage = lazy(() => import('@/features/user-management/components/LoginPage'));
 const AddUserPage = lazy(() => import('@/features/user-management/components/AddUserPage'));
-const AccessDeniedPage = lazy(() => import('@/features/user-management/components/AccessDeniedPage'));
+const AccessDeniedPage = lazy(
+  () => import('@/features/user-management/components/AccessDeniedPage')
+);
 
 // Reporting
 const AddReportPage = lazy(() => import('@/features/reporting/components/AddReportPage'));
@@ -178,4 +186,3 @@ export function getCurrentPage(url) {
   const route = allRoutes.find((r) => r.name.toLowerCase() === urlLastPart.toLowerCase());
   return route ? route.name : 'Dashboard';
 }
-

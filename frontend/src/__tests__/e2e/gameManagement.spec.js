@@ -1,7 +1,7 @@
 /**
  * Game Management E2E Tests
  * End-to-end tests for the complete game management workflow
- * 
+ *
  * Prerequisites:
  * - Backend server running on localhost:3001
  * - Frontend server running on localhost:5173
@@ -24,7 +24,7 @@ test.describe('Game Management', () => {
     await page.fill('#email', TEST_USER.email);
     await page.fill('#password', TEST_USER.password);
     await page.click('button[type="submit"]');
-    
+
     // Wait for dashboard to load
     await page.waitForURL(`${BASE_URL}/Dashboard`);
   });
@@ -57,7 +57,7 @@ test.describe('Game Management', () => {
   test('should view game details', async ({ page }) => {
     // Navigate to games page
     await page.click('text=Games');
-    
+
     // Click on first game
     const firstGame = page.locator('[data-testid="game-card"]').first();
     await firstGame.click();
@@ -121,7 +121,7 @@ test.describe('Game Management', () => {
 
     // Verify goal appears in timeline
     await expect(page.locator('text=John Doe scored')).toBeVisible();
-    await expect(page.locator('text=23\'')).toBeVisible();
+    await expect(page.locator("text=23'")).toBeVisible();
   });
 
   test('should handle substitution', async ({ page }) => {
@@ -176,7 +176,7 @@ test.describe('Game Management - Error Handling', () => {
 
   test('should handle network error gracefully', async ({ page, context }) => {
     // Block API calls
-    await context.route('**/api/games', route => route.abort());
+    await context.route('**/api/games', (route) => route.abort());
 
     await page.click('text=Games');
 
@@ -184,4 +184,3 @@ test.describe('Game Management - Error Handling', () => {
     await expect(page.locator('text=Failed to load games')).toBeVisible();
   });
 });
-

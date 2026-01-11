@@ -1,14 +1,14 @@
-import React from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/shared/ui/primitives/button";
-import { Label } from "@/shared/ui/primitives/label";
+import React from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/shared/ui/primitives/button';
+import { Label } from '@/shared/ui/primitives/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/primitives/select";
+} from '@/shared/ui/primitives/select';
 
 const CONTRIBUTION_TYPES = [
   { value: 'pre-assist', label: 'Pre-Assist' },
@@ -16,38 +16,33 @@ const CONTRIBUTION_TYPES = [
   { value: 'defensive-action', label: 'Defensive Action' },
   { value: 'set-piece-delivery', label: 'Set Piece Delivery' },
   { value: 'pressing-action', label: 'Pressing Action' },
-  { value: 'other', label: 'Other' }
+  { value: 'other', label: 'Other' },
 ];
 
 /**
  * GoalInvolvementSection Component
- * 
+ *
  * Displays and manages goal involvement tracking (pre-assists and other contributions).
  * Allows adding/removing involved players and selecting their contribution type.
- * 
+ *
  * @param {Array} involvements - Array of involvement objects: [{ playerId, contributionType }]
  * @param {Function} onUpdate - Callback when involvements change: (newInvolvements) => void
  * @param {Array} players - Available players for selection
  * @param {Array} excludedPlayerIds - Player IDs to exclude (e.g., scorer, assister)
  * @param {boolean} isReadOnly - Whether the section is read-only
  */
-export const GoalInvolvementSection = ({ 
-  involvements = [], 
-  onUpdate, 
+export const GoalInvolvementSection = ({
+  involvements = [],
+  onUpdate,
   players = [],
   excludedPlayerIds = [],
-  isReadOnly = false 
+  isReadOnly = false,
 }) => {
   // Filter out excluded players (scorer, assister)
-  const availablePlayers = players.filter(
-    player => !excludedPlayerIds.includes(player._id)
-  );
+  const availablePlayers = players.filter((player) => !excludedPlayerIds.includes(player._id));
 
   const handleAddInvolvement = () => {
-    const newInvolvements = [
-      ...involvements,
-      { playerId: null, contributionType: 'pre-assist' }
-    ];
+    const newInvolvements = [...involvements, { playerId: null, contributionType: 'pre-assist' }];
     onUpdate(newInvolvements);
   };
 
@@ -79,7 +74,7 @@ export const GoalInvolvementSection = ({
           </Button>
         )}
       </div>
-      
+
       {involvements.map((involvement, index) => (
         <div key={index} className="flex gap-2 items-start">
           <div className="flex-1 grid grid-cols-2 gap-2">
@@ -92,7 +87,7 @@ export const GoalInvolvementSection = ({
                 <SelectValue placeholder="Select player..." />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
-                {availablePlayers.map(player => (
+                {availablePlayers.map((player) => (
                   <SelectItem key={player._id} value={player._id} className="text-white">
                     #{player.kitNumber || '?'} {player.fullName || player.name || 'Unknown'}
                   </SelectItem>
@@ -109,7 +104,7 @@ export const GoalInvolvementSection = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
-                {CONTRIBUTION_TYPES.map(type => (
+                {CONTRIBUTION_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value} className="text-white">
                     {type.label}
                   </SelectItem>
@@ -117,7 +112,7 @@ export const GoalInvolvementSection = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           {!isReadOnly && (
             <Button
               type="button"
@@ -131,11 +126,8 @@ export const GoalInvolvementSection = ({
           )}
         </div>
       ))}
-      
-      {involvements.length === 0 && (
-        <p className="text-sm text-slate-500">No contributors added</p>
-      )}
+
+      {involvements.length === 0 && <p className="text-sm text-slate-500">No contributors added</p>}
     </div>
   );
 };
-

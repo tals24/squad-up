@@ -1,8 +1,8 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/shared/ui/primitives/button";
-import { Input } from "@/shared/ui/primitives/input";
-import { Badge } from "@/shared/ui/primitives/badge";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/shared/ui/primitives/button';
+import { Input } from '@/shared/ui/primitives/input';
+import { Badge } from '@/shared/ui/primitives/badge';
 import {
   ArrowLeft,
   Calendar,
@@ -19,7 +19,7 @@ import {
   Trophy,
   Zap,
   Star,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function GameDetailsHeader({
   game,
@@ -43,11 +43,11 @@ export default function GameDetailsHeader({
   const navigate = useNavigate();
 
   // Format date
-  const formattedDate = new Date(game.date).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  const formattedDate = new Date(game.date).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 
   return (
@@ -60,12 +60,12 @@ export default function GameDetailsHeader({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/GamesSchedule")}
+              onClick={() => navigate('/GamesSchedule')}
               className="text-cyan-400 hover:text-cyan-300 hover:bg-slate-800"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            
+
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                 {game.gameTitle || `${game.teamName} vs ${game.opponent}`}
@@ -88,9 +88,13 @@ export default function GameDetailsHeader({
           </div>
 
           {/* Center: Match Stats - Only show for Played/Done */}
-          {(isPlayed || isDone) && matchStats && (matchStats.scorers.length > 0 || matchStats.assists.length > 0 || matchStats.topRated) && (
-            <div className="flex-1 flex items-center justify-center">
-              <style>{`
+          {(isPlayed || isDone) &&
+            matchStats &&
+            (matchStats.scorers.length > 0 ||
+              matchStats.assists.length > 0 ||
+              matchStats.topRated) && (
+              <div className="flex-1 flex items-center justify-center">
+                <style>{`
                 .match-stats-scrollable {
                   scrollbar-width: thin;
                   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
@@ -106,56 +110,56 @@ export default function GameDetailsHeader({
                   border-radius: 2px;
                 }
               `}</style>
-              <div className="flex gap-6 px-4 py-1.5 bg-slate-800/30 border border-slate-700/50 rounded-lg max-h-20">
-                {/* Scorers */}
-                {matchStats.scorers.length > 0 && (
-                  <div className="flex flex-col min-w-0">
-                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
-                      <Trophy className="w-3 h-3" />
-                      Scorers
+                <div className="flex gap-6 px-4 py-1.5 bg-slate-800/30 border border-slate-700/50 rounded-lg max-h-20">
+                  {/* Scorers */}
+                  {matchStats.scorers.length > 0 && (
+                    <div className="flex flex-col min-w-0">
+                      <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                        <Trophy className="w-3 h-3" />
+                        Scorers
+                      </div>
+                      <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
+                        {matchStats.scorers.map((scorer, i) => (
+                          <div key={i} className="whitespace-nowrap">
+                            {scorer.name} ({scorer.count})
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
-                      {matchStats.scorers.map((scorer, i) => (
-                        <div key={i} className="whitespace-nowrap">
-                          {scorer.name} ({scorer.count})
-                        </div>
-                      ))}
+                  )}
+
+                  {/* Assists */}
+                  {matchStats.assists.length > 0 && (
+                    <div className="flex flex-col min-w-0">
+                      <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                        <Zap className="w-3 h-3" />
+                        Assists
+                      </div>
+                      <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
+                        {matchStats.assists.map((assist, i) => (
+                          <div key={i} className="whitespace-nowrap">
+                            {assist.name} ({assist.count})
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Assists */}
-                {matchStats.assists.length > 0 && (
-                  <div className="flex flex-col min-w-0">
-                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
-                      <Zap className="w-3 h-3" />
-                      Assists
+                  )}
+
+                  {/* MVP */}
+                  {matchStats.topRated && (
+                    <div className="flex flex-col min-w-0">
+                      <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
+                        <Star className="w-3 h-3" />
+                        MVP
+                      </div>
+                      <div className="text-xs text-white whitespace-nowrap">
+                        {matchStats.topRated.name} ({matchStats.topRated.rating})
+                      </div>
                     </div>
-                    <div className="text-xs text-white overflow-y-auto match-stats-scrollable max-h-12">
-                      {matchStats.assists.map((assist, i) => (
-                        <div key={i} className="whitespace-nowrap">
-                          {assist.name} ({assist.count})
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* MVP */}
-                {matchStats.topRated && (
-                  <div className="flex flex-col min-w-0">
-                    <div className="text-xs font-semibold text-cyan-400 mb-1 flex items-center gap-1 whitespace-nowrap">
-                      <Star className="w-3 h-3" />
-                      MVP
-                    </div>
-                    <div className="text-xs text-white whitespace-nowrap">
-                      {matchStats.topRated.name} ({matchStats.topRated.rating})
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Right: Status + Score + Actions */}
           <div className="flex items-center gap-4">
@@ -163,17 +167,19 @@ export default function GameDetailsHeader({
             <Badge
               variant="outline"
               className={`
-                ${game.status === "Scheduled" ? "border-blue-500 text-blue-400" : ""}
-                ${game.status === "Played" ? "border-yellow-500 text-yellow-400 animate-pulse" : ""}
-                ${game.status === "Done" ? "border-green-500 text-green-400" : ""}
-                ${game.status === "Postponed" ? "border-gray-500 text-gray-400" : ""}
+                ${game.status === 'Scheduled' ? 'border-blue-500 text-blue-400' : ''}
+                ${game.status === 'Played' ? 'border-yellow-500 text-yellow-400 animate-pulse' : ''}
+                ${game.status === 'Done' ? 'border-green-500 text-green-400' : ''}
+                ${game.status === 'Postponed' ? 'border-gray-500 text-gray-400' : ''}
               `}
             >
-              <div className={`w-2 h-2 rounded-full mr-2 ${
-                game.status === "Scheduled" ? "bg-blue-500" : ""
-              }${game.status === "Played" ? "bg-yellow-500 animate-pulse" : ""}${
-                game.status === "Done" ? "bg-green-500" : ""
-              }${game.status === "Postponed" ? "bg-gray-500" : ""}`} />
+              <div
+                className={`w-2 h-2 rounded-full mr-2 ${
+                  game.status === 'Scheduled' ? 'bg-blue-500' : ''
+                }${game.status === 'Played' ? 'bg-yellow-500 animate-pulse' : ''}${
+                  game.status === 'Done' ? 'bg-green-500' : ''
+                }${game.status === 'Postponed' ? 'bg-gray-500' : ''}`}
+              />
               {game.status}
             </Badge>
 
@@ -230,9 +236,10 @@ export default function GameDetailsHeader({
                 onClick={handleSubmitFinalReport}
                 disabled={isSaving || missingReportsCount > 0}
                 className={`
-                  ${missingReportsCount > 0
-                    ? "bg-slate-700 text-slate-400"
-                    : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/30"
+                  ${
+                    missingReportsCount > 0
+                      ? 'bg-slate-700 text-slate-400'
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/30'
                   }
                 `}
               >
@@ -266,4 +273,3 @@ export default function GameDetailsHeader({
     </div>
   );
 }
-

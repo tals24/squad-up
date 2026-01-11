@@ -6,9 +6,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 export const fetchGoals = async (gameId) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/goals`, {
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -26,10 +26,10 @@ export const createGoal = async (gameId, goalData) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/goals`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(goalData)
+    body: JSON.stringify(goalData),
   });
 
   if (!response.ok) {
@@ -49,10 +49,10 @@ export const updateGoal = async (gameId, goalId, goalData) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/goals/${goalId}`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(goalData)
+    body: JSON.stringify(goalData),
   });
 
   if (!response.ok) {
@@ -72,9 +72,9 @@ export const deleteGoal = async (gameId, goalId) => {
   const response = await fetch(`${API_URL}/api/games/${gameId}/goals/${goalId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -97,9 +97,9 @@ export const fetchGoalPartnerships = async (teamId, season = null) => {
 
   const response = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -109,4 +109,3 @@ export const fetchGoalPartnerships = async (teamId, season = null) => {
   const data = await response.json();
   return data.partnerships || [];
 };
-

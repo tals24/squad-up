@@ -2,10 +2,10 @@ import { useState } from 'react';
 
 /**
  * useDialogState
- * 
+ *
  * Centralized dialog state management for GameDetailsPage
  * Manages all dialog visibility states and selected entities
- * 
+ *
  * @returns {Object} Dialog states and setters
  */
 export function useDialogState() {
@@ -89,4 +89,3 @@ export function useDialogState() {
     showConfirmation,
   };
 }
-

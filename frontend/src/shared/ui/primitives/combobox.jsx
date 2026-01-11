@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
+import * as React from 'react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 
-import { cn } from "@/shared/lib/utils"
-import { Button } from "@/shared/ui/primitives/button"
+import { cn } from '@/shared/lib/utils';
+import { Button } from '@/shared/ui/primitives/button';
 import {
   Command,
   CommandEmpty,
@@ -12,25 +12,21 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/shared/ui/primitives/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/ui/primitives/popover"
+} from '@/shared/ui/primitives/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/primitives/popover';
 
-export function Combobox({ 
-  options, 
-  value, 
+export function Combobox({
+  options,
+  value,
   onValueChange,
   onInputChange,
   inputValue,
-  placeholder, 
-  searchPlaceholder, 
+  placeholder,
+  searchPlaceholder,
   emptyPlaceholder,
-  loading = false
+  loading = false,
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,14 +39,14 @@ export function Combobox({
         >
           {value
             ? options.find((option) => option.value === value)?.label
-            : placeholder || "Select option..."}
+            : placeholder || 'Select option...'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-bg-secondary border-border-custom text-text-primary">
         <Command className="bg-bg-secondary">
-          <CommandInput 
-            placeholder={searchPlaceholder || "Search..."} 
+          <CommandInput
+            placeholder={searchPlaceholder || 'Search...'}
             value={inputValue}
             onValueChange={onInputChange}
             className="text-text-primary bg-bg-secondary border-border-custom placeholder-text-secondary"
@@ -62,7 +58,9 @@ export function Combobox({
               </div>
             )}
             {!loading && (
-              <CommandEmpty className="text-text-secondary">{emptyPlaceholder || "No option found."}</CommandEmpty>
+              <CommandEmpty className="text-text-secondary">
+                {emptyPlaceholder || 'No option found.'}
+              </CommandEmpty>
             )}
             <CommandGroup className="bg-bg-secondary">
               {options.map((option) => (
@@ -70,16 +68,18 @@ export function Combobox({
                   key={option.value}
                   value={option.label}
                   onSelect={(currentValue) => {
-                    const selectedValue = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase())?.value;
-                    onValueChange(selectedValue === value ? "" : selectedValue)
-                    setOpen(false)
+                    const selectedValue = options.find(
+                      (opt) => opt.label.toLowerCase() === currentValue.toLowerCase()
+                    )?.value;
+                    onValueChange(selectedValue === value ? '' : selectedValue);
+                    setOpen(false);
                   }}
                   className="aria-selected:bg-bg-secondary hover:bg-bg-secondary text-text-primary focus:bg-bg-secondary"
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      value === option.value ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {option.label}
@@ -90,5 +90,5 @@ export function Combobox({
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

@@ -1,30 +1,30 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Shield, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/shared/ui/primitives/button";
-import { Input } from "@/shared/ui/primitives/input";
-import { Label } from "@/shared/ui/primitives/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Shield, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/shared/ui/primitives/button';
+import { Input } from '@/shared/ui/primitives/input';
+import { Label } from '@/shared/ui/primitives/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
 
 export default function Login() {
   const [formData, setFormData] = useState({
-    email: "",
-    password: ""
+    email: '',
+    password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (error) setError(""); // Clear error when user types
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (error) setError(''); // Clear error when user types
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await fetch('http://localhost:3001/api/auth/login', {
@@ -32,7 +32,7 @@ export default function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -41,9 +41,9 @@ export default function Login() {
         // Store JWT token
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         console.log('🟢 Login successful, token stored, navigating to dashboard');
-        
+
         // Small delay to ensure localStorage is properly written
         setTimeout(() => {
           // Redirect to dashboard
@@ -86,7 +86,7 @@ export default function Login() {
               Sign In
             </CardTitle>
           </CardHeader>
-          
+
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Field */}
@@ -108,14 +108,17 @@ export default function Login() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white font-medium flex items-center gap-2">
+                <Label
+                  htmlFor="password"
+                  className="text-white font-medium flex items-center gap-2"
+                >
                   <Lock className="w-4 h-4 text-red-400" />
                   Password *
                 </Label>
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleChange('password', e.target.value)}
                     placeholder="Enter your password"
@@ -151,7 +154,7 @@ export default function Login() {
                     Signing In...
                   </div>
                 ) : (
-                  "Sign In"
+                  'Sign In'
                 )}
               </Button>
             </form>

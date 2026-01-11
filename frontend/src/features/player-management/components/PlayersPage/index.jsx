@@ -1,9 +1,8 @@
-
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { User } from "@/shared/api";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/shared/utils";
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User } from '@/shared/api';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/shared/utils';
 import {
   Users,
   Search,
@@ -13,53 +12,59 @@ import {
   Trophy,
   Target,
   TrendingUp,
-  Calendar
-} from "lucide-react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
+  Calendar,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
   CardTitle,
   Input,
   Button,
   Badge,
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
   SelectValue,
   Container,
   Section,
   Heading,
   Text,
   FormField,
-  Grid
-} from "@/shared/ui/primitives/design-system-components";
-import { PageLayout } from "@/shared/ui/primitives/design-system-components";
-import PageLoader from "@/shared/components/PageLoader";
-import { 
-  AnimatedButton, 
-  AnimatedCard, 
+  Grid,
+} from '@/shared/ui/primitives/design-system-components';
+import { PageLayout } from '@/shared/ui/primitives/design-system-components';
+import PageLoader from '@/shared/components/PageLoader';
+import {
+  AnimatedButton,
+  AnimatedCard,
   AnimatedInput,
   PageTransition,
   StaggerContainer,
   StaggerItem,
-  LoadingSpinner
-} from "@/shared/ui/primitives/animated-components";
-import { theme } from "@/shared/lib/theme";
-import { createAriaProps, createFormFieldProps } from "@/shared/lib/accessibility";
-import { useData } from "@/app/providers/DataProvider";
-import { getPlayersForTeam } from "@/features/player-management/api";
-import PlayersHeader from "../shared-players/PlayersHeader";
-import PlayerFilters from "../shared-players/PlayerFilters";
-import PlayerGrid from "../shared-players/PlayerGrid";
-import { usePlayersData } from "@/shared/hooks";
+  LoadingSpinner,
+} from '@/shared/ui/primitives/animated-components';
+import { theme } from '@/shared/lib/theme';
+import { createAriaProps, createFormFieldProps } from '@/shared/lib/accessibility';
+import { useData } from '@/app/providers/DataProvider';
+import { getPlayersForTeam } from '@/features/player-management/api';
+import PlayersHeader from '../shared-players/PlayersHeader';
+import PlayerFilters from '../shared-players/PlayerFilters';
+import PlayerGrid from '../shared-players/PlayerGrid';
+import { usePlayersData } from '@/shared/hooks';
 
 const PLAYERS_PER_PAGE = 12;
 
 export default function Players() {
-  const { users, teams, players: contextPlayers, isLoading: isContextLoading, error: contextError } = useData();
-  
+  const {
+    users,
+    teams,
+    players: contextPlayers,
+    isLoading: isContextLoading,
+    error: contextError,
+  } = useData();
+
   // 🔍 DEBUG: Let's see what data we actually have
   console.log('🔍 Players Component Debug:');
   console.log('  - isContextLoading:', isContextLoading);
@@ -71,9 +76,9 @@ export default function Players() {
   const [isLoading, setIsLoading] = useState(true); // Loading state for player fetch
 
   const [currentUser, setCurrentUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState("all");
-  const [selectedTeam, setSelectedTeam] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPosition, setSelectedPosition] = useState('all');
+  const [selectedTeam, setSelectedTeam] = useState('all');
 
   // pagination handled by usePlayersData hook
 
@@ -88,10 +93,12 @@ export default function Players() {
 
     if (currentUser.role === 'admin') {
       // Admins can see all teams, and their default selection can be "all" if teams exist, or the first team
-      return { filteredTeamsForDropdown: teams, defaultTeamId: teams.length > 0 ? "all" : null };
+      return { filteredTeamsForDropdown: teams, defaultTeamId: teams.length > 0 ? 'all' : null };
     }
 
-    const airtableUser = users.find(u => u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase());
+    const airtableUser = users.find(
+      (u) => u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
+    );
     if (!airtableUser) {
       // If the current authenticated user has no corresponding Airtable user, they have no access.
       return { filteredTeamsForDropdown: [], defaultTeamId: null };
@@ -101,15 +108,15 @@ export default function Players() {
     let fTeams = [];
 
     if (airtableRole === 'Coach' && airtableUser.id) {
-      fTeams = teams.filter(team => team.Coach && team.Coach.includes(airtableUser.id));
+      fTeams = teams.filter((team) => team.Coach && team.Coach.includes(airtableUser.id));
     } else if (airtableRole === 'Division Manager' && airtableUser.Department) {
-      fTeams = teams.filter(team => team.Division === airtableUser.Department);
+      fTeams = teams.filter((team) => team.Division === airtableUser.Department);
     }
-    
+
     // Default to the first team if any are found for the coach/DM, otherwise null
     return { filteredTeamsForDropdown: fTeams, defaultTeamId: fTeams[0]?.id || null };
   }, [currentUser, users, teams]);
-  
+
   // Effect to set the default team selection based on user role and available teams
   useEffect(() => {
     // Only set default if a defaultTeamId is determined and no team is currently selected
@@ -119,13 +126,11 @@ export default function Players() {
     }
     // For admins, if they have no default selected, and there are teams, set to "all"
     if (currentUser?.role === 'admin' && selectedTeam === 'all' && teams.length > 0) {
-      setSelectedTeam("all");
+      setSelectedTeam('all');
     }
   }, [defaultTeamId, currentUser, selectedTeam, teams]);
 
-
   // server-side pagination fetch function removed in favor of context + client filtering
-
 
   // 🔄 SIMPLIFIED: Use players directly from DataContext
   useEffect(() => {
@@ -148,7 +153,6 @@ export default function Players() {
 
   // Pagination reset handled by usePlayersData hook
 
-
   // Pagination helpers provided by usePlayersData hook
 
   const getPlayerAge = (dateOfBirth) => {
@@ -165,16 +169,16 @@ export default function Players() {
 
   const getTeamName = (team) => {
     // MongoDB structure: team is a populated object with _id and teamName
-    if (!team) return "No Team";
-    
+    if (!team) return 'No Team';
+
     // If team is already populated (has teamName), return it directly
     if (typeof team === 'object' && team.teamName) {
       return team.teamName;
     }
-    
+
     // If team is just an ObjectId, find the team in the teams array
-    const teamObj = teams.find(t => t._id === team);
-    return teamObj?.teamName || "Unknown Team";
+    const teamObj = teams.find((t) => t._id === team);
+    return teamObj?.teamName || 'Unknown Team';
   };
 
   const { pagePlayers, hasNext, hasPrev, nextPage, prevPage, currentPage } = usePlayersData({
@@ -233,7 +237,7 @@ export default function Players() {
         </motion.div>
 
         {/* Pagination Controls */}
-        <motion.div 
+        <motion.div
           className="flex items-center justify-center gap-4 pt-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -247,17 +251,17 @@ export default function Players() {
             loading={isLoading}
             {...createAriaProps({
               label: 'Go to previous page',
-              disabled: !hasPrev || isLoading
+              disabled: !hasPrev || isLoading,
             })}
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
           </AnimatedButton>
-          
+
           <Text variant="body" className="font-medium px-4">
             Page {currentPage}
           </Text>
-          
+
           <AnimatedButton
             variant="outline"
             size="md"
@@ -266,7 +270,7 @@ export default function Players() {
             loading={isLoading}
             {...createAriaProps({
               label: 'Go to next page',
-              disabled: !hasNext || isLoading
+              disabled: !hasNext || isLoading,
             })}
           >
             Next

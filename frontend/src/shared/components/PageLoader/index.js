@@ -4,4 +4,3 @@
 
 export { SuspenseLoader, MinimalLoader } from './SuspenseLoader';
 export { default } from './SuspenseLoader';
-

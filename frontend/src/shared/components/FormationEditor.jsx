@@ -1,20 +1,26 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Button } from "@/shared/ui/primitives/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { Card, CardContent } from "@/shared/ui/primitives/card";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { 
-  RotateCcw, 
-  Save, 
-  Users, 
-  Target, 
-  Shield, 
-  Zap, 
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Button } from '@/shared/ui/primitives/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/select';
+import { Card, CardContent } from '@/shared/ui/primitives/card';
+import { Badge } from '@/shared/ui/primitives/badge';
+import {
+  RotateCcw,
+  Save,
+  Users,
+  Target,
+  Shield,
+  Zap,
   TrendingUp,
   User,
   Plus,
-  X
-} from "lucide-react";
+  X,
+} from 'lucide-react';
 
 // Formation templates
 const FORMATION_TEMPLATES = {
@@ -32,8 +38,8 @@ const FORMATION_TEMPLATES = {
       { id: 'cm2', x: 60, y: 50, position: 'Midfielder', required: true },
       { id: 'rm', x: 80, y: 50, position: 'Midfielder', required: true },
       { id: 'st1', x: 40, y: 70, position: 'Forward', required: true },
-      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true }
-    ]
+      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true },
+    ],
   },
   '3-5-2': {
     name: '3-5-2',
@@ -49,8 +55,8 @@ const FORMATION_TEMPLATES = {
       { id: 'cm3', x: 65, y: 50, position: 'Midfielder', required: true },
       { id: 'rwb', x: 85, y: 50, position: 'Defender', required: true },
       { id: 'st1', x: 40, y: 70, position: 'Forward', required: true },
-      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true }
-    ]
+      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true },
+    ],
   },
   '4-3-3': {
     name: '4-3-3',
@@ -66,8 +72,8 @@ const FORMATION_TEMPLATES = {
       { id: 'cm3', x: 70, y: 50, position: 'Midfielder', required: true },
       { id: 'lw', x: 20, y: 70, position: 'Forward', required: true },
       { id: 'st', x: 50, y: 70, position: 'Forward', required: true },
-      { id: 'rw', x: 80, y: 70, position: 'Forward', required: true }
-    ]
+      { id: 'rw', x: 80, y: 70, position: 'Forward', required: true },
+    ],
   },
   '5-3-2': {
     name: '5-3-2',
@@ -83,17 +89,12 @@ const FORMATION_TEMPLATES = {
       { id: 'cm2', x: 50, y: 50, position: 'Midfielder', required: true },
       { id: 'cm3', x: 70, y: 50, position: 'Midfielder', required: true },
       { id: 'st1', x: 40, y: 70, position: 'Forward', required: true },
-      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true }
-    ]
-  }
+      { id: 'st2', x: 60, y: 70, position: 'Forward', required: true },
+    ],
+  },
 };
 
-const FormationEditor = ({ 
-  gameRoster = [], 
-  onFormationChange, 
-  onSave, 
-  isReadOnly = false 
-}) => {
+const FormationEditor = ({ gameRoster = [], onFormationChange, onSave, isReadOnly = false }) => {
   const canvasRef = useRef(null);
   const [selectedFormation, setSelectedFormation] = useState('4-4-2');
   const [formation, setFormation] = useState([]);
@@ -107,10 +108,10 @@ const FormationEditor = ({
   useEffect(() => {
     const template = FORMATION_TEMPLATES[selectedFormation];
     if (template) {
-      const newFormation = template.positions.map(pos => ({
+      const newFormation = template.positions.map((pos) => ({
         ...pos,
         player: null,
-        playerId: null
+        playerId: null,
       }));
       setFormation(newFormation);
     }
@@ -122,16 +123,14 @@ const FormationEditor = ({
       console.log('🎮 FormationEditor: No game roster available');
       return [];
     }
-    
-    const assignedPlayerIds = formation
-      .filter(pos => pos.player)
-      .map(pos => pos.playerId);
-    
-    const available = gameRoster.filter(roster => {
+
+    const assignedPlayerIds = formation.filter((pos) => pos.player).map((pos) => pos.playerId);
+
+    const available = gameRoster.filter((roster) => {
       const playerId = roster.player?._id || roster.player?.id;
       return !assignedPlayerIds.includes(playerId);
     });
-    
+
     console.log('🎮 FormationEditor: Available players:', available.length);
     return available;
   }, [formation, gameRoster]);
@@ -173,10 +172,10 @@ const FormationEditor = ({
     setSelectedFormation(newFormation);
     const template = FORMATION_TEMPLATES[newFormation];
     if (template) {
-      const newFormationData = template.positions.map(pos => ({
+      const newFormationData = template.positions.map((pos) => ({
         ...pos,
         player: null,
-        playerId: null
+        playerId: null,
       }));
       setFormation(newFormationData);
       onFormationChange?.(newFormationData);
@@ -186,17 +185,17 @@ const FormationEditor = ({
   // Handle player drag start
   const handlePlayerDragStart = (e, player) => {
     if (isReadOnly) return;
-    
+
     console.log('🎮 Drag start:', player);
     setDraggedPlayer(player);
     setIsDragging(true);
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      y: e.clientY - rect.top,
     });
-    
+
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', JSON.stringify(player));
   };
@@ -212,7 +211,7 @@ const FormationEditor = ({
   const handleCanvasDrop = (e) => {
     e.preventDefault();
     console.log('🎮 Canvas drop event');
-    
+
     let playerData;
     try {
       // Try to get data from different formats
@@ -224,7 +223,7 @@ const FormationEditor = ({
       console.log('🎮 No drag data found, using draggedPlayer state');
       playerData = draggedPlayer;
     }
-    
+
     if (!playerData || isReadOnly) {
       console.log('🎮 No player data or read-only mode');
       setDraggedPlayer(null);
@@ -244,9 +243,7 @@ const FormationEditor = ({
     let minDistance = Infinity;
 
     formation.forEach((pos, index) => {
-      const distance = Math.sqrt(
-        Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
-      );
+      const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
       if (distance < minDistance) {
         minDistance = distance;
         closestPos = index;
@@ -259,26 +256,30 @@ const FormationEditor = ({
       const newFormation = [...formation];
       const playerId = playerData.player?._id || playerData.player?.id;
       const playerName = playerData.player?.fullName || playerData.player?.FullName || 'Unknown';
-      
-      console.log('🎮 Assigning player:', { playerId, playerName, position: formation[closestPos].id });
-      
+
+      console.log('🎮 Assigning player:', {
+        playerId,
+        playerName,
+        position: formation[closestPos].id,
+      });
+
       // Remove player from any existing position
-      newFormation.forEach(pos => {
+      newFormation.forEach((pos) => {
         if (pos.playerId === playerId) {
           pos.player = null;
           pos.playerId = null;
           pos.playerName = null;
         }
       });
-      
+
       // Assign player to new position
       newFormation[closestPos] = {
         ...newFormation[closestPos],
         player: playerData.player,
         playerId: playerId,
-        playerName: playerName
+        playerName: playerName,
       };
-      
+
       setFormation(newFormation);
       onFormationChange?.(newFormation);
       console.log('🎮 Formation updated');
@@ -291,15 +292,15 @@ const FormationEditor = ({
   // Handle position click (remove player)
   const handlePositionClick = (index) => {
     if (isReadOnly) return;
-    
+
     const newFormation = [...formation];
     newFormation[index] = {
       ...newFormation[index],
       player: null,
       playerId: null,
-      playerName: null
+      playerName: null,
     };
-    
+
     setFormation(newFormation);
     onFormationChange?.(newFormation);
   };
@@ -311,100 +312,115 @@ const FormationEditor = ({
 
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    
+
     // Set canvas size
     canvas.width = rect.width;
     canvas.height = rect.height;
-    
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Draw pitch background
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // Draw pitch lines
     ctx.strokeStyle = '#475569';
     ctx.lineWidth = 2;
-    
+
     // Center line
     ctx.beginPath();
     ctx.moveTo(0, canvas.height / 2);
     ctx.lineTo(canvas.width, canvas.height / 2);
     ctx.stroke();
-    
+
     // Goal areas
     const goalWidth = canvas.width * 0.15;
     const goalHeight = canvas.height * 0.2;
-    
+
     // Top goal
     ctx.strokeRect(canvas.width / 2 - goalWidth / 2, 0, goalWidth, goalHeight);
-    
+
     // Bottom goal
-    ctx.strokeRect(canvas.width / 2 - goalWidth / 2, canvas.height - goalHeight, goalWidth, goalHeight);
-    
-      // Draw positions
-      formation.forEach((pos, index) => {
-        const x = (pos.x / 100) * canvas.width;
-        const y = (pos.y / 100) * canvas.height;
-        
-        // Position circle
-        ctx.beginPath();
-        ctx.arc(x, y, 20, 0, 2 * Math.PI);
-        
-        if (pos.player) {
-          // Filled circle for assigned position
-          ctx.fillStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
-                         pos.position === 'Defender' ? '#3b82f6' :
-                         pos.position === 'Midfielder' ? '#10b981' : '#ef4444';
-          ctx.fill();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
+    ctx.strokeRect(
+      canvas.width / 2 - goalWidth / 2,
+      canvas.height - goalHeight,
+      goalWidth,
+      goalHeight
+    );
+
+    // Draw positions
+    formation.forEach((pos, index) => {
+      const x = (pos.x / 100) * canvas.width;
+      const y = (pos.y / 100) * canvas.height;
+
+      // Position circle
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, 2 * Math.PI);
+
+      if (pos.player) {
+        // Filled circle for assigned position
+        ctx.fillStyle =
+          pos.position === 'Goalkeeper'
+            ? '#8b5cf6'
+            : pos.position === 'Defender'
+              ? '#3b82f6'
+              : pos.position === 'Midfielder'
+                ? '#10b981'
+                : '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+      } else {
+        // Empty circle for unassigned position
+        ctx.strokeStyle =
+          pos.position === 'Goalkeeper'
+            ? '#8b5cf6'
+            : pos.position === 'Defender'
+              ? '#3b82f6'
+              : pos.position === 'Midfielder'
+                ? '#10b981'
+                : '#ef4444';
+        ctx.lineWidth = 2;
+      }
+
+      ctx.stroke();
+
+      // Position label or kit number
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+
+      if (pos.player) {
+        // Show kit number if player is assigned
+        const kitNumber = pos.player?.kitNumber || pos.player?.KitNumber || '';
+        if (kitNumber) {
+          ctx.fillText(kitNumber.toString(), x, y + 4);
         } else {
-          // Empty circle for unassigned position
-          ctx.strokeStyle = pos.position === 'Goalkeeper' ? '#8b5cf6' :
-                         pos.position === 'Defender' ? '#3b82f6' :
-                         pos.position === 'Midfielder' ? '#10b981' : '#ef4444';
-          ctx.lineWidth = 2;
-        }
-        
-        ctx.stroke();
-        
-        // Position label or kit number
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        
-        if (pos.player) {
-          // Show kit number if player is assigned
-          const kitNumber = pos.player?.kitNumber || pos.player?.KitNumber || '';
-          if (kitNumber) {
-            ctx.fillText(kitNumber.toString(), x, y + 4);
-          } else {
-            ctx.fillText(pos.id.toUpperCase(), x, y + 4);
-          }
-        } else {
-          // Show position label for empty positions
           ctx.fillText(pos.id.toUpperCase(), x, y + 4);
         }
-        
-        // Player name if assigned
-        if (pos.player) {
-          ctx.fillStyle = '#ffffff'; // More visible white color
-          ctx.font = 'bold 10px Arial';
-          const name = pos.playerName || 'Unknown';
-          if (name.length > 8) {
-            ctx.fillText(name.substring(0, 8) + '...', x, y + 32); // Increased gap to 32
-          } else {
-            ctx.fillText(name, x, y + 32); // Increased gap to 32
-          }
+      } else {
+        // Show position label for empty positions
+        ctx.fillText(pos.id.toUpperCase(), x, y + 4);
+      }
+
+      // Player name if assigned
+      if (pos.player) {
+        ctx.fillStyle = '#ffffff'; // More visible white color
+        ctx.font = 'bold 10px Arial';
+        const name = pos.playerName || 'Unknown';
+        if (name.length > 8) {
+          ctx.fillText(name.substring(0, 8) + '...', x, y + 32); // Increased gap to 32
         } else {
-          // Show "Click to assign" for empty positions
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = 'bold 9px Arial'; // Made bolder and slightly larger
-          ctx.fillText('Click to assign', x, y + 32); // Increased gap to 32
+          ctx.fillText(name, x, y + 32); // Increased gap to 32
         }
-      });
+      } else {
+        // Show "Click to assign" for empty positions
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 9px Arial'; // Made bolder and slightly larger
+        ctx.fillText('Click to assign', x, y + 32); // Increased gap to 32
+      }
+    });
   }, [formation]);
 
   // Redraw when formation changes
@@ -417,7 +433,7 @@ const FormationEditor = ({
     const handleResize = () => {
       drawFormation();
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [drawFormation]);
@@ -431,7 +447,7 @@ const FormationEditor = ({
             <Target className="w-5 h-5 text-cyan-400" />
             <span className="text-white font-semibold">Formation</span>
           </div>
-          
+
           <Select
             value={selectedFormation}
             onValueChange={handleFormationChange}
@@ -448,12 +464,12 @@ const FormationEditor = ({
               ))}
             </SelectContent>
           </Select>
-          
+
           <Badge variant="outline" className="bg-slate-700/50 text-slate-400 border-slate-600">
             {FORMATION_TEMPLATES[selectedFormation]?.description}
           </Badge>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             onClick={() => handleFormationChange(selectedFormation)}
@@ -465,7 +481,7 @@ const FormationEditor = ({
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
           </Button>
-          
+
           {onSave && (
             <Button
               onClick={() => onSave(formation)}
@@ -483,7 +499,7 @@ const FormationEditor = ({
       <div className="h-full w-full flex flex-col min-h-0">
         <Card className="flex-1 bg-slate-800/50 border-slate-700 flex flex-col min-h-0">
           <CardContent className="p-4 flex-1 flex flex-col min-h-0">
-            <div 
+            <div
               className={`relative flex-1 min-h-0 ${isDragging ? 'ring-2 ring-cyan-500/50' : ''}`}
               onDragOver={handleCanvasDragOver}
               onDrop={handleCanvasDrop}
@@ -493,43 +509,39 @@ const FormationEditor = ({
                 ref={canvasRef}
                 className="w-full h-full min-h-[600px] border border-slate-600 rounded-lg cursor-crosshair hover:border-cyan-500/50 transition-colors"
                 onClick={(e) => {
-                    if (isReadOnly) return;
-                    const canvas = canvasRef.current;
-                    const rect = canvas.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 100;
-                    const y = ((e.clientY - rect.top) / rect.height) * 100;
-                    
-                    // Find clicked position
-                    formation.forEach((pos, index) => {
-                      const distance = Math.sqrt(
-                        Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)
-                      );
-                      if (distance < 8) { // Increased hit area
-                        if (pos.player) {
-                          // Remove player from position
-                          handlePositionClick(index);
-                        } else {
-                          // Show player selector for empty position
-                          setSelectedPosition(index);
-                          setShowPlayerSelector(true);
-                        }
-                      }
-                    });
-                  }}
-                />
-                
-                {isDragging && (
-                  <div className="absolute inset-0 bg-cyan-500/10 border-2 border-dashed border-cyan-400 rounded-lg flex items-center justify-center">
-                    <div className="text-cyan-400 font-semibold">
-                      Drop player on position
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-      </div>
+                  if (isReadOnly) return;
+                  const canvas = canvasRef.current;
+                  const rect = canvas.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
 
+                  // Find clicked position
+                  formation.forEach((pos, index) => {
+                    const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+                    if (distance < 8) {
+                      // Increased hit area
+                      if (pos.player) {
+                        // Remove player from position
+                        handlePositionClick(index);
+                      } else {
+                        // Show player selector for empty position
+                        setSelectedPosition(index);
+                        setShowPlayerSelector(true);
+                      }
+                    }
+                  });
+                }}
+              />
+
+              {isDragging && (
+                <div className="absolute inset-0 bg-cyan-500/10 border-2 border-dashed border-cyan-400 rounded-lg flex items-center justify-center">
+                  <div className="text-cyan-400 font-semibold">Drop player on position</div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Player Selector Modal */}
       {showPlayerSelector && (
@@ -552,14 +564,14 @@ const FormationEditor = ({
                   ×
                 </Button>
               </div>
-              
+
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {getAvailablePlayers()
                   .filter((roster) => {
                     const player = roster.player || roster.Player?.[0];
                     const position = player?.position || player?.Position || 'Unknown';
                     const targetPosition = formation[selectedPosition]?.position;
-                    
+
                     // Filter players by position match
                     return position === targetPosition;
                   })
@@ -569,7 +581,7 @@ const FormationEditor = ({
                     const fullName = player?.fullName || player?.FullName || 'Unknown';
                     const kitNumber = player?.kitNumber || player?.KitNumber || '';
                     const position = player?.position || player?.Position || 'Unknown';
-                    
+
                     return (
                       <div
                         key={playerId}
@@ -580,7 +592,7 @@ const FormationEditor = ({
                               ...newFormation[selectedPosition],
                               player: player,
                               playerId: playerId,
-                              playerName: fullName
+                              playerName: fullName,
                             };
                             setFormation(newFormation);
                             onFormationChange?.(newFormation);
@@ -596,7 +608,7 @@ const FormationEditor = ({
                               {kitNumber}
                             </div>
                           )}
-                          
+
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-white truncate">{fullName}</p>
                             <div className="flex items-center gap-2">
@@ -608,7 +620,7 @@ const FormationEditor = ({
                       </div>
                     );
                   })}
-                
+
                 {getAvailablePlayers().filter((roster) => {
                   const player = roster.player || roster.Player?.[0];
                   const position = player?.position || player?.Position || 'Unknown';
@@ -616,8 +628,12 @@ const FormationEditor = ({
                   return position === targetPosition;
                 }).length === 0 && (
                   <div className="text-center py-4">
-                    <p className="text-slate-400">No {formation[selectedPosition]?.position} players available</p>
-                    <p className="text-slate-500 text-sm mt-1">Try adding players to the roster first</p>
+                    <p className="text-slate-400">
+                      No {formation[selectedPosition]?.position} players available
+                    </p>
+                    <p className="text-slate-500 text-sm mt-1">
+                      Try adding players to the roster first
+                    </p>
                   </div>
                 )}
               </div>

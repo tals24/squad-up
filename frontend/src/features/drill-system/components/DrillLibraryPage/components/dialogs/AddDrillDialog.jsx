@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useData } from "@/app/providers/DataProvider";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/shared/utils";
-import { ClipboardList, Target } from "lucide-react";
-import { 
+import React, { useState, useEffect } from 'react';
+import { useData } from '@/app/providers/DataProvider';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/shared/utils';
+import { ClipboardList, Target } from 'lucide-react';
+import {
   Button,
   Input,
   Label,
@@ -15,23 +15,30 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from "@/shared/ui/primitives/design-system-components";
-import { createDrill, getDrills } from "@/features/drill-system/api";
-import { User } from "@/shared/api";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/design-system-components';
+import { createDrill, getDrills } from '@/features/drill-system/api';
+import { User } from '@/shared/api';
 
-export default function AddDrillDialog({ open, setOpen, refreshData, showConfirmation, categories, ageGroups }) {
+export default function AddDrillDialog({
+  open,
+  setOpen,
+  refreshData,
+  showConfirmation,
+  categories,
+  ageGroups,
+}) {
   const { users } = useData();
   const [formData, setFormData] = useState({
-    DrillName: "",
-    Category: "",
+    DrillName: '',
+    Category: '',
     TargetAgeGroup: [],
-    Description: "",
-    VideoLink: ""
+    Description: '',
+    VideoLink: '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [availableFields, setAvailableFields] = useState([]);
@@ -39,17 +46,24 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
 
   const navigate = useNavigate();
 
-  const exactCategories = categories || ["Dribbling", "Shooting", "Passing", "Defense", "Goalkeeping", "Warm-up"];
-  const exactAgeGroups = ageGroups || ["U6-U8", "U8-U10", "U10-U12", "U12-U14", "U14-U16", "U16+"];
+  const exactCategories = categories || [
+    'Dribbling',
+    'Shooting',
+    'Passing',
+    'Defense',
+    'Goalkeeping',
+    'Warm-up',
+  ];
+  const exactAgeGroups = ageGroups || ['U6-U8', 'U8-U10', 'U10-U12', 'U12-U14', 'U14-U16', 'U16+'];
 
   useEffect(() => {
     if (open) {
       setFormData({
-        DrillName: "",
-        Category: "",
+        DrillName: '',
+        Category: '',
         TargetAgeGroup: [],
-        Description: "",
-        VideoLink: ""
+        Description: '',
+        VideoLink: '',
       });
       setLayoutDataDraft(null);
       testAvailableFields();
@@ -60,13 +74,21 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
     const handleMessage = (event) => {
       console.log('[AddDrillDialog] Received message:', event.data);
       if (!event?.data || typeof event.data !== 'object') return;
-      if (event.data.type === 'DRILL_LAB_SAVE' && event.data.data && Array.isArray(event.data.data.elements)) {
-        console.log('[AddDrillDialog] Setting layoutDataDraft with', event.data.data.elements.length, 'elements');
+      if (
+        event.data.type === 'DRILL_LAB_SAVE' &&
+        event.data.data &&
+        Array.isArray(event.data.data.elements)
+      ) {
+        console.log(
+          '[AddDrillDialog] Setting layoutDataDraft with',
+          event.data.data.elements.length,
+          'elements'
+        );
         setLayoutDataDraft(event.data.data.elements);
         showConfirmation?.({
           type: 'success',
           title: 'Visual design captured',
-          message: 'The diagram has been added to this drill form.'
+          message: 'The diagram has been added to this drill form.',
         });
       }
     };
@@ -79,20 +101,38 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
       const response = await getDrills();
       if (response.data?.records && response.data.records.length > 0) {
         const firstRecord = response.data.records[0];
-        const fields = Object.keys(firstRecord).filter(key => !['id', 'createdTime'].includes(key));
+        const fields = Object.keys(firstRecord).filter(
+          (key) => !['id', 'createdTime'].includes(key)
+        );
         setAvailableFields(fields);
-        console.log("Available fields in Drills table:", fields);
+        console.log('Available fields in Drills table:', fields);
       } else {
-        setAvailableFields(['DrillName', 'Category', 'TargetAgeGroup', 'Description', 'DrillDescription', 'VideoLink', 'Author']);
+        setAvailableFields([
+          'DrillName',
+          'Category',
+          'TargetAgeGroup',
+          'Description',
+          'DrillDescription',
+          'VideoLink',
+          'Author',
+        ]);
       }
     } catch (error) {
-      console.error("Error testing fields:", error);
-      setAvailableFields(['DrillName', 'Category', 'TargetAgeGroup', 'Description', 'DrillDescription', 'VideoLink', 'Author']);
+      console.error('Error testing fields:', error);
+      setAvailableFields([
+        'DrillName',
+        'Category',
+        'TargetAgeGroup',
+        'Description',
+        'DrillDescription',
+        'VideoLink',
+        'Author',
+      ]);
     }
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const validateBasicInfo = () => {
@@ -100,7 +140,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
       showConfirmation({
         type: 'error',
         title: 'Missing Information',
-        message: 'Please enter a drill name.'
+        message: 'Please enter a drill name.',
       });
       return false;
     }
@@ -108,7 +148,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
       showConfirmation({
         type: 'error',
         title: 'Missing Information',
-        message: 'Please select a category.'
+        message: 'Please select a category.',
       });
       return false;
     }
@@ -116,7 +156,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
       showConfirmation({
         type: 'error',
         title: 'Missing Information',
-        message: 'Please select at least one target age group.'
+        message: 'Please select at least one target age group.',
       });
       return false;
     }
@@ -131,8 +171,8 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
     setIsSaving(true);
     try {
       const currentUser = await User.me();
-      const authorUserRecord = users.find(u =>
-        u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
+      const authorUserRecord = users.find(
+        (u) => u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
       );
 
       let descriptionFieldName = 'Description';
@@ -152,7 +192,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
         category: formData.Category,
         targetAgeGroup: formData.TargetAgeGroup,
         videoLink: formData.VideoLink || null,
-        author: authorUserRecord?._id
+        author: authorUserRecord?._id,
       };
 
       drillData.description = formData.Description || '';
@@ -168,19 +208,21 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
         showConfirmation({
           type: 'success',
           title: openTacticBoard ? 'Drill Created! 🎯' : 'Drill Created Successfully! 🎯',
-          message: openTacticBoard ? 'Now opening the tactic board to design your drill...' : `"${formData.DrillName}" has been added to your drill library.`
+          message: openTacticBoard
+            ? 'Now opening the tactic board to design your drill...'
+            : `"${formData.DrillName}" has been added to your drill library.`,
         });
         refreshData();
         setOpen(false);
       } else {
-        throw new Error(response?.error || "Failed to create drill");
+        throw new Error(response?.error || 'Failed to create drill');
       }
     } catch (error) {
-      console.error("Error adding/creating drill:", error);
+      console.error('Error adding/creating drill:', error);
       showConfirmation({
         type: 'error',
         title: 'Failed to Add Drill',
-        message: `There was an issue: ${error.message}. Please check your connection and try again.`
+        message: `There was an issue: ${error.message}. Please check your connection and try again.`,
       });
     } finally {
       setIsSaving(false);
@@ -199,10 +241,18 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={(e) => { e.preventDefault(); handleCreateDrill(false); }} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateDrill(false);
+          }}
+          className="space-y-6"
+        >
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="drillName" className="font-medium text-slate-100">Drill Name *</Label>
+              <Label htmlFor="drillName" className="font-medium text-slate-100">
+                Drill Name *
+              </Label>
               <Input
                 id="drillName"
                 value={formData.DrillName}
@@ -213,7 +263,9 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="videoLink" className="font-medium text-slate-100">Video Link</Label>
+              <Label htmlFor="videoLink" className="font-medium text-slate-100">
+                Video Link
+              </Label>
               <Input
                 id="videoLink"
                 type="url"
@@ -226,14 +278,25 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category" className="font-medium text-slate-100">Category *</Label>
-            <Select value={formData.Category} onValueChange={(value) => handleChange('Category', value)}>
+            <Label htmlFor="category" className="font-medium text-slate-100">
+              Category *
+            </Label>
+            <Select
+              value={formData.Category}
+              onValueChange={(value) => handleChange('Category', value)}
+            >
               <SelectTrigger className="bg-slate-700/50 border-slate-600 text-slate-100 focus:border-cyan-500 focus:ring-cyan-500/20">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-600 text-slate-100">
-                {exactCategories.map(category => (
-                  <SelectItem key={category} value={category} className="text-slate-100 hover:bg-slate-700 focus:bg-slate-700">{category}</SelectItem>
+                {exactCategories.map((category) => (
+                  <SelectItem
+                    key={category}
+                    value={category}
+                    className="text-slate-100 hover:bg-slate-700 focus:bg-slate-700"
+                  >
+                    {category}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -243,7 +306,7 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
             <Label className="font-medium text-slate-100">Target Age Group *</Label>
             <div className="p-4 border border-slate-600 rounded-md max-h-40 overflow-y-auto bg-slate-700/30">
               <div className="grid grid-cols-2 gap-4">
-                {exactAgeGroups.map(age => (
+                {exactAgeGroups.map((age) => (
                   <div key={age} className="flex items-center gap-2">
                     <Checkbox
                       id={`age-${age}`}
@@ -252,12 +315,20 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
                         if (checked) {
                           handleChange('TargetAgeGroup', [...formData.TargetAgeGroup, age]);
                         } else {
-                          handleChange('TargetAgeGroup', formData.TargetAgeGroup.filter(item => item !== age));
+                          handleChange(
+                            'TargetAgeGroup',
+                            formData.TargetAgeGroup.filter((item) => item !== age)
+                          );
                         }
                       }}
                       className="border-slate-600 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
                     />
-                    <Label htmlFor={`age-${age}`} className="font-normal text-slate-100 cursor-pointer">{age}</Label>
+                    <Label
+                      htmlFor={`age-${age}`}
+                      className="font-normal text-slate-100 cursor-pointer"
+                    >
+                      {age}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -279,19 +350,34 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
                 <Button
                   type="button"
                   onClick={() => {
-                    console.log('[AddDrillDialog] Opening design drill. layoutDataDraft:', layoutDataDraft);
-                    const layoutParam = Array.isArray(layoutDataDraft) && layoutDataDraft.length > 0
-                      ? `&layout=${encodeURIComponent(JSON.stringify(layoutDataDraft))}`
-                      : '';
+                    console.log(
+                      '[AddDrillDialog] Opening design drill. layoutDataDraft:',
+                      layoutDataDraft
+                    );
+                    const layoutParam =
+                      Array.isArray(layoutDataDraft) && layoutDataDraft.length > 0
+                        ? `&layout=${encodeURIComponent(JSON.stringify(layoutDataDraft))}`
+                        : '';
                     console.log('[AddDrillDialog] Layout param length:', layoutParam.length);
-                    const url = createPageUrl(`DrillDesigner?mode=create&returnTo=drillLibrary${layoutParam}`);
+                    const url = createPageUrl(
+                      `DrillDesigner?mode=create&returnTo=drillLibrary${layoutParam}`
+                    );
                     console.log('[AddDrillDialog] Opening URL:', url);
                     const win = window.open(url, '_blank');
                     if (!win) {
-                      showConfirmation?.({ type: 'error', title: 'Popup blocked', message: 'Allow popups to design the drill.' });
+                      showConfirmation?.({
+                        type: 'error',
+                        title: 'Popup blocked',
+                        message: 'Allow popups to design the drill.',
+                      });
                     }
                   }}
-                  disabled={isSaving || !formData.DrillName || !formData.Category || formData.TargetAgeGroup.length === 0}
+                  disabled={
+                    isSaving ||
+                    !formData.DrillName ||
+                    !formData.Category ||
+                    formData.TargetAgeGroup.length === 0
+                  }
                   variant="default"
                   size="sm"
                   className="bg-cyan-600 hover:bg-cyan-700 text-white disabled:bg-slate-600 disabled:text-slate-400"
@@ -301,13 +387,17 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
                 </Button>
               </div>
               <div className="mt-2 text-xs text-slate-400">
-                {Array.isArray(layoutDataDraft) && layoutDataDraft.length > 0 ? 'Visual design attached to this drill.' : 'No visual design attached yet.'}
+                {Array.isArray(layoutDataDraft) && layoutDataDraft.length > 0
+                  ? 'Visual design attached to this drill.'
+                  : 'No visual design attached yet.'}
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="font-medium text-slate-100">Description</Label>
+            <Label htmlFor="description" className="font-medium text-slate-100">
+              Description
+            </Label>
             <Textarea
               id="description"
               value={formData.Description}
@@ -319,9 +409,9 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
 
           <DialogFooter className="gap-3 pt-6 border-t border-slate-700">
             <DialogClose asChild>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600 hover:text-slate-100 hover:border-slate-400 px-6 py-2 font-medium"
               >
                 Cancel
@@ -329,7 +419,12 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
             </DialogClose>
             <Button
               type="submit"
-              disabled={isSaving || !formData.DrillName || !formData.Category || formData.TargetAgeGroup.length === 0}
+              disabled={
+                isSaving ||
+                !formData.DrillName ||
+                !formData.Category ||
+                formData.TargetAgeGroup.length === 0
+              }
               className="bg-cyan-600 hover:bg-cyan-700 text-white disabled:bg-slate-600 disabled:text-slate-400 px-6 py-2 font-medium"
             >
               {isSaving ? (
@@ -337,7 +432,9 @@ export default function AddDrillDialog({ open, setOpen, refreshData, showConfirm
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Saving...
                 </>
-              ) : "Save Drill"}
+              ) : (
+                'Save Drill'
+              )}
             </Button>
           </DialogFooter>
         </form>

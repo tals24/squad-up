@@ -2,7 +2,7 @@
 /* Modern, theme-based components built on TailwindCSS + shadcn/ui */
 
 import React from 'react';
-import { cn } from "@/shared/lib/utils";
+import { cn } from '@/shared/lib/utils';
 
 // Import our new theme-based components
 export {
@@ -54,33 +54,26 @@ export {
 // ADDITIONAL UTILITY COMPONENTS
 // ===========================================
 
-export const Divider = React.forwardRef(({ 
-  className, 
-  orientation = 'horizontal',
-  ...props 
-}, ref) => {
-  const orientations = {
-    horizontal: 'h-px w-full',
-    vertical: 'w-px h-full',
-  };
+export const Divider = React.forwardRef(
+  ({ className, orientation = 'horizontal', ...props }, ref) => {
+    const orientations = {
+      horizontal: 'h-px w-full',
+      vertical: 'w-px h-full',
+    };
 
-  return (
-    <div
-      ref={ref}
-      className={cn('bg-neutral-200', orientations[orientation], className)}
-      {...props}
-    />
-  );
-});
+    return (
+      <div
+        ref={ref}
+        className={cn('bg-neutral-200', orientations[orientation], className)}
+        {...props}
+      />
+    );
+  }
+);
 
 Divider.displayName = 'Divider';
 
-export const Grid = React.forwardRef(({ 
-  className, 
-  cols = 1,
-  gap = 'md',
-  ...props 
-}, ref) => {
+export const Grid = React.forwardRef(({ className, cols = 1, gap = 'md', ...props }, ref) => {
   const colClasses = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 md:grid-cols-2',
@@ -97,11 +90,7 @@ export const Grid = React.forwardRef(({
   };
 
   return (
-    <div
-      ref={ref}
-      className={cn('grid', colClasses[cols], gaps[gap], className)}
-      {...props}
-    />
+    <div ref={ref} className={cn('grid', colClasses[cols], gaps[gap], className)} {...props} />
   );
 });
 

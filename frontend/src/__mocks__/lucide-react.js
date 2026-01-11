@@ -2,10 +2,11 @@ import React from 'react';
 
 // Mock all lucide-react icons as simple divs for testing
 const mockIcon = (name) => {
-  const MockedIcon = (props) => React.createElement('svg', { 
-    'data-testid': `${name.toLowerCase()}-icon`, 
-    ...props 
-  });
+  const MockedIcon = (props) =>
+    React.createElement('svg', {
+      'data-testid': `${name.toLowerCase()}-icon`,
+      ...props,
+    });
   MockedIcon.displayName = name;
   return MockedIcon;
 };
@@ -34,4 +35,3 @@ export const Settings = mockIcon('Settings');
 
 // Add more icons as needed
 export default {};
-

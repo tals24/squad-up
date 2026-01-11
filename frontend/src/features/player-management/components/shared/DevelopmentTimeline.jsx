@@ -20,9 +20,9 @@ const DevelopmentTimeline = ({ playerReports, games, playerId }) => {
           <div className="space-y-8 scrollbar-hover max-h-[60rem] overflow-y-auto pr-4">
             {playerReports.map((report, index) => {
               // Handle both old Airtable and new MongoDB structures
-              const gameForReport = report.game 
-                ? games.find(g => g._id === report.game._id || g._id === report.game)
-                : games.find(g => report.Game && report.Game.includes(g.id));
+              const gameForReport = report.game
+                ? games.find((g) => g._id === report.game._id || g._id === report.game)
+                : games.find((g) => report.Game && report.Game.includes(g.id));
               const isLast = index === playerReports.length - 1;
 
               return (

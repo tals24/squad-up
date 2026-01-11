@@ -27,9 +27,7 @@ const AllProviders = ({ children }) => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <DataProvider>{children}</DataProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
@@ -38,7 +36,7 @@ const AllProviders = ({ children }) => {
 describe('Game Creation Flow', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock initial games list
     sharedGameApi.getGames.mockResolvedValue({
       success: true,
@@ -133,4 +131,3 @@ describe('Game Creation Flow', () => {
     });
   });
 });
-

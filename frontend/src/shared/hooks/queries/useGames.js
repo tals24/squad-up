@@ -18,12 +18,12 @@ export const gameKeys = {
 
 /**
  * Fetch all games with caching
- * 
+ *
  * Benefits:
  * - Cached for 5 minutes (no refetch on navigation)
  * - Background updates when data gets stale
  * - Automatic retry on failure
- * 
+ *
  * @returns {Object} { data, isLoading, error, refetch }
  */
 export function useGames() {
@@ -42,7 +42,7 @@ export function useGames() {
 
 /**
  * Fetch single game by ID with caching
- * 
+ *
  * @param {string} gameId - Game ID
  * @returns {Object} { data, isLoading, error }
  */
@@ -63,7 +63,7 @@ export function useGame(gameId) {
 
 /**
  * Create game mutation with optimistic updates
- * 
+ *
  * @returns {Object} { mutate, mutateAsync, isLoading }
  */
 export function useCreateGame() {
@@ -80,7 +80,7 @@ export function useCreateGame() {
 
 /**
  * Update game mutation with cache update
- * 
+ *
  * @returns {Object} { mutate, mutateAsync, isLoading }
  */
 export function useUpdateGame() {
@@ -99,7 +99,7 @@ export function useUpdateGame() {
 
 /**
  * Delete game mutation
- * 
+ *
  * @returns {Object} { mutate, mutateAsync, isLoading }
  */
 export function useDeleteGame() {
@@ -113,4 +113,3 @@ export function useDeleteGame() {
     },
   });
 }
-

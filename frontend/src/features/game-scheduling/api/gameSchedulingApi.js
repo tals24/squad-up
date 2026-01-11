@@ -1,6 +1,6 @@
 /**
  * Game Scheduling API
- * 
+ *
  * Handles API calls for game creation, scheduling, and pre-game planning.
  * Part of the game-scheduling feature domain.
  */

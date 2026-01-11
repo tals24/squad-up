@@ -5,10 +5,19 @@ import { startOfWeek, addDays, format } from 'date-fns';
 import DrillMenuDropdown from '@/features/drill-system/components/DrillMenuDropdown';
 import DrillDetailModal from '@/features/drill-system/components/DrillDetailModal';
 
-const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const sessionSlots = ["Warm-up", "Main Part", "Small Game"];
+const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const sessionSlots = ['Warm-up', 'Main Part', 'Small Game'];
 
-const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotesChange, onViewDrillDetails }) => {
+const CalendarSlot = ({
+  day,
+  slot,
+  drills,
+  notes,
+  onDrop,
+  onRemoveDrill,
+  onNotesChange,
+  onViewDrillDetails,
+}) => {
   const [selectedDrill, setSelectedDrill] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -18,7 +27,7 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const drillData = JSON.parse(e.dataTransfer.getData("application/json"));
+    const drillData = JSON.parse(e.dataTransfer.getData('application/json'));
     onDrop(day, slot, drillData);
   };
 
@@ -34,7 +43,7 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
   const handleRemoveDrill = (drill) => {
     onRemoveDrill(day, slot, drill.id);
   };
-  
+
   return (
     <div
       onDragOver={handleDragOver}
@@ -43,8 +52,11 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
     >
       <h3 className="font-semibold text-xs text-slate-400 uppercase tracking-wider">{slot}</h3>
       <div className="flex-1 space-y-1">
-        {drills.map(drill => (
-          <div key={drill.id} className="bg-slate-600/50 p-2 rounded-md shadow-sm text-sm text-slate-200 flex items-center justify-between group">
+        {drills.map((drill) => (
+          <div
+            key={drill.id}
+            className="bg-slate-600/50 p-2 rounded-md shadow-sm text-sm text-slate-200 flex items-center justify-between group"
+          >
             <span className="truncate flex-1">{drill.DrillName}</span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <DrillMenuDropdown
@@ -56,7 +68,7 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
           </div>
         ))}
       </div>
-      {slot === "Small Game" && (
+      {slot === 'Small Game' && (
         <Textarea
           placeholder="Notes..."
           value={notes}
@@ -64,7 +76,7 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
           className="text-xs p-1 h-16 bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-400"
         />
       )}
-      
+
       {/* Drill Detail Modal */}
       <DrillDetailModal
         drill={selectedDrill}
@@ -77,8 +89,14 @@ const CalendarSlot = ({ day, slot, drills, notes, onDrop, onRemoveDrill, onNotes
   );
 };
 
-
-export default function WeeklyCalendar({ plan, onDrop, onRemoveDrill, onNotesChange, currentDate, onViewDrillDetails }) {
+export default function WeeklyCalendar({
+  plan,
+  onDrop,
+  onRemoveDrill,
+  onNotesChange,
+  currentDate,
+  onViewDrillDetails,
+}) {
   // Calculate the dates for each day of the week
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday start
   const weekDates = daysOfWeek.map((_, index) => {
@@ -104,13 +122,13 @@ export default function WeeklyCalendar({ plan, onDrop, onRemoveDrill, onNotesCha
             {weekDates[index]} {day}
           </h2>
           <div className="flex flex-col gap-1">
-            {sessionSlots.map(slot => (
+            {sessionSlots.map((slot) => (
               <CalendarSlot
                 key={slot}
                 day={day}
                 slot={slot}
                 drills={plan[day]?.[slot]?.drills || []}
-                notes={plan[day]?.["Small Game"]?.notes || ""}
+                notes={plan[day]?.['Small Game']?.notes || ''}
                 onDrop={onDrop}
                 onRemoveDrill={onRemoveDrill}
                 onNotesChange={onNotesChange}

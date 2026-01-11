@@ -14,4 +14,3 @@ export const fetchAllTables = async () => {
   console.log('Fetching all data from backend API...');
   return await apiClient.get('/api/data/all');
 };
-

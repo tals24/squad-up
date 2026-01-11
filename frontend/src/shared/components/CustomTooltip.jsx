@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { cn } from "@/shared/lib/utils";
+import { cn } from '@/shared/lib/utils';
 
-const CustomTooltip = ({ 
-  children, 
-  content, 
-  side = 'top',
-  className 
-}) => {
+const CustomTooltip = ({ children, content, side = 'top', className }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const positionClasses = {
@@ -29,14 +24,14 @@ const CustomTooltip = ({
   if (!content) return children;
 
   return (
-    <div 
-      className="relative inline-block" 
+    <div
+      className="relative inline-block"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {children}
       {isVisible && (
-        <div 
+        <div
           className={cn(
             // Base tooltip styles using design system
             'absolute w-max max-w-xs p-3 text-sm rounded-lg z-50',
@@ -49,7 +44,7 @@ const CustomTooltip = ({
         >
           {content}
           {/* Arrow/pointer using design system colors */}
-          <div 
+          <div
             className={cn(
               'absolute w-2 h-2 bg-neutral-900 border border-neutral-700 rotate-45',
               arrowClasses[side] || arrowClasses.top

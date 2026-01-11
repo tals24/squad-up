@@ -8,20 +8,35 @@ export function useDrillLabHistory(initialElements = []) {
 
   // Update history when initialElements change (for external data loading)
   useEffect(() => {
-    if (initialElements && initialElements.length > 0 && history.length === 1 && history[0].length === 0) {
-      console.log('[useDrillLabHistory] Updating history with initial elements:', initialElements.length);
+    if (
+      initialElements &&
+      initialElements.length > 0 &&
+      history.length === 1 &&
+      history[0].length === 0
+    ) {
+      console.log(
+        '[useDrillLabHistory] Updating history with initial elements:',
+        initialElements.length
+      );
       setHistory([initialElements]);
       setHistoryIndex(0);
     }
   }, [initialElements, history]);
 
-  const saveToHistory = useCallback((newElements) => {
-    console.log('[useDrillLabHistory] Saving to history:', Array.isArray(newElements) ? newElements.length : 0, 'elements');
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newElements);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
+  const saveToHistory = useCallback(
+    (newElements) => {
+      console.log(
+        '[useDrillLabHistory] Saving to history:',
+        Array.isArray(newElements) ? newElements.length : 0,
+        'elements'
+      );
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(newElements);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    },
+    [history, historyIndex]
+  );
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -55,6 +70,6 @@ export function useDrillLabHistory(initialElements = []) {
     redo,
     clear,
     canUndo,
-    canRedo
+    canRedo,
   };
 }

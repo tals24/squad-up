@@ -13,16 +13,12 @@ export function SuspenseLoader() {
         <div className="inline-block">
           <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
         </div>
-        
+
         {/* Loading Text */}
-        <p className="mt-4 text-gray-600 text-lg font-medium">
-          Loading...
-        </p>
-        
+        <p className="mt-4 text-gray-600 text-lg font-medium">Loading...</p>
+
         {/* Optional hint */}
-        <p className="mt-2 text-gray-400 text-sm">
-          First-time loads may take a moment
-        </p>
+        <p className="mt-2 text-gray-400 text-sm">First-time loads may take a moment</p>
       </div>
     </div>
   );
@@ -41,4 +37,3 @@ export function MinimalLoader() {
 }
 
 export default SuspenseLoader;
-

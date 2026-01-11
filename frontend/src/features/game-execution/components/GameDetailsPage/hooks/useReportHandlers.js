@@ -2,12 +2,12 @@ import { apiClient } from '@/shared/api/client';
 
 /**
  * useReportHandlers
- * 
+ *
  * Manages player performance reports and team summaries:
  * - Individual player report dialogs
  * - Team summary dialogs (defense, midfield, attack, general)
  * - Auto-fill missing reports
- * 
+ *
  * @param {Object} params
  * @param {string} params.gameId - Game ID
  * @param {Object} params.game - Game object
@@ -28,7 +28,7 @@ import { apiClient } from '@/shared/api/client';
  * @param {Function} params.setTeamSummary - Set team summary
  * @param {Function} params.needsReport - Check if player needs report
  * @param {Function} params.toast - Toast notification function
- * 
+ *
  * @returns {Object} Report handlers
  */
 export function useReportHandlers({
@@ -52,7 +52,6 @@ export function useReportHandlers({
   needsReport,
   toast,
 }) {
-  
   /**
    * Open performance dialog for a player
    */
@@ -61,7 +60,7 @@ export function useReportHandlers({
     const existingReport = localPlayerReports[player._id] || {};
     const playerStats = teamStats[player._id] || {};
     const playerMatchStat = localPlayerMatchStats[player._id] || {};
-    
+
     // Debug logging for "Done" games
     if (game?.status === 'Done') {
       console.log('🔍 [useReportHandlers] Opening dialog for Done game:', {
@@ -73,22 +72,26 @@ export function useReportHandlers({
         hasAssists: existingReport.assists !== undefined,
       });
     }
-    
+
     // Load ALL detailed stats from localPlayerMatchStats (nested structure)
     const savedDetailedStats = playerMatchStat || {};
-    
+
     const playerPerfDataToSet = {
       // User-editable fields
       rating_physical: existingReport.rating_physical || 3,
       rating_technical: existingReport.rating_technical || 3,
       rating_tactical: existingReport.rating_tactical || 3,
       rating_mental: existingReport.rating_mental || 3,
-      notes: existingReport.notes || "",
+      notes: existingReport.notes || '',
       // ALL Detailed Stats from localPlayerMatchStats (draftable, nested structure)
       stats: {
         fouls: savedDetailedStats.fouls || { committedRating: 0, receivedRating: 0 },
         shooting: savedDetailedStats.shooting || { volumeRating: 0, accuracyRating: 0 },
-        passing: savedDetailedStats.passing || { volumeRating: 0, accuracyRating: 0, keyPassesRating: 0 },
+        passing: savedDetailedStats.passing || {
+          volumeRating: 0,
+          accuracyRating: 0,
+          keyPassesRating: 0,
+        },
         duels: savedDetailedStats.duels || { involvementRating: 0, successRating: 0 },
       },
       // Stats from teamStats (read-only, calculated by server)
@@ -97,7 +100,7 @@ export function useReportHandlers({
       goals: playerStats.goals || 0,
       assists: playerStats.assists || 0,
     };
-    
+
     console.log('🔍 [useReportHandlers] Opening player dialog:', {
       playerId: player._id,
       playerName: player.fullName,
@@ -110,9 +113,9 @@ export function useReportHandlers({
       goalsFromTeamStats: playerStats.goals,
       assistsFromTeamStats: playerStats.assists,
       gameStatus: game?.status,
-      finalDataToSet: playerPerfDataToSet
+      finalDataToSet: playerPerfDataToSet,
     });
-    
+
     setPlayerPerfData(playerPerfDataToSet);
     setShowPlayerPerfDialog(true);
   };
@@ -141,7 +144,7 @@ export function useReportHandlers({
     console.log('💾 [useReportHandlers] Saving detailed stats:', {
       playerId: selectedPlayer._id,
       playerName: selectedPlayer.fullName,
-      stats: detailedStats
+      stats: detailedStats,
     });
     setLocalPlayerMatchStats((prev) => ({
       ...prev,
@@ -158,7 +161,7 @@ export function useReportHandlers({
         rating_mental: playerPerfData.rating_mental,
         notes: playerPerfData.notes || null,
       };
-      
+
       // DO NOT send: minutesPlayed, goals, assists (server calculates)
       // DO NOT send: foulsCommitted, foulsReceived (saved to draft, will be saved on final submission)
 
@@ -168,7 +171,10 @@ export function useReportHandlers({
           reports: [reportPayload],
         });
       } catch (error) {
-        console.error('[useReportHandlers] Failed to save performance report:', error.message || 'Unknown error');
+        console.error(
+          '[useReportHandlers] Failed to save performance report:',
+          error.message || 'Unknown error'
+        );
       }
     } catch (error) {
       console.error('[useReportHandlers] Error saving performance report:', error);
@@ -186,15 +192,13 @@ export function useReportHandlers({
     if (game?.status !== 'Played') return;
 
     // Identify players without reports
-    const playersWithoutReports = gamePlayers.filter(
-      player => !localPlayerReports[player._id]
-    );
+    const playersWithoutReports = gamePlayers.filter((player) => !localPlayerReports[player._id]);
 
     if (playersWithoutReports.length === 0) {
       toast({
-        title: "No players to fill",
-        description: "All players already have reports.",
-        variant: "default",
+        title: 'No players to fill',
+        description: 'All players already have reports.',
+        variant: 'default',
       });
       return;
     }
@@ -207,16 +211,16 @@ export function useReportHandlers({
         rating_technical: 3,
         rating_tactical: 3,
         rating_mental: 3,
-        notes: "",
+        notes: '',
       };
     });
-    
+
     setLocalPlayerReports((prev) => ({ ...prev, ...updates }));
-    
+
     toast({
-      title: "Reports auto-filled",
+      title: 'Reports auto-filled',
       description: `Created default reports for ${playersWithoutReports.length} player(s).`,
-      variant: "default",
+      variant: 'default',
     });
   };
 
@@ -224,13 +228,13 @@ export function useReportHandlers({
    * Open team summary dialog
    */
   const handleTeamSummaryClick = (summaryType) => {
-    const currentValue = teamSummary[`${summaryType}Summary`] || "";
+    const currentValue = teamSummary[`${summaryType}Summary`] || '';
     console.log('🔍 [useReportHandlers] Team summary clicked:', {
       summaryType,
       fullKey: `${summaryType}Summary`,
       currentValue,
       fullTeamSummary: teamSummary,
-      willSetDialog: true
+      willSetDialog: true,
     });
     setSelectedSummaryType(summaryType);
     setShowTeamSummaryDialog(true);
@@ -244,11 +248,11 @@ export function useReportHandlers({
     console.log('💾 [useReportHandlers] Saving team summary:', {
       summaryType,
       fullKey: `${summaryType}Summary`,
-      value
+      value,
     });
     setTeamSummary((prev) => ({
       ...prev,
-      [`${summaryType}Summary`]: value,  // defense -> defenseSummary
+      [`${summaryType}Summary`]: value, // defense -> defenseSummary
     }));
     setShowTeamSummaryDialog(false);
   };
@@ -261,4 +265,3 @@ export function useReportHandlers({
     handleTeamSummarySave,
   };
 }
-

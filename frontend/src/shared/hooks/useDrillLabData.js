@@ -5,7 +5,7 @@ export function useDrillLabData(drillId, mode, searchParams) {
   const [drillData, setDrillData] = useState({
     name: '',
     description: '',
-    layoutData: []
+    layoutData: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -21,27 +21,36 @@ export function useDrillLabData(drillId, mode, searchParams) {
         if (mode === 'create') {
           // Handle create mode with layout param
           const layoutParam = searchParams.get('layout');
-          console.log('[useDrillLabData] Create mode. layoutParam:', layoutParam ? 'present' : 'missing');
-          
+          console.log(
+            '[useDrillLabData] Create mode. layoutParam:',
+            layoutParam ? 'present' : 'missing'
+          );
+
           if (layoutParam) {
             try {
               const layoutElements = JSON.parse(layoutParam);
-              setDrillData(prev => ({
+              setDrillData((prev) => ({
                 ...prev,
-                layoutData: Array.isArray(layoutElements) ? layoutElements : []
+                layoutData: Array.isArray(layoutElements) ? layoutElements : [],
               }));
-              console.log('[useDrillLabData] Loaded layout from param:', layoutElements.length, 'elements');
+              console.log(
+                '[useDrillLabData] Loaded layout from param:',
+                layoutElements.length,
+                'elements'
+              );
             } catch (e) {
               console.error('[useDrillLabData] Failed to parse layout param:', e);
               setError('Failed to load draft layout');
             }
           } else {
             // No layout param - start with empty drill data
-            console.log('[useDrillLabData] Create mode - no layout param, starting with empty data');
+            console.log(
+              '[useDrillLabData] Create mode - no layout param, starting with empty data'
+            );
             setDrillData({
               name: 'New Drill',
               description: '',
-              layoutData: []
+              layoutData: [],
             });
           }
         } else if (drillId) {
@@ -49,17 +58,20 @@ export function useDrillLabData(drillId, mode, searchParams) {
           console.log('[useDrillLabData] Loading existing drill with ID:', drillId);
           const response = await getDrills();
           console.log('[useDrillLabData] getDrills response:', response);
-          
+
           if (response?.success && response?.data) {
-            const drill = response.data.find(d => d._id === drillId);
+            const drill = response.data.find((d) => d._id === drillId);
             console.log('[useDrillLabData] Found drill:', drill);
-            
+
             if (drill) {
               setDrillData({
                 name: drill.drillName || drill.DrillName || 'Unknown Drill',
                 description: drill.description || '',
-                layoutData: drill.layoutData ? 
-                  (Array.isArray(drill.layoutData) ? drill.layoutData : JSON.parse(drill.layoutData)) : []
+                layoutData: drill.layoutData
+                  ? Array.isArray(drill.layoutData)
+                    ? drill.layoutData
+                    : JSON.parse(drill.layoutData)
+                  : [],
               });
               console.log('[useDrillLabData] Drill layoutData:', drill.layoutData);
             } else {
@@ -74,7 +86,7 @@ export function useDrillLabData(drillId, mode, searchParams) {
           setDrillData({
             name: 'New Drill',
             description: '',
-            layoutData: []
+            layoutData: [],
           });
         }
       } catch (err) {
@@ -98,12 +110,18 @@ export function useDrillLabData(drillId, mode, searchParams) {
     setError(null);
 
     try {
-      console.log('[useDrillLabData] Updating existing drill', drillId, 'with', Array.isArray(layoutData) ? layoutData.length : 0, 'elements');
+      console.log(
+        '[useDrillLabData] Updating existing drill',
+        drillId,
+        'with',
+        Array.isArray(layoutData) ? layoutData.length : 0,
+        'elements'
+      );
       const response = await updateDrill(drillId, {
-        layoutData: layoutData
+        layoutData: layoutData,
       });
       console.log('[useDrillLabData] Update response:', response);
-      
+
       if (response?.success) {
         return { success: true };
       } else {
@@ -125,6 +143,6 @@ export function useDrillLabData(drillId, mode, searchParams) {
     isLoading,
     isSaving,
     error,
-    saveDrill
+    saveDrill,
   };
 }

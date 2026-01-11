@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 export function useDrillLabMode() {
   const [searchParams] = useSearchParams();
-  
+
   const mode = useMemo(() => {
     const drillId = searchParams.get('drillId');
     const mode = searchParams.get('mode');
@@ -15,7 +15,7 @@ export function useDrillLabMode() {
       mode,
       isReadOnly,
       returnTo,
-      allParams: Object.fromEntries(searchParams.entries())
+      allParams: Object.fromEntries(searchParams.entries()),
     });
 
     return {
@@ -26,7 +26,7 @@ export function useDrillLabMode() {
       searchParams,
       isCreate: mode === 'create' || (!mode && !drillId),
       isEdit: mode === 'edit' || (!mode && drillId && !isReadOnly),
-      isView: isReadOnly || (drillId && !mode && isReadOnly)
+      isView: isReadOnly || (drillId && !mode && isReadOnly),
     };
   }, [searchParams]);
 

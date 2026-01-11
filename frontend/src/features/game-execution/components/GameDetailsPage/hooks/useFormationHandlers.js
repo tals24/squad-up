@@ -1,11 +1,11 @@
 /**
  * useFormationHandlers
- * 
+ *
  * Manages formation-related interactions:
  * - Change formation type
  * - Position click handling
  * - Player assignment to positions
- * 
+ *
  * @param {Object} params
  * @param {Object} params.formation - Current formation state
  * @param {Function} params.setFormation - Set formation state
@@ -17,7 +17,7 @@
  * @param {Function} params.setSelectedPositionData - Set position data
  * @param {Function} params.setShowPlayerSelectionDialog - Show/hide dialog
  * @param {Function} params.updatePlayerStatus - Update player roster status
- * 
+ *
  * @returns {Object} Formation handlers
  */
 export function useFormationHandlers({
@@ -32,13 +32,14 @@ export function useFormationHandlers({
   setShowPlayerSelectionDialog,
   updatePlayerStatus,
 }) {
-  
   /**
    * Handle formation type change
    * Clears all position assignments when changing formation
    */
   const handleFormationChange = (newFormationType) => {
-    if (window.confirm("Changing formation will clear all current position assignments. Continue?")) {
+    if (
+      window.confirm('Changing formation will clear all current position assignments. Continue?')
+    ) {
       setFormationType(newFormationType);
       setFormation({});
     }
@@ -61,10 +62,10 @@ export function useFormationHandlers({
    */
   const handleSelectPlayerForPosition = (player) => {
     if (!selectedPosition) return;
-    
+
     console.log('✅ [useFormationHandlers] Assigning player to position:', {
       posId: selectedPosition,
-      player: player.fullName
+      player: player.fullName,
     });
 
     // Remove player from any existing position first
@@ -78,9 +79,9 @@ export function useFormationHandlers({
     // Assign to new position
     newFormation[selectedPosition] = player;
     setFormation(newFormation);
-    
+
     // Update player status
-    updatePlayerStatus(player._id, "Starting Lineup");
+    updatePlayerStatus(player._id, 'Starting Lineup');
     setManualFormationMode(true);
 
     // Close dialog and reset
@@ -95,4 +96,3 @@ export function useFormationHandlers({
     handleSelectPlayerForPosition,
   };
 }
-

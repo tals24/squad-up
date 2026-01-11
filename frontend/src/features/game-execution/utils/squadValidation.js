@@ -1,6 +1,6 @@
 /**
  * Squad Validation Utilities
- * 
+ *
  * Contains validation logic for sports team squad management
  * including formation validation, bench size checks, and position validation
  */
@@ -14,36 +14,38 @@ export const validateStartingLineup = (formation) => {
   if (!formation || typeof formation !== 'object') {
     return {
       isValid: false,
-      message: "No players assigned to starting lineup"
+      message: 'No players assigned to starting lineup',
     };
   }
-  
-  const playersOnPitch = Object.values(formation).filter(player => player !== null && player !== undefined);
-  
+
+  const playersOnPitch = Object.values(formation).filter(
+    (player) => player !== null && player !== undefined
+  );
+
   if (playersOnPitch.length === 0) {
     return {
       isValid: false,
-      message: "No players assigned to starting lineup"
+      message: 'No players assigned to starting lineup',
     };
   }
-  
+
   if (playersOnPitch.length < 11) {
     return {
       isValid: false,
-      message: `Only ${playersOnPitch.length} players in starting lineup. Need exactly 11 players.`
+      message: `Only ${playersOnPitch.length} players in starting lineup. Need exactly 11 players.`,
     };
   }
-  
+
   if (playersOnPitch.length > 11) {
     return {
       isValid: false,
-      message: `Too many players (${playersOnPitch.length}) in starting lineup. Maximum 11 players allowed.`
+      message: `Too many players (${playersOnPitch.length}) in starting lineup. Maximum 11 players allowed.`,
     };
   }
-  
+
   return {
     isValid: true,
-    message: "Starting lineup is valid"
+    message: 'Starting lineup is valid',
   };
 };
 
@@ -56,36 +58,36 @@ export const validateBenchSize = (benchPlayers) => {
   if (!benchPlayers || !Array.isArray(benchPlayers)) {
     return {
       isValid: true,
-      message: "No players on the bench",
+      message: 'No players on the bench',
       needsConfirmation: true,
-      confirmationMessage: "You have no players on the bench. Are you sure you want to continue?"
+      confirmationMessage: 'You have no players on the bench. Are you sure you want to continue?',
     };
   }
-  
+
   const benchCount = benchPlayers.length;
-  
+
   if (benchCount >= 7) {
     return {
       isValid: true,
-      message: "Bench size is adequate",
-      needsConfirmation: false
+      message: 'Bench size is adequate',
+      needsConfirmation: false,
     };
   }
-  
+
   if (benchCount === 0) {
     return {
       isValid: true,
-      message: "No players on the bench",
+      message: 'No players on the bench',
       needsConfirmation: true,
-      confirmationMessage: "You have no players on the bench. Are you sure you want to continue?"
+      confirmationMessage: 'You have no players on the bench. Are you sure you want to continue?',
     };
   }
-  
+
   return {
     isValid: true,
     message: `Only ${benchCount} players on bench (recommended: 7+)`,
     needsConfirmation: true,
-    confirmationMessage: "You have fewer than 7 bench players. Are you sure you want to continue?"
+    confirmationMessage: 'You have fewer than 7 bench players. Are you sure you want to continue?',
   };
 };
 
@@ -99,39 +101,73 @@ export const validatePlayerPosition = (player, positionData) => {
   if (!player || !positionData) {
     return {
       isNaturalPosition: true,
-      message: "Position validation passed"
+      message: 'Position validation passed',
     };
   }
-  
+
   const playerPosition = player.position?.toLowerCase();
   const positionType = positionData.type?.toLowerCase();
   const positionLabel = positionData.label?.toLowerCase();
-  
+
   // Define position mappings
   const positionMappings = {
-    'goalkeeper': ['gk', 'goalkeeper'],
-    'defender': ['cb', 'lb', 'rb', 'lcb', 'rcb', 'defender', 'centre-back', 'left-back', 'right-back'],
-    'midfielder': ['cm', 'lm', 'rm', 'cam', 'cdm', 'lcm', 'rcm', 'midfielder', 'centre-mid', 'left-mid', 'right-mid', 'attacking-mid', 'defensive-mid'],
-    'forward': ['st', 'cf', 'lw', 'rw', 'forward', 'striker', 'centre-forward', 'left-wing', 'right-wing']
+    goalkeeper: ['gk', 'goalkeeper'],
+    defender: [
+      'cb',
+      'lb',
+      'rb',
+      'lcb',
+      'rcb',
+      'defender',
+      'centre-back',
+      'left-back',
+      'right-back',
+    ],
+    midfielder: [
+      'cm',
+      'lm',
+      'rm',
+      'cam',
+      'cdm',
+      'lcm',
+      'rcm',
+      'midfielder',
+      'centre-mid',
+      'left-mid',
+      'right-mid',
+      'attacking-mid',
+      'defensive-mid',
+    ],
+    forward: [
+      'st',
+      'cf',
+      'lw',
+      'rw',
+      'forward',
+      'striker',
+      'centre-forward',
+      'left-wing',
+      'right-wing',
+    ],
   };
-  
+
   // Check if player position matches the position type or label
-  const isNaturalPosition = 
+  const isNaturalPosition =
     positionMappings[playerPosition]?.includes(positionType) ||
     positionMappings[playerPosition]?.includes(positionLabel) ||
     playerPosition === positionType ||
     playerPosition === positionLabel;
-  
+
   if (isNaturalPosition) {
     return {
       isNaturalPosition: true,
-      message: `${player.name} is in their natural position`
+      message: `${player.name} is in their natural position`,
     };
   }
-  
+
   return {
     isNaturalPosition: false,
-    message: `${player.name} is being placed out of their natural position (${player.position} → ${positionData.label})`
+    message: `${player.name} is being placed out of their natural position (${player.position} → ${positionData.label})`,
   };
 };
 
@@ -144,22 +180,22 @@ export const validateGoalkeeper = (formation) => {
   if (!formation || typeof formation !== 'object') {
     return {
       hasGoalkeeper: false,
-      message: "No goalkeeper assigned to the team"
+      message: 'No goalkeeper assigned to the team',
     };
   }
-  
+
   const gkPosition = formation.gk;
-  
+
   if (!gkPosition) {
     return {
       hasGoalkeeper: false,
-      message: "No goalkeeper assigned to the team"
+      message: 'No goalkeeper assigned to the team',
     };
   }
-  
+
   return {
     hasGoalkeeper: true,
-    message: "Goalkeeper is assigned"
+    message: 'Goalkeeper is assigned',
   };
 };
 
@@ -174,12 +210,12 @@ export const validateSquad = (formation, benchPlayers, localRosterStatuses) => {
   const startingLineupValidation = validateStartingLineup(formation);
   const benchValidation = validateBenchSize(benchPlayers);
   const goalkeeperValidation = validateGoalkeeper(formation);
-  
-  const isValid = 
-    startingLineupValidation.isValid && 
-    benchValidation.isValid && 
+
+  const isValid =
+    startingLineupValidation.isValid &&
+    benchValidation.isValid &&
     goalkeeperValidation.hasGoalkeeper;
-  
+
   return {
     isValid,
     startingLineup: startingLineupValidation,
@@ -189,8 +225,8 @@ export const validateSquad = (formation, benchPlayers, localRosterStatuses) => {
     messages: [
       startingLineupValidation.message,
       benchValidation.message,
-      goalkeeperValidation.message
-    ]
+      goalkeeperValidation.message,
+    ],
   };
 };
 
@@ -204,33 +240,32 @@ export const validateMinutesPlayed = (startingLineup, playerReports) => {
   if (!startingLineup || startingLineup.length === 0) {
     return {
       isValid: false,
-      message: "No starting lineup players found",
-      needsConfirmation: false
+      message: 'No starting lineup players found',
+      needsConfirmation: false,
     };
   }
 
-  const playersWithoutMinutes = startingLineup.filter(player => {
+  const playersWithoutMinutes = startingLineup.filter((player) => {
     const report = playerReports[player._id];
     const minutes = report?.minutesPlayed || 0;
     return minutes <= 0;
   });
 
   if (playersWithoutMinutes.length > 0) {
-    const playerNames = playersWithoutMinutes.map(p => p.fullName || p.name).join(", ");
+    const playerNames = playersWithoutMinutes.map((p) => p.fullName || p.name).join(', ');
     return {
       isValid: false,
       message: `Starting lineup players must have minutes played: ${playerNames}`,
-      needsConfirmation: false
+      needsConfirmation: false,
     };
   }
 
   return {
     isValid: true,
-    message: "All starting lineup players have minutes played",
-    needsConfirmation: false
+    message: 'All starting lineup players have minutes played',
+    needsConfirmation: false,
   };
 };
-
 
 /**
  * Validates report completeness for starting lineup players
@@ -242,37 +277,38 @@ export const validateReportCompleteness = (startingLineup, playerReports) => {
   if (!startingLineup || startingLineup.length === 0) {
     return {
       isValid: false,
-      message: "No starting lineup players found",
-      needsConfirmation: false
+      message: 'No starting lineup players found',
+      needsConfirmation: false,
     };
   }
 
-  const playersWithoutReports = startingLineup.filter(player => {
+  const playersWithoutReports = startingLineup.filter((player) => {
     const report = playerReports[player._id];
     // Check if report exists and has at least one rating
     // Reports structure: { rating_physical, rating_technical, rating_tactical, rating_mental, notes }
     if (!report) return true;
-    
+
     // Check if report has all required ratings
-    const hasAllRatings = report.rating_physical !== undefined && 
-                         report.rating_technical !== undefined && 
-                         report.rating_tactical !== undefined && 
-                         report.rating_mental !== undefined;
+    const hasAllRatings =
+      report.rating_physical !== undefined &&
+      report.rating_technical !== undefined &&
+      report.rating_tactical !== undefined &&
+      report.rating_mental !== undefined;
     return !hasAllRatings;
   });
 
   if (playersWithoutReports.length > 0) {
-    const playerNames = playersWithoutReports.map(p => p.fullName || p.name).join(", ");
+    const playerNames = playersWithoutReports.map((p) => p.fullName || p.name).join(', ');
     return {
       isValid: false,
       message: `Starting lineup players must have complete reports: ${playerNames}`,
-      needsConfirmation: false
+      needsConfirmation: false,
     };
   }
 
   return {
     isValid: true,
-    message: "All starting lineup players have complete reports",
-    needsConfirmation: false
+    message: 'All starting lineup players have complete reports',
+    needsConfirmation: false,
   };
 };

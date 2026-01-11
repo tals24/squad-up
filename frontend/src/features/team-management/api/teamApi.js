@@ -24,4 +24,3 @@ export const updateTeam = async (teamId, teamData) => {
 export const deleteTeam = async (teamId) => {
   return await apiClient.delete(`/api/teams/${teamId}`);
 };
-

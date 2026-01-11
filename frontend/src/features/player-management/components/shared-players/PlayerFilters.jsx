@@ -9,11 +9,14 @@ export default function PlayerFilters({
   selectedTeam,
   setSelectedTeam,
   teams,
-  currentUser
+  currentUser,
 }) {
   const teamOptions = [
     ...(currentUser?.role === 'admin' ? [{ value: 'all', label: 'All Teams' }] : []),
-    ...teams.map(team => ({ value: team._id || team.id, label: team.teamName || team.TeamName || team.Name }))
+    ...teams.map((team) => ({
+      value: team._id || team.id,
+      label: team.teamName || team.TeamName || team.Name,
+    })),
   ];
 
   return (
@@ -44,6 +47,3 @@ export default function PlayerFilters({
     />
   );
 }
-
-
-

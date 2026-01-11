@@ -14,4 +14,3 @@ export { getGames, getGame, getGameById } from './gameApi';
 // NOTE: Game write operations (create/update/delete) are in feature-specific APIs
 // - game-scheduling: createGame, updateGame, deleteGame, transitionToScheduled
 // - game-execution: startGame, submitFinalReport, etc (via apiClient directly in hooks)
-

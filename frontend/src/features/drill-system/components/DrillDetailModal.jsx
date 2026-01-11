@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/primitives/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/primitives/dialog';
 import { Badge } from '@/shared/ui/primitives/badge';
 import { Button } from '@/shared/ui/primitives/button';
 import { Tag, Users, Eye, Play, Clock, Users2, Wrench, ExternalLink } from 'lucide-react';
@@ -21,7 +21,8 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
   };
 
   const getYouTubeVideoId = (url) => {
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeRegex =
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url?.match(youtubeRegex);
     return match ? match[1] : null;
   };
@@ -36,7 +37,10 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             {drill?.drillName || drill?.DrillName}
             <div className="flex gap-2">
               {(drill?.category || drill?.Category) && (
-                <Badge variant="outline" className={`text-xs ${getCategoryColor(drill?.category || drill?.Category)}`}>
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${getCategoryColor(drill?.category || drill?.Category)}`}
+                >
                   <Tag className="w-3 h-3 mr-1" />
                   {drill?.category || drill?.Category}
                 </Badge>
@@ -50,7 +54,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             </div>
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6 pt-4">
           {/* Drill Metadata */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -63,7 +67,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
                 <p className="text-slate-100 font-semibold mt-1">{drill.duration} minutes</p>
               </div>
             )}
-            
+
             {drill?.playersRequired && (
               <div className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
                 <div className="flex items-center gap-2 text-slate-300">
@@ -73,7 +77,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
                 <p className="text-slate-100 font-semibold mt-1">{drill.playersRequired} players</p>
               </div>
             )}
-            
+
             {drill?.equipment && drill.equipment.length > 0 && (
               <div className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
                 <div className="flex items-center gap-2 text-slate-300">
@@ -89,7 +93,14 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
           <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
             <h3 className="font-semibold text-slate-100 mb-3 text-lg">Description</h3>
             <p className="text-slate-200 whitespace-pre-wrap break-words leading-relaxed">
-              {drill?.description || drill?.DrillDescription || drill?.Description || drill?.instructions || drill?.Instructions || drill?.details || drill?.Details || "No description available."}
+              {drill?.description ||
+                drill?.DrillDescription ||
+                drill?.Description ||
+                drill?.instructions ||
+                drill?.Instructions ||
+                drill?.details ||
+                drill?.Details ||
+                'No description available.'}
             </p>
           </div>
 
@@ -117,7 +128,10 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Visual Board Link */}
             {(drill?.layoutData || drill?.DrillLayoutData) && (
-              <Link to={`/drilllab?drillId=${drill._id || drill.id}&readOnly=true&from=${source}`} className="flex-1">
+              <Link
+                to={`/drilllab?drillId=${drill._id || drill.id}&readOnly=true&from=${source}`}
+                className="flex-1"
+              >
                 <Button className="w-full bg-slate-600 hover:bg-cyan-600 text-slate-100 hover:text-white px-4 py-3 rounded-lg border border-slate-500 hover:border-cyan-500 transition-all duration-300 flex items-center justify-center gap-2 font-medium">
                   <Eye className="w-4 h-4" />
                   View Tactic Board
@@ -160,7 +174,11 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
               <h3 className="font-semibold text-slate-100 mb-2 text-lg">Created By</h3>
               <p className="text-slate-200">
-                {drill.author?.fullName || drill.author?.FullName || drill.author?.email || drill.author?.Email || 'Unknown'}
+                {drill.author?.fullName ||
+                  drill.author?.FullName ||
+                  drill.author?.email ||
+                  drill.author?.Email ||
+                  'Unknown'}
               </p>
             </div>
           )}

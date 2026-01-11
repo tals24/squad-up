@@ -2,7 +2,7 @@
 
 // Navigation
 export function createPageUrl(pageName) {
-    return '/' + pageName.toLowerCase().replace(/ /g, '-');
+  return '/' + pageName.toLowerCase().replace(/ /g, '-');
 }
 
 // Date utilities
@@ -13,4 +13,3 @@ export * from './positionUtils';
 
 // Category colors
 export * from './categoryColors';
-

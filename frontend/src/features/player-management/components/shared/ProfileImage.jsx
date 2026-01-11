@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProfileImage = ({ player, className = "w-28 h-28" }) => {
+const ProfileImage = ({ player, className = 'w-28 h-28' }) => {
   return (
     <div className="relative inline-block">
       <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur opacity-50 animate-pulse"></div>

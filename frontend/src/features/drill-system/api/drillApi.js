@@ -24,4 +24,3 @@ export const updateDrill = async (drillId, drillData) => {
 export const deleteDrill = async (drillId) => {
   return await apiClient.delete(`/api/drills/${drillId}`);
 };
-

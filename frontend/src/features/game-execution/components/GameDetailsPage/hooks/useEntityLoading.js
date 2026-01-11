@@ -9,15 +9,15 @@ import { fetchDifficultyAssessment } from '../../../api/difficultyAssessmentApi'
 
 /**
  * useEntityLoading
- * 
+ *
  * Loads all game-related entities (goals, substitutions, cards, timeline, stats, etc.)
  * Consolidates all data loading effects into one hook
- * 
+ *
  * @param {Object} params
  * @param {string} params.gameId - Game ID
  * @param {Object} params.game - Game object
  * @param {boolean} params.isDifficultyAssessmentEnabled - Feature flag
- * 
+ *
  * @returns {Object} Entity states, setters, and refresh function
  */
 export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }) {
@@ -38,29 +38,32 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
         console.log('🔍 [useEntityLoading] Loading entities...', {
           gameId,
           gameStatus: game?.status,
-          isDifficultyAssessmentEnabled
+          isDifficultyAssessmentEnabled,
         });
-        
+
         // Only fetch player stats for Played/Done games
         const shouldFetchStats = game.status === 'Played' || game.status === 'Done';
-        
-        const [goalsData, subsData, cardsData, difficultyData, timelineData, statsData] = await Promise.all([
-          fetchGoals(gameId),
-          fetchSubstitutions(gameId),
-          fetchCards(gameId),
-          isDifficultyAssessmentEnabled ? fetchDifficultyAssessment(gameId) : Promise.resolve(null),
-          fetchMatchTimeline(gameId),
-          shouldFetchStats ? fetchPlayerStats(gameId) : Promise.resolve({}),
-        ]);
-        
+
+        const [goalsData, subsData, cardsData, difficultyData, timelineData, statsData] =
+          await Promise.all([
+            fetchGoals(gameId),
+            fetchSubstitutions(gameId),
+            fetchCards(gameId),
+            isDifficultyAssessmentEnabled
+              ? fetchDifficultyAssessment(gameId)
+              : Promise.resolve(null),
+            fetchMatchTimeline(gameId),
+            shouldFetchStats ? fetchPlayerStats(gameId) : Promise.resolve({}),
+          ]);
+
         console.log('🔍 [useEntityLoading] Entities loaded:', {
           goalsCount: goalsData?.length,
           subsCount: subsData?.length,
           cardsCount: cardsData?.length,
           hasDifficultyData: !!difficultyData,
-          difficultyData
+          difficultyData,
         });
-        
+
         setGoals(goalsData);
         setSubstitutions(subsData);
         setCards(cardsData);
@@ -84,7 +87,7 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
       try {
         const stats = await fetchPlayerMatchStats(gameId);
         const statsMap = {};
-        stats.forEach(stat => {
+        stats.forEach((stat) => {
           statsMap[stat.playerId] = stat;
         });
         setLocalPlayerMatchStats(statsMap);
@@ -104,7 +107,7 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
       console.log('⏸️ [useEntityLoading] Skipping refreshTeamStats - game status:', game.status);
       return;
     }
-    
+
     try {
       console.log('🔄 [useEntityLoading] Refreshing team stats for game:', gameId);
       const stats = await fetchPlayerStats(gameId);
@@ -114,7 +117,7 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
         allPlayerIds: Object.keys(stats),
         samplePlayerId: firstPlayerId,
         sampleStats: firstPlayerId ? stats[firstPlayerId] : null,
-        allStats: stats
+        allStats: stats,
       });
       setTeamStats(stats);
     } catch (error) {
@@ -140,4 +143,3 @@ export function useEntityLoading({ gameId, game, isDifficultyAssessmentEnabled }
     refreshTeamStats,
   };
 }
-

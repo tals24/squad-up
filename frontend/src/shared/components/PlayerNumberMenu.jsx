@@ -22,7 +22,7 @@ export default function PlayerNumberMenu({ position, onSelectNumber, onClose }) 
         onDrag={(e) => e.stopPropagation()}
       >
         <div className="grid grid-cols-5 gap-2">
-          {numbers.map(number => (
+          {numbers.map((number) => (
             <button
               key={number}
               onClick={(e) => {
@@ -35,7 +35,7 @@ export default function PlayerNumberMenu({ position, onSelectNumber, onClose }) 
             </button>
           ))}
         </div>
-        
+
         {/* כפתור סגירה */}
         <div className="flex justify-center mt-2">
           <button

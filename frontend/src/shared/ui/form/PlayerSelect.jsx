@@ -1,17 +1,17 @@
-import React from "react";
+import React from 'react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/primitives/select";
-import FormField from "./FormField";
+} from '@/shared/ui/primitives/select';
+import FormField from './FormField';
 
 /**
  * PlayerSelect - Standardized player dropdown selector
  * Used across Card, Goal, and Substitution dialogs
- * 
+ *
  * @param {Array} players - Array of player objects
  * @param {string} value - Selected player ID
  * @param {function} onChange - Change handler (receives player ID)
@@ -31,7 +31,7 @@ export default function PlayerSelect({
   value,
   onChange,
   label,
-  placeholder = "Select player...",
+  placeholder = 'Select player...',
   required = true,
   disabled = false,
   error,
@@ -39,7 +39,7 @@ export default function PlayerSelect({
   formatPlayer,
   showPosition = false,
   allowNone = false,
-  noneLabel = "None"
+  noneLabel = 'None',
 }) {
   // Default player formatter: #KitNumber FullName
   const defaultFormatter = (player) => {
@@ -52,12 +52,7 @@ export default function PlayerSelect({
   const formatter = formatPlayer || defaultFormatter;
 
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-    >
+    <FormField label={label} htmlFor={id} required={required} error={error}>
       <Select
         value={value || (allowNone ? 'none' : '')}
         onValueChange={onChange}
@@ -72,12 +67,8 @@ export default function PlayerSelect({
               {noneLabel}
             </SelectItem>
           )}
-          {players.map(player => (
-            <SelectItem 
-              key={player._id} 
-              value={player._id} 
-              className="text-white"
-            >
+          {players.map((player) => (
+            <SelectItem key={player._id} value={player._id} className="text-white">
               {formatter(player)}
             </SelectItem>
           ))}

@@ -3,13 +3,13 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useGoalsHandlers
- * 
+ *
  * Manages all goal-related CRUD operations:
  * - Add new goal (team or opponent)
  * - Edit existing goal
  * - Delete goal
  * - Update scores and timeline
- * 
+ *
  * @param {Object} params
  * @param {string} params.gameId - Game ID
  * @param {Array} params.goals - Current goals array
@@ -21,7 +21,7 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
  * @param {Function} params.setSelectedGoal - Set selected goal
  * @param {Function} params.setShowGoalDialog - Show/hide goal dialog
  * @param {Function} params.refreshTeamStats - Refresh team stats after goal changes
- * 
+ *
  * @returns {Object} Goal handlers
  */
 export function useGoalsHandlers({
@@ -36,7 +36,6 @@ export function useGoalsHandlers({
   setShowGoalDialog,
   refreshTeamStats,
 }) {
-  
   /**
    * Open dialog to add new goal
    */
@@ -64,7 +63,7 @@ export function useGoalsHandlers({
 
     try {
       await deleteGoal(gameId, goalId);
-      setGoals(prevGoals => prevGoals.filter(g => g._id !== goalId));
+      setGoals((prevGoals) => prevGoals.filter((g) => g._id !== goalId));
       // Refresh team stats after goal deletion (affects goals/assists)
       refreshTeamStats();
     } catch (error) {
@@ -79,21 +78,17 @@ export function useGoalsHandlers({
    */
   const calculateMatchStateForGoal = (minute, excludeGoalId = null) => {
     // Count goals BEFORE this minute (not including this goal itself)
-    const ourGoalsBeforeThis = goals.filter(g => 
-      g.minute < minute && 
-      !g.isOpponentGoal &&
-      g._id !== excludeGoalId
+    const ourGoalsBeforeThis = goals.filter(
+      (g) => g.minute < minute && !g.isOpponentGoal && g._id !== excludeGoalId
     ).length;
-    
-    const opponentGoalsBeforeThis = goals.filter(g => 
-      g.minute < minute && 
-      g.isOpponentGoal &&
-      g._id !== excludeGoalId
+
+    const opponentGoalsBeforeThis = goals.filter(
+      (g) => g.minute < minute && g.isOpponentGoal && g._id !== excludeGoalId
     ).length;
 
     console.log(`🔍 [useGoalsHandlers] Calculating match state BEFORE goal at minute ${minute}:`, {
       ourGoals: ourGoalsBeforeThis,
-      opponentGoals: opponentGoalsBeforeThis
+      opponentGoals: opponentGoalsBeforeThis,
     });
 
     if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
@@ -112,47 +107,49 @@ export function useGoalsHandlers({
     try {
       // Calculate match state based on goals timeline BEFORE this goal
       const matchState = calculateMatchStateForGoal(
-        goalData.minute, 
+        goalData.minute,
         selectedGoal?._id // Exclude current goal if editing
       );
       const goalDataWithMatchState = {
         ...goalData,
-        matchState
+        matchState,
       };
 
       console.log('💾 [useGoalsHandlers] Saving goal with match state:', {
         minute: goalData.minute,
         matchState,
-        goalData: goalDataWithMatchState
+        goalData: goalDataWithMatchState,
       });
 
       if (selectedGoal) {
         // Update existing goal
         const updatedGoal = await updateGoal(gameId, selectedGoal._id, goalDataWithMatchState);
-        setGoals(prevGoals => prevGoals.map(g => g._id === updatedGoal._id ? updatedGoal : g));
-        
+        setGoals((prevGoals) =>
+          prevGoals.map((g) => (g._id === updatedGoal._id ? updatedGoal : g))
+        );
+
         // Recalculate score from goals
         const updatedGoals = await fetchGoals(gameId);
         setGoals(updatedGoals);
       } else {
         // Create new goal
         const newGoal = await createGoal(gameId, goalDataWithMatchState);
-        setGoals(prevGoals => [...prevGoals, newGoal]);
-        
+        setGoals((prevGoals) => [...prevGoals, newGoal]);
+
         // Increment team score when team goal is recorded
-        setFinalScore(prev => ({
+        setFinalScore((prev) => ({
           ...prev,
-          ourScore: prev.ourScore + 1
+          ourScore: prev.ourScore + 1,
         }));
       }
-      
+
       // Refresh goals list to ensure consistency
       const updatedGoals = await fetchGoals(gameId);
       setGoals(updatedGoals);
-      
+
       // Refresh team stats after goal save (affects goals/assists)
       refreshTeamStats();
-      
+
       // Refresh timeline to update player states
       try {
         const timelineData = await fetchMatchTimeline(gameId);
@@ -160,7 +157,7 @@ export function useGoalsHandlers({
       } catch (error) {
         console.error('[useGoalsHandlers] Error refreshing timeline:', error);
       }
-      
+
       setShowGoalDialog(false);
       setSelectedGoal(null);
     } catch (error) {
@@ -176,34 +173,34 @@ export function useGoalsHandlers({
     try {
       // Calculate match state BEFORE this opponent goal
       const matchState = calculateMatchStateForGoal(opponentGoalData.minute);
-      
+
       // Save opponent goal to database
       const goalData = {
         minute: opponentGoalData.minute,
         goalType: opponentGoalData.goalType || 'open-play',
         isOpponentGoal: true,
-        matchState
+        matchState,
       };
-      
+
       console.log('💾 [useGoalsHandlers] Saving opponent goal with match state:', {
         minute: opponentGoalData.minute,
         matchState,
-        goalData
+        goalData,
       });
-      
+
       await createGoal(gameId, goalData);
-      
+
       // Increment opponent score when opponent goal is recorded
       const newOpponentScore = finalScore.opponentScore + 1;
-      setFinalScore(prev => ({
+      setFinalScore((prev) => ({
         ...prev,
-        opponentScore: newOpponentScore
+        opponentScore: newOpponentScore,
       }));
-      
+
       // Refresh goals list to include the new opponent goal
       const updatedGoals = await fetchGoals(gameId);
       setGoals(updatedGoals);
-      
+
       // Refresh team stats after opponent goal save (no player stats change, but keep consistency)
       refreshTeamStats();
     } catch (error) {
@@ -220,4 +217,3 @@ export function useGoalsHandlers({
     handleSaveOpponentGoal,
   };
 }
-

@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 /**
  * Custom hook for dashboard data filtering and calculations
  * Centralizes all role-based data filtering logic
- * 
+ *
  * @param {Object} params - Parameters object
  * @param {Object} params.currentUser - Current authenticated user
  * @param {Array} params.users - All users from backend
@@ -17,12 +17,12 @@ export const useDashboardData = ({ currentUser, users, teams, players, reports, 
   return useMemo(() => {
     // Early return if no user or data
     if (!currentUser || !users.length) {
-      return { 
-        filteredTeams: [], 
-        filteredPlayers: [], 
-        filteredReports: [], 
-        filteredGames: [], 
-        userRole: '' 
+      return {
+        filteredTeams: [],
+        filteredPlayers: [],
+        filteredReports: [],
+        filteredGames: [],
+        userRole: '',
       };
     }
 
@@ -33,13 +33,13 @@ export const useDashboardData = ({ currentUser, users, teams, players, reports, 
         filteredPlayers: players,
         filteredReports: reports,
         filteredGames: games,
-        userRole: 'Admin'
+        userRole: 'Admin',
       };
     }
 
     // Find backend user for role-based filtering
-    const backendUser = users.find(u => 
-      u.email && u.email.toLowerCase() === currentUser.email.toLowerCase()
+    const backendUser = users.find(
+      (u) => u.email && u.email.toLowerCase() === currentUser.email.toLowerCase()
     );
     const userRole = currentUser.role;
 
@@ -50,36 +50,22 @@ export const useDashboardData = ({ currentUser, users, teams, players, reports, 
     // Role-based filtering logic
     if (userRole === 'Coach' && backendUser) {
       // Filter teams where this user is the coach
-      fTeams = teams.filter(team => 
-        team.coach && team.coach._id === backendUser._id
-      );
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => 
-        player.team && teamIds.includes(player.team._id)
-      );
-      fGames = games.filter(game => 
-        game.team && teamIds.includes(game.team._id)
-      );
+      fTeams = teams.filter((team) => team.coach && team.coach._id === backendUser._id);
+      const teamIds = fTeams.map((team) => team._id);
+      fPlayers = players.filter((player) => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter((game) => game.team && teamIds.includes(game.team._id));
     } else if (userRole === 'Division Manager' && backendUser?.department) {
       // Filter teams by division
-      fTeams = teams.filter(team => team.division === backendUser.department);
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => 
-        player.team && teamIds.includes(player.team._id)
-      );
-      fGames = games.filter(game => 
-        game.team && teamIds.includes(game.team._id)
-      );
+      fTeams = teams.filter((team) => team.division === backendUser.department);
+      const teamIds = fTeams.map((team) => team._id);
+      fPlayers = players.filter((player) => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter((game) => game.team && teamIds.includes(game.team._id));
     } else if (userRole === 'Department Manager' && backendUser?.department) {
       // Filter teams by department
-      fTeams = teams.filter(team => team.division === backendUser.department);
-      const teamIds = fTeams.map(team => team._id);
-      fPlayers = players.filter(player => 
-        player.team && teamIds.includes(player.team._id)
-      );
-      fGames = games.filter(game => 
-        game.team && teamIds.includes(game.team._id)
-      );
+      fTeams = teams.filter((team) => team.division === backendUser.department);
+      const teamIds = fTeams.map((team) => team._id);
+      fPlayers = players.filter((player) => player.team && teamIds.includes(player.team._id));
+      fGames = games.filter((game) => game.team && teamIds.includes(game.team._id));
     } else if (userRole !== 'Admin') {
       // Non-admin users with no specific permissions see nothing
       fTeams = [];
@@ -88,20 +74,19 @@ export const useDashboardData = ({ currentUser, users, teams, players, reports, 
     }
 
     // Filter reports based on filtered players
-    const playerIds = fPlayers.map(p => p._id);
-    const fReports = reports.filter(report => 
-      report.player && playerIds.includes(report.player._id)
+    const playerIds = fPlayers.map((p) => p._id);
+    const fReports = reports.filter(
+      (report) => report.player && playerIds.includes(report.player._id)
     );
 
     const displayRole = userRole || 'Coach';
 
-    return { 
-      filteredTeams: fTeams, 
-      filteredPlayers: fPlayers, 
-      filteredReports: fReports, 
-      filteredGames: fGames, 
-      userRole: displayRole 
+    return {
+      filteredTeams: fTeams,
+      filteredPlayers: fPlayers,
+      filteredReports: fReports,
+      filteredGames: fGames,
+      userRole: displayRole,
     };
   }, [currentUser, users, teams, players, reports, games]);
 };
-

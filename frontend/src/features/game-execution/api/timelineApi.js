@@ -14,7 +14,7 @@ export async function fetchMatchTimeline(gameId) {
   try {
     const response = await fetch(`${API_URL}/api/games/${gameId}/timeline`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         'Content-Type': 'application/json',
       },
     });
@@ -30,4 +30,3 @@ export async function fetchMatchTimeline(gameId) {
     throw error;
   }
 }
-

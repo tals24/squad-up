@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { User } from "@/shared/api";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { User } from '@/shared/api';
+import { useSearchParams } from 'react-router-dom';
 import {
   Eye,
   Star,
@@ -11,25 +11,34 @@ import {
   Clock,
   Search,
   ChevronDown,
-  X
-} from "lucide-react";
-import { createScoutReport } from "@/features/reporting/api";
-import GenericAddPage from "@/shared/components/GenericAddPage";
-import { TextInputField, SelectField, TextareaField, FormGrid } from "@/shared/components/FormFields";
-import { Input } from "@/shared/ui/primitives/input";
-import { Label } from "@/shared/ui/primitives/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { Textarea } from "@/shared/ui/primitives/textarea";
-import { Button } from "@/shared/ui/primitives/button";
-import { useData } from "@/app/providers/DataProvider";
-
+  X,
+} from 'lucide-react';
+import { createScoutReport } from '@/features/reporting/api';
+import GenericAddPage from '@/shared/components/GenericAddPage';
+import {
+  TextInputField,
+  SelectField,
+  TextareaField,
+  FormGrid,
+} from '@/shared/components/FormFields';
+import { Input } from '@/shared/ui/primitives/input';
+import { Label } from '@/shared/ui/primitives/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/select';
+import { Textarea } from '@/shared/ui/primitives/textarea';
+import { Button } from '@/shared/ui/primitives/button';
+import { useData } from '@/app/providers/DataProvider';
 
 export default function AddReport() {
   const [searchParams] = useSearchParams();
   const playerId = searchParams.get('playerId');
   const gameId = searchParams.get('gameId');
   const fromPage = searchParams.get('from');
-  
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +48,7 @@ export default function AddReport() {
   const [isPlayerPreSelected, setIsPlayerPreSelected] = useState(false);
 
   const isScoutReport = !gameId;
-  const reportType = isScoutReport ? "Scout Report" : "Game Report";
+  const reportType = isScoutReport ? 'Scout Report' : 'Game Report';
 
   const initialFormData = {
     Date: new Date().toISOString().split('T')[0],
@@ -48,7 +57,7 @@ export default function AddReport() {
     MinutesPlayed: isScoutReport ? undefined : 0,
     Goals: isScoutReport ? undefined : 0,
     Assists: isScoutReport ? undefined : 0,
-    GeneralNotes: ""
+    GeneralNotes: '',
   };
 
   // For player search - using client-side filtering
@@ -66,28 +75,24 @@ export default function AddReport() {
 
     // Filter by team if not 'all'
     if (selectedTeam !== 'all') {
-      filtered = filtered.filter(player => 
-        player.team && player.team._id === selectedTeam
-      );
+      filtered = filtered.filter((player) => player.team && player.team._id === selectedTeam);
     }
 
     // Filter by position if not 'all'
     if (selectedPosition !== 'all') {
-      filtered = filtered.filter(player => 
-        player.position === selectedPosition
-      );
+      filtered = filtered.filter((player) => player.position === selectedPosition);
     }
 
     // Filter by kit number if not empty (exact match)
     if (kitNumber.trim()) {
-      filtered = filtered.filter(player => 
-        player.kitNumber && player.kitNumber.toString() === kitNumber.trim()
+      filtered = filtered.filter(
+        (player) => player.kitNumber && player.kitNumber.toString() === kitNumber.trim()
       );
     }
 
     // Filter by search term if not empty
     if (playerSearch.trim()) {
-      filtered = filtered.filter(player => 
+      filtered = filtered.filter((player) =>
         player.fullName.toLowerCase().includes(playerSearch.toLowerCase())
       );
     }
@@ -103,13 +108,13 @@ export default function AddReport() {
   // Pre-select player when coming from player page
   useEffect(() => {
     if (playerId && players.length > 0 && !selectedPlayerDetails) {
-      const preSelectedPlayer = players.find(p => p._id === playerId);
-      
+      const preSelectedPlayer = players.find((p) => p._id === playerId);
+
       if (preSelectedPlayer) {
         setSelectedPlayerDetails(preSelectedPlayer);
         setPlayerSearch(preSelectedPlayer.fullName);
         setIsPlayerPreSelected(true);
-        
+
         // Set the team filter to the player's team
         if (preSelectedPlayer.team) {
           setSelectedTeam(preSelectedPlayer.team._id);
@@ -137,17 +142,16 @@ export default function AddReport() {
       const user = await User.me();
       setCurrentUser(user);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error('Error loading data:', error);
     }
     setIsLoading(isContextLoading);
   };
-
 
   const handleSubmit = async (formData) => {
     try {
       // Ensure we have a player selected
       if (!selectedPlayerDetails) {
-        throw new Error("Please select a player for the report");
+        throw new Error('Please select a player for the report');
       }
 
       const reportData = {
@@ -157,19 +161,19 @@ export default function AddReport() {
         generalRating: selectedRating,
         notes: formData.GeneralNotes || null,
         date: formData.Date || new Date().toISOString().split('T')[0], // Use form date or default to today
-        game: null // Scout reports don't require a specific game
+        game: null, // Scout reports don't require a specific game
       };
 
       const response = await createScoutReport(reportData);
 
       if (response?.success) {
-        const playerName = selectedPlayerDetails?.fullName || "Player";
+        const playerName = selectedPlayerDetails?.fullName || 'Player';
         return {
           success: true,
-          message: `${reportType} for ${playerName} has been saved successfully!`
+          message: `${reportType} for ${playerName} has been saved successfully!`,
         };
       } else {
-        throw new Error(response?.error || "Failed to save report");
+        throw new Error(response?.error || 'Failed to save report');
       }
     } catch (error) {
       throw new Error(error.message);
@@ -177,14 +181,13 @@ export default function AddReport() {
   };
 
   const isFormValid = (formData) => {
-    const isValid = selectedPlayerDetails &&
-                   formData.GeneralNotes?.trim();
+    const isValid = selectedPlayerDetails && formData.GeneralNotes?.trim();
 
     // Debug logging
     console.log('Form validation:', {
       selectedPlayerDetails: !!selectedPlayerDetails,
       notes: formData.GeneralNotes?.trim(),
-      isValid
+      isValid,
     });
 
     return isValid;
@@ -193,17 +196,17 @@ export default function AddReport() {
   // Determine back URL based on context
   const getBackUrl = () => {
     if (gameId) return `GameDetails?id=${gameId}`;
-    if (fromPage === "Player" && playerId) return `Player?id=${playerId}`;
+    if (fromPage === 'Player' && playerId) return `Player?id=${playerId}`;
     if (fromPage) return fromPage;
-    
+
     // Check if we came from Dashboard by looking at referrer
     const referrer = document.referrer;
     if (referrer && referrer.includes('/dashboard')) {
-      return "Dashboard";
+      return 'Dashboard';
     }
-    
+
     // Default to Players for other cases
-    return "Players";
+    return 'Players';
   };
 
   const backUrl = getBackUrl();
@@ -215,7 +218,7 @@ export default function AddReport() {
       description={`Create a new ${reportType.toLowerCase()}`}
       icon={Eye}
       titleIcon={isScoutReport ? Eye : Trophy}
-      titleColor={isScoutReport ? "text-brand-purple" : "text-brand-green"}
+      titleColor={isScoutReport ? 'text-brand-purple' : 'text-brand-green'}
       backUrl={backUrl}
       initialFormData={initialFormData}
       onSubmit={handleSubmit}
@@ -225,7 +228,7 @@ export default function AddReport() {
       <FormGrid columns={1}>
         {/* Team Selection */}
         {!playerId && (
-                            <div className="space-y-2">
+          <div className="space-y-2">
             <Label className="text-foreground font-medium flex items-center gap-2">
               <Trophy className="w-4 h-4 text-brand-green" />
               Team (Optional)
@@ -244,17 +247,17 @@ export default function AddReport() {
             >
               <SelectTrigger className="bg-background border-border text-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors">
                 <SelectValue placeholder="Select a team to filter players..." />
-                                    </SelectTrigger>
+              </SelectTrigger>
               <SelectContent className="bg-background border-border text-foreground">
                 <SelectItem value="all">All Teams</SelectItem>
-                {teams.map(team => (
+                {teams.map((team) => (
                   <SelectItem key={team._id} value={team._id}>
                     {team.teamName} ({team.season})
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         {/* Player Selection Filters */}
@@ -263,16 +266,18 @@ export default function AddReport() {
             <Search className="w-4 h-4 text-brand-blue" />
             Search Player *
           </Label>
-            
+
           {/* Pre-selected Player Display */}
           {isPlayerPreSelected && selectedPlayerDetails && (
             <div className="p-4 border border-border rounded-lg bg-card/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold">
                   {selectedPlayerDetails.kitNumber || '?'}
-                          </div>
+                </div>
                 <div className="flex-1">
-                  <div className="font-medium text-foreground">{selectedPlayerDetails.fullName}</div>
+                  <div className="font-medium text-foreground">
+                    {selectedPlayerDetails.fullName}
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     #{selectedPlayerDetails.kitNumber} • {selectedPlayerDetails.position}
                     {selectedPlayerDetails.team && (
@@ -292,17 +297,20 @@ export default function AddReport() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Position Filter */}
-                  <div className="space-y-2">
+                <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Position</Label>
-                  <Select value={selectedPosition} onValueChange={(newValue) => {
-                    setSelectedPosition(newValue);
-                    setSelectedPlayerDetails(null);
-                    setPlayerSearch('');
-                    setShowPlayerDropdown(false);
-                  }}>
+                  <Select
+                    value={selectedPosition}
+                    onValueChange={(newValue) => {
+                      setSelectedPosition(newValue);
+                      setSelectedPlayerDetails(null);
+                      setPlayerSearch('');
+                      setShowPlayerDropdown(false);
+                    }}
+                  >
                     <SelectTrigger className="bg-background border-border text-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors">
                       <SelectValue placeholder="Position" />
-                      </SelectTrigger>
+                    </SelectTrigger>
                     <SelectContent className="bg-background border-border text-foreground">
                       <SelectItem value="all">All Positions</SelectItem>
                       <SelectItem value="Goalkeeper">Goalkeeper</SelectItem>
@@ -311,12 +319,12 @@ export default function AddReport() {
                       <SelectItem value="Forward">Forward</SelectItem>
                       <SelectItem value="Wing-back">Wing-back</SelectItem>
                       <SelectItem value="Striker">Striker</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Kit Number Filter */}
-                      <div className="space-y-2">
+                <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Kit Number</Label>
                   <Input
                     value={kitNumber}
@@ -329,10 +337,10 @@ export default function AddReport() {
                     placeholder="Exact number"
                     className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring/20 hover:bg-accent/50 transition-colors"
                   />
-                      </div>
+                </div>
 
                 {/* Player Search */}
-                      <div className="space-y-2">
+                <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Player Name</Label>
                   <div className="relative" ref={dropdownRef}>
                     <div className="relative">
@@ -390,13 +398,13 @@ export default function AddReport() {
                                 {player.kitNumber || '?'}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-foreground truncate">{player.fullName}</div>
+                                <div className="font-medium text-foreground truncate">
+                                  {player.fullName}
+                                </div>
                                 <div className="text-xs text-muted-foreground truncate">
                                   #{player.kitNumber} • {player.position}
                                   {player.team && (
-                                    <span className="ml-1">
-                                      ({player.team.teamName})
-                                    </span>
+                                    <span className="ml-1">({player.team.teamName})</span>
                                   )}
                                 </div>
                               </div>
@@ -404,14 +412,16 @@ export default function AddReport() {
                           ))
                         ) : (
                           <div className="py-1.5 px-2 text-muted-foreground text-center text-sm">
-                            {playerSearch.trim() || selectedPosition !== 'all' || kitNumber.trim() ? 'No players found' : 'Start typing to search players...'}
+                            {playerSearch.trim() || selectedPosition !== 'all' || kitNumber.trim()
+                              ? 'No players found'
+                              : 'Start typing to search players...'}
                           </div>
                         )}
                       </div>
-                  )}
+                    )}
                   </div>
                 </div>
-                </div>
+              </div>
 
               {/* Clear Filters Button */}
               {(selectedPosition !== 'all' || kitNumber.trim() || playerSearch.trim()) && (
@@ -432,12 +442,10 @@ export default function AddReport() {
                   </button>
                 </div>
               )}
-                      </>
-                    )}
+            </>
+          )}
         </div>
-
       </FormGrid>
-
 
       <FormGrid columns={2}>
         <TextInputField
@@ -464,15 +472,15 @@ export default function AddReport() {
                 size="sm"
                 onClick={() => setSelectedRating(rating)}
                 className={`p-2 transition-colors hover:bg-accent/20 ${
-                  rating <= selectedRating 
-                    ? 'text-brand-yellow' 
+                  rating <= selectedRating
+                    ? 'text-brand-yellow'
                     : 'text-muted-foreground hover:text-brand-yellow/70'
                 }`}
               >
                 <Star className={`w-6 h-6 ${rating <= selectedRating ? 'fill-current' : ''}`} />
-                  </Button>
+              </Button>
             ))}
-                </div>
+          </div>
         </div>
 
         {/* Game Report specific fields */}

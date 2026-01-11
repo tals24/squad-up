@@ -1,7 +1,7 @@
 /**
  * Virtual Grid Component
  * Renders only visible items in a grid layout for optimal performance
- * 
+ *
  * Perfect for:
  * - Player grids with cards
  * - Drill library with thumbnails
@@ -12,7 +12,7 @@ import { Grid as FixedSizeGrid } from 'react-window';
 
 /**
  * Virtual Grid for fixed-size items in grid layout
- * 
+ *
  * @param {Array} items - Array of items to render
  * @param {Function} renderItem - Function to render each item
  * @param {number} columnCount - Number of columns
@@ -36,19 +36,15 @@ export function VirtualGrid({
   // Render function for react-window
   const Cell = ({ columnIndex, rowIndex, style }) => {
     const itemIndex = rowIndex * columnCount + columnIndex;
-    
+
     // Don't render if beyond items array
     if (itemIndex >= items.length) {
       return null;
     }
 
     const item = items[itemIndex];
-    
-    return (
-      <div style={style}>
-        {renderItem(item, itemIndex)}
-      </div>
-    );
+
+    return <div style={style}>{renderItem(item, itemIndex)}</div>;
   };
 
   // Show empty state if no items
@@ -78,4 +74,3 @@ export function VirtualGrid({
 }
 
 export default VirtualGrid;
-

@@ -1,16 +1,10 @@
-
-import React from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/shared/utils";
-import { 
-  Shield,
-  AlertCircle,
-  Mail,
-  ArrowLeft
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import { User } from "@/shared/api";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/shared/utils';
+import { Shield, AlertCircle, Mail, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import { User } from '@/shared/api';
 
 export default function AccessDenied() {
   const handleTryAgain = async () => {
@@ -18,7 +12,7 @@ export default function AccessDenied() {
       await User.logout();
       window.location.reload();
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error('Error logging out:', error);
       window.location.reload();
     }
   };
@@ -31,9 +25,7 @@ export default function AccessDenied() {
             <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
               <Shield className="w-12 h-12 text-text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold text-red-900 mb-2">
-              Access Denied
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold text-red-900 mb-2">Access Denied</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-6">
             <div className="flex items-center justify-center gap-3 p-4 bg-red-50 rounded-xl border border-red-200">
@@ -42,13 +34,13 @@ export default function AccessDenied() {
                 Your email is not registered in the system
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">
-                Only authorized club members can access the SquadUp management system. 
-                If you believe this is a mistake, please contact the club administrator.
+                Only authorized club members can access the SquadUp management system. If you
+                believe this is a mistake, please contact the club administrator.
               </p>
-              
+
               <div className="flex items-center gap-2 justify-center text-sm text-gray-600">
                 <Mail className="w-4 h-4" />
                 <span>Contact your club administrator for access</span>
@@ -63,7 +55,7 @@ export default function AccessDenied() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Try Different Account
               </Button>
-              
+
               <p className="text-xs text-text-secondary">
                 This will log you out and allow you to sign in with a different Google account
               </p>

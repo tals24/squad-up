@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { BaseDialog } from "@/shared/ui/composed";
-import { Textarea } from "@/shared/ui/primitives/textarea";
-import { Shield, Zap, Target, FileText } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { BaseDialog } from '@/shared/ui/composed';
+import { Textarea } from '@/shared/ui/primitives/textarea';
+import { Shield, Zap, Target, FileText } from 'lucide-react';
 
 export default function TeamSummaryDialog({
   open,
@@ -11,53 +11,53 @@ export default function TeamSummaryDialog({
   onSave,
   isSaving = false,
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   useEffect(() => {
-    setValue(currentValue || "");
+    setValue(currentValue || '');
   }, [currentValue, open]);
 
   const getSummaryConfig = () => {
     switch (summaryType) {
-      case "defense":
+      case 'defense':
         return {
-          title: "Defense Summary",
+          title: 'Defense Summary',
           icon: Shield,
-          iconColor: "text-blue-400",
-          placeholder: "Describe the defensive performance...",
-          label: "Defense"
+          iconColor: 'text-blue-400',
+          placeholder: 'Describe the defensive performance...',
+          label: 'Defense',
         };
-      case "midfield":
+      case 'midfield':
         return {
-          title: "Midfield Summary", 
+          title: 'Midfield Summary',
           icon: Zap,
-          iconColor: "text-green-400",
-          placeholder: "Describe the midfield performance...",
-          label: "Midfield"
+          iconColor: 'text-green-400',
+          placeholder: 'Describe the midfield performance...',
+          label: 'Midfield',
         };
-      case "attack":
+      case 'attack':
         return {
-          title: "Attack Summary",
+          title: 'Attack Summary',
           icon: Target,
-          iconColor: "text-red-400", 
-          placeholder: "Describe the attacking performance...",
-          label: "Attack"
+          iconColor: 'text-red-400',
+          placeholder: 'Describe the attacking performance...',
+          label: 'Attack',
         };
-      case "general":
+      case 'general':
         return {
-          title: "General Summary",
+          title: 'General Summary',
           icon: FileText,
-          iconColor: "text-purple-400",
-          placeholder: "Describe the overall game performance...",
-          label: "General"
+          iconColor: 'text-purple-400',
+          placeholder: 'Describe the overall game performance...',
+          label: 'General',
         };
       default:
         return {
-          title: "Team Summary",
+          title: 'Team Summary',
           icon: FileText,
-          iconColor: "text-slate-400",
-          placeholder: "Describe the team performance...",
-          label: "Summary"
+          iconColor: 'text-slate-400',
+          placeholder: 'Describe the team performance...',
+          label: 'Summary',
         };
     }
   };
@@ -71,7 +71,7 @@ export default function TeamSummaryDialog({
   };
 
   const handleCancel = () => {
-    setValue(currentValue || "");
+    setValue(currentValue || '');
     onOpenChange(false);
   };
 
@@ -84,12 +84,12 @@ export default function TeamSummaryDialog({
       size="sm"
       actions={{
         cancel: {
-          label: "Cancel",
+          label: 'Cancel',
           onClick: handleCancel,
           disabled: isSaving,
         },
         confirm: {
-          label: "Save",
+          label: 'Save',
           onClick: handleSave,
           disabled: isSaving,
           loading: isSaving,

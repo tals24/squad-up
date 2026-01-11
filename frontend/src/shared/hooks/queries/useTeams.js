@@ -4,12 +4,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getTeams, 
-  getTeamById, 
-  createTeam, 
-  updateTeam, 
-  deleteTeam 
+import {
+  getTeams,
+  getTeamById,
+  createTeam,
+  updateTeam,
+  deleteTeam,
 } from '@/features/team-management/api/teamApi';
 
 // Query Keys
@@ -98,4 +98,3 @@ export function useDeleteTeam() {
     },
   });
 }
-

@@ -49,4 +49,3 @@ export const updateUser = async (userId, userData) => {
 export const deleteUser = async (userId) => {
   return await apiClient.delete(`/api/users/${userId}`);
 };
-

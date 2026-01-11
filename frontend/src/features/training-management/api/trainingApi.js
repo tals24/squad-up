@@ -64,6 +64,7 @@ export const saveTrainingPlan = async (planData) => {
 
 export const loadTrainingPlan = async (planData) => {
   console.log('Loading training plan from backend...', planData);
-  return await apiClient.get(`/api/session-drills/plan/${planData.teamId}/${planData.weekIdentifier}`);
+  return await apiClient.get(
+    `/api/session-drills/plan/${planData.teamId}/${planData.weekIdentifier}`
+  );
 };
-

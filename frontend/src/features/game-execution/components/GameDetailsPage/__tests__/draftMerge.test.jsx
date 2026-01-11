@@ -1,8 +1,8 @@
 /**
  * Critical Test Suite: Data Loss Prevention (Frontend Merge Logic)
- * 
+ *
  * Tests DL-001 through DL-007 from CRITICAL_TEST_SUITE_DRAFT_AUTOSAVE.md
- * 
+ *
  * These tests verify the critical merge logic that prevents data loss:
  * - Draft overrides saved data
  * - Partial drafts preserve saved fields
@@ -25,14 +25,14 @@ function useDraftMerge(savedData, draftData) {
       return; // No draft, keep saved data
     }
 
-    setMergedData(prev => {
+    setMergedData((prev) => {
       const result = { ...prev };
 
       // Merge teamSummary
       if (draftData.teamSummary) {
         result.teamSummary = {
           ...prev.teamSummary,
-          ...draftData.teamSummary // Draft overrides saved
+          ...draftData.teamSummary, // Draft overrides saved
         };
       }
 
@@ -40,7 +40,7 @@ function useDraftMerge(savedData, draftData) {
       if (draftData.finalScore) {
         result.finalScore = {
           ...prev.finalScore,
-          ...draftData.finalScore // Draft overrides saved
+          ...draftData.finalScore, // Draft overrides saved
         };
       }
 
@@ -48,7 +48,7 @@ function useDraftMerge(savedData, draftData) {
       if (draftData.matchDuration) {
         result.matchDuration = {
           ...prev.matchDuration,
-          ...draftData.matchDuration // Draft overrides saved
+          ...draftData.matchDuration, // Draft overrides saved
         };
       }
 
@@ -56,7 +56,7 @@ function useDraftMerge(savedData, draftData) {
       if (draftData.playerReports) {
         result.playerReports = {
           ...prev.playerReports,
-          ...draftData.playerReports // Draft overrides saved
+          ...draftData.playerReports, // Draft overrides saved
         };
       }
 
@@ -76,14 +76,14 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should override saved defenseSummary with draft value', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved value'
-        }
+          defenseSummary: 'Saved value',
+        },
       };
 
       const draftData = {
         teamSummary: {
-          defenseSummary: 'Draft value'
-        }
+          defenseSummary: 'Draft value',
+        },
       };
 
       const { result } = renderHook(() => useDraftMerge(savedData, draftData));
@@ -106,14 +106,14 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
         teamSummary: {
           defenseSummary: 'Saved defense',
           midfieldSummary: 'Saved midfield',
-          attackSummary: 'Saved attack'
-        }
+          attackSummary: 'Saved attack',
+        },
       };
 
       const draftData = {
         teamSummary: {
-          defenseSummary: 'Draft defense'
-        }
+          defenseSummary: 'Draft defense',
+        },
       };
 
       const { result } = renderHook(() => useDraftMerge(savedData, draftData));
@@ -132,12 +132,12 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
    * Test DL-003: Empty Draft Doesn't Overwrite Saved Data
    * Risk: Loading empty/null draft should not clear existing saved data
    */
-  describe('DL-003: Empty Draft Doesn\'t Overwrite Saved Data', () => {
+  describe("DL-003: Empty Draft Doesn't Overwrite Saved Data", () => {
     it('should preserve saved data when draft is null', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved value'
-        }
+          defenseSummary: 'Saved value',
+        },
       };
 
       const draftData = null;
@@ -154,8 +154,8 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should preserve saved data when draft is empty object', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved value'
-        }
+          defenseSummary: 'Saved value',
+        },
       };
 
       const draftData = {};
@@ -180,15 +180,15 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
         teamSummary: {
           defenseSummary: 'D1',
           midfieldSummary: 'M1',
-          attackSummary: 'A1'
-        }
+          attackSummary: 'A1',
+        },
       };
 
       const draftData = {
         teamSummary: {
           defenseSummary: 'D2',
-          generalSummary: 'G2'
-        }
+          generalSummary: 'G2',
+        },
       };
 
       const { result } = renderHook(() => useDraftMerge(savedData, draftData));
@@ -212,21 +212,21 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should merge partial player report with existing report', () => {
       const savedData = {
         playerReports: {
-          'player1': {
+          player1: {
             rating_physical: 3,
             rating_technical: 4,
-            notes: 'Old notes'
-          }
-        }
+            notes: 'Old notes',
+          },
+        },
       };
 
       const draftData = {
         playerReports: {
-          'player1': {
+          player1: {
             rating_physical: 5,
-            notes: 'New notes'
-          }
-        }
+            notes: 'New notes',
+          },
+        },
       };
 
       const { result } = renderHook(() => useDraftMerge(savedData, draftData));
@@ -252,26 +252,25 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should overwrite with second draft load', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved'
-        }
+          defenseSummary: 'Saved',
+        },
       };
 
       const draftData1 = {
         teamSummary: {
-          defenseSummary: 'Draft 1'
-        }
+          defenseSummary: 'Draft 1',
+        },
       };
 
       const draftData2 = {
         teamSummary: {
-          defenseSummary: 'Draft 2'
-        }
+          defenseSummary: 'Draft 2',
+        },
       };
 
-      const { result, rerender } = renderHook(
-        ({ draft }) => useDraftMerge(savedData, draft),
-        { initialProps: { draft: draftData1 } }
-      );
+      const { result, rerender } = renderHook(({ draft }) => useDraftMerge(savedData, draft), {
+        initialProps: { draft: draftData1 },
+      });
 
       act(() => {
         result.current.loadDraft();
@@ -298,23 +297,23 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should not load draft for Scheduled games', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved'
-        }
+          defenseSummary: 'Saved',
+        },
       };
 
       const draftData = {
         teamSummary: {
-          defenseSummary: 'Draft'
-        }
+          defenseSummary: 'Draft',
+        },
       };
 
       // Simulate Scheduled game status check
       const gameStatus = 'Scheduled';
-      
+
       if (gameStatus !== 'Played') {
         // Draft should not load
         const { result } = renderHook(() => useDraftMerge(savedData, null));
-        
+
         act(() => {
           // loadDraft would not be called for Scheduled games
         });
@@ -326,18 +325,17 @@ describe('Critical Frontend Tests: Data Loss Prevention (Merge Logic)', () => {
     it('should not load draft for Done games', () => {
       const savedData = {
         teamSummary: {
-          defenseSummary: 'Saved'
-        }
+          defenseSummary: 'Saved',
+        },
       };
 
       const gameStatus = 'Done';
-      
+
       if (gameStatus !== 'Played') {
         const { result } = renderHook(() => useDraftMerge(savedData, null));
-        
+
         expect(result.current.mergedData.teamSummary.defenseSummary).toBe('Saved');
       }
     });
   });
 });
-

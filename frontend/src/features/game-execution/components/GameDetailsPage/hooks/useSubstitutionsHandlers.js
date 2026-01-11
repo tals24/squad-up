@@ -1,15 +1,20 @@
-import { fetchSubstitutions, createSubstitution, updateSubstitution, deleteSubstitution } from '../../../api/substitutionsApi';
+import {
+  fetchSubstitutions,
+  createSubstitution,
+  updateSubstitution,
+  deleteSubstitution,
+} from '../../../api/substitutionsApi';
 import { fetchMatchTimeline } from '../../../api/timelineApi';
 
 /**
  * useSubstitutionsHandlers
- * 
+ *
  * Manages all substitution-related CRUD operations:
  * - Add new substitution
  * - Edit existing substitution
  * - Delete substitution
  * - Update timeline and stats
- * 
+ *
  * @param {Object} params
  * @param {string} params.gameId - Game ID
  * @param {Array} params.substitutions - Current substitutions array
@@ -20,7 +25,7 @@ import { fetchMatchTimeline } from '../../../api/timelineApi';
  * @param {Function} params.setShowSubstitutionDialog - Show/hide dialog
  * @param {Function} params.refreshTeamStats - Refresh team stats after changes
  * @param {Array} params.goals - Current goals array (to calculate match state)
- * 
+ *
  * @returns {Object} Substitution handlers
  */
 export function useSubstitutionsHandlers({
@@ -34,7 +39,6 @@ export function useSubstitutionsHandlers({
   refreshTeamStats,
   goals = [],
 }) {
-  
   /**
    * Open dialog to add new substitution
    */
@@ -61,7 +65,7 @@ export function useSubstitutionsHandlers({
 
     try {
       await deleteSubstitution(gameId, subId);
-      setSubstitutions(prevSubs => prevSubs.filter(s => s._id !== subId));
+      setSubstitutions((prevSubs) => prevSubs.filter((s) => s._id !== subId));
       // Refresh team stats after substitution deletion (affects minutes)
       refreshTeamStats();
     } catch (error) {
@@ -75,17 +79,15 @@ export function useSubstitutionsHandlers({
    */
   const calculateMatchState = (minute) => {
     // Count our goals and opponent goals before this minute
-    const ourGoalsBeforeThis = goals.filter(g => 
-      g.minute <= minute && !g.isOpponentGoal
-    ).length;
-    
-    const opponentGoalsBeforeThis = goals.filter(g => 
-      g.minute <= minute && g.isOpponentGoal
+    const ourGoalsBeforeThis = goals.filter((g) => g.minute <= minute && !g.isOpponentGoal).length;
+
+    const opponentGoalsBeforeThis = goals.filter(
+      (g) => g.minute <= minute && g.isOpponentGoal
     ).length;
 
     console.log(`🔍 [useSubstitutionsHandlers] Calculating match state at minute ${minute}:`, {
       ourGoals: ourGoalsBeforeThis,
-      opponentGoals: opponentGoalsBeforeThis
+      opponentGoals: opponentGoalsBeforeThis,
     });
 
     if (ourGoalsBeforeThis > opponentGoalsBeforeThis) {
@@ -106,28 +108,34 @@ export function useSubstitutionsHandlers({
       const matchState = calculateMatchState(subData.minute);
       const subDataWithMatchState = {
         ...subData,
-        matchState
+        matchState,
       };
 
       console.log('💾 [useSubstitutionsHandlers] Saving substitution with match state:', {
         minute: subData.minute,
         matchState,
-        subData: subDataWithMatchState
+        subData: subDataWithMatchState,
       });
 
       if (selectedSubstitution) {
         // Update existing substitution
-        const updatedSub = await updateSubstitution(gameId, selectedSubstitution._id, subDataWithMatchState);
-        setSubstitutions(prevSubs => prevSubs.map(s => s._id === updatedSub._id ? updatedSub : s));
+        const updatedSub = await updateSubstitution(
+          gameId,
+          selectedSubstitution._id,
+          subDataWithMatchState
+        );
+        setSubstitutions((prevSubs) =>
+          prevSubs.map((s) => (s._id === updatedSub._id ? updatedSub : s))
+        );
       } else {
         // Create new substitution
         const newSub = await createSubstitution(gameId, subDataWithMatchState);
-        setSubstitutions(prevSubs => [...prevSubs, newSub]);
+        setSubstitutions((prevSubs) => [...prevSubs, newSub]);
       }
-      
+
       // Refresh team stats after substitution save (affects minutes)
       refreshTeamStats();
-      
+
       // Refresh timeline to update player states
       try {
         const timelineData = await fetchMatchTimeline(gameId);
@@ -135,7 +143,7 @@ export function useSubstitutionsHandlers({
       } catch (error) {
         console.error('[useSubstitutionsHandlers] Error refreshing timeline:', error);
       }
-      
+
       setShowSubstitutionDialog(false);
       setSelectedSubstitution(null);
     } catch (error) {
@@ -151,4 +159,3 @@ export function useSubstitutionsHandlers({
     handleSaveSubstitution,
   };
 }
-

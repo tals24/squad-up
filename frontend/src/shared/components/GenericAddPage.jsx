@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/shared/utils";
-import { ArrowLeft, Save } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import ConfirmationToast from "@/shared/components/ConfirmationToast";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/shared/utils';
+import { ArrowLeft, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import ConfirmationToast from '@/shared/components/ConfirmationToast';
 
 /**
  * Generic Add Page Template Component
- * 
+ *
  * @param {Object} props
  * @param {string} props.entityName - Name of the entity being created (e.g., "User", "Team", "Player")
  * @param {string} props.entityDisplayName - Display name for the entity (e.g., "User", "Team", "Player")
@@ -30,14 +30,14 @@ export default function GenericAddPage({
   description,
   icon: Icon,
   titleIcon: TitleIcon,
-  titleColor = "text-brand-blue",
-  backUrl = "Dashboard",
+  titleColor = 'text-brand-blue',
+  backUrl = 'Dashboard',
   initialFormData = {},
   onSubmit,
   children,
   isFormValid = () => true,
   isLoading = false,
-  loadingContent = null
+  loadingContent = null,
 }) {
   const [formData, setFormData] = useState(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,25 +45,26 @@ export default function GenericAddPage({
   const [confirmationConfig, setConfirmationConfig] = useState({});
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid(formData)) return;
-    
+
     setIsSaving(true);
     try {
       const result = await onSubmit(formData);
-      
+
       if (result?.success) {
         setConfirmationConfig({
           type: 'success',
           title: `${entityDisplayName} Added Successfully! 🎉`,
-          message: result.message || `${entityDisplayName} has been added to the system successfully.`
+          message:
+            result.message || `${entityDisplayName} has been added to the system successfully.`,
         });
         setShowConfirmation(true);
-        
+
         // Navigate back after success
         setTimeout(() => {
           window.location.href = createPageUrl(backUrl);
@@ -76,7 +77,7 @@ export default function GenericAddPage({
       setConfirmationConfig({
         type: 'error',
         title: `Failed to Add ${entityDisplayName}`,
-        message: `There was an issue adding the ${entityDisplayName.toLowerCase()}: ${error.message}`
+        message: `There was an issue adding the ${entityDisplayName.toLowerCase()}: ${error.message}`,
       });
       setShowConfirmation(true);
     }
@@ -105,12 +106,16 @@ export default function GenericAddPage({
         {/* Ambient effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"></div>
-        
+
         <div className="max-w-2xl mx-auto space-y-8 relative">
           {/* Header */}
           <div className="flex items-center gap-4">
             <Link to={createPageUrl(backUrl)}>
-              <Button variant="outline" size="icon" className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300">
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300"
+              >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -127,7 +132,7 @@ export default function GenericAddPage({
           <Card className="shadow-2xl border border-brand-blue/20 bg-card/70 backdrop-blur-sm relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>
-            
+
             <CardHeader className="border-b border-border/50 relative">
               <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-brand-blue/0 via-brand-blue/30 to-brand-blue/0"></div>
               <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
@@ -139,22 +144,25 @@ export default function GenericAddPage({
                 {entityDisplayName} Information
               </CardTitle>
             </CardHeader>
-            
+
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Dynamic form fields */}
-                {React.Children.map(children, child => 
-                  React.cloneElement(child, { 
-                    formData, 
+                {React.Children.map(children, (child) =>
+                  React.cloneElement(child, {
+                    formData,
                     handleChange,
-                    onChange: handleChange // Alternative prop name for flexibility
+                    onChange: handleChange, // Alternative prop name for flexibility
                   })
                 )}
 
                 {/* Form Actions */}
                 <div className="flex justify-end gap-4 pt-6 border-t border-border">
                   <Link to={createPageUrl(backUrl)}>
-                    <Button variant="outline" className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300">
+                    <Button
+                      variant="outline"
+                      className="border-border text-muted-foreground hover:bg-accent hover:border-brand-blue transition-all duration-300"
+                    >
                       Cancel
                     </Button>
                   </Link>

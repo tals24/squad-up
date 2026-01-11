@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import { TrendingUp, Save, Loader2, RotateCcw } from "lucide-react";
-import { useToast } from "@/shared/ui/primitives/use-toast";
-import { cn } from "@/shared/lib/utils";
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import { TrendingUp, Save, Loader2, RotateCcw } from 'lucide-react';
+import { useToast } from '@/shared/ui/primitives/use-toast';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Compact Slider Component for Difficulty Assessment
  */
 const CompactSlider = ({ label, value, onChange, disabled = false }) => {
   const levels = {
-    1: "Poor",
-    2: "Below",
-    3: "Normal",
-    4: "Good",
-    5: "Elite"
+    1: 'Poor',
+    2: 'Below',
+    3: 'Normal',
+    4: 'Good',
+    5: 'Elite',
   };
 
   const handleChange = (e) => {
@@ -24,8 +24,8 @@ const CompactSlider = ({ label, value, onChange, disabled = false }) => {
   };
 
   // If value is 0 (not set), show at middle position (3)
-  const sliderValue = value === 0 ? 3 : (value >= 1 && value <= 5 ? value : 3);
-  const displayLabel = value === 0 ? "Not Set" : (levels[value] || "—");
+  const sliderValue = value === 0 ? 3 : value >= 1 && value <= 5 ? value : 3;
+  const displayLabel = value === 0 ? 'Not Set' : levels[value] || '—';
   const isUnset = value === 0;
 
   return (
@@ -33,10 +33,12 @@ const CompactSlider = ({ label, value, onChange, disabled = false }) => {
       {/* Label and Value */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-400">{label}</span>
-        <span className={cn(
-          "text-xs font-semibold min-w-[45px] text-right",
-          isUnset ? "text-slate-500" : "text-purple-400"
-        )}>
+        <span
+          className={cn(
+            'text-xs font-semibold min-w-[45px] text-right',
+            isUnset ? 'text-slate-500' : 'text-purple-400'
+          )}
+        >
           {displayLabel}
         </span>
       </div>
@@ -50,44 +52,50 @@ const CompactSlider = ({ label, value, onChange, disabled = false }) => {
         onChange={handleChange}
         disabled={disabled}
         className={cn(
-          "w-full h-1.5 rounded-full appearance-none cursor-pointer",
-          "focus:outline-none focus:ring-1 focus:ring-purple-500/50",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
+          'w-full h-1.5 rounded-full appearance-none cursor-pointer',
+          'focus:outline-none focus:ring-1 focus:ring-purple-500/50',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
           // Webkit thumb styling - color changes based on set/unset
-          "[&::-webkit-slider-thumb]:appearance-none",
-          "[&::-webkit-slider-thumb]:w-3.5",
-          "[&::-webkit-slider-thumb]:h-3.5",
-          "[&::-webkit-slider-thumb]:rounded-full",
-          "[&::-webkit-slider-thumb]:cursor-pointer",
-          "[&::-webkit-slider-thumb]:transition-all",
-          "[&::-webkit-slider-thumb]:hover:scale-110",
-          isUnset ? "[&::-webkit-slider-thumb]:bg-slate-500" : "[&::-webkit-slider-thumb]:bg-purple-400",
-          isUnset ? "[&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(100,116,139,0.4)]" : "[&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.5)]",
+          '[&::-webkit-slider-thumb]:appearance-none',
+          '[&::-webkit-slider-thumb]:w-3.5',
+          '[&::-webkit-slider-thumb]:h-3.5',
+          '[&::-webkit-slider-thumb]:rounded-full',
+          '[&::-webkit-slider-thumb]:cursor-pointer',
+          '[&::-webkit-slider-thumb]:transition-all',
+          '[&::-webkit-slider-thumb]:hover:scale-110',
+          isUnset
+            ? '[&::-webkit-slider-thumb]:bg-slate-500'
+            : '[&::-webkit-slider-thumb]:bg-purple-400',
+          isUnset
+            ? '[&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(100,116,139,0.4)]'
+            : '[&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.5)]',
           // Firefox thumb styling
-          "[&::-moz-range-thumb]:w-3.5",
-          "[&::-moz-range-thumb]:h-3.5",
-          "[&::-moz-range-thumb]:rounded-full",
-          "[&::-moz-range-thumb]:border-0",
-          "[&::-moz-range-thumb]:cursor-pointer",
-          "[&::-moz-range-thumb]:transition-all",
-          "[&::-moz-range-thumb]:hover:scale-110",
-          isUnset ? "[&::-moz-range-thumb]:bg-slate-500" : "[&::-moz-range-thumb]:bg-purple-400",
-          isUnset ? "[&::-moz-range-thumb]:shadow-[0_0_6px_rgba(100,116,139,0.4)]" : "[&::-moz-range-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.5)]",
+          '[&::-moz-range-thumb]:w-3.5',
+          '[&::-moz-range-thumb]:h-3.5',
+          '[&::-moz-range-thumb]:rounded-full',
+          '[&::-moz-range-thumb]:border-0',
+          '[&::-moz-range-thumb]:cursor-pointer',
+          '[&::-moz-range-thumb]:transition-all',
+          '[&::-moz-range-thumb]:hover:scale-110',
+          isUnset ? '[&::-moz-range-thumb]:bg-slate-500' : '[&::-moz-range-thumb]:bg-purple-400',
+          isUnset
+            ? '[&::-moz-range-thumb]:shadow-[0_0_6px_rgba(100,116,139,0.4)]'
+            : '[&::-moz-range-thumb]:shadow-[0_0_6px_rgba(192,132,252,0.5)]',
           // Track styling
-          "[&::-webkit-slider-runnable-track]:h-1.5",
-          "[&::-webkit-slider-runnable-track]:rounded-full",
-          "[&::-moz-range-track]:h-1.5",
-          "[&::-moz-range-track]:rounded-full"
+          '[&::-webkit-slider-runnable-track]:h-1.5',
+          '[&::-webkit-slider-runnable-track]:rounded-full',
+          '[&::-moz-range-track]:h-1.5',
+          '[&::-moz-range-track]:rounded-full'
         )}
         style={{
-          background: isUnset 
+          background: isUnset
             ? 'linear-gradient(to right, #475569 0%, #64748b 50%, #475569 100%)'
             : `linear-gradient(to right, 
                 #ef4444 0%, 
                 #f59e0b 25%, 
                 #10b981 50%, 
                 #3b82f6 75%, 
-                #8b5cf6 100%)`
+                #8b5cf6 100%)`,
         }}
       />
     </div>
@@ -96,7 +104,7 @@ const CompactSlider = ({ label, value, onChange, disabled = false }) => {
 
 /**
  * DifficultyAssessmentCard Component
- * 
+ *
  * Inline component for game difficulty assessment in MatchAnalysisSidebar.
  * - Scheduled: Full interactive card with sliders
  * - Played: Hidden
@@ -112,7 +120,7 @@ export default function DifficultyAssessmentCard({
 }) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Local state for form inputs
   const [opponentStrength, setOpponentStrength] = useState(0);
   const [matchImportance, setMatchImportance] = useState(0);
@@ -136,7 +144,7 @@ export default function DifficultyAssessmentCard({
     if (opponentStrength === 0 || matchImportance === 0 || externalConditions === 0) {
       return null;
     }
-    const calculated = (opponentStrength * 0.40) + (matchImportance * 0.35) + (externalConditions * 0.25);
+    const calculated = opponentStrength * 0.4 + matchImportance * 0.35 + externalConditions * 0.25;
     return parseFloat(calculated.toFixed(1));
   }, [opponentStrength, matchImportance, externalConditions]);
 
@@ -173,18 +181,18 @@ export default function DifficultyAssessmentCard({
       await onSave({
         opponentStrength,
         matchImportance,
-        externalConditions
+        externalConditions,
       });
       toast({
-        title: "Success",
-        description: "Difficulty assessment saved",
+        title: 'Success',
+        description: 'Difficulty assessment saved',
       });
     } catch (error) {
       console.error('Error saving difficulty assessment:', error);
       toast({
-        title: "Error",
-        description: "Failed to save assessment",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save assessment',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -251,7 +259,8 @@ export default function DifficultyAssessmentCard({
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-400">Overall Difficulty:</span>
                 <span className="text-xl font-bold text-purple-400">
-                  {overallScore.toFixed(1)} <span className="text-xs text-slate-500 font-normal">/ 5</span>
+                  {overallScore.toFixed(1)}{' '}
+                  <span className="text-xs text-slate-500 font-normal">/ 5</span>
                 </span>
               </div>
             </div>
@@ -287,4 +296,3 @@ export default function DifficultyAssessmentCard({
   // For "Played" status or if not enabled, don't render anything
   return null;
 }
-

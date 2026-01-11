@@ -5,7 +5,7 @@ class JwtAuthService {
     this.authStateListeners = [];
     this.token = localStorage.getItem('authToken');
     this.userData = JSON.parse(localStorage.getItem('user') || 'null');
-    
+
     // Initialize current user if token exists
     if (this.token && this.userData) {
       this.currentUser = this.userData;
@@ -17,7 +17,7 @@ class JwtAuthService {
     this.authStateListeners.push(callback);
     // Call immediately with current state
     callback(this.currentUser);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.authStateListeners.indexOf(callback);
@@ -33,24 +33,24 @@ class JwtAuthService {
     if (this.currentUser && this.token) {
       return this.formatUser(this.currentUser);
     }
-    
+
     // If no in-memory data, try to load from localStorage
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('user');
-    
+
     if (storedToken && storedUser) {
       try {
         this.token = storedToken;
         this.userData = JSON.parse(storedUser);
         this.currentUser = this.userData;
-        
+
         console.log('🟡 Restored user from localStorage:', this.currentUser);
         return this.formatUser(this.currentUser);
       } catch (error) {
         console.log('🔴 Failed to parse stored user data:', error);
       }
     }
-    
+
     throw new Error('No authenticated user');
   }
 
@@ -62,7 +62,7 @@ class JwtAuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -72,13 +72,13 @@ class JwtAuthService {
         this.token = data.token;
         this.userData = data.user;
         this.currentUser = data.user;
-        
+
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        
+
         // Notify listeners
-        this.authStateListeners.forEach(listener => listener(this.currentUser));
-        
+        this.authStateListeners.forEach((listener) => listener(this.currentUser));
+
         return this.formatUser(data.user);
       } else {
         throw new Error(data.error || 'Login failed');
@@ -93,12 +93,12 @@ class JwtAuthService {
     this.token = null;
     this.userData = null;
     this.currentUser = null;
-    
+
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    
+
     // Notify listeners
-    this.authStateListeners.forEach(listener => listener(null));
+    this.authStateListeners.forEach((listener) => listener(null));
   }
 
   // Verify current token
@@ -111,9 +111,9 @@ class JwtAuthService {
       const response = await fetch('http://localhost:3001/api/auth/verify', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.token}`,
+          Authorization: `Bearer ${this.token}`,
           'Content-Type': 'application/json',
-        }
+        },
       });
 
       const data = await response.json();
@@ -151,7 +151,7 @@ class JwtAuthService {
       department: userData.department,
       phoneNumber: userData.phoneNumber,
       displayName: userData.fullName,
-      uid: userData.id // For compatibility
+      uid: userData.id, // For compatibility
     };
   }
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { User } from "@/shared/api";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { User } from '@/shared/api';
 import {
   Users,
   RotateCcw,
@@ -14,20 +14,38 @@ import {
   Check,
   Search,
   Plus, // Added Plus icon
-  Loader2 // Added Loader2 icon
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/primitives/card";
-import { Button } from "@/shared/ui/primitives/button";
-import { Badge } from "@/shared/ui/primitives/badge";
-import { Input } from "@/shared/ui/primitives/input";
-import { Label } from "@/shared/ui/primitives/label";
-import { Textarea } from "@/shared/ui/primitives/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/ui/primitives/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/primitives/select";
-import { useData } from "@/app/providers/DataProvider";
-import { getFormations, createFormation, updateFormation, deleteFormation, createTimelineEvent } from "@/features/team-management/api";
-import ConfirmationToast from "@/shared/components/ConfirmationToast";
-import FormationEditorModal from "@/shared/components/FormationEditorModal";
+  Loader2, // Added Loader2 icon
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives/card';
+import { Button } from '@/shared/ui/primitives/button';
+import { Badge } from '@/shared/ui/primitives/badge';
+import { Input } from '@/shared/ui/primitives/input';
+import { Label } from '@/shared/ui/primitives/label';
+import { Textarea } from '@/shared/ui/primitives/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/shared/ui/primitives/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/primitives/select';
+import { useData } from '@/app/providers/DataProvider';
+import {
+  getFormations,
+  createFormation,
+  updateFormation,
+  deleteFormation,
+  createTimelineEvent,
+} from '@/features/team-management/api';
+import ConfirmationToast from '@/shared/components/ConfirmationToast';
+import FormationEditorModal from '@/shared/components/FormationEditorModal';
 
 export default function TacticBoard() {
   const { users, teams, players, isLoading } = useData();
@@ -40,16 +58,16 @@ export default function TacticBoard() {
     Goals: 0,
     Assists: 0,
     GeneralRating: 3,
-    GeneralNotes: ""
+    GeneralNotes: '',
   });
   const [isSaving, setIsSaving] = useState(false); // Used for saving performance data
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationConfig, setConfirmationConfig] = useState({});
 
-  const [gameSize, setGameSize] = useState("11-a-side");
-  const [selectedFormation, setSelectedFormation] = useState("1-4-3-3");
+  const [gameSize, setGameSize] = useState('11-a-side');
+  const [selectedFormation, setSelectedFormation] = useState('1-4-3-3');
   const [isDragging, setIsDragging] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [formation, setFormation] = useState({});
   const [customFormations, setCustomFormations] = useState([]);
@@ -63,19 +81,19 @@ export default function TacticBoard() {
   const [formationToDelete, setFormationToDelete] = useState(null);
 
   const [showSaveFormationModal, setShowSaveFormationModal] = useState(false); // Controls Save Board Layout modal
-  const [saveFormationName, setSaveFormationName] = useState("");
+  const [saveFormationName, setSaveFormationName] = useState('');
   const [savedFormations, setSavedFormations] = useState([]);
   const [isSavingFormation, setIsSavingFormation] = useState(false); // Used for saving actual formation templates or board layouts
   const [currentTeamId, setCurrentTeamId] = useState(null);
 
-  const [editingFormationName, setEditingFormationName] = useState("");
+  const [editingFormationName, setEditingFormationName] = useState('');
 
   useEffect(() => {
     User.me().then(setCurrentUser).catch(console.error);
   }, []);
 
   const initializeFormation = useCallback(() => {
-    const numPositions = gameSize === "9-a-side" ? 9 : 11;
+    const numPositions = gameSize === '9-a-side' ? 9 : 11;
     const newFormation = {};
     for (let i = 1; i <= numPositions; i++) {
       newFormation[i] = null;
@@ -88,16 +106,17 @@ export default function TacticBoard() {
       if (!currentUser) return;
 
       let teamId = null;
-      const airtableUser = users.find(u =>
-        u.Email && currentUser.email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
+      const airtableUser = users.find(
+        (u) =>
+          u.Email && currentUser.email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
       );
 
       if (airtableUser) {
         const airtableRole = airtableUser.Role;
 
         if (airtableRole === 'Coach') {
-          const coachTeams = teams.filter(team =>
-            team.Coach && team.Coach.includes(airtableUser.id)
+          const coachTeams = teams.filter(
+            (team) => team.Coach && team.Coach.includes(airtableUser.id)
           );
           if (coachTeams.length > 0) {
             teamId = coachTeams[0].id;
@@ -110,7 +129,7 @@ export default function TacticBoard() {
       const response = await getFormations();
 
       if (response.data?.records) {
-        const filteredFormations = response.data.records.filter(formation => {
+        const filteredFormations = response.data.records.filter((formation) => {
           const formationTeamLink = formation.Team && formation.Team[0];
           if (currentUser.role === 'admin' || !teamId) {
             return true;
@@ -120,11 +139,11 @@ export default function TacticBoard() {
         setSavedFormations(filteredFormations);
       }
     } catch (error) {
-      console.error("Error loading saved formations:", error);
+      console.error('Error loading saved formations:', error);
       setConfirmationConfig({
         type: 'error',
         title: 'Error Loading Formations',
-        message: `Failed to load saved formations: ${error.message}`
+        message: `Failed to load saved formations: ${error.message}`,
       });
       setShowConfirmation(true);
     }
@@ -137,15 +156,15 @@ export default function TacticBoard() {
   }, [currentUser, teams, players, loadSavedFormations]);
 
   useEffect(() => {
-    if (gameSize === "9-a-side") {
-        setSelectedFormation("1-3-3-2");
+    if (gameSize === '9-a-side') {
+      setSelectedFormation('1-3-3-2');
     } else {
-        setSelectedFormation("1-4-3-3");
+      setSelectedFormation('1-4-3-3');
     }
     initializeFormation();
     setIsEditingFormation(false);
     setEditingFormationData(null);
-    setEditingFormationName("");
+    setEditingFormationName('');
   }, [gameSize, initializeFormation]);
 
   const { availablePlayers, formationPlayers } = useMemo(() => {
@@ -156,57 +175,54 @@ export default function TacticBoard() {
     let filteredPlayers = players;
 
     if (currentUser.role !== 'admin') {
-      const airtableUser = users.find(u =>
-        u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
+      const airtableUser = users.find(
+        (u) => u.Email && u.Email.toLowerCase() === currentUser.email.toLowerCase()
       );
       const airtableRole = airtableUser?.Role;
 
       if (airtableRole === 'Coach' && airtableUser) {
-        const coachTeams = teams.filter(team =>
-          team.Coach && team.Coach.includes(airtableUser.id)
+        const coachTeams = teams.filter(
+          (team) => team.Coach && team.Coach.includes(airtableUser.id)
         );
-        const teamIds = coachTeams.map(team => team.id);
-        filteredPlayers = players.filter(player =>
-          player.Team && teamIds.some(id => player.Team.includes(id))
+        const teamIds = coachTeams.map((team) => team.id);
+        filteredPlayers = players.filter(
+          (player) => player.Team && teamIds.some((id) => player.Team.includes(id))
         );
       } else if (airtableRole === 'Division Manager' && airtableUser?.Department) {
-        const divisionTeams = teams.filter(team =>
-          team.Division === airtableUser.Department
-        );
-        const teamIds = divisionTeams.map(team => team.id);
-        filteredPlayers = players.filter(player =>
-          player.Team && teamIds.some(id => player.Team.includes(id))
+        const divisionTeams = teams.filter((team) => team.Division === airtableUser.Department);
+        const teamIds = divisionTeams.map((team) => team.id);
+        filteredPlayers = players.filter(
+          (player) => player.Team && teamIds.some((id) => player.Team.includes(id))
         );
       }
     }
 
     if (searchTerm) {
-        filteredPlayers = filteredPlayers.filter(player =>
-            player.FullName?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+      filteredPlayers = filteredPlayers.filter((player) =>
+        player.FullName?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
     const playersInFormation = Object.values(formation).filter(Boolean);
-    const formationPlayerIds = playersInFormation.map(p => p.id);
+    const formationPlayerIds = playersInFormation.map((p) => p.id);
 
-    const available = filteredPlayers.filter(player =>
-      !formationPlayerIds.includes(player.id)
-    );
+    const available = filteredPlayers.filter((player) => !formationPlayerIds.includes(player.id));
 
     return {
       availablePlayers: available,
-      formationPlayers: playersInFormation
+      formationPlayers: playersInFormation,
     };
   }, [currentUser, users, teams, players, formation, searchTerm]);
 
-  const handleSaveFormation = async () => { // This function saves the current board layout
+  const handleSaveFormation = async () => {
+    // This function saves the current board layout
     if (!saveFormationName.trim() || isSavingFormation) return;
 
     setIsSavingFormation(true);
     try {
       const formationLayout = JSON.stringify({
         players: formation,
-        gameSize: gameSize
+        gameSize: gameSize,
       });
 
       const recordData = {
@@ -225,22 +241,22 @@ export default function TacticBoard() {
         setConfirmationConfig({
           type: 'success',
           title: 'Formation Saved! ⚽',
-          message: `"${saveFormationName}" has been saved and can now be selected from the formation dropdown.`
+          message: `"${saveFormationName}" has been saved and can now be selected from the formation dropdown.`,
         });
         setShowConfirmation(true);
         setShowSaveFormationModal(false);
-        setSaveFormationName("");
+        setSaveFormationName('');
 
         await loadSavedFormations();
       } else {
-        throw new Error(response?.error || "Failed to save formation");
+        throw new Error(response?.error || 'Failed to save formation');
       }
     } catch (error) {
-      console.error("Error saving formation:", error);
+      console.error('Error saving formation:', error);
       setConfirmationConfig({
         type: 'error',
         title: 'Failed to Save Formation',
-        message: `There was an issue saving the formation: ${error.message}`
+        message: `There was an issue saving the formation: ${error.message}`,
       });
       setShowConfirmation(true);
     }
@@ -262,23 +278,23 @@ export default function TacticBoard() {
 
       setIsEditingFormation(false);
       setEditingFormationData(null);
-      setEditingFormationName("");
+      setEditingFormationName('');
     } catch (error) {
-      console.error("Error loading saved formation:", error);
+      console.error('Error loading saved formation:', error);
       setConfirmationConfig({
         type: 'error',
         title: 'Failed to Load Formation',
-        message: `There was an issue loading the formation: ${error.message}`
+        message: `There was an issue loading the formation: ${error.message}`,
       });
       setShowConfirmation(true);
     }
   };
 
   const handleFormationChange = (value) => {
-    if (value === "create_new") {
+    if (value === 'create_new') {
       setShowFormationModal(true);
     } else {
-      const savedFormationRecord = savedFormations.find(f => f.id === value);
+      const savedFormationRecord = savedFormations.find((f) => f.id === value);
       if (savedFormationRecord) {
         loadSavedFormation(savedFormationRecord);
       } else {
@@ -286,66 +302,79 @@ export default function TacticBoard() {
         initializeFormation();
         setIsEditingFormation(false);
         setEditingFormationData(null);
-        setEditingFormationName("");
+        setEditingFormationName('');
       }
     }
   };
 
   const handleEditCurrentFormation = () => {
-    const customFormationToEdit = customFormations.find(f => f.name === selectedFormation && f.gameSize === gameSize);
+    const customFormationToEdit = customFormations.find(
+      (f) => f.name === selectedFormation && f.gameSize === gameSize
+    );
     if (customFormationToEdit) {
-        setEditingFormationData({ ...customFormationToEdit });
-        setEditingFormationName(customFormationToEdit.name);
-        setIsEditingFormation(true);
-        return;
+      setEditingFormationData({ ...customFormationToEdit });
+      setEditingFormationName(customFormationToEdit.name);
+      setIsEditingFormation(true);
+      return;
     }
 
-    const airtableFormationToEdit = savedFormations.find(f => f.id === selectedFormation);
+    const airtableFormationToEdit = savedFormations.find((f) => f.id === selectedFormation);
     if (airtableFormationToEdit) {
-        try {
-            const layout = JSON.parse(airtableFormationToEdit.FormationLayout);
-            if (layout.defenders !== undefined && layout.midfielders !== undefined && layout.forwards !== undefined) {
-                setEditingFormationData({
-                    id: airtableFormationToEdit.id,
-                    name: airtableFormationToEdit.FormationName,
-                    defenders: layout.defenders,
-                    midfielders: layout.midfielders,
-                    forwards: layout.forwards,
-                    positions: layout.positions || { 1: 'GK' },
-                    gameSize: airtableFormationToEdit.GameSize,
-                });
-                setEditingFormationName(airtableFormationToEdit.FormationName);
-                setIsEditingFormation(true);
-            } else {
-                setConfirmationConfig({
-                    type: 'info',
-                    title: 'Cannot Edit This Formation',
-                    message: 'This formation was saved in a simple format and cannot be edited. Please create a new formation with a defined structure to enable editing.'
-                });
-                setShowConfirmation(true);
-            }
-        } catch (error) {
-            console.error("Error parsing formation for editing:", error);
-            setConfirmationConfig({
-                type: 'error',
-                title: 'Error Preparing Edit',
-                message: 'Could not prepare this formation for editing. It might be corrupted or in an old format.'
-            });
-            setShowConfirmation(true);
-        }
-    } else {
-        setConfirmationConfig({
+      try {
+        const layout = JSON.parse(airtableFormationToEdit.FormationLayout);
+        if (
+          layout.defenders !== undefined &&
+          layout.midfielders !== undefined &&
+          layout.forwards !== undefined
+        ) {
+          setEditingFormationData({
+            id: airtableFormationToEdit.id,
+            name: airtableFormationToEdit.FormationName,
+            defenders: layout.defenders,
+            midfielders: layout.midfielders,
+            forwards: layout.forwards,
+            positions: layout.positions || { 1: 'GK' },
+            gameSize: airtableFormationToEdit.GameSize,
+          });
+          setEditingFormationName(airtableFormationToEdit.FormationName);
+          setIsEditingFormation(true);
+        } else {
+          setConfirmationConfig({
             type: 'info',
-            title: 'Cannot Edit Default Formation',
-            message: 'Default formations (like 1-4-3-3) cannot be edited. Please create and save a custom formation to enable editing.'
+            title: 'Cannot Edit This Formation',
+            message:
+              'This formation was saved in a simple format and cannot be edited. Please create a new formation with a defined structure to enable editing.',
+          });
+          setShowConfirmation(true);
+        }
+      } catch (error) {
+        console.error('Error parsing formation for editing:', error);
+        setConfirmationConfig({
+          type: 'error',
+          title: 'Error Preparing Edit',
+          message:
+            'Could not prepare this formation for editing. It might be corrupted or in an old format.',
         });
         setShowConfirmation(true);
+      }
+    } else {
+      setConfirmationConfig({
+        type: 'info',
+        title: 'Cannot Edit Default Formation',
+        message:
+          'Default formations (like 1-4-3-3) cannot be edited. Please create and save a custom formation to enable editing.',
+      });
+      setShowConfirmation(true);
     }
   };
 
   const handleDeleteCurrentFormation = async () => {
-    const localCustomFormation = customFormations.find(f => f.name === selectedFormation && f.gameSize === gameSize);
-    const airtableSavedFormation = savedFormations.find(f => f.id === selectedFormation && f.GameSize === gameSize);
+    const localCustomFormation = customFormations.find(
+      (f) => f.name === selectedFormation && f.gameSize === gameSize
+    );
+    const airtableSavedFormation = savedFormations.find(
+      (f) => f.id === selectedFormation && f.GameSize === gameSize
+    );
 
     if (localCustomFormation) {
       setFormationToDelete(localCustomFormation);
@@ -355,7 +384,7 @@ export default function TacticBoard() {
       setConfirmationConfig({
         type: 'error',
         title: 'Deletion Not Allowed',
-        message: 'Default formations cannot be deleted.'
+        message: 'Default formations cannot be deleted.',
       });
       setShowConfirmation(true);
       return;
@@ -368,7 +397,11 @@ export default function TacticBoard() {
 
     let success = false;
     let message = '';
-    const isAirtableFormation = formationToDelete.id && formationToDelete.FormationName && formationToDelete.GameSize && formationToDelete.FormationLayout;
+    const isAirtableFormation =
+      formationToDelete.id &&
+      formationToDelete.FormationName &&
+      formationToDelete.GameSize &&
+      formationToDelete.FormationLayout;
 
     try {
       if (isAirtableFormation) {
@@ -379,32 +412,39 @@ export default function TacticBoard() {
           success = true;
           message = `"${formationToDelete.FormationName}" has been removed from your formation library (Airtable).`;
         } else {
-          throw new Error(response?.error || "Failed to delete from Airtable");
+          throw new Error(response?.error || 'Failed to delete from Airtable');
         }
       } else {
-        setCustomFormations(prev => prev.filter(f => f.name !== formationToDelete.name || f.gameSize !== formationToDelete.gameSize));
+        setCustomFormations((prev) =>
+          prev.filter(
+            (f) => f.name !== formationToDelete.name || f.gameSize !== formationToDelete.gameSize
+          )
+        );
         success = true;
         message = `"${formationToDelete.name}" has been removed from your local formation library.`;
       }
 
       if (success) {
-        if (selectedFormation === (isAirtableFormation ? formationToDelete.id : formationToDelete.name)) {
-          setSelectedFormation(gameSize === "9-a-side" ? "1-3-3-2" : "1-4-3-3");
+        if (
+          selectedFormation ===
+          (isAirtableFormation ? formationToDelete.id : formationToDelete.name)
+        ) {
+          setSelectedFormation(gameSize === '9-a-side' ? '1-3-3-2' : '1-4-3-3');
           initializeFormation();
         }
 
         setConfirmationConfig({
           type: 'success',
           title: 'Formation Deleted',
-          message: message
+          message: message,
         });
       }
     } catch (error) {
-      console.error("Error deleting formation:", error);
+      console.error('Error deleting formation:', error);
       setConfirmationConfig({
         type: 'error',
         title: 'Failed to Delete Formation',
-        message: `There was an issue deleting the formation: ${error.message}`
+        message: `There was an issue deleting the formation: ${error.message}`,
       });
     } finally {
       setShowDeleteConfirmation(false);
@@ -417,11 +457,11 @@ export default function TacticBoard() {
     const formationWithGameSize = {
       ...newFormation,
       gameSize,
-      positions: { 1: 'GK' }
+      positions: { 1: 'GK' },
     };
 
     setEditingFormationData(formationWithGameSize);
-    setEditingFormationName(newFormation.name || "");
+    setEditingFormationName(newFormation.name || '');
     setIsEditingFormation(true);
     setShowFormationModal(false);
   };
@@ -439,8 +479,8 @@ export default function TacticBoard() {
         ...editingFormationData,
         positions: {
           ...editingFormationData.positions,
-          [selectedPositionId]: positionLabel
-        }
+          [selectedPositionId]: positionLabel,
+        },
       };
       setEditingFormationData(updatedFormationData);
       setShowPositionModal(false);
@@ -455,7 +495,7 @@ export default function TacticBoard() {
         setConfirmationConfig({
           type: 'error',
           title: 'Formation Name Required',
-          message: 'Please enter a name for your custom formation.'
+          message: 'Please enter a name for your custom formation.',
         });
         setShowConfirmation(true);
         return;
@@ -469,7 +509,7 @@ export default function TacticBoard() {
           defenders: editingFormationData.defenders,
           midfielders: editingFormationData.midfielders,
           forwards: editingFormationData.forwards,
-          positions: editingFormationData.positions
+          positions: editingFormationData.positions,
         });
 
         const recordData = {
@@ -484,15 +524,15 @@ export default function TacticBoard() {
 
         let response;
         if (isUpdating) {
-            response = await updateFormation(editingFormationData.id, recordData);
+          response = await updateFormation(editingFormationData.id, recordData);
         } else {
-            response = await createFormation(recordData);
+          response = await createFormation(recordData);
         }
 
         if (response?.success) {
           setIsEditingFormation(false);
           setEditingFormationData(null);
-          setEditingFormationName("");
+          setEditingFormationName('');
 
           await loadSavedFormations();
 
@@ -502,18 +542,20 @@ export default function TacticBoard() {
           setConfirmationConfig({
             type: 'success',
             title: isUpdating ? 'Formation Updated! ⚽' : 'Custom Formation Saved! ⚽',
-            message: `"${editingFormationName.trim()}" has been successfully ${isUpdating ? 'updated' : 'saved'}.`
+            message: `"${editingFormationName.trim()}" has been successfully ${isUpdating ? 'updated' : 'saved'}.`,
           });
           setShowConfirmation(true);
         } else {
-          throw new Error(response?.error || `Failed to ${isUpdating ? 'update' : 'save'} formation`);
+          throw new Error(
+            response?.error || `Failed to ${isUpdating ? 'update' : 'save'} formation`
+          );
         }
       } catch (error) {
         console.error(`Error ${isUpdating ? 'updating' : 'saving'} custom formation:`, error);
         setConfirmationConfig({
           type: 'error',
           title: `Failed to ${isUpdating ? 'Update' : 'Save'} Formation`,
-          message: `There was an issue saving the formation: ${error.message}`
+          message: `There was an issue saving the formation: ${error.message}`,
         });
         setShowConfirmation(true);
       }
@@ -522,85 +564,114 @@ export default function TacticBoard() {
   };
 
   const cancelFormationEdit = () => {
-    setSelectedFormation(gameSize === "9-a-side" ? "1-3-3-2" : "1-4-3-3");
+    setSelectedFormation(gameSize === '9-a-side' ? '1-3-3-2' : '1-4-3-3');
     setIsEditingFormation(false);
     setEditingFormationData(null);
-    setEditingFormationName("");
+    setEditingFormationName('');
     initializeFormation();
   };
 
   const getFormationOptions = () => {
-    const defaultOptions = gameSize === "9-a-side"
-      ? [{ value: "1-3-3-2", label: "1-3-3-2" }, { value: "1-4-2-2", label: "1-4-2-2" }]
-      : [{ value: "1-4-4-2", label: "1-4-4-2" }, { value: "1-4-3-3", label: "1-4-3-3" }];
+    const defaultOptions =
+      gameSize === '9-a-side'
+        ? [
+            { value: '1-3-3-2', label: '1-3-3-2' },
+            { value: '1-4-2-2', label: '1-4-2-2' },
+          ]
+        : [
+            { value: '1-4-4-2', label: '1-4-4-2' },
+            { value: '1-4-3-3', label: '1-4-3-3' },
+          ];
 
     const customOptions = customFormations
-      .filter(f => f.gameSize === gameSize)
-      .map(f => ({ value: f.name, label: f.name }));
+      .filter((f) => f.gameSize === gameSize)
+      .map((f) => ({ value: f.name, label: f.name }));
 
     const savedOptions = savedFormations
-      .filter(f => f.GameSize === gameSize)
-      .map(f => ({ value: f.id, label: f.FormationName }));
+      .filter((f) => f.GameSize === gameSize)
+      .map((f) => ({ value: f.id, label: f.FormationName }));
 
     return [...defaultOptions, ...customOptions, ...savedOptions];
   };
 
-  const _calculatePositions = useCallback((isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations) => {
-    if (isEditingFormation && editingFormationData) {
-      let positions = { 1: { x: 50, y: 85, label: editingFormationData.positions?.[1] || 'GK' } };
-      let positionIndex = 2;
+  const _calculatePositions = useCallback(
+    (
+      isEditingFormation,
+      editingFormationData,
+      customFormations,
+      selectedFormation,
+      gameSize,
+      savedFormations
+    ) => {
+      if (isEditingFormation && editingFormationData) {
+        let positions = { 1: { x: 50, y: 85, label: editingFormationData.positions?.[1] || 'GK' } };
+        let positionIndex = 2;
 
-      const distributeLine = (count, y) => {
-        for (let i = 0; i < count; i++) {
-          const positionId = positionIndex.toString();
-          const assignedLabel = editingFormationData.positions?.[positionId] || 'POS';
+        const distributeLine = (count, y) => {
+          for (let i = 0; i < count; i++) {
+            const positionId = positionIndex.toString();
+            const assignedLabel = editingFormationData.positions?.[positionId] || 'POS';
 
-          positions[positionIndex] = {
-            x: (100 / (count + 1)) * (i + 1),
-            y: y,
-            label: assignedLabel
+            positions[positionIndex] = {
+              x: (100 / (count + 1)) * (i + 1),
+              y: y,
+              label: assignedLabel,
+            };
+            positionIndex++;
+          }
+        };
+
+        distributeLine(editingFormationData.defenders, 65);
+        distributeLine(editingFormationData.midfielders, 45);
+        distributeLine(editingFormationData.forwards, 25);
+        return positions;
+      }
+
+      const custom = customFormations.find(
+        (f) => f.name === selectedFormation && f.gameSize === gameSize
+      );
+      if (custom) {
+        let positions = { 1: { x: 50, y: 85, label: custom.positions?.[1] || 'GK' } };
+        let positionIndex = 2;
+
+        const distributeLine = (count, y) => {
+          for (let i = 0; i < count; i++) {
+            const positionId = positionIndex.toString();
+            const assignedLabel = custom.positions?.[positionId] || 'POS';
+
+            positions[positionIndex] = {
+              x: (100 / (count + 1)) * (i + 1),
+              y: y,
+              label: assignedLabel,
+            };
+            positionIndex++;
+          }
+        };
+
+        distributeLine(custom.defenders, 65);
+        distributeLine(custom.midfielders, 45);
+        distributeLine(custom.forwards, 25);
+        return positions;
+      }
+
+      const airtableSaved = savedFormations.find(
+        (f) => f.id === selectedFormation && f.GameSize === gameSize
+      );
+      if (airtableSaved) {
+        const parsedLayout = JSON.parse(airtableSaved.FormationLayout);
+
+        if (
+          parsedLayout.defenders !== undefined &&
+          parsedLayout.midfielders !== undefined &&
+          parsedLayout.forwards !== undefined
+        ) {
+          let positions = {
+            1: {
+              x: 50,
+              y: 85,
+              label: (parsedLayout.positions && parsedLayout.positions[1]) || 'GK',
+            },
           };
-          positionIndex++;
-        }
-      };
-
-      distributeLine(editingFormationData.defenders, 65);
-      distributeLine(editingFormationData.midfielders, 45);
-      distributeLine(editingFormationData.forwards, 25);
-      return positions;
-    }
-
-    const custom = customFormations.find(f => f.name === selectedFormation && f.gameSize === gameSize);
-    if (custom) {
-      let positions = { 1: { x: 50, y: 85, label: custom.positions?.[1] || 'GK' } };
-      let positionIndex = 2;
-
-      const distributeLine = (count, y) => {
-        for (let i = 0; i < count; i++) {
-          const positionId = positionIndex.toString();
-          const assignedLabel = custom.positions?.[positionId] || 'POS';
-
-          positions[positionIndex] = {
-            x: (100 / (count + 1)) * (i + 1),
-            y: y,
-            label: assignedLabel
-          };
-          positionIndex++;
-        }
-      };
-
-      distributeLine(custom.defenders, 65);
-      distributeLine(custom.midfielders, 45);
-      distributeLine(custom.forwards, 25);
-      return positions;
-    }
-
-    const airtableSaved = savedFormations.find(f => f.id === selectedFormation && f.GameSize === gameSize);
-    if (airtableSaved) {
-      const parsedLayout = JSON.parse(airtableSaved.FormationLayout);
-
-      if (parsedLayout.defenders !== undefined && parsedLayout.midfielders !== undefined && parsedLayout.forwards !== undefined) {
-          let positions = { 1: { x: 50, y: 85, label: (parsedLayout.positions && parsedLayout.positions[1]) || 'GK' } };
           let positionIndex = 2;
 
           const distributeLine = (count, y, currentPositions) => {
@@ -611,7 +682,7 @@ export default function TacticBoard() {
               positions[positionIndex] = {
                 x: (100 / (count + 1)) * (i + 1),
                 y: y,
-                label: assignedLabel
+                label: assignedLabel,
               };
               positionIndex++;
             }
@@ -621,103 +692,120 @@ export default function TacticBoard() {
           distributeLine(parsedLayout.midfielders, 45, parsedLayout.positions);
           distributeLine(parsedLayout.forwards, 25, parsedLayout.positions);
           return positions;
-      } else {
-          if (gameSize === "9-a-side") {
-              return {
-                  1: { x: 50, y: 85, label: 'GK' },
-                  2: { x: 25, y: 65, label: 'LB' },
-                  3: { x: 50, y: 65, label: 'CB' },
-                  4: { x: 75, y: 65, label: 'RB' },
-                  5: { x: 25, y: 45, label: 'LM' },
-                  6: { x: 50, y: 45, label: 'CM' },
-                  7: { x: 75, y: 45, label: 'RM' },
-                  8: { x: 35, y: 25, label: 'LF' },
-                  9: { x: 65, y: 25, label: 'RF' }
-              };
+        } else {
+          if (gameSize === '9-a-side') {
+            return {
+              1: { x: 50, y: 85, label: 'GK' },
+              2: { x: 25, y: 65, label: 'LB' },
+              3: { x: 50, y: 65, label: 'CB' },
+              4: { x: 75, y: 65, label: 'RB' },
+              5: { x: 25, y: 45, label: 'LM' },
+              6: { x: 50, y: 45, label: 'CM' },
+              7: { x: 75, y: 45, label: 'RM' },
+              8: { x: 35, y: 25, label: 'LF' },
+              9: { x: 65, y: 25, label: 'RF' },
+            };
           } else {
-              return {
-                  1: { x: 50, y: 85, label: 'GK' },
-                  2: { x: 75, y: 65, label: 'RB' },
-                  3: { x: 60, y: 65, label: 'CB' },
-                  4: { x: 40, y: 65, label: 'CB' },
-                  5: { x: 25, y: 65, label: 'LB' },
-                  6: { x: 65, y: 45, label: 'CM' },
-                  7: { x: 50, y: 45, label: 'CM' },
-                  8: { x: 35, y: 45, label: 'CM' },
-                  9: { x: 75, y: 25, label: 'RW' },
-                  10: { x: 50, y: 20, label: 'ST' },
-                  11: { x: 25, y: 25, label: 'LW' }
-              };
+            return {
+              1: { x: 50, y: 85, label: 'GK' },
+              2: { x: 75, y: 65, label: 'RB' },
+              3: { x: 60, y: 65, label: 'CB' },
+              4: { x: 40, y: 65, label: 'CB' },
+              5: { x: 25, y: 65, label: 'LB' },
+              6: { x: 65, y: 45, label: 'CM' },
+              7: { x: 50, y: 45, label: 'CM' },
+              8: { x: 35, y: 45, label: 'CM' },
+              9: { x: 75, y: 25, label: 'RW' },
+              10: { x: 50, y: 20, label: 'ST' },
+              11: { x: 25, y: 25, label: 'LW' },
+            };
           }
+        }
       }
-    }
 
-    if (gameSize === "9-a-side") {
-        if (selectedFormation === "1-3-3-2") {
-            return {
-                1: { x: 50, y: 85, label: 'GK' },
-                2: { x: 25, y: 65, label: 'LB' },
-                3: { x: 50, y: 65, label: 'CB' },
-                4: { x: 75, y: 65, label: 'RB' },
-                5: { x: 25, y: 45, label: 'LM' },
-                6: { x: 50, y: 45, label: 'CM' },
-                7: { x: 75, y: 45, label: 'RM' },
-                8: { x: 35, y: 25, label: 'LF' },
-                9: { x: 65, y: 25, label: 'RF' }
-            };
+      if (gameSize === '9-a-side') {
+        if (selectedFormation === '1-3-3-2') {
+          return {
+            1: { x: 50, y: 85, label: 'GK' },
+            2: { x: 25, y: 65, label: 'LB' },
+            3: { x: 50, y: 65, label: 'CB' },
+            4: { x: 75, y: 65, label: 'RB' },
+            5: { x: 25, y: 45, label: 'LM' },
+            6: { x: 50, y: 45, label: 'CM' },
+            7: { x: 75, y: 45, label: 'RM' },
+            8: { x: 35, y: 25, label: 'LF' },
+            9: { x: 65, y: 25, label: 'RF' },
+          };
         } else {
-            return {
-                1: { x: 50, y: 85, label: 'GK' },
-                2: { x: 20, y: 65, label: 'LB' },
-                3: { x: 40, y: 65, label: 'CB' },
-                4: { x: 60, y: 65, label: 'CB' },
-                5: { x: 80, y: 65, label: 'RB' },
-                6: { x: 40, y: 45, label: 'CM' },
-                7: { x: 60, y: 45, label: 'CM' },
-                8: { x: 35, y: 25, label: 'LF' },
-                9: { x: 65, y: 25, label: 'RF' }
-            };
+          return {
+            1: { x: 50, y: 85, label: 'GK' },
+            2: { x: 20, y: 65, label: 'LB' },
+            3: { x: 40, y: 65, label: 'CB' },
+            4: { x: 60, y: 65, label: 'CB' },
+            5: { x: 80, y: 65, label: 'RB' },
+            6: { x: 40, y: 45, label: 'CM' },
+            7: { x: 60, y: 45, label: 'CM' },
+            8: { x: 35, y: 25, label: 'LF' },
+            9: { x: 65, y: 25, label: 'RF' },
+          };
         }
-    } else {
-        if (selectedFormation === "1-4-4-2") {
-            return {
-                1: { x: 50, y: 85, label: 'GK' },
-                2: { x: 75, y: 65, label: 'RB' },
-                3: { x: 60, y: 65, label: 'CB' },
-                4: { x: 40, y: 65, label: 'CB' },
-                5: { x: 25, y: 65, label: 'LB' },
-                6: { x: 75, y: 45, label: 'RM' },
-                7: { x: 60, y: 45, label: 'CM' },
-                8: { x: 40, y: 45, label: 'CM' },
-                9: { x: 25, y: 45, label: 'LM' },
-                10: { x: 40, y: 25, label: 'ST' },
-                11: { x: 60, y: 25, label: 'ST' }
-            };
+      } else {
+        if (selectedFormation === '1-4-4-2') {
+          return {
+            1: { x: 50, y: 85, label: 'GK' },
+            2: { x: 75, y: 65, label: 'RB' },
+            3: { x: 60, y: 65, label: 'CB' },
+            4: { x: 40, y: 65, label: 'CB' },
+            5: { x: 25, y: 65, label: 'LB' },
+            6: { x: 75, y: 45, label: 'RM' },
+            7: { x: 60, y: 45, label: 'CM' },
+            8: { x: 40, y: 45, label: 'CM' },
+            9: { x: 25, y: 45, label: 'LM' },
+            10: { x: 40, y: 25, label: 'ST' },
+            11: { x: 60, y: 25, label: 'ST' },
+          };
         } else {
-            return {
-                1: { x: 50, y: 85, label: 'GK' },
-                2: { x: 75, y: 65, label: 'RB' },
-                3: { x: 60, y: 65, label: 'CB' },
-                4: { x: 40, y: 65, label: 'CB' },
-                5: { x: 25, y: 65, label: 'LB' },
-                6: { x: 65, y: 45, label: 'CM' },
-                7: { x: 50, y: 45, label: 'CM' },
-                8: { x: 35, y: 45, label: 'CM' },
-                9: { x: 75, y: 25, label: 'RW' },
-                10: { x: 50, y: 20, label: 'ST' },
-                11: { x: 25, y: 25, label: 'LW' }
-            };
+          return {
+            1: { x: 50, y: 85, label: 'GK' },
+            2: { x: 75, y: 65, label: 'RB' },
+            3: { x: 60, y: 65, label: 'CB' },
+            4: { x: 40, y: 65, label: 'CB' },
+            5: { x: 25, y: 65, label: 'LB' },
+            6: { x: 65, y: 45, label: 'CM' },
+            7: { x: 50, y: 45, label: 'CM' },
+            8: { x: 35, y: 45, label: 'CM' },
+            9: { x: 75, y: 25, label: 'RW' },
+            10: { x: 50, y: 20, label: 'ST' },
+            11: { x: 25, y: 25, label: 'LW' },
+          };
         }
-    }
+      }
 
-    return {
-        1: { x: 50, y: 85, label: 'GK' }
-    };
-  }, []);
+      return {
+        1: { x: 50, y: 85, label: 'GK' },
+      };
+    },
+    []
+  );
 
   const positions = useMemo(() => {
-    return _calculatePositions(isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations);
-  }, [isEditingFormation, editingFormationData, customFormations, selectedFormation, gameSize, savedFormations, _calculatePositions]);
+    return _calculatePositions(
+      isEditingFormation,
+      editingFormationData,
+      customFormations,
+      selectedFormation,
+      gameSize,
+      savedFormations
+    );
+  }, [
+    isEditingFormation,
+    editingFormationData,
+    customFormations,
+    selectedFormation,
+    gameSize,
+    savedFormations,
+    _calculatePositions,
+  ]);
 
   const getAvailablePositions = () => {
     if (!selectedPositionId || !editingFormationData) return [];
@@ -730,45 +818,52 @@ export default function TacticBoard() {
     } else {
       let currentIndex = 2;
 
-      if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.defenders) {
+      if (
+        positionNumber >= currentIndex &&
+        positionNumber < currentIndex + editingFormationData.defenders
+      ) {
         lineType = 'defender';
       }
       currentIndex += editingFormationData.defenders;
 
-      if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.midfielders) {
+      if (
+        positionNumber >= currentIndex &&
+        positionNumber < currentIndex + editingFormationData.midfielders
+      ) {
         lineType = 'midfielder';
       }
       currentIndex += editingFormationData.midfielders;
 
-      if (positionNumber >= currentIndex && positionNumber < currentIndex + editingFormationData.forwards) {
+      if (
+        positionNumber >= currentIndex &&
+        positionNumber < currentIndex + editingFormationData.forwards
+      ) {
         lineType = 'forward';
       }
     }
 
     const positionsByLine = {
-      goalkeeper: [
-        { value: 'GK', label: 'GK' }
-      ],
+      goalkeeper: [{ value: 'GK', label: 'GK' }],
       defender: [
         { value: 'CB', label: 'CB' },
         { value: 'LB', label: 'LB' },
         { value: 'RB', label: 'RB' },
         { value: 'LWB', label: 'LWB' },
-        { value: 'RWB', label: 'RWB' }
+        { value: 'RWB', label: 'RWB' },
       ],
       midfielder: [
         { value: 'CDM', label: 'CDM' },
         { value: 'CM', label: 'CM' },
         { value: 'CAM', label: 'CAM' },
         { value: 'LM', label: 'LM' },
-        { value: 'RM', label: 'RM' }
+        { value: 'RM', label: 'RM' },
       ],
       forward: [
         { value: 'ST', label: 'ST' },
         { value: 'CF', label: 'CF' },
         { value: 'LW', label: 'LW' },
-        { value: 'RW', label: 'RW' }
-      ]
+        { value: 'RW', label: 'RW' },
+      ],
     };
 
     return positionsByLine[lineType] || [];
@@ -793,9 +888,9 @@ export default function TacticBoard() {
   const handleDrop = (e, positionId) => {
     e.preventDefault();
     if (draggedPlayer) {
-      setFormation(prev => ({
+      setFormation((prev) => ({
         ...prev,
-        [positionId]: draggedPlayer
+        [positionId]: draggedPlayer,
       }));
       setDraggedPlayer(null);
       setIsDragging(false);
@@ -803,9 +898,9 @@ export default function TacticBoard() {
   };
 
   const removeFromFormation = (positionId) => {
-    setFormation(prev => ({
+    setFormation((prev) => ({
       ...prev,
-      [positionId]: null
+      [positionId]: null,
     }));
   };
 
@@ -820,7 +915,7 @@ export default function TacticBoard() {
       Goals: 0,
       Assists: 0,
       GeneralRating: 3,
-      GeneralNotes: ""
+      GeneralNotes: '',
     });
     setShowPerformanceModal(true);
   };
@@ -832,14 +927,14 @@ export default function TacticBoard() {
     try {
       const eventData = {
         player: selectedPlayer ? selectedPlayer._id : null,
-        type: "Game Report",
+        type: 'Game Report',
         title: `Performance Report - ${selectedPlayer?.fullName}`,
-        content: performanceData.GeneralNotes || "",
+        content: performanceData.GeneralNotes || '',
         rating: parseInt(performanceData.GeneralRating) || 3,
         minutesPlayed: parseInt(performanceData.MinutesPlayed) || 0,
         goals: parseInt(performanceData.Goals) || 0,
         assists: parseInt(performanceData.Assists) || 0,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       };
 
       const response = await createTimelineEvent(eventData);
@@ -848,19 +943,19 @@ export default function TacticBoard() {
         setConfirmationConfig({
           type: 'success',
           title: 'Performance Data Saved! ⚽',
-          message: `Match data for ${selectedPlayer?.FullName} has been recorded successfully.`
+          message: `Match data for ${selectedPlayer?.FullName} has been recorded successfully.`,
         });
         setShowConfirmation(true);
         setShowPerformanceModal(false);
       } else {
-        throw new Error(response?.error || "Failed to save performance data");
+        throw new Error(response?.error || 'Failed to save performance data');
       }
     } catch (error) {
-      console.error("Error saving performance data:", error);
+      console.error('Error saving performance data:', error);
       setConfirmationConfig({
         type: 'error',
         title: 'Failed to Save Data',
-        message: `There was an issue saving the performance data: ${error.message}`
+        message: `There was an issue saving the performance data: ${error.message}`,
       });
       setShowConfirmation(true);
     }
@@ -869,17 +964,19 @@ export default function TacticBoard() {
 
   const getPositionColor = (position) => {
     const colors = {
-      'Goalkeeper': 'bg-purple-500',
-      'Defender': 'bg-blue-500',
-      'Midfielder': 'bg-green-500',
-      'Forward': 'bg-red-500'
+      Goalkeeper: 'bg-purple-500',
+      Defender: 'bg-blue-500',
+      Midfielder: 'bg-green-500',
+      Forward: 'bg-red-500',
     };
     return colors[position] || 'bg-muted';
   };
 
   const isCurrentFormationCustom = useMemo(() => {
-    return customFormations.some(f => f.name === selectedFormation && f.gameSize === gameSize) ||
-           savedFormations.some(f => f.id === selectedFormation && f.GameSize === gameSize);
+    return (
+      customFormations.some((f) => f.name === selectedFormation && f.gameSize === gameSize) ||
+      savedFormations.some((f) => f.id === selectedFormation && f.GameSize === gameSize)
+    );
   }, [selectedFormation, customFormations, savedFormations, gameSize]);
 
   if (isLoading) {
@@ -922,7 +1019,7 @@ export default function TacticBoard() {
               </Button>
               <Button
                 onClick={() => setShowSaveFormationModal(true)} // Opens the "Save Board Layout as Formation" modal
-                disabled={isSavingFormation || Object.values(formation).every(player => !player)}
+                disabled={isSavingFormation || Object.values(formation).every((player) => !player)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {isSavingFormation ? (
@@ -946,16 +1043,15 @@ export default function TacticBoard() {
               <CardTitle className="text-xl font-bold text-foreground">
                 {isEditingFormation
                   ? `Editing Formation: ${editingFormationName || 'New Custom Formation'}`
-                  : `Current Formation`
-                }
+                  : `Current Formation`}
               </CardTitle>
               <p className="text-muted-foreground">
-                 {isEditingFormation
-                    ? 'Click empty circles to assign positions'
-                    : `Drag players to build your formation (${
-                        savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation
-                      })`
-                  }
+                {isEditingFormation
+                  ? 'Click empty circles to assign positions'
+                  : `Drag players to build your formation (${
+                      savedFormations.find((f) => f.id === selectedFormation)?.FormationName ||
+                      selectedFormation
+                    })`}
               </p>
             </CardHeader>
             <CardContent className="p-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -981,8 +1077,12 @@ export default function TacticBoard() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
-                        <SelectItem value="9-a-side" className="text-foreground">9-a-side</SelectItem>
-                        <SelectItem value="11-a-side" className="text-foreground">11-a-side</SelectItem>
+                        <SelectItem value="9-a-side" className="text-foreground">
+                          9-a-side
+                        </SelectItem>
+                        <SelectItem value="11-a-side" className="text-foreground">
+                          11-a-side
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -991,12 +1091,17 @@ export default function TacticBoard() {
                     <Select value={selectedFormation} onValueChange={handleFormationChange}>
                       <SelectTrigger className="w-48 bg-card border-border text-foreground text-sm">
                         <SelectValue>
-                          {savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}
+                          {savedFormations.find((f) => f.id === selectedFormation)?.FormationName ||
+                            selectedFormation}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
-                        {getFormationOptions().map(option => (
-                          <SelectItem key={option.value} value={option.value} className="text-foreground">
+                        {getFormationOptions().map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value}
+                            className="text-foreground"
+                          >
                             {option.label}
                           </SelectItem>
                         ))}
@@ -1028,7 +1133,7 @@ export default function TacticBoard() {
                     className="bg-green-500 hover:bg-green-600 text-white"
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    {isSavingFormation ? "Saving..." : "Save Custom Formation"}
+                    {isSavingFormation ? 'Saving...' : 'Save Custom Formation'}
                   </Button>
                   <Button
                     onClick={cancelFormationEdit}
@@ -1078,12 +1183,12 @@ export default function TacticBoard() {
                   </div>
                 </div>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                      placeholder="Search by name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground pl-9"
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground pl-9"
                   />
                 </div>
               </div>
@@ -1102,20 +1207,20 @@ export default function TacticBoard() {
                           isEditingFormation
                             ? 'bg-secondary/30 opacity-50 cursor-not-allowed'
                             : `cursor-pointer hover:bg-accent ${
-                                draggedPlayer?.id === player.id ? 'opacity-50 bg-accent' : 'bg-secondary/30 hover:bg-accent'
+                                draggedPlayer?.id === player.id
+                                  ? 'opacity-50 bg-accent'
+                                  : 'bg-secondary/30 hover:bg-accent'
                               }`
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPositionColor(player.Position)}`}>
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ${getPositionColor(player.Position)}`}
+                        >
                           {player.KitNumber || '?'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate">
-                            {player.FullName}
-                          </p>
-                          <p className="text-muted-foreground text-sm">
-                            {player.Position}
-                          </p>
+                          <p className="font-medium text-foreground truncate">{player.FullName}</p>
+                          <p className="text-muted-foreground text-sm">{player.Position}</p>
                         </div>
                       </div>
                     ))
@@ -1123,7 +1228,9 @@ export default function TacticBoard() {
                     <div className="text-center py-12">
                       <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                       <p className="text-muted-foreground">
-                        {isEditingFormation ? "Players hidden during formation editing" : "All players are on the pitch"}
+                        {isEditingFormation
+                          ? 'Players hidden during formation editing'
+                          : 'All players are on the pitch'}
                       </p>
                     </div>
                   )}
@@ -1149,7 +1256,10 @@ export default function TacticBoard() {
                   </div>
                 ) : (
                   <h3 className="text-lg font-semibold text-foreground">
-                    Formation ({savedFormations.find(f => f.id === selectedFormation)?.FormationName || selectedFormation}) - {formationPlayers.length}/{gameSize === "9-a-side" ? 9 : 11} Players
+                    Formation (
+                    {savedFormations.find((f) => f.id === selectedFormation)?.FormationName ||
+                      selectedFormation}
+                    ) - {formationPlayers.length}/{gameSize === '9-a-side' ? 9 : 11} Players
                   </h3>
                 )}
               </div>
@@ -1171,7 +1281,7 @@ export default function TacticBoard() {
 
                   {Object.entries(positions).map(([positionId, pos]) => {
                     const player = formation[positionId];
-                    const isClickableForEdit = isEditingFormation && !player && positionId !== "1";
+                    const isClickableForEdit = isEditingFormation && !player && positionId !== '1';
 
                     return (
                       <div
@@ -1179,7 +1289,7 @@ export default function TacticBoard() {
                         className="absolute transform -translate-x-1/2 -translate-y-1/2"
                         style={{
                           left: `${pos.x}%`,
-                          top: `${pos.y}%`
+                          top: `${pos.y}%`,
                         }}
                         onDragOver={!isEditingFormation ? handleDragOver : undefined}
                         onDrop={!isEditingFormation ? (e) => handleDrop(e, positionId) : undefined}
@@ -1212,11 +1322,17 @@ export default function TacticBoard() {
                             className={`w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-white font-bold transition-all duration-200 ${
                               isClickableForEdit
                                 ? 'border-yellow-400 bg-yellow-500/30 shadow-lg cursor-pointer hover:bg-yellow-500/50 hover:scale-110'
-                                : isDragging ? 'border-blue-400 bg-blue-500/30 shadow-lg' : 'border-white'
+                                : isDragging
+                                  ? 'border-blue-400 bg-blue-500/30 shadow-lg'
+                                  : 'border-white'
                             }`}
-                            onClick={isClickableForEdit ? () => handlePositionClick(positionId) : undefined}
+                            onClick={
+                              isClickableForEdit ? () => handlePositionClick(positionId) : undefined
+                            }
                           >
-                            <span className={`text-xs ${isEditingFormation && (editingFormationData?.positions?.[positionId] && positionId !== '1' || positionId === '1' ) ? 'text-yellow-200' : ''}`}>
+                            <span
+                              className={`text-xs ${isEditingFormation && ((editingFormationData?.positions?.[positionId] && positionId !== '1') || positionId === '1') ? 'text-yellow-200' : ''}`}
+                            >
                               {pos.label}
                             </span>
                           </div>
@@ -1250,7 +1366,8 @@ export default function TacticBoard() {
               onKeyPress={(e) => e.key === 'Enter' && handleSaveFormation()}
             />
             <div className="text-sm text-muted-foreground">
-              Game Size: {gameSize} • Players on Board: {formationPlayers.length}/{gameSize === "9-a-side" ? 9 : 11}
+              Game Size: {gameSize} • Players on Board: {formationPlayers.length}/
+              {gameSize === '9-a-side' ? 9 : 11}
             </div>
           </div>
 
@@ -1259,7 +1376,7 @@ export default function TacticBoard() {
               variant="outline"
               onClick={() => {
                 setShowSaveFormationModal(false);
-                setSaveFormationName("");
+                setSaveFormationName('');
               }}
               className="border-border text-muted-foreground hover:bg-accent"
             >
@@ -1270,7 +1387,7 @@ export default function TacticBoard() {
               disabled={!saveFormationName.trim() || isSavingFormation}
               variant="default"
             >
-              {isSavingFormation ? "Saving..." : "Save Board Layout"}
+              {isSavingFormation ? 'Saving...' : 'Save Board Layout'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1288,38 +1405,50 @@ export default function TacticBoard() {
           <form onSubmit={handlePerformanceSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="minutes" className="text-muted-foreground">Minutes Played</Label>
+                <Label htmlFor="minutes" className="text-muted-foreground">
+                  Minutes Played
+                </Label>
                 <Input
                   id="minutes"
                   type="number"
                   min="0"
                   max="120"
                   value={performanceData.MinutesPlayed}
-                  onChange={(e) => setPerformanceData(prev => ({ ...prev, MinutesPlayed: e.target.value }))}
+                  onChange={(e) =>
+                    setPerformanceData((prev) => ({ ...prev, MinutesPlayed: e.target.value }))
+                  }
                   className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="goals" className="text-muted-foreground">Goals</Label>
+                <Label htmlFor="goals" className="text-muted-foreground">
+                  Goals
+                </Label>
                 <Input
                   id="goals"
                   type="number"
                   min="0"
                   value={performanceData.Goals}
-                  onChange={(e) => setPerformanceData(prev => ({ ...prev, Goals: e.target.value }))}
+                  onChange={(e) =>
+                    setPerformanceData((prev) => ({ ...prev, Goals: e.target.value }))
+                  }
                   className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="assists" className="text-muted-foreground">Assists</Label>
+                <Label htmlFor="assists" className="text-muted-foreground">
+                  Assists
+                </Label>
                 <Input
                   id="assists"
                   type="number"
                   min="0"
                   value={performanceData.Assists}
-                  onChange={(e) => setPerformanceData(prev => ({ ...prev, Assists: e.target.value }))}
+                  onChange={(e) =>
+                    setPerformanceData((prev) => ({ ...prev, Assists: e.target.value }))
+                  }
                   className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
@@ -1331,9 +1460,13 @@ export default function TacticBoard() {
                     <button
                       key={rating}
                       type="button"
-                      onClick={() => setPerformanceData(prev => ({ ...prev, GeneralRating: rating }))}
+                      onClick={() =>
+                        setPerformanceData((prev) => ({ ...prev, GeneralRating: rating }))
+                      }
                       className={`text-2xl transition-colors duration-200 ${
-                        rating <= performanceData.GeneralRating ? 'text-yellow-400' : 'text-muted-foreground'
+                        rating <= performanceData.GeneralRating
+                          ? 'text-yellow-400'
+                          : 'text-muted-foreground'
                       }`}
                     >
                       <Star className="w-6 h-6 fill-current" />
@@ -1344,11 +1477,15 @@ export default function TacticBoard() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-muted-foreground">Player Notes</Label>
+              <Label htmlFor="notes" className="text-muted-foreground">
+                Player Notes
+              </Label>
               <Textarea
                 id="notes"
                 value={performanceData.GeneralNotes}
-                onChange={(e) => setPerformanceData(prev => ({ ...prev, GeneralNotes: e.target.value }))}
+                onChange={(e) =>
+                  setPerformanceData((prev) => ({ ...prev, GeneralNotes: e.target.value }))
+                }
                 placeholder="Add performance notes..."
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground h-20"
               />
@@ -1363,12 +1500,8 @@ export default function TacticBoard() {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSaving}
-                variant="default"
-              >
-                {isSaving ? "Saving..." : "Save Data"}
+              <Button type="submit" disabled={isSaving} variant="default">
+                {isSaving ? 'Saving...' : 'Save Data'}
               </Button>
             </DialogFooter>
           </form>
@@ -1423,7 +1556,9 @@ export default function TacticBoard() {
 
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              Are you sure you want to delete "{formationToDelete?.name || formationToDelete?.FormationName}"? This action cannot be undone.
+              Are you sure you want to delete "
+              {formationToDelete?.name || formationToDelete?.FormationName}"? This action cannot be
+              undone.
             </p>
           </div>
 

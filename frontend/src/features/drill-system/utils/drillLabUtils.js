@@ -76,6 +76,5 @@ export const validateDrillData = (drillData) => {
  */
 export const formatElementsForSave = (elements) => {
   if (!Array.isArray(elements)) return [];
-  return elements.filter(element => element && typeof element === 'object');
+  return elements.filter((element) => element && typeof element === 'object');
 };
-

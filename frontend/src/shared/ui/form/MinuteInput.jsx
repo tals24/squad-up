@@ -1,11 +1,11 @@
-import React from "react";
-import { Input } from "@/shared/ui/primitives/input";
-import FormField from "./FormField";
+import React from 'react';
+import { Input } from '@/shared/ui/primitives/input';
+import FormField from './FormField';
 
 /**
  * MinuteInput - Standardized match minute input field
  * Used across Card, Goal, and Substitution dialogs
- * 
+ *
  * @param {number} value - Current minute value
  * @param {function} onChange - Change handler (receives parsed integer)
  * @param {number} matchDuration - Maximum allowed minute (default: 90)
@@ -22,10 +22,10 @@ export default function MinuteInput({
   matchDuration = 90,
   disabled = false,
   error,
-  label = "Minute",
+  label = 'Minute',
   required = true,
-  id = "minute",
-  hint
+  id = 'minute',
+  hint,
 }) {
   const handleChange = (e) => {
     const parsed = parseInt(e.target.value);

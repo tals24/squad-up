@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from "react";
-import { Target } from "lucide-react";
-import { BaseDialog } from "@/shared/ui/composed";
-import { FormField, MinuteInput, PlayerSelect } from "@/shared/ui/form";
-import { Label } from "@/shared/ui/primitives/label";
+import React, { useState, useEffect } from 'react';
+import { Target } from 'lucide-react';
+import { BaseDialog } from '@/shared/ui/composed';
+import { FormField, MinuteInput, PlayerSelect } from '@/shared/ui/form';
+import { Label } from '@/shared/ui/primitives/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/primitives/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/primitives/tabs";
-import { FeatureGuard } from "@/app/router/guards/FeatureGuard";
-import { GoalInvolvementSection } from "../features/GoalInvolvementSection";
+} from '@/shared/ui/primitives/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/primitives/tabs';
+import { FeatureGuard } from '@/app/router/guards/FeatureGuard';
+import { GoalInvolvementSection } from '../features/GoalInvolvementSection';
 
 const GOAL_TYPES = [
   { value: 'open-play', label: 'Open Play' },
   { value: 'set-piece', label: 'Set Piece' },
   { value: 'penalty', label: 'Penalty' },
   { value: 'counter-attack', label: 'Counter Attack' },
-  { value: 'own-goal', label: 'Own Goal' }
+  { value: 'own-goal', label: 'Own Goal' },
 ];
 
 const MATCH_STATES = [
   { value: 'winning', label: 'Winning' },
   { value: 'drawing', label: 'Drawing' },
-  { value: 'losing', label: 'Losing' }
+  { value: 'losing', label: 'Losing' },
 ];
 
 export default function GoalDialog({
@@ -41,7 +41,7 @@ export default function GoalDialog({
   game = null, // Game object to extract teamId for feature flags
   timeline = [], // Unified timeline from parent (Cards, Goals, Substitutions)
   startingLineup = {}, // Map of playerId -> true for starting lineup players
-  squadPlayers = {} // Map of playerId -> status ('Starting Lineup' | 'Bench')
+  squadPlayers = {}, // Map of playerId -> status ('Starting Lineup' | 'Bench')
 }) {
   const [activeTab, setActiveTab] = useState('team');
   const [goalData, setGoalData] = useState({
@@ -49,11 +49,11 @@ export default function GoalDialog({
     scorerId: null,
     assistedById: null,
     goalInvolvement: [],
-    goalType: 'open-play'
+    goalType: 'open-play',
   });
   const [opponentGoalData, setOpponentGoalData] = useState({
     minute: null,
-    goalType: 'open-play'
+    goalType: 'open-play',
   });
 
   const [errors, setErrors] = useState({});
@@ -64,21 +64,21 @@ export default function GoalDialog({
     if (isOpen) {
       // Check if editing an opponent goal
       const isOpponentGoal = goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal);
-      
+
       if (isOpponentGoal) {
         setActiveTab('opponent');
         setOpponentGoalData({
           minute: goal.minute,
-          goalType: goal.goalType || 'open-play'
+          goalType: goal.goalType || 'open-play',
         });
       } else {
         setActiveTab('team');
         setOpponentGoalData({
           minute: null,
-          goalType: 'open-play'
+          goalType: 'open-play',
         });
       }
-      
+
       if (goal && !isOpponentGoal) {
         // Editing existing team goal
         setGoalData({
@@ -86,7 +86,7 @@ export default function GoalDialog({
           scorerId: goal.scorerId?._id || goal.scorerId,
           assistedById: goal.assistedById?._id || goal.assistedById || null,
           goalInvolvement: goal.goalInvolvement || [],
-          goalType: goal.goalType || 'open-play'
+          goalType: goal.goalType || 'open-play',
         });
       } else if (!goal) {
         // Creating new goal
@@ -95,7 +95,7 @@ export default function GoalDialog({
           scorerId: null,
           assistedById: null,
           goalInvolvement: [],
-          goalType: 'open-play'
+          goalType: 'open-play',
         });
       }
       setErrors({});
@@ -183,12 +183,11 @@ export default function GoalDialog({
     }
   };
 
-
   // Extract teamId from game object for feature flags
   const getTeamId = () => {
     if (!game) return null;
     const teamObj = game.team || game.Team || game.teamId || game.TeamId;
-    return typeof teamObj === "object" ? teamObj._id : teamObj;
+    return typeof teamObj === 'object' ? teamObj._id : teamObj;
   };
 
   const teamId = getTeamId();
@@ -201,8 +200,8 @@ export default function GoalDialog({
   const description = isReadOnly
     ? 'View goal details'
     : goal
-    ? 'Update goal information and relationships'
-    : 'Record goals for your team or track opponent goals';
+      ? 'Update goal information and relationships'
+      : 'Record goals for your team or track opponent goals';
 
   // Dynamic save handler based on active tab
   const handleSaveClick = activeTab === 'team' ? handleSave : handleSaveOpponentGoal;
@@ -229,23 +228,38 @@ export default function GoalDialog({
                 label: saveButtonLabel,
                 onClick: handleSaveClick,
                 disabled: isSaving,
-                loading: isSaving
-              }
+                loading: isSaving,
+              },
             }
       }
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-            <TabsTrigger value="team" disabled={!!goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) || isReadOnly}>Team Goal</TabsTrigger>
-            <TabsTrigger value="opponent" disabled={!!goal && goal.goalCategory !== 'OpponentGoal' && !goal.isOpponentGoal || isReadOnly}>Opponent Goal</TabsTrigger>
-          </TabsList>
+        <TabsList className="grid w-full grid-cols-2 bg-slate-800">
+          <TabsTrigger
+            value="team"
+            disabled={
+              (!!goal && (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal)) ||
+              isReadOnly
+            }
+          >
+            Team Goal
+          </TabsTrigger>
+          <TabsTrigger
+            value="opponent"
+            disabled={
+              (!!goal && goal.goalCategory !== 'OpponentGoal' && !goal.isOpponentGoal) || isReadOnly
+            }
+          >
+            Opponent Goal
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Team Goal Tab */}
-          <TabsContent value="team" className="space-y-4 mt-4">
+        {/* Team Goal Tab */}
+        <TabsContent value="team" className="space-y-4 mt-4">
           {/* Minute */}
           <MinuteInput
             value={goalData.minute}
-            onChange={(value) => setGoalData(prev => ({ ...prev, minute: value }))}
+            onChange={(value) => setGoalData((prev) => ({ ...prev, minute: value }))}
             matchDuration={matchDuration}
             disabled={isReadOnly}
             error={errors.minute}
@@ -259,7 +273,7 @@ export default function GoalDialog({
               required={true}
               players={gamePlayers}
               value={goalData.scorerId}
-              onChange={(value) => setGoalData(prev => ({ ...prev, scorerId: value }))}
+              onChange={(value) => setGoalData((prev) => ({ ...prev, scorerId: value }))}
               disabled={isReadOnly}
               error={errors.scorerId}
               placeholder="Select scorer..."
@@ -272,9 +286,11 @@ export default function GoalDialog({
               id="assister"
               label="Assisted By (Optional)"
               required={false}
-              players={gamePlayers.filter(p => p._id !== goalData.scorerId)}
+              players={gamePlayers.filter((p) => p._id !== goalData.scorerId)}
               value={goalData.assistedById}
-              onChange={(value) => setGoalData(prev => ({ ...prev, assistedById: value === 'none' ? null : value }))}
+              onChange={(value) =>
+                setGoalData((prev) => ({ ...prev, assistedById: value === 'none' ? null : value }))
+              }
               disabled={isReadOnly}
               error={errors.assistedById}
               placeholder="Select assister or unassisted..."
@@ -285,13 +301,12 @@ export default function GoalDialog({
 
           {/* Goal Involvement - Feature Flag Protected */}
           {!isOwnGoal && (
-            <FeatureGuard 
-              feature="goalInvolvementEnabled" 
-              teamId={teamId}
-            >
-              <GoalInvolvementSection 
+            <FeatureGuard feature="goalInvolvementEnabled" teamId={teamId}>
+              <GoalInvolvementSection
                 involvements={goalData.goalInvolvement}
-                onUpdate={(newInvolvements) => setGoalData(prev => ({ ...prev, goalInvolvement: newInvolvements }))}
+                onUpdate={(newInvolvements) =>
+                  setGoalData((prev) => ({ ...prev, goalInvolvement: newInvolvements }))
+                }
                 players={gamePlayers}
                 excludedPlayerIds={excludedPlayerIds}
                 isReadOnly={isReadOnly}
@@ -300,20 +315,17 @@ export default function GoalDialog({
           )}
 
           {/* Goal Type */}
-          <FormField
-            label="Goal Type"
-            htmlFor="goalType"
-          >
+          <FormField label="Goal Type" htmlFor="goalType">
             <Select
               value={goalData.goalType}
-              onValueChange={(value) => setGoalData(prev => ({ ...prev, goalType: value }))}
+              onValueChange={(value) => setGoalData((prev) => ({ ...prev, goalType: value }))}
               disabled={isReadOnly}
             >
               <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
-                {GOAL_TYPES.map(type => (
+                {GOAL_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value} className="text-white">
                     {type.label}
                   </SelectItem>
@@ -321,44 +333,42 @@ export default function GoalDialog({
               </SelectContent>
             </Select>
           </FormField>
-          </TabsContent>
+        </TabsContent>
 
-          {/* Opponent Goal Tab */}
-          <TabsContent value="opponent" className="space-y-4 mt-4">
-            {/* Minute */}
-            <MinuteInput
-              id="opponentMinute"
-              value={opponentGoalData.minute}
-              onChange={(value) => setOpponentGoalData(prev => ({ ...prev, minute: value }))}
-              matchDuration={matchDuration}
-              error={errors.opponentMinute}
-            />
+        {/* Opponent Goal Tab */}
+        <TabsContent value="opponent" className="space-y-4 mt-4">
+          {/* Minute */}
+          <MinuteInput
+            id="opponentMinute"
+            value={opponentGoalData.minute}
+            onChange={(value) => setOpponentGoalData((prev) => ({ ...prev, minute: value }))}
+            matchDuration={matchDuration}
+            error={errors.opponentMinute}
+          />
 
-            {/* Goal Type */}
-            <FormField
-              label="Goal Type"
-              htmlFor="opponentGoalType"
+          {/* Goal Type */}
+          <FormField label="Goal Type" htmlFor="opponentGoalType">
+            <Select
+              value={opponentGoalData.goalType}
+              onValueChange={(value) =>
+                setOpponentGoalData((prev) => ({ ...prev, goalType: value }))
+              }
+              disabled={isReadOnly}
             >
-              <Select
-                value={opponentGoalData.goalType}
-                onValueChange={(value) => setOpponentGoalData(prev => ({ ...prev, goalType: value }))}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {GOAL_TYPES.map(type => (
-                    <SelectItem key={type.value} value={type.value} className="text-white">
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormField>
-          </TabsContent>
-        </Tabs>
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                {GOAL_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value} className="text-white">
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+        </TabsContent>
+      </Tabs>
     </BaseDialog>
   );
 }
-

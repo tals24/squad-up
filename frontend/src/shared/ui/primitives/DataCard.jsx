@@ -5,22 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/primitives
  * DataCard Component
  * Provides consistent card styling for data display across pages
  */
-const DataCard = ({ 
+const DataCard = ({
   title,
   titleIcon,
   children,
-  className = "",
-  headerClassName = "",
-  contentClassName = "",
+  className = '',
+  headerClassName = '',
+  contentClassName = '',
   hover = true,
   ...props
 }) => {
-  const hoverClasses = hover 
-    ? "hover:shadow-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300" 
-    : "";
+  const hoverClasses = hover
+    ? 'hover:shadow-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300'
+    : '';
 
   return (
-    <Card 
+    <Card
       className={`bg-slate-800/70 border-slate-700 shadow-xl backdrop-blur-sm ${hoverClasses} ${className}`}
       {...props}
     >
@@ -32,9 +32,7 @@ const DataCard = ({
           </CardTitle>
         </CardHeader>
       )}
-      <CardContent className={contentClassName}>
-        {children}
-      </CardContent>
+      <CardContent className={contentClassName}>{children}</CardContent>
     </Card>
   );
 };
