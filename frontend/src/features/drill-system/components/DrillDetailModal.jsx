@@ -129,7 +129,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             {/* Visual Board Link */}
             {(drill?.layoutData || drill?.DrillLayoutData) && (
               <Link
-                to={`/drilllab?drillId=${drill._id}&readOnly=true&from=${source}`}
+                to={`/DrillDesigner?drillId=${drill._id}&readOnly=true&from=${source}`}
                 className="flex-1"
               >
                 <Button className="w-full bg-slate-600 hover:bg-cyan-600 text-slate-100 hover:text-white px-4 py-3 rounded-lg border border-slate-500 hover:border-cyan-500 transition-all duration-300 flex items-center justify-center gap-2 font-medium">
