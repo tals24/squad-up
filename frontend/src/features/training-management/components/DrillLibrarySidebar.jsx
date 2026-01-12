@@ -162,7 +162,11 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
                   )}
                   {drill.targetAgeGroup && (
                     <Badge variant="outline" className={`text-xs ${getAgeColor()}`}>
-                      {drill.targetAgeGroup}
+                      {/* Check if it's an array; if so, join it. If not, render as is. */}
+                      {Array.isArray(drill.targetAgeGroup) 
+                        ? drill.targetAgeGroup.join(', ') 
+                        : drill.targetAgeGroup
+                      }
                     </Badge>
                   )}
                 </div>

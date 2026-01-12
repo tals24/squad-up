@@ -15,7 +15,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
 
   const displayAgeGroups = (ageGroups) => {
     if (Array.isArray(ageGroups)) {
-      return ageGroups.join(', ');
+      return ageGroups.join(' , ');
     }
     return ageGroups || 'Not specified';
   };
