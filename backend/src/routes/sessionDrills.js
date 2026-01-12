@@ -5,6 +5,7 @@ const sessionDrillController = require('../controllers/training/sessionDrillCont
 const router = express.Router();
 
 router.get('/', authenticateJWT, sessionDrillController.getAllSessionDrills);
+router.get('/plan/:teamId/:weekId', authenticateJWT, sessionDrillController.getTrainingPlan);
 router.get('/:id', authenticateJWT, sessionDrillController.getSessionDrillById);
 router.post('/', authenticateJWT, sessionDrillController.createSessionDrill);
 router.put('/:id', authenticateJWT, sessionDrillController.updateSessionDrill);

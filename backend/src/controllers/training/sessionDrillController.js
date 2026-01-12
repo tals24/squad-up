@@ -59,6 +59,37 @@ exports.deleteSessionDrill = async (req, res, next) => {
   }
 };
 
+exports.getTrainingPlan = async (req, res, next) => {
+  try {
+    const { teamId, weekId } = req.params;
+
+    // Validate parameters
+    if (!teamId || !weekId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: teamId and weekId'
+      });
+    }
+
+    console.log('📅 [Controller] Loading training plan:', { teamId, weekId });
+
+    // Call service
+    const planData = await sessionDrillService.getTrainingPlanByTeamAndWeek(teamId, weekId);
+
+    // Always return 200 OK (empty plan is valid, not an error)
+    res.status(200).json({
+      success: true,
+      data: planData
+    });
+  } catch (error) {
+    console.error('Get training plan error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+};
+
 exports.batchSaveTrainingPlan = async (req, res, next) => {
   try {
     const sessionDrills = await sessionDrillService.batchSaveTrainingPlan(req.body);

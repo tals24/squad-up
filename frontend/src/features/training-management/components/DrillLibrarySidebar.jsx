@@ -23,15 +23,14 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const categories = useMemo(
-    () => [...new Set(drills.map((d) => d.category || d.Category).filter(Boolean))],
+    () => [...new Set(drills.map((d) => d.category).filter(Boolean))],
     [drills]
   );
 
   const ageGroups = useMemo(() => {
     const allAgeGroups = drills
       .flatMap((drill) => {
-        const ageGroups = drill.targetAgeGroup || drill.TargetAgeGroup;
-        return Array.isArray(ageGroups) ? ageGroups : [ageGroups];
+        return Array.isArray(drill.targetAgeGroup) ? drill.targetAgeGroup : [drill.targetAgeGroup];
       })
       .filter(Boolean);
 
@@ -44,22 +43,21 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
 
   const filteredDrills = useMemo(() => {
     return drills.filter((drill) => {
-      const drillName = drill.drillName || drill.DrillName;
-      const category = drill.category || drill.Category;
-      const ageGroups = drill.targetAgeGroup || drill.TargetAgeGroup;
-      const nameMatch = drillName?.toLowerCase().includes(searchTerm.toLowerCase());
-      const categoryMatch = categoryFilter === 'all' || category === categoryFilter;
+      const nameMatch = drill.drillName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const categoryMatch = categoryFilter === 'all' || drill.category === categoryFilter;
       const ageMatch =
         ageFilter === 'all' ||
-        (Array.isArray(ageGroups) ? ageGroups.includes(ageFilter) : ageGroups === ageFilter);
+        (Array.isArray(drill.targetAgeGroup) 
+          ? drill.targetAgeGroup.includes(ageFilter) 
+          : drill.targetAgeGroup === ageFilter);
       return nameMatch && categoryMatch && ageMatch;
     });
   }, [drills, searchTerm, categoryFilter, ageFilter]);
 
   const handleDragStart = (e, drill) => {
     const drillData = JSON.stringify({
-      id: drill._id || drill.id,
-      DrillName: drill.drillName || drill.DrillName,
+      _id: drill._id,
+      drillName: drill.drillName,
     });
     e.dataTransfer.setData('application/json', drillData);
   };
@@ -71,7 +69,7 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
       setIsDetailModalOpen(true);
     } else {
       // In drill library context, navigate to drill library page
-      window.location.href = `/DrillLibrary?drillId=${drill._id || drill.id}`;
+      window.location.href = `/DrillLibrary?drillId=${drill._id}`;
     }
   };
 
@@ -143,7 +141,7 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {filteredDrills.map((drill) => (
           <div
-            key={drill._id || drill.id}
+            key={drill._id}
             draggable
             onDragStart={(e) => handleDragStart(e, drill)}
             className="p-3 bg-slate-700/30 rounded-lg cursor-grab active:cursor-grabbing hover:bg-slate-700/50 border border-slate-600/50 hover:border-cyan-400/50 transition-colors duration-200 group relative"
@@ -151,20 +149,20 @@ export default function DrillLibrarySidebar({ context = 'library' }) {
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-white truncate">
-                  {drill.drillName || drill.DrillName}
+                  {drill.drillName}
                 </p>
                 <div className="flex gap-2 mt-2">
-                  {(drill.category || drill.Category) && (
+                  {drill.category && (
                     <Badge
                       variant="outline"
-                      className={`text-xs ${getCategoryColor(drill.category || drill.Category)}`}
+                      className={`text-xs ${getCategoryColor(drill.category)}`}
                     >
-                      {drill.category || drill.Category}
+                      {drill.category}
                     </Badge>
                   )}
-                  {(drill.targetAgeGroup || drill.TargetAgeGroup) && (
+                  {drill.targetAgeGroup && (
                     <Badge variant="outline" className={`text-xs ${getAgeColor()}`}>
-                      {drill.targetAgeGroup || drill.TargetAgeGroup}
+                      {drill.targetAgeGroup}
                     </Badge>
                   )}
                 </div>

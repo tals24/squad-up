@@ -28,33 +28,27 @@ export default function DrillGrid({ drills, onDrillClick }) {
     <>
       {drills.map((drill) => (
         <div
-          key={drill._id || drill.id}
+          key={drill._id}
           className="bg-slate-800/70 border-slate-700 rounded-xl border hover:bg-slate-800/90 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 group cursor-pointer overflow-hidden flex flex-col"
           onClick={() => onDrillClick(drill)}
         >
           <div className="p-6 flex-grow">
             <h3 className="text-lg font-bold text-slate-100 truncate mb-2 group-hover:text-cyan-400 transition-colors">
-              {drill.drillName || drill.DrillName}
+              {drill.drillName}
             </h3>
             <p className="text-slate-400 text-sm mb-4 h-10 overflow-hidden">
-              {drill.description ||
-                drill.DrillDescription ||
-                drill.Description ||
-                drill.Instructions ||
-                drill.Details ||
-                'No description available.'}
+              {drill.description || 'No description available.'}
             </p>
             <div className="flex flex-wrap gap-2">
               <span
-                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(drill.category || drill.Category)}`}
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(drill.category)}`}
               >
-                <Tag className="w-3 h-3 mr-1" /> {drill.category || drill.Category}
+                <Tag className="w-3 h-3 mr-1" /> {drill.category}
               </span>
               <span
                 className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getAgeColor()}`}
               >
-                <Users className="w-3 h-3 mr-1" />{' '}
-                {displayAgeGroups(drill.targetAgeGroup || drill.TargetAgeGroup)}
+                <Users className="w-3 h-3 mr-1" /> {displayAgeGroups(drill.targetAgeGroup)}
               </span>
             </div>
           </div>

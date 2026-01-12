@@ -294,14 +294,14 @@ const WeeklyTrainingPlanOverview = ({
                       {drills.length > 0 ? (
                         drills.map((drill) => (
                           <div
-                            key={drill._id || drill.id}
+                            key={drill._id}
                             className={`flex flex-col items-center gap-1 text-xs ${DASHBOARD_COLORS.text.secondary}`}
                           >
                             <span
-                              className={`w-2 h-2 rounded-full ${DRILL_CATEGORY_COLORS[drill.category || drill.Category] || 'bg-slate-500'}`}
+                              className={`w-2 h-2 rounded-full ${DRILL_CATEGORY_COLORS[drill.category] || 'bg-slate-500'}`}
                             ></span>
                             <span className="truncate text-center leading-tight">
-                              {drill.drillName || drill.DrillName}
+                              {drill.drillName}
                             </span>
                           </div>
                         ))

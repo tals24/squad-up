@@ -24,21 +24,13 @@ export default function DrillLibrary() {
 
   const filteredDrills = useMemo(() => {
     return drills.filter((drill) => {
-      const drillName = (drill.drillName || drill.DrillName || '').toLowerCase();
-      const nameMatch = drillName.includes(searchTerm.toLowerCase());
-
-      const category = drill.category || drill.Category;
-      const categoryMatch = categoryFilter === 'all' || category === categoryFilter;
-
-      const ageGroups = drill.targetAgeGroup || drill.TargetAgeGroup;
+      const nameMatch = drill.drillName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const categoryMatch = categoryFilter === 'all' || drill.category === categoryFilter;
       const ageGroupMatch =
         ageGroupFilter === 'all' ||
-        (() => {
-          if (Array.isArray(ageGroups)) {
-            return ageGroups.includes(ageGroupFilter);
-          }
-          return ageGroups === ageGroupFilter;
-        })();
+        (Array.isArray(drill.targetAgeGroup)
+          ? drill.targetAgeGroup.includes(ageGroupFilter)
+          : drill.targetAgeGroup === ageGroupFilter);
 
       return nameMatch && categoryMatch && ageGroupMatch;
     });

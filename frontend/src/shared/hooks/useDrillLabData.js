@@ -65,7 +65,7 @@ export function useDrillLabData(drillId, mode, searchParams) {
 
             if (drill) {
               setDrillData({
-                name: drill.drillName || drill.DrillName || 'Unknown Drill',
+                name: drill.drillName || 'Unknown Drill',
                 description: drill.description || '',
                 layoutData: drill.layoutData
                   ? Array.isArray(drill.layoutData)

@@ -255,7 +255,7 @@ export default function TrainingPlanner() {
         const newPlan = { ...prevPlan };
         const currentDrills = newPlan[day][slot].drills;
         // Prevent adding duplicates
-        if (!currentDrills.some((d) => d.id === drill.id)) {
+        if (!currentDrills.some((d) => d._id === drill._id)) {
           newPlan[day][slot].drills = [...currentDrills, drill];
 
           // If this was saved data, mark it as modified (draft)
@@ -274,7 +274,7 @@ export default function TrainingPlanner() {
     (day, slot, drillId) => {
       setTrainingPlan((prevPlan) => {
         const newPlan = { ...prevPlan };
-        newPlan[day][slot].drills = newPlan[day][slot].drills.filter((d) => d.id !== drillId);
+        newPlan[day][slot].drills = newPlan[day][slot].drills.filter((d) => d._id !== drillId);
 
         // If this was saved data, mark it as modified (draft)
         if (hasSavedData) {

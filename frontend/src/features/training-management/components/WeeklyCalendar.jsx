@@ -32,7 +32,7 @@ const CalendarSlot = ({
   };
 
   const handleViewDetails = (drill) => {
-    console.log('🔍 WeeklyCalendar handleViewDetails - drill:', drill?.DrillName);
+    console.log('🔍 WeeklyCalendar handleViewDetails - drill:', drill?.drillName);
     setSelectedDrill(drill);
     setIsDetailModalOpen(true);
     if (onViewDrillDetails) {
@@ -41,7 +41,7 @@ const CalendarSlot = ({
   };
 
   const handleRemoveDrill = (drill) => {
-    onRemoveDrill(day, slot, drill.id);
+    onRemoveDrill(day, slot, drill._id);
   };
 
   return (
@@ -54,10 +54,10 @@ const CalendarSlot = ({
       <div className="flex-1 space-y-1">
         {drills.map((drill) => (
           <div
-            key={drill.id}
+            key={drill._id}
             className="bg-slate-600/50 p-2 rounded-md shadow-sm text-sm text-slate-200 flex items-center justify-between group"
           >
-            <span className="truncate flex-1">{drill.DrillName}</span>
+            <span className="truncate flex-1">{drill.drillName}</span>
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <DrillMenuDropdown
                 drill={drill}
