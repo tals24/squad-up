@@ -1,7 +1,7 @@
 import React from 'react';
 import { Loader2, Info } from 'lucide-react';
-import WeeklyCalendar from '../../../components/WeeklyCalendar';
-import DrillLibrarySidebar from '../../../components/DrillLibrarySidebar';
+import WeeklyCalendar from '../../WeeklyCalendar';
+import TrainingPlannerSidebar from '../../TrainingPlannerSidebar';
 
 const TrainingPlannerContent = ({
   isLoadingPlan,
@@ -35,7 +35,7 @@ const TrainingPlannerContent = ({
           currentDate={currentDate}
           onViewDrillDetails={onViewDrillDetails}
         />
-        <DrillLibrarySidebar context="training-planner" />
+        <TrainingPlannerSidebar context="training-planner" />
       </>
     );
   }

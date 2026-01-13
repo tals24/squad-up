@@ -7,12 +7,12 @@
 
 /**
  * Determine the result of a game based on final score
- * @param {Object} game - Game object with FinalScore_Display
+ * @param {Object} game - Game object with finalScoreDisplay
  * @returns {string} - 'win', 'loss', 'draw', or 'unknown'
  */
 export const getGameResult = (game) => {
-  if (!game.FinalScore_Display) return 'unknown';
-  const scores = game.FinalScore_Display.split('-').map((s) => parseInt(s.trim()));
+  if (!game.finalScoreDisplay) return 'unknown';
+  const scores = game.finalScoreDisplay.split('-').map((s) => parseInt(s.trim()));
   if (scores.length !== 2 || isNaN(scores[0]) || isNaN(scores[1])) return 'unknown';
   if (scores[0] > scores[1]) return 'win';
   if (scores[0] < scores[1]) return 'loss';

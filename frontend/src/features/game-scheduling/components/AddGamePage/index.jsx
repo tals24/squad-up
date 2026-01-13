@@ -54,14 +54,13 @@ export default function AddGame() {
       console.log('🔍 Looking for team with ID:', formData.Team);
       console.log(
         '🔍 Available teams:',
-        teams.map((t) => ({ id: t._id || t.id, name: t.teamName || t.TeamName || t.Name }))
+        teams.map((t) => ({ id: t._id, name: t.teamName }))
       );
 
-      const selectedTeam = teams.find((team) => (team._id || team.id) === formData.Team);
+      const selectedTeam = teams.find((team) => team._id === formData.Team);
       console.log('🔍 Selected team:', selectedTeam);
 
-      const teamName =
-        selectedTeam?.teamName || selectedTeam?.TeamName || selectedTeam?.Name || 'Our Team';
+      const teamName = selectedTeam?.teamName || 'Our Team';
 
       // Auto-detect season based on game date
       const season = getSeasonFromDate(gameDateTime);
@@ -124,8 +123,8 @@ export default function AddGame() {
   const teamOptions = teams.map((team) => {
     console.log('🔍 Team object:', team);
     return {
-      value: team._id || team.id, // Use _id for MongoDB
-      label: team.teamName || team.TeamName || team.Name,
+      value: team._id,
+      label: team.teamName,
     };
   });
 

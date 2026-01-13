@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/primitives/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/shared/ui/primitives/dialog';
 import { Badge } from '@/shared/ui/primitives/badge';
 import { Button } from '@/shared/ui/primitives/button';
 import { Tag, Users, Eye, Play, Clock, Users2, Wrench, ExternalLink } from 'lucide-react';
@@ -8,10 +8,6 @@ import { getCategoryColor, getAgeColor } from '@/shared/utils';
 
 const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
   if (!drill) return null;
-
-  // Debug logging for source parameter
-  console.log('🔍 DrillDetailModal source:', source);
-  console.log('🔍 DrillDetailModal drill:', drill?.drillName || drill?.DrillName);
 
   const displayAgeGroups = (ageGroups) => {
     if (Array.isArray(ageGroups)) {
@@ -27,32 +23,44 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
     return match ? match[1] : null;
   };
 
-  const videoId = getYouTubeVideoId(drill?.videoLink || drill?.VideoLink);
+  // Check if video link is valid (not a placeholder)
+  const hasValidVideoLink = (videoLink) => {
+    if (!videoLink) return false;
+    // Filter out placeholder/example links
+    if (videoLink.includes('example.com')) return false;
+    return true;
+  };
+
+  const videoLink = drill?.videoLink;
+  const videoId = getYouTubeVideoId(videoLink);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-3xl bg-slate-800/95 border-slate-600 backdrop-blur-sm shadow-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-slate-100 flex items-center gap-3">
-            {drill?.drillName || drill?.DrillName}
+            {drill?.drillName}
             <div className="flex gap-2">
-              {(drill?.category || drill?.Category) && (
+              {drill?.category && (
                 <Badge
                   variant="outline"
-                  className={`text-xs ${getCategoryColor(drill?.category || drill?.Category)}`}
+                  className={`text-xs ${getCategoryColor(drill.category)}`}
                 >
                   <Tag className="w-3 h-3 mr-1" />
-                  {drill?.category || drill?.Category}
+                  {drill.category}
                 </Badge>
               )}
-              {(drill?.targetAgeGroup || drill?.TargetAgeGroup) && (
+              {drill?.targetAgeGroup && (
                 <Badge variant="outline" className={`text-xs ${getAgeColor()}`}>
                   <Users className="w-3 h-3 mr-1" />
-                  {displayAgeGroups(drill?.targetAgeGroup || drill?.TargetAgeGroup)}
+                  {displayAgeGroups(drill.targetAgeGroup)}
                 </Badge>
               )}
             </div>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            View detailed information about this drill including description, video, and tactic board
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 pt-4">
@@ -93,33 +101,26 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
           <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
             <h3 className="font-semibold text-slate-100 mb-3 text-lg">Description</h3>
             <p className="text-slate-200 whitespace-pre-wrap break-words leading-relaxed">
-              {drill?.description ||
-                drill?.DrillDescription ||
-                drill?.Description ||
-                drill?.instructions ||
-                drill?.Instructions ||
-                drill?.details ||
-                drill?.Details ||
-                'No description available.'}
+              {drill?.description || drill?.instructions || drill?.details || 'No description available.'}
             </p>
           </div>
 
           {/* Instructions */}
-          {(drill?.instructions || drill?.Instructions) && (
+          {drill?.instructions && (
             <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
               <h3 className="font-semibold text-slate-100 mb-3 text-lg">Instructions</h3>
               <p className="text-slate-200 whitespace-pre-wrap break-words leading-relaxed">
-                {drill?.instructions || drill?.Instructions}
+                {drill.instructions}
               </p>
             </div>
           )}
 
           {/* Additional Details */}
-          {(drill?.details || drill?.Details) && (
+          {drill?.details && (
             <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
               <h3 className="font-semibold text-slate-100 mb-3 text-lg">Additional Details</h3>
               <p className="text-slate-200 whitespace-pre-wrap break-words leading-relaxed">
-                {drill?.details || drill?.Details}
+                {drill.details}
               </p>
             </div>
           )}
@@ -127,7 +128,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Visual Board Link */}
-            {(drill?.layoutData || drill?.DrillLayoutData) && (
+            {drill?.layoutData && (
               <Link
                 to={`/DrillDesigner?drillId=${drill._id}&readOnly=true&from=${source}`}
                 className="flex-1"
@@ -140,9 +141,9 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             )}
 
             {/* Video Link */}
-            {(drill?.videoLink || drill?.VideoLink) && (
+            {hasValidVideoLink(videoLink) && (
               <Button
-                onClick={() => window.open(drill?.videoLink || drill?.VideoLink, '_blank')}
+                onClick={() => window.open(videoLink, '_blank')}
                 className="flex-1 bg-slate-600 hover:bg-red-600 text-slate-100 hover:text-white px-4 py-3 rounded-lg border border-slate-500 hover:border-red-500 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
               >
                 <Play className="w-4 h-4" />
@@ -174,11 +175,7 @@ const DrillDetailModal = ({ drill, open, setOpen, source = 'library' }) => {
             <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
               <h3 className="font-semibold text-slate-100 mb-2 text-lg">Created By</h3>
               <p className="text-slate-200">
-                {drill.author?.fullName ||
-                  drill.author?.FullName ||
-                  drill.author?.email ||
-                  drill.author?.Email ||
-                  'Unknown'}
+                {drill.author?.fullName || drill.author?.email || 'Unknown'}
               </p>
             </div>
           )}

@@ -61,8 +61,8 @@ const TrainingPlannerHeader = ({
               {managedTeams.length > 0 ? (
                 managedTeams.map((team) => (
                   <SelectItem
-                    key={team._id || team.id}
-                    value={team._id || team.id}
+                    key={team._id}
+                    value={team._id}
                     className="focus:bg-slate-700 hover:bg-slate-700"
                   >
                     {team.teamName}

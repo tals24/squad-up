@@ -11,11 +11,11 @@ const router = express.Router();
 
 /**
  * Get match timeline
- * GET /api/games/:id/timeline
+ * GET /api/games/:gameId/timeline
  */
-router.get('/:id/timeline', authenticateJWT, checkGameAccess, async (req, res, next) => {
+router.get('/:gameId/timeline', authenticateJWT, checkGameAccess, async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const timeline = await getMatchTimeline(gameId);
     
     res.json({

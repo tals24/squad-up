@@ -27,7 +27,7 @@ const DevelopmentTimeline = ({ playerReports, games, playerId }) => {
 
               return (
                 <TimelineItem
-                  key={report._id || report.id || `report-${index}`}
+                  key={report._id || `report-${index}`}
                   report={report}
                   gameForReport={gameForReport}
                   isLast={isLast}

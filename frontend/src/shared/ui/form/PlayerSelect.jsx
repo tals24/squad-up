@@ -43,7 +43,7 @@ export default function PlayerSelect({
 }) {
   // Default player formatter: #KitNumber FullName
   const defaultFormatter = (player) => {
-    const kitNum = player.kitNumber || player.jerseyNumber || '?';
+    const kitNum = player.kitNumber || '?';
     const name = player.fullName || player.name || 'Unknown';
     const position = showPosition && player.position ? ` - ${player.position}` : '';
     return `#${kitNum} ${name}${position}`;

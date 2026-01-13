@@ -17,9 +17,9 @@ router.get('/', authenticateJWT, gameController.getAllGames);
 
 /**
  * Get game by ID
- * GET /api/games/:id
+ * GET /api/games/:gameId
  */
-router.get('/:id', authenticateJWT, checkGameAccess, gameController.getGameById);
+router.get('/:gameId', authenticateJWT, checkGameAccess, gameController.getGameById);
 
 /**
  * Create new game
@@ -29,15 +29,15 @@ router.post('/', authenticateJWT, checkTeamAccess, gameController.createGame);
 
 /**
  * Update game
- * PUT /api/games/:id
+ * PUT /api/games/:gameId
  */
-router.put('/:id', authenticateJWT, checkGameAccess, gameController.updateGame);
+router.put('/:gameId', authenticateJWT, checkGameAccess, gameController.updateGame);
 
 /**
  * Delete game
- * DELETE /api/games/:id
+ * DELETE /api/games/:gameId
  */
-router.delete('/:id', authenticateJWT, checkTeamAccess, gameController.deleteGame);
+router.delete('/:gameId', authenticateJWT, checkTeamAccess, gameController.deleteGame);
 
 module.exports = router;
 

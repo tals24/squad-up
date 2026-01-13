@@ -14,8 +14,8 @@ export default function PlayerFilters({
   const teamOptions = [
     ...(currentUser?.role === 'admin' ? [{ value: 'all', label: 'All Teams' }] : []),
     ...teams.map((team) => ({
-      value: team._id || team.id,
-      label: team.teamName || team.TeamName || team.Name,
+      value: team._id,
+      label: team.teamName,
     })),
   ];
 

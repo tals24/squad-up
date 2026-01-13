@@ -186,7 +186,7 @@ export default function GoalDialog({
   // Extract teamId from game object for feature flags
   const getTeamId = () => {
     if (!game) return null;
-    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    const teamObj = game.team;
     return typeof teamObj === 'object' ? teamObj._id : teamObj;
   };
 

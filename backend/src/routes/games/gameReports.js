@@ -46,10 +46,10 @@ router.get('/', authenticateJWT, gameReportController.getAllGameReports);
 router.get('/game/:gameId', authenticateJWT, checkGameAccess, gameReportController.getGameReportsByGame);
 
 /**
- * GET /api/game-reports/:id
+ * GET /api/game-reports/:reportId
  * Get game report by ID
  */
-router.get('/:id', authenticateJWT, gameReportController.getGameReportById);
+router.get('/:reportId', authenticateJWT, gameReportController.getGameReportById);
 
 /**
  * POST /api/game-reports
@@ -58,16 +58,16 @@ router.get('/:id', authenticateJWT, gameReportController.getGameReportById);
 router.post('/', authenticateJWT, gameReportController.createGameReport);
 
 /**
- * PUT /api/game-reports/:id
+ * PUT /api/game-reports/:reportId
  * Update game report
  */
-router.put('/:id', authenticateJWT, gameReportController.updateGameReport);
+router.put('/:reportId', authenticateJWT, gameReportController.updateGameReport);
 
 /**
- * DELETE /api/game-reports/:id
+ * DELETE /api/game-reports/:reportId
  * Delete game report
  */
-router.delete('/:id', authenticateJWT, gameReportController.deleteGameReport);
+router.delete('/:reportId', authenticateJWT, gameReportController.deleteGameReport);
 
 /**
  * POST /api/game-reports/batch

@@ -227,7 +227,7 @@ export function useGameDetailsData(gameId, { games, players, teams }) {
   useEffect(() => {
     if (!game || !players || players.length === 0) return;
 
-    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    const teamObj = game.team;
     const teamId = typeof teamObj === 'object' ? teamObj._id : teamObj;
 
     if (!teamId) return;
@@ -238,7 +238,7 @@ export function useGameDetailsData(gameId, { games, players, teams }) {
 
     // Filter players for this team
     const filteredPlayers = players.filter((player) => {
-      const playerTeamObj = player.team || player.Team || player.teamId || player.TeamId;
+      const playerTeamObj = player.team;
       const playerTeamId = typeof playerTeamObj === 'object' ? playerTeamObj._id : playerTeamObj;
       return playerTeamId === teamId;
     });

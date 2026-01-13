@@ -91,7 +91,7 @@ export default function AddTeam() {
   const coachOptions = users
     .filter((user) => user.role === 'Coach')
     .map((user) => ({
-      value: user.id || user._id,
+      value: user._id,
       label: user.fullName || user.email,
     }));
 

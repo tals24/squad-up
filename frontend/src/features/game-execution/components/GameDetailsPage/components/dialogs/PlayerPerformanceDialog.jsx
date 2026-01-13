@@ -165,7 +165,7 @@ export default function PlayerPerformanceDialog({
   // Extract teamId from game object (handles different property names)
   const getTeamId = () => {
     if (!game) return null;
-    const teamObj = game.team || game.Team || game.teamId || game.TeamId;
+    const teamObj = game.team;
     return typeof teamObj === 'object' ? teamObj._id : teamObj;
   };
 
@@ -316,7 +316,7 @@ export default function PlayerPerformanceDialog({
                         cardType === 'yellow' ? '🟨' : cardType === 'red' ? '🟥' : '🟨🟥';
 
                       return (
-                        <div key={card.id || card._id} className="flex items-center gap-1.5">
+                        <div key={card._id} className="flex items-center gap-1.5">
                           <span className={`text-xs ${getCardBadgeColor(cardType)}`}>
                             {cardEmoji}
                           </span>

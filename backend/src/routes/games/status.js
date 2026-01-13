@@ -11,15 +11,15 @@ const router = express.Router();
 
 /**
  * Start game (Scheduled → Played with lineup)
- * POST /api/games/:id/start-game
+ * POST /api/games/:gameId/start-game
  */
-router.post('/:id/start-game', authenticateJWT, checkGameAccess, gameController.startGame);
+router.post('/:gameId/start-game', authenticateJWT, checkGameAccess, gameController.startGame);
 
 /**
  * Submit final report (Played → Done)
- * POST /api/games/:id/submit-report
+ * POST /api/games/:gameId/submit-report
  */
-router.post('/:id/submit-report', authenticateJWT, checkGameAccess, gameController.submitFinalReport);
+router.post('/:gameId/submit-report', authenticateJWT, checkGameAccess, gameController.submitFinalReport);
 
 module.exports = router;
 
