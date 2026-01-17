@@ -127,7 +127,7 @@ export function filterPlayersByState(
   }
 
   return players.filter((player) => {
-    const playerId = player._id || player.id;
+    const playerId = player._id;
     const state = getPlayerStateAtMinute(timeline, playerId, minute, startingLineup, squadPlayers);
     return state === requiredState;
   });

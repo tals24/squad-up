@@ -172,7 +172,7 @@ export default function GameDetails() {
       if (goal.goalCategory === 'OpponentGoal' || goal.isOpponentGoal) return;
       if (goal.scorerId && goal.scorerId._id) {
         const scorerId = goal.scorerId._id;
-        const scorerName = goal.scorerId.fullName || goal.scorerId.name || 'Unknown';
+        const scorerName = goal.scorerId.fullName || 'Unknown';
         scorerMap.set(scorerId, {
           name: scorerName,
           count: (scorerMap.get(scorerId)?.count || 0) + 1,
@@ -180,7 +180,7 @@ export default function GameDetails() {
       }
       if (goal.assisterId && goal.assisterId._id) {
         const assisterId = goal.assisterId._id;
-        const assisterName = goal.assisterId.fullName || goal.assisterId.name || 'Unknown';
+        const assisterName = goal.assisterId.fullName || 'Unknown';
         assisterMap.set(assisterId, {
           name: assisterName,
           count: (assisterMap.get(assisterId)?.count || 0) + 1,

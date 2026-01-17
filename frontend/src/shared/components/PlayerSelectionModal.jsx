@@ -51,15 +51,15 @@ const PlayerSelectionModal = ({
 
   // Filter available players (not already in roster)
   const availablePlayers = teamPlayers.filter((player) => {
-    const playerId = player._id || player.id;
+    const playerId = player._id;
     return !existingPlayerIds.includes(playerId);
   });
 
   // Filter players based on search and filters
   const filteredPlayers = availablePlayers.filter((player) => {
-    const fullName = player.fullName || player.FullName || '';
-    const position = player.position || player.Position || '';
-    const kitNumber = player.kitNumber || player.KitNumber || '';
+    const fullName = player.fullName || '';
+    const position = player.position || '';
+    const kitNumber = player.kitNumber || '';
 
     // Search filter
     const matchesSearch =
@@ -90,7 +90,7 @@ const PlayerSelectionModal = ({
 
   const handleConfirm = () => {
     const playersToAdd = filteredPlayers.filter((player) =>
-      selectedPlayers.includes(player._id || player.id)
+      selectedPlayers.includes(player._id)
     );
     onConfirm(playersToAdd);
     onClose();
@@ -196,10 +196,10 @@ const PlayerSelectionModal = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {players.map((player) => {
-                      const playerId = player._id || player.id;
+                      const playerId = player._id;
                       const isSelected = selectedPlayers.includes(playerId);
-                      const fullName = player.fullName || player.FullName || 'Unknown';
-                      const kitNumber = player.kitNumber || player.KitNumber || '';
+                      const fullName = player.fullName || 'Unknown';
+                      const kitNumber = player.kitNumber || '';
                       const age = player.age || player.Age || '';
 
                       return (

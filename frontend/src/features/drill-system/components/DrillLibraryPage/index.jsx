@@ -37,9 +37,6 @@ export default function DrillLibrary() {
   }, [drills, searchTerm, categoryFilter, ageGroupFilter]);
 
   const handleDrillClick = (drill) => {
-    console.log('[DrillLibrary] Opening drill detail:', drill);
-    console.log('[DrillLibrary] Drill layoutData:', drill?.layoutData);
-    console.log('[DrillLibrary] Drill DrillLayoutData:', drill?.DrillLayoutData);
     setSelectedDrill(drill);
     setIsDetailModalOpen(true);
   };
@@ -49,7 +46,6 @@ export default function DrillLibrary() {
   };
 
   const showConfirmationMessage = (config) => {
-    console.log('Showing confirmation:', config);
     setConfirmationConfig(config);
     setShowConfirmation(true);
   };

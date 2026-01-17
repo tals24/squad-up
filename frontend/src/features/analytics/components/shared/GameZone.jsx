@@ -26,20 +26,20 @@ import { DASHBOARD_COLORS } from '../../utils';
  */
 const GameZone = ({ games }) => {
   const recentGames = games
-    .filter((game) => game.Date && safeIsPast(game.Date) && game.FinalScore_Display)
+    .filter((game) => game.date && safeIsPast(game.date) && game.finalScoreDisplay)
     .sort((a, b) => {
-      const dateA = safeDate(a.Date);
-      const dateB = safeDate(b.Date);
+      const dateA = safeDate(a.date);
+      const dateB = safeDate(b.date);
       if (!dateA || !dateB) return 0;
       return dateB - dateA;
     })
     .slice(0, 5);
 
   const nextGame = games
-    .filter((game) => game.Date && safeIsFuture(game.Date))
+    .filter((game) => game.date && safeIsFuture(game.date))
     .sort((a, b) => {
-      const dateA = safeDate(a.Date);
-      const dateB = safeDate(b.Date);
+      const dateA = safeDate(a.date);
+      const dateB = safeDate(b.date);
       if (!dateA || !dateB) return 0;
       return dateA - dateB;
     })[0];
@@ -66,14 +66,14 @@ const GameZone = ({ games }) => {
             recentGames.map((game) => {
               const result = getGameResult(game);
               return (
-                <div key={game.id} className="flex flex-col items-center gap-1">
+                <div key={game._id} className="flex flex-col items-center gap-1">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${getResultColor(result)}`}
                   >
                     {getResultText(result)}
                   </div>
                   <span className="text-xs text-slate-400 font-mono">
-                    {game.FinalScore_Display}
+                    {game.finalScoreDisplay}
                   </span>
                 </div>
               );
@@ -94,19 +94,19 @@ const GameZone = ({ games }) => {
         </h3>
         {nextGame ? (
           <Link
-            to={createPageUrl(`GameDetails?id=${nextGame.id}`)}
+            to={createPageUrl(`GameDetails?id=${nextGame._id}`)}
             className={`block ${DASHBOARD_COLORS.background.hover} rounded-lg p-2 transition-colors -m-2`}
           >
             <p className={`font-bold ${DASHBOARD_COLORS.text.primary} truncate`}>
-              {nextGame.GameTitle || 'Untitled Game'}
+              {nextGame.gameTitle || 'Untitled Game'}
             </p>
             <div className={`text-sm ${DASHBOARD_COLORS.text.accent} font-mono mt-1`}>
-              {safeFormatDistanceToNow(nextGame.Date, { addSuffix: true })}
+              {safeFormatDistanceToNow(nextGame.date, { addSuffix: true })}
             </div>
-            {nextGame.Location && (
+            {nextGame.location && (
               <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
                 <MapPin className="w-3 h-3" />
-                <span>{nextGame.Location}</span>
+                <span>{nextGame.location}</span>
               </div>
             )}
           </Link>

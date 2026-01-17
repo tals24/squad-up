@@ -17,10 +17,10 @@ router.get('/', authenticateJWT, gameRosterController.getAllGameRosters);
 router.get('/game/:gameId', authenticateJWT, checkGameAccess, gameRosterController.getGameRostersByGame);
 
 /**
- * GET /api/game-rosters/:id
+ * GET /api/game-rosters/:rosterId
  * Get game roster by ID
  */
-router.get('/:id', authenticateJWT, gameRosterController.getGameRosterById);
+router.get('/:rosterId', authenticateJWT, gameRosterController.getGameRosterById);
 
 /**
  * POST /api/game-rosters
@@ -29,15 +29,15 @@ router.get('/:id', authenticateJWT, gameRosterController.getGameRosterById);
 router.post('/', authenticateJWT, gameRosterController.createGameRoster);
 
 /**
- * PUT /api/game-rosters/:id
+ * PUT /api/game-rosters/:rosterId
  * Update game roster
  */
-router.put('/:id', authenticateJWT, gameRosterController.updateGameRoster);
+router.put('/:rosterId', authenticateJWT, gameRosterController.updateGameRoster);
 
 /**
- * DELETE /api/game-rosters/:id
+ * DELETE /api/game-rosters/:rosterId
  * Delete game roster
  */
-router.delete('/:id', authenticateJWT, gameRosterController.deleteGameRoster);
+router.delete('/:rosterId', authenticateJWT, gameRosterController.deleteGameRoster);
 
 module.exports = router;

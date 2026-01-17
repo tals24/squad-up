@@ -120,7 +120,7 @@ export function useLineupDraftManager({
       });
 
       // Extract rosters and formation from draft
-      const draftRosters = game.lineupDraft.rosters || game.lineupDraft; // Support both old and new format
+      const draftRosters = game.lineupDraft.rosters || game.lineupDraft;
       const draftFormation = game.lineupDraft.formation || {};
       const draftFormationType = game.lineupDraft.formationType || formationType;
 

@@ -75,11 +75,11 @@ exports.createGame = async (req, res, next) => {
 
 /**
  * Update game
- * PUT /api/games/:id
+ * PUT /api/games/:gameId
  */
 exports.updateGame = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const updateData = req.body;
     
     const updatedGame = await gameService.updateGame(gameId, updateData);
@@ -102,11 +102,11 @@ exports.updateGame = async (req, res, next) => {
 
 /**
  * Delete game
- * DELETE /api/games/:id
+ * DELETE /api/games/:gameId
  */
 exports.deleteGame = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     await gameService.deleteGame(gameId);
     
     res.json({
@@ -124,11 +124,11 @@ exports.deleteGame = async (req, res, next) => {
 
 /**
  * Start game (move from Scheduled to Played with lineup)
- * POST /api/games/:id/start-game
+ * POST /api/games/:gameId/start-game
  */
 exports.startGame = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const { rosters, formation, formationType } = req.body;
     
     const result = await gameService.startGame(gameId, { rosters, formation, formationType });
@@ -189,11 +189,11 @@ exports.getPlayerStats = async (req, res, next) => {
 
 /**
  * Get game draft (lineup or report)
- * GET /api/games/:id/draft
+ * GET /api/games/:gameId/draft
  */
 exports.getGameDraft = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const draft = await gameService.getGameDraft(gameId);
     
     res.json({
@@ -211,11 +211,11 @@ exports.getGameDraft = async (req, res, next) => {
 
 /**
  * Update game draft (lineup or report)
- * PUT /api/games/:id/draft
+ * PUT /api/games/:gameId/draft
  */
 exports.updateGameDraft = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const draftData = req.body;
     
     const updatedGame = await gameService.updateGameDraft(gameId, draftData);
@@ -236,11 +236,11 @@ exports.updateGameDraft = async (req, res, next) => {
 
 /**
  * Submit final report (move from Played to Done)
- * POST /api/games/:id/submit-report
+ * POST /api/games/:gameId/submit-report
  */
 exports.submitFinalReport = async (req, res, next) => {
   try {
-    const gameId = req.params.id;
+    const gameId = req.params.gameId;
     const reportData = req.body;
     
     const result = await gameService.submitFinalReport(gameId, reportData);

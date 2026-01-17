@@ -99,22 +99,22 @@ const WeeklyTrainingPlanOverview = ({
       weekEndFormatted: format(end, 'MMM d, yyyy'),
       teamsCount: teams.length,
       trainingSessionsCount: trainingSessions.length,
-      teams: teams.map((t) => ({ id: t._id || t.id, name: t.teamName })),
+      teams: teams.map((t) => ({ id: t._id, name: t.teamName })),
       sessions: trainingSessions.map((s) => ({
-        id: s._id || s.id,
-        weekIdentifier: s.weekIdentifier || s.WeekIdentifier,
+        id: s._id,
+        weekIdentifier: s.weekIdentifier,
         team: s.team,
         Team: s.Team,
         sessionTitle: s.sessionTitle,
       })),
     });
 
-    const teamIds = new Set(teams.map((t) => t._id || t.id));
+    const teamIds = new Set(teams.map((t) => t._id));
 
     console.log('🔍 Team IDs for matching:', Array.from(teamIds));
     console.log('🔍 Sample session team field:', trainingSessions[0]?.team);
     const sessions = trainingSessions.filter((session) => {
-      const weekMatch = (session.weekIdentifier || session.WeekIdentifier) === id;
+      const weekMatch = session.weekIdentifier === id;
       // Handle both populated team object and team ID
       const teamMatch =
         teamIds.has(session.team) ||
@@ -145,7 +145,7 @@ const WeeklyTrainingPlanOverview = ({
     console.log('  - sessionDrills:', sessionDrills.length);
     console.log('  - allDrills:', allDrills.length);
 
-    const sessionIds = new Set(weekSessions.map((s) => s._id || s.id));
+    const sessionIds = new Set(weekSessions.map((s) => s._id));
     const relevantSessionDrills = sessionDrills.filter((sd) => {
       // Handle both populated and unpopulated trainingSession fields
       const sessionId = sd.trainingSession?._id || sd.trainingSession;
@@ -161,7 +161,7 @@ const WeeklyTrainingPlanOverview = ({
     console.log(
       '  - Sample sessionDrill trainingSession field:',
       sessionDrills.slice(0, 3).map((sd) => ({
-        id: sd._id || sd.id,
+        id: sd._id,
         trainingSession: sd.trainingSession,
         TrainingSessions: sd.TrainingSessions,
         drill: sd.drill,
@@ -170,13 +170,13 @@ const WeeklyTrainingPlanOverview = ({
     );
 
     const drillsByDay = {};
-    const drillDetails = new Map(allDrills.map((d) => [d._id || d.id, d]));
+    const drillDetails = new Map(allDrills.map((d) => [d._id, d]));
 
     for (const session of weekSessions) {
       // Use safe date parsing and formatting
       const date = safeDate(session.date || session.Date);
       if (!date) {
-        console.log('  - Skipping session with invalid date:', session._id || session.id);
+        console.log('  - Skipping session with invalid date:', session._id);
         continue; // Skip sessions with invalid dates
       }
 
@@ -185,7 +185,7 @@ const WeeklyTrainingPlanOverview = ({
         if (!drillsByDay[dayName]) {
           drillsByDay[dayName] = [];
         }
-        const sessionId = session._id || session.id;
+        const sessionId = session._id;
         const drillsForThisSession = relevantSessionDrills
           .filter((sd) => {
             // Handle both populated and unpopulated trainingSession fields

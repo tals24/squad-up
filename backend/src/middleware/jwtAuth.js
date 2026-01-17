@@ -115,6 +115,9 @@ const checkTeamAccess = async (req, res, next) => {
  * Middleware to check if user has access to a specific game
  * Must be placed AFTER authenticateJWT middleware
  * 
+ * IMPORTANT: Routes using this middleware MUST use :gameId parameter naming.
+ * Example: router.get('/:gameId', checkGameAccess, handler)
+ * 
  * This middleware:
  * 1. Validates gameId parameter
  * 2. Fetches the game from database
@@ -127,8 +130,8 @@ const checkTeamAccess = async (req, res, next) => {
  */
 const checkGameAccess = async (req, res, next) => {
   try {
-    // Step 1: Get gameId from params (support both :id and :gameId)
-    const gameId = req.params.gameId || req.params.id;
+    // Step 1: Get gameId from params
+    const gameId = req.params.gameId;
     
     // Step 2: Validate gameId exists and is valid format
     if (!gameId) {

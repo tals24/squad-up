@@ -129,7 +129,7 @@ export default function SubstitutionDialog({
 
   const getPlayerDisplay = (player) => {
     if (!player) return 'Unknown';
-    const kitNumber = player.kitNumber || player.jerseyNumber || '?';
+    const kitNumber = player.kitNumber || '?';
     const name = player.fullName || player.name || 'Unknown';
     return `#${kitNumber} ${name}`;
   };

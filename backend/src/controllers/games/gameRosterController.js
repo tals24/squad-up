@@ -37,12 +37,12 @@ exports.getGameRostersByGame = async (req, res, next) => {
 };
 
 /**
- * GET /api/game-rosters/:id
+ * GET /api/game-rosters/:rosterId
  * Get game roster by ID
  */
 exports.getGameRosterById = async (req, res, next) => {
   try {
-    const gameRoster = await gameRosterService.getGameRosterById(req.params.id);
+    const gameRoster = await gameRosterService.getGameRosterById(req.params.rosterId);
 
     res.json({
       success: true,
@@ -78,12 +78,12 @@ exports.createGameRoster = async (req, res, next) => {
 };
 
 /**
- * PUT /api/game-rosters/:id
+ * PUT /api/game-rosters/:rosterId
  * Update game roster
  */
 exports.updateGameRoster = async (req, res, next) => {
   try {
-    const gameRoster = await gameRosterService.updateGameRoster(req.params.id, req.body);
+    const gameRoster = await gameRosterService.updateGameRoster(req.params.rosterId, req.body);
 
     res.json({
       success: true,
@@ -101,12 +101,12 @@ exports.updateGameRoster = async (req, res, next) => {
 };
 
 /**
- * DELETE /api/game-rosters/:id
+ * DELETE /api/game-rosters/:rosterId
  * Delete game roster
  */
 exports.deleteGameRoster = async (req, res, next) => {
   try {
-    await gameRosterService.deleteGameRoster(req.params.id);
+    await gameRosterService.deleteGameRoster(req.params.rosterId);
 
     res.json({
       success: true,

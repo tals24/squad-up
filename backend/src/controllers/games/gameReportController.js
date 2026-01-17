@@ -37,12 +37,12 @@ exports.getGameReportsByGame = async (req, res, next) => {
 };
 
 /**
- * GET /api/game-reports/:id
+ * GET /api/game-reports/:reportId
  * Get game report by ID
  */
 exports.getGameReportById = async (req, res, next) => {
   try {
-    const gameReport = await gameReportService.getGameReportById(req.params.id);
+    const gameReport = await gameReportService.getGameReportById(req.params.reportId);
 
     res.json({
       success: true,
@@ -78,12 +78,12 @@ exports.createGameReport = async (req, res, next) => {
 };
 
 /**
- * PUT /api/game-reports/:id
+ * PUT /api/game-reports/:reportId
  * Update game report
  */
 exports.updateGameReport = async (req, res, next) => {
   try {
-    const gameReport = await gameReportService.updateGameReport(req.params.id, req.body);
+    const gameReport = await gameReportService.updateGameReport(req.params.reportId, req.body);
 
     res.json({
       success: true,
@@ -101,12 +101,12 @@ exports.updateGameReport = async (req, res, next) => {
 };
 
 /**
- * DELETE /api/game-reports/:id
+ * DELETE /api/game-reports/:reportId
  * Delete game report
  */
 exports.deleteGameReport = async (req, res, next) => {
   try {
-    await gameReportService.deleteGameReport(req.params.id);
+    await gameReportService.deleteGameReport(req.params.reportId);
 
     res.json({
       success: true,
